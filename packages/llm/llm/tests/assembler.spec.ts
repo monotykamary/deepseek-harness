@@ -29,6 +29,31 @@ describe('BlockAssembler', () => {
     expect(assembler.message().role).toBe('assistant')
   })
 
+  it('drops replay state when max-token safety filtering removes a tool call', () => {
+    const replayState = { responseId: 'response-1' }
+    const assembler = new BlockAssembler()
+    assembler.push({ type: 'block-end', index: 0, block: { type: 'text', text: 'safe content' } })
+    assembler.push({
+      type: 'block-end',
+      index: 1,
+      block: { type: 'tool-call', id: CallId('call-1'), name: 'echo', arguments: '{}' },
+    })
+    assembler.push({ type: 'finish', reason: { kind: 'max-tokens' }, replayState })
+
+    expect(assembler.blocks()).toEqual([{ type: 'text', text: 'safe content' }])
+    expect(assembler.replayState).toBeUndefined()
+  })
+
+  it('retains replay state when max-token assembly does not filter content', () => {
+    const replayState = { responseId: 'response-1' }
+    const assembler = new BlockAssembler()
+    assembler.push({ type: 'block-end', index: 0, block: { type: 'text', text: 'safe content' } })
+    assembler.push({ type: 'finish', reason: { kind: 'max-tokens' }, replayState })
+
+    expect(assembler.blocks()).toEqual([{ type: 'text', text: 'safe content' }])
+    expect(assembler.replayState).toBe(replayState)
+  })
+
   it('records the completed block from block-end', () => {
     const assembler = new BlockAssembler()
     assembler.push({ type: 'block-start', index: 0, blockType: 'text' })

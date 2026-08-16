@@ -148,9 +148,16 @@ export class BlockAssembler {
     return this._finish ?? { kind: 'stop' }
   }
 
-  /** Adapter-private replay state from the terminal finish chunk, if any. */
+  /**
+   * Adapter-private replay state from the terminal finish chunk, if it still
+   * describes the assembled content. Max-token safety filtering removes tool
+   * calls, so metadata for a response containing one is discarded with it.
+   */
   get replayState(): unknown {
-    return this._replayState
+    if (this._replayState === undefined || this.finish.kind !== 'max-tokens') return this._replayState
+    return this.order.some(index => this.assemble(this.mustGet(index), index).type === 'tool-call')
+      ? undefined
+      : this._replayState
   }
 
   /**

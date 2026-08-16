@@ -271,7 +271,7 @@ interface TokenUsage {
 
 ## `BlockAssembler`
 
-`BlockAssembler`（[`packages/llm/llm/src/assembler.ts`](../../packages/llm/llm/src/assembler.ts)）是唯一的共享实现，负责把 `StreamChunk` 流折叠回 `ContentBlock`、usage、结束原因与回放状态。循环在记录原始分片的同时，把同一批分片送入 assembler，再将组装后的 assistant 内容连同生成它的提供方和模型一起存储。需要组装结果、又不想重新实现 fold 的消费方使用它。
+`BlockAssembler`（[`packages/llm/llm/src/assembler.ts`](../../packages/llm/llm/src/assembler.ts)）是唯一的共享实现，负责把 `StreamChunk` 流折叠回 `ContentBlock`、usage、结束原因与回放状态。循环在记录原始分片的同时，把同一批分片送入 assembler，再将组装后的 assistant 内容连同生成它的提供方和模型一起存储。达到最大 token 数时，安全过滤会同时移除工具调用及其回放状态，确保保留内容与适配器元数据不会不一致。需要组装结果、又不想重新实现 fold 的消费方使用它。
 
 ```ts public-api
 /**
@@ -302,7 +302,11 @@ declare class BlockAssembler {
   get usage(): TokenUsage | undefined;
   /** Finish reason from the `finish` chunk; `{kind: 'stop'}` when the stream ended without one. */
   get finish(): FinishReason;
-  /** Adapter-private replay state from the terminal finish chunk, if any. */
+  /**
+   * Adapter-private replay state from the terminal finish chunk, if it still
+   * describes the assembled content. Max-token safety filtering removes tool
+   * calls, so metadata for a response containing one is discarded with it.
+   */
   get replayState(): unknown;
   /**
    * The assembled assistant message.

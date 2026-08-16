@@ -1184,7 +1184,7 @@ describe('agent loop', () => {
     }])
   })
 
-  it('keeps safe max-tokens assistant content while dropping truncated tool calls', async () => {
+  it('keeps safe max-tokens content while dropping truncated tool calls and replay state', async () => {
     const callId = CallId('c1')
     const adapter = new MockAdapter([[
       { type: 'block-start', index: 0, blockType: 'text' },
@@ -1192,7 +1192,7 @@ describe('agent loop', () => {
       { type: 'block-end', index: 0, block: { type: 'text', text: 'partial text' } },
       { type: 'block-start', index: 1, blockType: 'tool-call' },
       { type: 'tool-call-delta', index: 1, id: callId, name: 'echo', argumentsDelta: '{"text"' },
-      { type: 'finish', reason: { kind: 'max-tokens' } },
+      { type: 'finish', reason: { kind: 'max-tokens' }, replayState: { responseId: 'response-1' } },
     ]])
     const ctx = await harness(adapter)
     const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })

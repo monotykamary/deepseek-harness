@@ -265,7 +265,7 @@ interface TokenUsage {
 
 ## `BlockAssembler`
 
-`BlockAssembler` ([`packages/llm/llm/src/assembler.ts`](../../packages/llm/llm/src/assembler.ts)) is the single shared implementation that folds a `StreamChunk` stream back into `ContentBlock`s, usage, finish reason, and replay state. The loop logs the raw chunks while feeding the same chunks through an assembler, then stores the assembled assistant content with the provider and model that produced it. A consumer that needs the assembled result without re-implementing the fold uses this.
+`BlockAssembler` ([`packages/llm/llm/src/assembler.ts`](../../packages/llm/llm/src/assembler.ts)) is the single shared implementation that folds a `StreamChunk` stream back into `ContentBlock`s, usage, finish reason, and replay state. The loop logs the raw chunks while feeding the same chunks through an assembler, then stores the assembled assistant content with the provider and model that produced it. Max-token safety filtering removes tool calls and their replay state together, so retained content and adapter metadata cannot disagree. A consumer that needs the assembled result without re-implementing the fold uses this.
 
 ```ts public-api
 /**
@@ -296,7 +296,11 @@ declare class BlockAssembler {
   get usage(): TokenUsage | undefined;
   /** Finish reason from the `finish` chunk; `{kind: 'stop'}` when the stream ended without one. */
   get finish(): FinishReason;
-  /** Adapter-private replay state from the terminal finish chunk, if any. */
+  /**
+   * Adapter-private replay state from the terminal finish chunk, if it still
+   * describes the assembled content. Max-token safety filtering removes tool
+   * calls, so metadata for a response containing one is discarded with it.
+   */
   get replayState(): unknown;
   /**
    * The assembled assistant message.
