@@ -389,9 +389,25 @@ describe('provider profile lifecycle', () => {
       maxDelayMs: 100,
       jitterRatio: 0.2,
     })
-    expect(ctx.llm.providerRetryPolicy('anthropic')).toMatchObject({
+    expect(ctx.llm.providerRetryPolicy('anthropic')).toEqual({
       mode: 'normal',
-      maxRetries: 2,
+      maxRetries: 3,
+      retryableCodes: [
+        'AUTH',
+        'CONTEXT_WINDOW_EXCEEDED',
+        'EMPTY_RESPONSE',
+        'INVALID_REQUEST',
+        'PI_AI_ERROR',
+        'QUOTA',
+        'RATE_LIMIT',
+        'SERVER',
+        'STREAM_CLOSED',
+        'TIMEOUT',
+        'TRANSPORT',
+      ],
+      initialDelayMs: 500,
+      maxDelayMs: 10_000,
+      jitterRatio: 0.1,
     })
     await fiber.dispose()
     expect(ctx.llm.listProviders()).toEqual([])

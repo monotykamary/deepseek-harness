@@ -19,7 +19,7 @@ import z from '@deepseek-ai/schemastery'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
+import { CONTEXT_WINDOW_EXCEEDED_CODE, EMPTY_RESPONSE_CODE, QUOTA_EXCEEDED_CODE, resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
 import type { ResolvedRetryPolicy, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
 import { MODALITIES, resolveRouteModels, SUPPORTED_THINKING_FORMATS, THINKING_LEVELS } from './catalog.ts'
 import type {
@@ -39,6 +39,28 @@ export const DEFAULT_CONTEXT_WINDOW = 262_144
 
 /** Output capability assumed for a model neither configuration nor the catalog sizes. */
 export const DEFAULT_MAX_TOKENS = 32_768
+
+/**
+ * Retry every provider-attempt failure surfaced by pi-ai three times. Caller
+ * cancellation and deterministic adapter validation never enter this policy.
+ */
+const DEFAULT_RETRY_POLICY: RetryPolicyConfig = {
+  mode: 'normal',
+  maxRetries: 3,
+  retryableCodes: [
+    'AUTH',
+    CONTEXT_WINDOW_EXCEEDED_CODE,
+    EMPTY_RESPONSE_CODE,
+    'INVALID_REQUEST',
+    'PI_AI_ERROR',
+    QUOTA_EXCEEDED_CODE,
+    'RATE_LIMIT',
+    'SERVER',
+    'STREAM_CLOSED',
+    'TIMEOUT',
+    'TRANSPORT',
+  ],
+}
 
 /**
  * Modalities assumed for a model neither configuration nor the catalog
@@ -136,7 +158,7 @@ export interface PiAiProviderProfile {
   websocketConnectTimeoutMs?: number
   /** Maximum provider idle time while one stream read is outstanding. */
   streamIdleTimeoutMs?: number
-  /** Provider-owned model-request retry policy; omission uses normal defaults. */
+  /** Provider-owned model-request retry policy; omission retries every pi-ai request failure three times. */
   retryPolicy?: RetryPolicyConfig
 }
 
@@ -354,7 +376,7 @@ export function resolveProfiles(
       displayName,
       ...apiKeyEnv === undefined ? {} : { apiKeyEnv: credentialRef(apiKeyEnv) },
       streamIdleTimeoutMs,
-      retryPolicy: resolveRetryPolicy(retryPolicy, `llm-pi-ai: provider "${provider}" retryPolicy`),
+      retryPolicy: resolveRetryPolicy(retryPolicy ?? DEFAULT_RETRY_POLICY, `llm-pi-ai: provider "${provider}" retryPolicy`),
       ...rest.headers === undefined ? {} : { headers: { ...rest.headers } },
       ...rest.thinkingBudgets === undefined ? {} : { thinkingBudgets: { ...rest.thinkingBudgets } },
       configuredMaxTokens: catalog.configuredMaxTokens,
