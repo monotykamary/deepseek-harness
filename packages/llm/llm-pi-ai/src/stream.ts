@@ -41,7 +41,10 @@ function classifyPiAiError(message: string): string {
   if (isQuotaExceededError(message)) return QUOTA_EXCEEDED_CODE
   if (/\b429\b|rate.?limit/i.test(message)) return 'RATE_LIMIT'
   if (/\b400\b|invalid.?request/i.test(message)) return 'INVALID_REQUEST'
-  if (/\b5\d\d\b/.test(message)) return 'SERVER'
+  if (/\b5\d\d\b/.test(message)
+    // Codex's generic transient backend failure omits the HTTP status but uses
+    // this stable OpenAI error wording and supplies a request ID for support.
+    || /an error occurred while processing your request/i.test(message)) return 'SERVER'
   if (/\btime(?:d)?\s*out\b|timeout/i.test(message)) return 'TIMEOUT'
   // A stream truncated before the provider's terminal event: each pi-ai provider
   // throws its own wording when the wire closes mid-response without a terminal
