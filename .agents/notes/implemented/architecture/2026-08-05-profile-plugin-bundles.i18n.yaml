@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-05-profile-plugin-bundles.md
-2026-08-05-profile-plugin-bundles.md: 94e3ddad0cfea0a1aaf2efe8d15f26f471bb2bd3
-2026-08-05-profile-plugin-bundles.zh.md: 96d22c57f68ecc72e1afd34fbbd3cfbe3ac24c61
+2026-08-05-profile-plugin-bundles.md: 38c02214a2e0cd4ed1c0abdc0315bcbeb5bd9862
+2026-08-05-profile-plugin-bundles.zh.md: 0415761b58941bc6839f4904e4e5b6aa2620dcce

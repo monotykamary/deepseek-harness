@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md
-2026-06-24-web-capability-seam.md: 7e7b09f19864bd2ad8ad9d69579c1d5c79600cde
-2026-06-24-web-capability-seam.zh.md: d6051eec498edb640773ba367038581cebd1f654
+2026-06-24-web-capability-seam.md: 49d25d1a7405ec90628300cf1bf115a6629dcace
+2026-06-24-web-capability-seam.zh.md: b388a741280a053bb49ab01fb703dbcfadc1626a
