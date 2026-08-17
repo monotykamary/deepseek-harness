@@ -12,7 +12,7 @@ OpenTelemetry 后端已在 `$DSH_HOME/.anonymous-user-id` 中持久化一个匿�
 
 ## 决策
 
-`@monotykamary/dsh-anonymous-user-id` 负责 `getOrCreateAnonymousUserId()` 和 `$DSH_HOME/.anonymous-user-id` 存储约定。`session-telemetry-otel` 将返回的 id 用作 OpenTelemetry Resource 的 `user.id`；`/feedback` 的成功确认先报告 `Feedback recorded for session {sessionId}`，再在第二行显示 `User: {userId}`；直连 DeepSeek 请求则通过 `x-deepseek-harness-user-id` 携带它。系统在获取 id 前拒绝无效反馈，DeepSeek 适配器也仅在凭据解析成功后获取 id，因此空命令和凭据失败都不会创建 `.anonymous-user-id`。
+`@monotykamary/dsh-anonymous-user-id` 负责 `getOrCreateAnonymousUserId()` 和 `$DSH_HOME/.anonymous-user-id` 存储约定。`session-telemetry-otel` 将返回的 id 用作 OpenTelemetry Resource 的 `user.id`；`/feedback` 的成功确认先报告 `Feedback recorded for session {sessionId}`，再在第二行显示 `User: {userId}`；直连 DeepSeek 请求则在启用 `requestHeaders.userId` 时通过 `x-deepseek-harness-user-id` 携带它。系统在获取 id 前拒绝无效反馈，DeepSeek 适配器也仅在凭据解析成功后、且该标头启用时才获取 id，因此空命令、凭据失败和未启用的标头都不会创建 `.anonymous-user-id`。
 
 此次抽取保留既有的随机 UUID、home 解析、进程内缓存、独占创建并发、损坏文件替换与 best-effort 写入语义。
 
@@ -26,7 +26,7 @@ OpenTelemetry 后端已在 `$DSH_HOME/.anonymous-user-id` 中持久化一个匿�
 
 ## 后果
 
-- 一个 harness home 只有一个匿名 id，由反馈确认、会话遥测导出与直连 DeepSeek 请求共享。
+- 一个 harness home 只有一个匿名 id，由反馈确认、任何已挂载的会话遥测后端与（启用后的）直连 DeepSeek 请求共享。
 - 反馈包只依赖身份能力，不依赖遥测 seam 或 OTel SDK。
 - 该包由三个消费方使用，成为有充分依据的共享库；其空不变式伴生插件解释了为何读取私有文件并非有用的运行时关系检查。
 - 原始匿名用户 id Note 仍是存储与隐私语义的权威记录；本 Note 仅取代其中由 OTel 本地拥有身份的决策。

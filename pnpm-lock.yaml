@@ -1091,9 +1091,6 @@ importers:
       '@monotykamary/dsh-session-query-sqlite':
         specifier: workspace:^
         version: link:../../session-query/session-query-sqlite
-      '@monotykamary/dsh-session-telemetry-otel':
-        specifier: workspace:^
-        version: link:../../session/session-telemetry-otel
       '@monotykamary/dsh-session-title':
         specifier: workspace:^
         version: link:../../session/session-title

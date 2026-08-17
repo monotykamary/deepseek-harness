@@ -27,6 +27,10 @@ harness LLM（大语言模型）seam 的 DeepSeek chat-completions 适配器：�
         maxDelayMs: 10000
         jitterRatio: 0.1
     defaultContextWindow: 1000000 # optional positive-integer fallback; this is the default
+    requestHeaders:          # optional; every field off by default — no harness correlation header ships without opting in
+      userId: true           # send x-deepseek-harness-user-id (the harness-home anonymous id)
+      sessionId: true        # send x-deepseek-harness-session-id when a request carries a session id
+      compact: true          # send x-deepseek-harness-compact: 1 on compaction-purpose requests
     models:                  # optional; defaults to V4 Flash and V4 Pro
       - id: deepseek-v4-flash
         name: DeepSeek-V4-Flash
@@ -60,9 +64,9 @@ harness LLM（大语言模型）seam 的 DeepSeek chat-completions 适配器：�
 
 ## 应用归因
 
-每个请求都携带 dsh-llm `attributionHeaders()` 的共享归因标头，即用于识别 harness 的必需 `User-Agent` 基线（见 [dsh-llm § 应用归因](../llm/README.md#app-attribution-attributionts)）。在该适配器约定（adapter contract）下，直接 DeepSeek 请求与 OpenAI 兼容 gateway 请求都不会获得提供方特定应用归因标头；OpenRouter 应用归因暂缓到未来的显式 OpenRouter 适配器或模式。`GenerateOptions.purpose` 为 `compaction` 的请求（dsh-compaction-basic 的辅助摘要调用）还会携带 `x-deepseek-harness-compact: 1`，让宿主可以将压缩流量与会话请求分开。
+每个请求都携带 dsh-llm `attributionHeaders()` 的共享归因标头，即用于识别 harness 的必需 `User-Agent` 基线（见 [dsh-llm § 应用归因](../llm/README.md#app-attribution-attributionts)）。在该适配器约定（adapter contract）下，直接 DeepSeek 请求与 OpenAI 兼容 gateway 请求都不会获得提供方特定应用归因标头；OpenRouter 应用归因暂缓到未来的显式 OpenRouter 适配器或模式。
 
-DeepSeek 请求身份独立于应用归因。凭据解析成功后，每个提供方请求都会通过 `x-deepseek-harness-user-id` 携带来自 [`@monotykamary/dsh-anonymous-user-id`](../../identity/anonymous-user-id/README.md) 的稳定匿名 id；携带 `GenerateOptions.sessionId` 的请求还会通过 `x-deepseek-harness-session-id` 发送该确切值，缺少会话的直接调用则省略会话标头。两个标头都会发送至解析后的 `baseURL`（包括已配置的 gateway），且不会进入请求正文或模型可见内容。
+DeepSeek 请求身份独立于应用归因，且为显式启用（opt-in）：三个 harness 关联标头默认全部关闭，除非部署启用对应的 `requestHeaders` 字段，否则请求不发送其中任何一个。`requestHeaders.userId` 通过 `x-deepseek-harness-user-id` 发送来自 [`@monotykamary/dsh-anonymous-user-id`](../../identity/anonymous-user-id/README.md) 的稳定匿名 id（在凭据解析成功后惰性解析，因此标头关闭时绝不会创建 id 文件）；`requestHeaders.sessionId` 将请求的 `GenerateOptions.sessionId` 值作为 `x-deepseek-harness-session-id` 发送；`requestHeaders.compact` 为 `GenerateOptions.purpose: 'compaction'` 的请求（dsh-compaction-basic 的辅助摘要调用）标记 `x-deepseek-harness-compact: 1`，让宿主可以将压缩流量与会话请求分开。已发送的标头都会发送至解析后的 `baseURL`（包括已配置的 gateway），且不会进入请求正文或模型可见内容。同一组字段在 `llm-deepseek:` settings 分区同样有效，并无需重启即可在下一个请求生效。
 
 ## 协议格式说明
 

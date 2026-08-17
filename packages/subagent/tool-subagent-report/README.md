@@ -18,7 +18,7 @@ The contribution body is exported as `installReportTool(childCtx, ctx, delivery)
 
 #### What the model sees
 
-The generated [`report` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-subagent-report): one required `output` string. Its description states that the child must report once before finishing, that reporting reaches only the Agent that started the child, and that it does not end the turn. It carries no recipient or delivery-mode parameter. The separate `tool:report` prompt section repeats the obligation outside the schema, where a child that ignores tool descriptions still reads it.
+The generated [`report` schema](../../../docs/tool-catalog.md#monotykamarydsh-tool-subagent-report): one required `output` string. Its description states that the child must report once before finishing, that reporting reaches only the Agent that started the child, and that it does not end the turn. It carries no recipient or delivery-mode parameter. The separate `tool:report` prompt section repeats the obligation outside the schema, where a child that ignores tool descriptions still reads it.
 
 #### Token effect
 

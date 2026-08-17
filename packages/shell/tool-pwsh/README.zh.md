@@ -66,7 +66,7 @@ Non-zero exits are reported as `[exit code: N]` markers; investigate failures be
 
 #### 模型看到的内容
 
-模型看到生成的 [`pwsh` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-pwsh)。按 agent 作用域的工具限制可以移除该 agent 的定义。
+模型看到生成的 [`pwsh` schema](../../../docs/tool-catalog.md#monotykamarydsh-tool-pwsh)。按 agent 作用域的工具限制可以移除该 agent 的定义。
 
 #### Token 影响
 

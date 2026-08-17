@@ -14,7 +14,7 @@ Status: implemented
 
 - `FULL` 显式选择向已配置 OTel 流水线即时投递。
 - `FEEDBACK_ONLY` 在追加 `feedback/record` 时读取权威会话日志，并交接截至该事件的未释放前缀。该边界后追加的记录会留在本地，直到另一个反馈事件。
-- `DISABLED` 是[默认值](2026-08-10-telemetry-default-off.md)，不构造导出器、处理器或日志提供方，并在观察到 `feedback/record` 时输出警告，说明什么都不会共享，且反馈仍留在本地。
+- `DISABLED` 是[默认值](../../archived/feature/2026-08-10-telemetry-default-off.md)，不构造导出器、处理器或日志提供方，并在观察到 `feedback/record` 时输出警告，说明什么都不会共享，且反馈仍留在本地。
 
 通用遥测协调器拥有 `live` 与 `on-demand` 捕获。实时捕获在会话 firehose 上投影、深拷贝、脱敏每个事件，并将其交给后端。按需捕获不注册持续捕获监听器；`captureSession(session, throughSeq)` 从 handoff 游标起读取权威日志，直至含边界的指定序列号，然后投影、深拷贝、脱敏并交接该前缀。游标只为已交接记录推进。[无缓冲回放决策](../simplification/2026-08-06-buffer-free-feedback-telemetry.md)说明了按需路径为何使用权威日志而非记录副本。
 

@@ -75,7 +75,6 @@
     "@monotykamary/dsh-session-persistence-jsonl": "workspace:^",
     "@monotykamary/dsh-session-projection": "workspace:^",
     "@monotykamary/dsh-session-query-sqlite": "workspace:^",
-    "@monotykamary/dsh-session-telemetry-otel": "workspace:^",
     "@monotykamary/dsh-session-title": "workspace:^",
     "@monotykamary/dsh-session-title-first-prompt-llm": "workspace:^",
     "@monotykamary/dsh-settings-file": "workspace:^",

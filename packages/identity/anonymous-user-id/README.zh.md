@@ -12,7 +12,7 @@
 
 ## 组合
 
-本包是共享库，并非 Cordis 插件。消费方直接导入 `getOrCreateAnonymousUserId()`。其不变式伴生插件刻意留空，因为本包既不拥有事件流，也不拥有任何可以在不触发创建身份这一副作用的情况下检查的公开可变关系。`DSH_TELEMETRY_DISABLED` 只会停止遥测导出，不会禁止直接反馈确认或 DeepSeek 提供方标头。
+本包是共享库，并非 Cordis 插件。消费方直接导入 `getOrCreateAnonymousUserId()`。其不变式伴生插件刻意留空，因为本包既不拥有事件流，也不拥有任何可以在不触发创建身份这一副作用的情况下检查的公开可变关系。身份本身绝不会自行离开进程：任何随附 profile 都不挂载遥测后端，`/feedback` 确认只会显示它，携带它的 DeepSeek 提供方标头则默认关闭，需经 `requestHeaders.userId` 显式启用。
 
 ## 模型体验
 

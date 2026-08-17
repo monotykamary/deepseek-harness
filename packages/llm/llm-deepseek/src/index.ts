@@ -78,6 +78,19 @@ export interface Config {
   streamIdleTimeoutMs?: number
   /** Provider-owned model-request retry policy; omission uses normal defaults. */
   retryPolicy?: RetryPolicyConfig
+  /**
+   * Opt-in provider-request correlation headers, every field off by default
+   * so no harness telemetry header leaves without a deployment choice. The
+   * same group is valid in the `llm-deepseek:` settings section.
+   */
+  requestHeaders?: {
+    /** Send the harness-home anonymous user id as `x-deepseek-harness-user-id`. */
+    userId?: boolean
+    /** Send a request's session id as `x-deepseek-harness-session-id`. */
+    sessionId?: boolean
+    /** Mark compaction-purpose requests with `x-deepseek-harness-compact: 1`. */
+    compact?: boolean
+  }
 }
 
 const catalogModel: z<DeepSeekCatalogModel> = z.object({
@@ -98,6 +111,11 @@ export const Config: z<Config> = z.object({
   models: z.array(catalogModel).default(DEFAULT_MODELS),
   streamIdleTimeoutMs: z.number().min(Number.MIN_VALUE).max(MAX_TIMER_DELAY_MS).default(DEFAULT_STREAM_IDLE_TIMEOUT_MS),
   retryPolicy: RetryPolicySchema,
+  requestHeaders: z.object({
+    userId: z.boolean().default(false),
+    sessionId: z.boolean().default(false),
+    compact: z.boolean().default(false),
+  }),
 })
 
 /** Public API default; the internal endpoint comes from $DEEPSEEK_BASE_URL. */
@@ -194,6 +212,11 @@ export function resolveAdapterOptions(config: Config, environment?: LaunchEnviro
     models: resolveModels(config.models),
     streamIdleTimeoutMs,
     retryPolicy: resolveRetryPolicy(config.retryPolicy, 'llm-deepseek: retryPolicy'),
+    requestHeaders: {
+      userId: config.requestHeaders?.userId ?? false,
+      sessionId: config.requestHeaders?.sessionId ?? false,
+      compact: config.requestHeaders?.compact ?? false,
+    },
   }
 }
 

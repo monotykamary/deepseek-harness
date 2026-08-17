@@ -1,6 +1,7 @@
 # Agent Note: dsh web 组合默认挂载会话遥测（OTel 上报）
 
 Status: implemented
+Archived: 2026-08-17
 
 [English](2026-07-31-web-telemetry-default-mount.md) | 中文
 

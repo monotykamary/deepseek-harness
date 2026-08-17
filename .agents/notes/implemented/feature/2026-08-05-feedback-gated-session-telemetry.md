@@ -14,7 +14,7 @@ Session telemetry originally has one mounted behavior: every accepted record ent
 
 - `FULL` explicitly selects immediate delivery to the configured OTel pipeline.
 - `FEEDBACK_ONLY` reads the canonical session log when `feedback/record` is appended and hands over the unreleased prefix through that exact event. Records appended after that boundary remain local until another feedback event.
-- `DISABLED` is the [default](2026-08-10-telemetry-default-off.md), constructs no exporter, processor, or logger provider, and prints that nothing is shared and the feedback remains local when it observes `feedback/record`.
+- `DISABLED` is the [default](../../archived/feature/2026-08-10-telemetry-default-off.md), constructs no exporter, processor, or logger provider, and prints that nothing is shared and the feedback remains local when it observes `feedback/record`.
 
 The generic telemetry coordinator owns `live` and `on-demand` capture. Live capture projects, clones, redacts, and hands each event to the backend on the session firehose. On-demand capture registers no continuous capture listeners; `captureSession(session, throughSeq)` reads the canonical log from the handoff cursor through an inclusive boundary, then projects, clones, redacts, and hands over that prefix. The cursor advances only for handed-over records. The [buffer-free replay decision](../simplification/2026-08-06-buffer-free-feedback-telemetry.md) owns why the on-demand path uses the canonical log instead of copied records.
 

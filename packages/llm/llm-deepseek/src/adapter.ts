@@ -68,6 +68,15 @@ export interface DeepSeekConnectionOptions {
   streamIdleTimeoutMs: number
   /** Provider-owned model-request retry policy, already resolved. */
   retryPolicy: ResolvedRetryPolicy
+  /** Opt-in provider-request correlation headers; all resolved off by default. */
+  requestHeaders: {
+    /** Send the harness-home anonymous user id as `x-deepseek-harness-user-id`. */
+    userId: boolean
+    /** Send a request's session id as `x-deepseek-harness-session-id`. */
+    sessionId: boolean
+    /** Mark compaction-purpose requests with `x-deepseek-harness-compact: 1`. */
+    compact: boolean
+  }
 }
 
 /** Constructor options for {@link DeepSeekAdapter}: the operation-local resolution hooks the plugin owns. */
@@ -81,7 +90,10 @@ export interface DeepSeekAdapterOptions {
    * `MISSING_CREDENTIAL` when no key is available anywhere.
    */
   resolveApiKey: (connection: DeepSeekConnectionOptions) => Promise<string>
-  /** Resolve the harness-home anonymous id shared with telemetry and feedback. */
+  /**
+   * Resolve the harness-home anonymous id; called only while
+   * `requestHeaders.userId` is enabled, so a disabled header never creates the id file.
+   */
   resolveUserId: () => AnonymousUserId
 }
 
@@ -219,7 +231,9 @@ export class DeepSeekAdapter extends LlmAdapter {
     // sent to it can never come from different configuration generations.
     const connection = this.config.options()
     const apiKey = await this.config.resolveApiKey(connection)
-    const userId = this.config.resolveUserId()
+    // Resolved only when the userId header is enabled: an off deployment must
+    // never create `$DSH_HOME/.anonymous-user-id` as a request side effect.
+    const userId = connection.requestHeaders.userId ? this.config.resolveUserId() : undefined
     const consumer = new AbortController()
     const upstream = options.signal === undefined
       ? consumer.signal
@@ -273,7 +287,7 @@ export class DeepSeekAdapter extends LlmAdapter {
     signal: AbortSignal,
     connection: DeepSeekConnectionOptions,
     apiKey: string,
-    userId: AnonymousUserId,
+    userId: AnonymousUserId | undefined,
     onComment: () => void,
   ): AsyncIterable<StreamChunk> {
     const body = serializeRequest(options, connection.defaults)
@@ -285,11 +299,13 @@ export class DeepSeekAdapter extends LlmAdapter {
       'content-type': 'application/json',
       'accept': 'text/event-stream',
       ...attributionHeaders(),
-      'x-deepseek-harness-user-id': String(userId),
-      ...options.sessionId !== undefined
+      ...connection.requestHeaders.userId && userId !== undefined
+        ? { 'x-deepseek-harness-user-id': String(userId) }
+        : {},
+      ...connection.requestHeaders.sessionId && options.sessionId !== undefined
         ? { 'x-deepseek-harness-session-id': String(options.sessionId) }
         : {},
-      ...options.purpose === 'compaction'
+      ...connection.requestHeaders.compact && options.purpose === 'compaction'
         ? { 'x-deepseek-harness-compact': '1' }
         : {},
     }

@@ -9,7 +9,7 @@ This file is GENERATED from source (`scripts/gen-config-catalog.ts`) and verifie
 
 A `Requires:` line lists the service keys the plugin `inject`s: its `cordis.yml` tree must also load providers for those services. Scope is the harness tier (`packages/`); the vendored cordis plugins a config tree may also load (`hmr`, the console logger, …) are pinned upstream source ([vendoring policy](../vendor/README.md)) and not catalogued here.
 
-<a id="deepseek-aidsh-acp"></a>
+<a id="monotykamarydsh-acp"></a>
 
 ## `@monotykamary/dsh-acp`
 
@@ -31,7 +31,7 @@ Depends on: `Stream` (`@agentclientprotocol/sdk`)
 
 Source: [`packages/acp/acp/src/index.ts:70`](../packages/acp/acp/src/index.ts)
 
-<a id="deepseek-aidsh-acp-demo"></a>
+<a id="monotykamarydsh-acp-demo"></a>
 
 ## `@monotykamary/dsh-acp-demo`
 
@@ -82,11 +82,11 @@ export interface Config {
 }
 ```
 
-Depends on: [`agentCore`](../packages/examples/agent-spine-demo/src/index.ts) · [`JsonlCompression`](../packages/session/session-persistence-jsonl/src/index.ts) · [`ToolsConfig`](#deepseek-aidsh-tools)
+Depends on: [`agentCore`](../packages/examples/agent-spine-demo/src/index.ts) · [`JsonlCompression`](../packages/session/session-persistence-jsonl/src/index.ts) · [`ToolsConfig`](#monotykamarydsh-tools)
 
 Source: [`packages/examples/acp-demo/src/index.ts:39`](../packages/examples/acp-demo/src/index.ts)
 
-<a id="deepseek-aidsh-agent-default-model"></a>
+<a id="monotykamarydsh-agent-default-model"></a>
 
 ## `@monotykamary/dsh-agent-default-model`
 
@@ -102,7 +102,7 @@ export interface Config {
 
 Source: [`packages/core/agent-default-model/src/index.ts:41`](../packages/core/agent-default-model/src/index.ts)
 
-<a id="deepseek-aidsh-agent-instructions"></a>
+<a id="monotykamarydsh-agent-instructions"></a>
 
 ## `@monotykamary/dsh-agent-instructions`
 
@@ -132,7 +132,7 @@ export interface Config {
 
 Source: [`packages/context/agent-instructions/src/config.ts:18`](../packages/context/agent-instructions/src/config.ts)
 
-<a id="deepseek-aidsh-agent-loop"></a>
+<a id="monotykamarydsh-agent-loop"></a>
 
 ## `@monotykamary/dsh-agent-loop`
 
@@ -164,7 +164,7 @@ Depends on: [`AgentOptions`](subsystems/core.md) · [`SessionId`](subsystems/cor
 
 Source: [`packages/core/agent-loop/src/index.ts:255`](../packages/core/agent-loop/src/index.ts)
 
-<a id="deepseek-aidsh-agent-presets"></a>
+<a id="monotykamarydsh-agent-presets"></a>
 
 ## `@monotykamary/dsh-agent-presets`
 
@@ -202,7 +202,7 @@ export type PresetTrust = 'system' | 'user'
 
 Source: [`packages/preset/agent-presets/src/preset.ts:52`](../packages/preset/agent-presets/src/preset.ts)
 
-<a id="deepseek-aidsh-agent-spine-demo"></a>
+<a id="monotykamarydsh-agent-spine-demo"></a>
 
 ## `@monotykamary/dsh-agent-spine-demo`
 
@@ -290,11 +290,11 @@ export interface GoalConfig {
 }
 ```
 
-Depends on: [`AgentLoopConfig`](#deepseek-aidsh-agent-loop) · [`GoalDomainConfig`](#deepseek-aidsh-goal) · [`InvariantConfig`](#deepseek-aidsh-invariants) · [`JobsConfig`](#deepseek-aidsh-jobs-local) · [`SessionTitleConfig`](#deepseek-aidsh-session-title) · [`SkillFileSystem`](../packages/skill/skill-filesystem/src/index.ts) · [`SkillRegistryConfig`](#deepseek-aidsh-skill) · [`SystemPromptConfig`](#deepseek-aidsh-system-prompt) · [`toolBash`](../packages/shell/tool-bash/src/index.ts) · [`toolGoal`](../packages/goal/tool-goal/src/index.ts) · [`toolJobs`](../packages/jobs/tool-jobs/src/index.ts) · [`ToolsConfig`](#deepseek-aidsh-tools) · [`toolSkill`](../packages/skill/tool-skill/src/index.ts) · [`workspaceContext`](../packages/context/agent-instructions/src/index.ts)
+Depends on: [`AgentLoopConfig`](#monotykamarydsh-agent-loop) · [`GoalDomainConfig`](#monotykamarydsh-goal) · [`InvariantConfig`](#monotykamarydsh-invariants) · [`JobsConfig`](#monotykamarydsh-jobs-local) · [`SessionTitleConfig`](#monotykamarydsh-session-title) · [`SkillFileSystem`](../packages/skill/skill-filesystem/src/index.ts) · [`SkillRegistryConfig`](#monotykamarydsh-skill) · [`SystemPromptConfig`](#monotykamarydsh-system-prompt) · [`toolBash`](../packages/shell/tool-bash/src/index.ts) · [`toolGoal`](../packages/goal/tool-goal/src/index.ts) · [`toolJobs`](../packages/jobs/tool-jobs/src/index.ts) · [`ToolsConfig`](#monotykamarydsh-tools) · [`toolSkill`](../packages/skill/tool-skill/src/index.ts) · [`workspaceContext`](../packages/context/agent-instructions/src/index.ts)
 
 Source: [`packages/examples/agent-spine-demo/src/index.ts:92`](../packages/examples/agent-spine-demo/src/index.ts)
 
-<a id="deepseek-aidsh-agent-tool-presentation"></a>
+<a id="monotykamarydsh-agent-tool-presentation"></a>
 
 ## `@monotykamary/dsh-agent-tool-presentation`
 
@@ -318,7 +318,7 @@ Depends on: [`ToolPresentationMode`](subsystems/tools.md)
 
 Source: [`packages/core/agent-tool-presentation/src/index.ts:38`](../packages/core/agent-tool-presentation/src/index.ts)
 
-<a id="deepseek-aidsh-attachment-local"></a>
+<a id="monotykamarydsh-attachment-local"></a>
 
 ## `@monotykamary/dsh-attachment-local`
 
@@ -340,7 +340,7 @@ export interface Config {
 
 Source: [`packages/attachment/attachment-local/src/index.ts:24`](../packages/attachment/attachment-local/src/index.ts)
 
-<a id="deepseek-aidsh-bash-local"></a>
+<a id="monotykamarydsh-bash-local"></a>
 
 ## `@monotykamary/dsh-bash-local`
 
@@ -366,7 +366,7 @@ export interface Config {
 
 Source: [`packages/shell/bash-local/src/index.ts:41`](../packages/shell/bash-local/src/index.ts)
 
-<a id="deepseek-aidsh-bash-sandbox"></a>
+<a id="monotykamarydsh-bash-sandbox"></a>
 
 ## `@monotykamary/dsh-bash-sandbox`
 
@@ -383,11 +383,11 @@ Requires: `subprocess` · `sandbox` · `sandboxPolicy`
 export type Config = LocalConfig
 ```
 
-Depends on: [`LocalConfig`](#deepseek-aidsh-bash-local)
+Depends on: [`LocalConfig`](#monotykamarydsh-bash-local)
 
 Source: [`packages/shell/bash-sandbox/src/index.ts:35`](../packages/shell/bash-sandbox/src/index.ts)
 
-<a id="deepseek-aidsh-client-connection"></a>
+<a id="monotykamarydsh-client-connection"></a>
 
 ## `@monotykamary/dsh-client-connection`
 
@@ -412,7 +412,7 @@ export interface ConnectionConfig {
 
 Source: [`packages/client/connection/src/index.ts:50`](../packages/client/connection/src/index.ts)
 
-<a id="deepseek-aidsh-client-hmr"></a>
+<a id="monotykamarydsh-client-hmr"></a>
 
 ## `@monotykamary/dsh-client-hmr`
 
@@ -428,7 +428,7 @@ export interface Config {
 
 Source: [`packages/client/hmr/src/index.ts:31`](../packages/client/hmr/src/index.ts)
 
-<a id="deepseek-aidsh-code-runtime-worker-thread"></a>
+<a id="monotykamarydsh-code-runtime-worker-thread"></a>
 
 ## `@monotykamary/dsh-code-runtime-worker-thread`
 
@@ -465,7 +465,7 @@ export interface Config {
 
 Source: [`packages/code-runtime/code-runtime-worker-thread/src/index.ts:25`](../packages/code-runtime/code-runtime-worker-thread/src/index.ts)
 
-<a id="deepseek-aidsh-compaction-basic"></a>
+<a id="monotykamarydsh-compaction-basic"></a>
 
 ## `@monotykamary/dsh-compaction-basic`
 
@@ -511,7 +511,7 @@ export interface ModelCompactPolicyConfig extends CompactionPolicyConfig {
 
 Source: [`packages/compaction/compaction-basic/src/types.ts:38`](../packages/compaction/compaction-basic/src/types.ts)
 
-<a id="deepseek-aidsh-compaction-tool-result-pruner"></a>
+<a id="monotykamarydsh-compaction-tool-result-pruner"></a>
 
 ## `@monotykamary/dsh-compaction-tool-result-pruner`
 
@@ -531,7 +531,7 @@ export interface ToolResultPruneConfig {
 
 Source: [`packages/compaction/compaction-tool-result-pruner/src/types.ts:4`](../packages/compaction/compaction-tool-result-pruner/src/types.ts)
 
-<a id="deepseek-aidsh-cordis-host-runner"></a>
+<a id="monotykamarydsh-cordis-host-runner"></a>
 
 ## `@monotykamary/dsh-cordis-host-runner`
 
@@ -547,7 +547,7 @@ export interface Config {
 
 Source: [`packages/extensions/cordis-host-runner/src/index.ts:88`](../packages/extensions/cordis-host-runner/src/index.ts)
 
-<a id="deepseek-aidsh-credentials-local"></a>
+<a id="monotykamarydsh-credentials-local"></a>
 
 ## `@monotykamary/dsh-credentials-local`
 
@@ -567,7 +567,7 @@ export interface Config {
 
 Source: [`packages/credentials/credentials-local/src/index.ts:55`](../packages/credentials/credentials-local/src/index.ts)
 
-<a id="deepseek-aidsh-e2b"></a>
+<a id="monotykamarydsh-e2b"></a>
 
 ## `@monotykamary/dsh-e2b`
 
@@ -585,7 +585,7 @@ export interface Config {
 
 Source: [`packages/e2b/e2b/src/index.ts:43`](../packages/e2b/e2b/src/index.ts)
 
-<a id="deepseek-aidsh-fs-local"></a>
+<a id="monotykamarydsh-fs-local"></a>
 
 ## `@monotykamary/dsh-fs-local`
 
@@ -604,7 +604,7 @@ export interface Config {
 
 Source: [`packages/fs/fs-local/src/index.ts:41`](../packages/fs/fs-local/src/index.ts)
 
-<a id="deepseek-aidsh-fs-sandbox"></a>
+<a id="monotykamarydsh-fs-sandbox"></a>
 
 ## `@monotykamary/dsh-fs-sandbox`
 
@@ -620,11 +620,11 @@ Requires: `sandboxPolicy`
 export type Config = LocalConfig
 ```
 
-Depends on: [`LocalConfig`](#deepseek-aidsh-fs-local)
+Depends on: [`LocalConfig`](#monotykamarydsh-fs-local)
 
 Source: [`packages/fs/fs-sandbox/src/index.ts:49`](../packages/fs/fs-sandbox/src/index.ts)
 
-<a id="deepseek-aidsh-goal"></a>
+<a id="monotykamarydsh-goal"></a>
 
 ## `@monotykamary/dsh-goal`
 
@@ -640,7 +640,7 @@ export interface Config {
 
 Source: [`packages/goal/goal/src/index.ts:116`](../packages/goal/goal/src/index.ts)
 
-<a id="deepseek-aidsh-headless"></a>
+<a id="monotykamarydsh-headless"></a>
 
 ## `@monotykamary/dsh-headless`
 
@@ -656,7 +656,7 @@ export interface Config {
 
 Source: [`packages/bundle/headless/src/index.ts:31`](../packages/bundle/headless/src/index.ts)
 
-<a id="deepseek-aidsh-hooks-claude-code"></a>
+<a id="monotykamarydsh-hooks-claude-code"></a>
 
 ## `@monotykamary/dsh-hooks-claude-code`
 
@@ -694,7 +694,7 @@ export interface Config {
 
 Source: [`packages/hooks/hooks-claude-code/src/index.ts:45`](../packages/hooks/hooks-claude-code/src/index.ts)
 
-<a id="deepseek-aidsh-hooks-codex"></a>
+<a id="monotykamarydsh-hooks-codex"></a>
 
 ## `@monotykamary/dsh-hooks-codex`
 
@@ -721,7 +721,7 @@ export interface Config {
 
 Source: [`packages/hooks/hooks-codex/src/index.ts:44`](../packages/hooks/hooks-codex/src/index.ts)
 
-<a id="deepseek-aidsh-host-apiproxy"></a>
+<a id="monotykamarydsh-host-apiproxy"></a>
 
 ## `@monotykamary/dsh-host-apiproxy`
 
@@ -755,7 +755,7 @@ export interface Config {
 
 Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src/index.ts)
 
-<a id="deepseek-aidsh-host-directory-picker-browse"></a>
+<a id="monotykamarydsh-host-directory-picker-browse"></a>
 
 ## `@monotykamary/dsh-host-directory-picker-browse`
 
@@ -769,7 +769,7 @@ export interface Config {
 
 Source: [`packages/host/directory-picker-browse/src/index.ts:181`](../packages/host/directory-picker-browse/src/index.ts)
 
-<a id="deepseek-aidsh-host-frontend-static"></a>
+<a id="monotykamarydsh-host-frontend-static"></a>
 
 ## `@monotykamary/dsh-host-frontend-static`
 
@@ -785,7 +785,7 @@ export interface Config {
 
 Source: [`packages/host/frontend-static/src/index.ts:28`](../packages/host/frontend-static/src/index.ts)
 
-<a id="deepseek-aidsh-host-webserver"></a>
+<a id="monotykamarydsh-host-webserver"></a>
 
 ## `@monotykamary/dsh-host-webserver`
 
@@ -801,7 +801,7 @@ export interface Config {
 
 Source: [`packages/host/webserver/src/index.ts:45`](../packages/host/webserver/src/index.ts)
 
-<a id="deepseek-aidsh-invariants"></a>
+<a id="monotykamarydsh-invariants"></a>
 
 ## `@monotykamary/dsh-invariants`
 
@@ -819,7 +819,7 @@ export interface Config {
 
 Source: [`packages/runtime-diagnostics/invariants/src/index.ts:15`](../packages/runtime-diagnostics/invariants/src/index.ts)
 
-<a id="deepseek-aidsh-jobs-local"></a>
+<a id="monotykamarydsh-jobs-local"></a>
 
 ## `@monotykamary/dsh-jobs-local`
 
@@ -836,7 +836,7 @@ export interface Config {
 
 Source: [`packages/jobs/jobs-local/src/index.ts:31`](../packages/jobs/jobs-local/src/index.ts)
 
-<a id="deepseek-aidsh-llm-deepseek"></a>
+<a id="monotykamarydsh-llm-deepseek"></a>
 
 ## `@monotykamary/dsh-llm-deepseek`
 
@@ -870,6 +870,19 @@ export interface Config {
   streamIdleTimeoutMs?: number
   /** Provider-owned model-request retry policy; omission uses normal defaults. */
   retryPolicy?: RetryPolicyConfig
+  /**
+   * Opt-in provider-request correlation headers, every field off by default
+   * so no harness telemetry header leaves without a deployment choice. The
+   * same group is valid in the `llm-deepseek:` settings section.
+   */
+  requestHeaders?: {
+    /** Send the harness-home anonymous user id as `x-deepseek-harness-user-id`. */
+    userId?: boolean
+    /** Send a request's session id as `x-deepseek-harness-session-id`. */
+    sessionId?: boolean
+    /** Mark compaction-purpose requests with `x-deepseek-harness-compact: 1`. */
+    compact?: boolean
+  }
 }
 
 /** One optional model entry advertised by the direct-fetch adapter. */
@@ -891,7 +904,7 @@ Depends on: [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
 
 Source: [`packages/llm/llm-deepseek/src/index.ts:62`](../packages/llm/llm-deepseek/src/index.ts)
 
-<a id="deepseek-aidsh-llm-pi-ai"></a>
+<a id="monotykamarydsh-llm-pi-ai"></a>
 
 ## `@monotykamary/dsh-llm-pi-ai`
 
@@ -983,7 +996,7 @@ export interface PiAiProviderProfile {
   websocketConnectTimeoutMs?: number
   /** Maximum provider idle time while one stream read is outstanding. */
   streamIdleTimeoutMs?: number
-  /** Provider-owned model-request retry policy; omission uses normal defaults. */
+  /** Provider-owned model-request retry policy; omission retries every pi-ai request failure three times. */
   retryPolicy?: RetryPolicyConfig
 }
 
@@ -1079,9 +1092,9 @@ type WithheldThinkingFormat = 'chat-template' | 'qwen-chat-template'
 
 Depends on: `Api` (`@earendil-works/pi-ai`) · `CacheRetention` (`@earendil-works/pi-ai`) · `Model` (`@earendil-works/pi-ai`) · `ModelThinkingLevel` (`@earendil-works/pi-ai`) · `OpenAICompletionsCompat` (`@earendil-works/pi-ai`) · [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts) · `ThinkingBudgets` (`@earendil-works/pi-ai`) · `Transport` (`@earendil-works/pi-ai`)
 
-Source: [`packages/llm/llm-pi-ai/src/config.ts:172`](../packages/llm/llm-pi-ai/src/config.ts)
+Source: [`packages/llm/llm-pi-ai/src/config.ts:194`](../packages/llm/llm-pi-ai/src/config.ts)
 
-<a id="deepseek-aidsh-llm-replay"></a>
+<a id="monotykamarydsh-llm-replay"></a>
 
 ## `@monotykamary/dsh-llm-replay`
 
@@ -1149,7 +1162,7 @@ Depends on: [`ModelModality`](../packages/llm/llm/src/index.ts) · [`RetryPolicy
 
 Source: [`packages/test-support/llm-replay/src/index.ts:776`](../packages/test-support/llm-replay/src/index.ts)
 
-<a id="deepseek-aidsh-llm-retry"></a>
+<a id="monotykamarydsh-llm-retry"></a>
 
 ## `@monotykamary/dsh-llm-retry`
 
@@ -1162,7 +1175,7 @@ export type Config = Readonly<Record<string, never>>
 
 Source: [`packages/llm/llm-retry/src/index.ts:24`](../packages/llm/llm-retry/src/index.ts)
 
-<a id="deepseek-aidsh-lsp-stdio"></a>
+<a id="monotykamarydsh-lsp-stdio"></a>
 
 ## `@monotykamary/dsh-lsp-stdio`
 
@@ -1204,7 +1217,7 @@ export interface LspLocalServerConfig {
 
 Source: [`packages/lsp/lsp-stdio/src/index.ts:82`](../packages/lsp/lsp-stdio/src/index.ts)
 
-<a id="deepseek-aidsh-mcp-client"></a>
+<a id="monotykamarydsh-mcp-client"></a>
 
 ## `@monotykamary/dsh-mcp-client`
 
@@ -1277,7 +1290,7 @@ export interface ReconnectConfig {
 
 Source: [`packages/mcp/mcp-client/src/index.ts:98`](../packages/mcp/mcp-client/src/index.ts)
 
-<a id="deepseek-aidsh-message-feedback"></a>
+<a id="monotykamarydsh-message-feedback"></a>
 
 ## `@monotykamary/dsh-message-feedback`
 
@@ -1293,7 +1306,7 @@ export interface Config {
 
 Source: [`packages/feedback/message-feedback/src/index.ts:49`](../packages/feedback/message-feedback/src/index.ts)
 
-<a id="deepseek-aidsh-permission-presets"></a>
+<a id="monotykamarydsh-permission-presets"></a>
 
 ## `@monotykamary/dsh-permission-presets`
 
@@ -1332,7 +1345,7 @@ Depends on: [`ApprovalPolicy`](subsystems/approval.md) · [`SandboxMode`](subsys
 
 Source: [`packages/interaction/permission-presets/src/index.ts:140`](../packages/interaction/permission-presets/src/index.ts)
 
-<a id="deepseek-aidsh-persona"></a>
+<a id="monotykamarydsh-persona"></a>
 
 ## `@monotykamary/dsh-persona`
 
@@ -1356,7 +1369,7 @@ export interface Config {
 
 Source: [`packages/preset/persona/src/index.ts:34`](../packages/preset/persona/src/index.ts)
 
-<a id="deepseek-aidsh-plan-mode"></a>
+<a id="monotykamarydsh-plan-mode"></a>
 
 ## `@monotykamary/dsh-plan-mode`
 
@@ -1372,7 +1385,7 @@ export interface PlanModeConfig {
 
 Source: [`packages/plan/plan-mode/src/index.ts:70`](../packages/plan/plan-mode/src/index.ts)
 
-<a id="deepseek-aidsh-pwsh-local"></a>
+<a id="monotykamarydsh-pwsh-local"></a>
 
 ## `@monotykamary/dsh-pwsh-local`
 
@@ -1405,7 +1418,7 @@ export interface Config {
 
 Source: [`packages/shell/pwsh-local/src/index.ts:58`](../packages/shell/pwsh-local/src/index.ts)
 
-<a id="deepseek-aidsh-pwsh-sandbox"></a>
+<a id="monotykamarydsh-pwsh-sandbox"></a>
 
 ## `@monotykamary/dsh-pwsh-sandbox`
 
@@ -1423,11 +1436,11 @@ Requires: `subprocess` · `sandbox` · `sandboxPolicy`
 export type Config = LocalConfig
 ```
 
-Depends on: [`LocalConfig`](#deepseek-aidsh-pwsh-local)
+Depends on: [`LocalConfig`](#monotykamarydsh-pwsh-local)
 
 Source: [`packages/shell/pwsh-sandbox/src/index.ts:40`](../packages/shell/pwsh-sandbox/src/index.ts)
 
-<a id="deepseek-aidsh-repeat-tool-reminder"></a>
+<a id="monotykamarydsh-repeat-tool-reminder"></a>
 
 ## `@monotykamary/dsh-repeat-tool-reminder`
 
@@ -1461,7 +1474,7 @@ export interface Config {
 
 Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guard/repeat-tool-reminder/src/index.ts)
 
-<a id="deepseek-aidsh-sandbox-local"></a>
+<a id="monotykamarydsh-sandbox-local"></a>
 
 ## `@monotykamary/dsh-sandbox-local`
 
@@ -1493,7 +1506,7 @@ export interface Config {
 
 Source: [`packages/sandbox/sandbox-local/src/index.ts:44`](../packages/sandbox/sandbox-local/src/index.ts)
 
-<a id="deepseek-aidsh-sandbox-policy"></a>
+<a id="monotykamarydsh-sandbox-policy"></a>
 
 ## `@monotykamary/dsh-sandbox-policy`
 
@@ -1520,7 +1533,7 @@ Depends on: [`SandboxMode`](subsystems/sandbox.md)
 
 Source: [`packages/sandbox/sandbox-policy/src/index.ts:67`](../packages/sandbox/sandbox-policy/src/index.ts)
 
-<a id="deepseek-aidsh-sdk-jsonrpc-server"></a>
+<a id="monotykamarydsh-sdk-jsonrpc-server"></a>
 
 ## `@monotykamary/dsh-sdk-jsonrpc-server`
 
@@ -1544,7 +1557,7 @@ Depends on: `Readable` (`node:stream`) · `Writable` (`node:stream`)
 
 Source: [`packages/sdk/server/src/index.ts:25`](../packages/sdk/server/src/index.ts)
 
-<a id="deepseek-aidsh-session-persistence-jsonl"></a>
+<a id="monotykamarydsh-session-persistence-jsonl"></a>
 
 ## `@monotykamary/dsh-session-persistence-jsonl`
 
@@ -1583,7 +1596,7 @@ export type JsonlCompression = 'zstd' | 'none'
 
 Source: [`packages/session/session-persistence-jsonl/src/index.ts:60`](../packages/session/session-persistence-jsonl/src/index.ts)
 
-<a id="deepseek-aidsh-session-persistence-sqlite"></a>
+<a id="monotykamarydsh-session-persistence-sqlite"></a>
 
 ## `@monotykamary/dsh-session-persistence-sqlite`
 
@@ -1628,7 +1641,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 Source: [`packages/session/session-persistence-sqlite/src/index.ts:70`](../packages/session/session-persistence-sqlite/src/index.ts)
 
-<a id="deepseek-aidsh-session-projection-cache"></a>
+<a id="monotykamarydsh-session-projection-cache"></a>
 
 ## `@monotykamary/dsh-session-projection-cache`
 
@@ -1651,7 +1664,7 @@ export interface Config {
 
 Source: [`packages/session/session-projection-cache/src/index.ts:42`](../packages/session/session-projection-cache/src/index.ts)
 
-<a id="deepseek-aidsh-session-query-sqlite"></a>
+<a id="monotykamarydsh-session-query-sqlite"></a>
 
 ## `@monotykamary/dsh-session-query-sqlite`
 
@@ -1697,7 +1710,7 @@ Depends on: [`SessionQueryConfig`](../packages/session-query/session-query/src/i
 
 Source: [`packages/session-query/session-query-sqlite/src/index.ts:89`](../packages/session-query/session-query-sqlite/src/index.ts)
 
-<a id="deepseek-aidsh-session-reference"></a>
+<a id="monotykamarydsh-session-reference"></a>
 
 ## `@monotykamary/dsh-session-reference`
 
@@ -1717,7 +1730,7 @@ export interface Config {
 
 Source: [`packages/context/session-reference/src/config.ts:11`](../packages/context/session-reference/src/config.ts)
 
-<a id="deepseek-aidsh-session-telemetry-otel"></a>
+<a id="monotykamarydsh-session-telemetry-otel"></a>
 
 ## `@monotykamary/dsh-session-telemetry-otel`
 
@@ -1763,7 +1776,7 @@ Depends on: `BatchLogRecordProcessorOptions` (`@opentelemetry/sdk-logs`) · `OTL
 
 Source: [`packages/session/session-telemetry-otel/src/index.ts:91`](../packages/session/session-telemetry-otel/src/index.ts)
 
-<a id="deepseek-aidsh-session-title"></a>
+<a id="monotykamarydsh-session-title"></a>
 
 ## `@monotykamary/dsh-session-title`
 
@@ -1783,7 +1796,7 @@ export interface Config {
 
 Source: [`packages/session/session-title/src/index.ts:79`](../packages/session/session-title/src/index.ts)
 
-<a id="deepseek-aidsh-session-title-all-prompts-llm"></a>
+<a id="monotykamarydsh-session-title-all-prompts-llm"></a>
 
 ## `@monotykamary/dsh-session-title-all-prompts-llm`
 
@@ -1798,7 +1811,7 @@ Depends on: [`SessionTitleLlmConfig`](../packages/session/session-title-llm/src/
 
 Source: [`packages/session/session-title-all-prompts-llm/src/index.ts:15`](../packages/session/session-title-all-prompts-llm/src/index.ts)
 
-<a id="deepseek-aidsh-session-title-first-prompt-llm"></a>
+<a id="monotykamarydsh-session-title-first-prompt-llm"></a>
 
 ## `@monotykamary/dsh-session-title-first-prompt-llm`
 
@@ -1813,7 +1826,7 @@ Depends on: [`SessionTitleLlmConfig`](../packages/session/session-title-llm/src/
 
 Source: [`packages/session/session-title-first-prompt-llm/src/index.ts:15`](../packages/session/session-title-first-prompt-llm/src/index.ts)
 
-<a id="deepseek-aidsh-settings-file"></a>
+<a id="monotykamarydsh-settings-file"></a>
 
 ## `@monotykamary/dsh-settings-file`
 
@@ -1833,7 +1846,7 @@ export interface Config {
 
 Source: [`packages/settings/settings-file/src/index.ts:21`](../packages/settings/settings-file/src/index.ts)
 
-<a id="deepseek-aidsh-shell-env"></a>
+<a id="monotykamarydsh-shell-env"></a>
 
 ## `@monotykamary/dsh-shell-env`
 
@@ -1847,7 +1860,7 @@ export interface Config {
 
 Source: [`packages/shell/shell-env/src/index.ts:29`](../packages/shell/shell-env/src/index.ts)
 
-<a id="deepseek-aidsh-skill"></a>
+<a id="monotykamarydsh-skill"></a>
 
 ## `@monotykamary/dsh-skill`
 
@@ -1861,7 +1874,7 @@ export interface Config {
 
 Source: [`packages/skill/skill/src/index.ts:279`](../packages/skill/skill/src/index.ts)
 
-<a id="deepseek-aidsh-skill-filesystem"></a>
+<a id="monotykamarydsh-skill-filesystem"></a>
 
 ## `@monotykamary/dsh-skill-filesystem`
 
@@ -1899,7 +1912,7 @@ export interface Config {
 
 Source: [`packages/skill/skill-filesystem/src/index.ts:49`](../packages/skill/skill-filesystem/src/index.ts)
 
-<a id="deepseek-aidsh-spill-local"></a>
+<a id="monotykamarydsh-spill-local"></a>
 
 ## `@monotykamary/dsh-spill-local`
 
@@ -1917,7 +1930,7 @@ export interface Config {
 
 Source: [`packages/spill/spill-local/src/index.ts:22`](../packages/spill/spill-local/src/index.ts)
 
-<a id="deepseek-aidsh-spill-policy"></a>
+<a id="monotykamarydsh-spill-policy"></a>
 
 ## `@monotykamary/dsh-spill-policy`
 
@@ -1937,7 +1950,7 @@ export interface Config {
 
 Source: [`packages/spill/spill-policy/src/index.ts:60`](../packages/spill/spill-policy/src/index.ts)
 
-<a id="deepseek-aidsh-storage-domain"></a>
+<a id="monotykamarydsh-storage-domain"></a>
 
 ## `@monotykamary/dsh-storage-domain`
 
@@ -1960,7 +1973,7 @@ export interface Config {
 
 Source: [`packages/storage/storage-domain/src/index.ts:52`](../packages/storage/storage-domain/src/index.ts)
 
-<a id="deepseek-aidsh-storage-json"></a>
+<a id="monotykamarydsh-storage-json"></a>
 
 ## `@monotykamary/dsh-storage-json`
 
@@ -1981,7 +1994,7 @@ export interface Config {
 
 Source: [`packages/storage/storage-json/src/index.ts:27`](../packages/storage/storage-json/src/index.ts)
 
-<a id="deepseek-aidsh-storage-sqlite"></a>
+<a id="monotykamarydsh-storage-sqlite"></a>
 
 ## `@monotykamary/dsh-storage-sqlite`
 
@@ -2021,7 +2034,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 Source: [`packages/storage/storage-sqlite/src/index.ts:24`](../packages/storage/storage-sqlite/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-acp"></a>
+<a id="monotykamarydsh-subagent-acp"></a>
 
 ## `@monotykamary/dsh-subagent-acp`
 
@@ -2074,7 +2087,7 @@ export type PermissionPolicy = 'allow' | 'reject'
 
 Source: [`packages/subagent/subagent-acp/src/index.ts:27`](../packages/subagent/subagent-acp/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-claude-code"></a>
+<a id="monotykamarydsh-subagent-claude-code"></a>
 
 ## `@monotykamary/dsh-subagent-claude-code`
 
@@ -2095,7 +2108,7 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-claude-code/src/index.ts:32`](../packages/subagent/subagent-claude-code/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-codex"></a>
+<a id="monotykamarydsh-subagent-codex"></a>
 
 ## `@monotykamary/dsh-subagent-codex`
 
@@ -2116,7 +2129,7 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-codex/src/index.ts:30`](../packages/subagent/subagent-codex/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-dsh-sdk"></a>
+<a id="monotykamarydsh-subagent-dsh-sdk"></a>
 
 ## `@monotykamary/dsh-subagent-dsh-sdk`
 
@@ -2169,7 +2182,7 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-dsh-sdk/src/index.ts:29`](../packages/subagent/subagent-dsh-sdk/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-fork-in-process"></a>
+<a id="monotykamarydsh-subagent-fork-in-process"></a>
 
 ## `@monotykamary/dsh-subagent-fork-in-process`
 
@@ -2185,7 +2198,7 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-fork-in-process/src/index.ts:31`](../packages/subagent/subagent-fork-in-process/src/index.ts)
 
-<a id="deepseek-aidsh-subagent-spawn-in-process"></a>
+<a id="monotykamarydsh-subagent-spawn-in-process"></a>
 
 ## `@monotykamary/dsh-subagent-spawn-in-process`
 
@@ -2201,7 +2214,7 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-spawn-in-process/src/index.ts:25`](../packages/subagent/subagent-spawn-in-process/src/index.ts)
 
-<a id="deepseek-aidsh-subprocess-e2b"></a>
+<a id="monotykamarydsh-subprocess-e2b"></a>
 
 ## `@monotykamary/dsh-subprocess-e2b`
 
@@ -2217,7 +2230,7 @@ export interface Config {
 
 Source: [`packages/e2b/subprocess-e2b/src/index.ts:25`](../packages/e2b/subprocess-e2b/src/index.ts)
 
-<a id="deepseek-aidsh-system-prompt"></a>
+<a id="monotykamarydsh-system-prompt"></a>
 
 ## `@monotykamary/dsh-system-prompt`
 
@@ -2244,7 +2257,7 @@ export interface Config {
 
 Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system-prompt/src/index.ts)
 
-<a id="deepseek-aidsh-terminal-bash"></a>
+<a id="monotykamarydsh-terminal-bash"></a>
 
 ## `@monotykamary/dsh-terminal-bash`
 
@@ -2289,7 +2302,7 @@ export interface Config {
 
 Source: [`packages/terminal/terminal-bash/src/config.ts:6`](../packages/terminal/terminal-bash/src/config.ts)
 
-<a id="deepseek-aidsh-time-context"></a>
+<a id="monotykamarydsh-time-context"></a>
 
 ## `@monotykamary/dsh-time-context`
 
@@ -2307,7 +2320,7 @@ export interface Config {
 
 Source: [`packages/context/time-context/src/index.ts:27`](../packages/context/time-context/src/index.ts)
 
-<a id="deepseek-aidsh-tmux-context"></a>
+<a id="monotykamarydsh-tmux-context"></a>
 
 ## `@monotykamary/dsh-tmux-context`
 
@@ -2323,7 +2336,7 @@ export interface Config {
 
 Source: [`packages/context/tmux-context/src/index.ts:34`](../packages/context/tmux-context/src/index.ts)
 
-<a id="deepseek-aidsh-token-meter"></a>
+<a id="monotykamarydsh-token-meter"></a>
 
 ## `@monotykamary/dsh-token-meter`
 
@@ -2334,7 +2347,7 @@ export type TokenMeterConfig = Record<string, never>
 
 Source: [`packages/llm/token-meter/src/types.ts:12`](../packages/llm/token-meter/src/types.ts)
 
-<a id="deepseek-aidsh-tool-bash"></a>
+<a id="monotykamarydsh-tool-bash"></a>
 
 ## `@monotykamary/dsh-tool-bash`
 
@@ -2350,7 +2363,7 @@ export interface Config {
 
 Source: [`packages/shell/tool-bash/src/index.ts:34`](../packages/shell/tool-bash/src/index.ts)
 
-<a id="deepseek-aidsh-tool-bash-persistent"></a>
+<a id="monotykamarydsh-tool-bash-persistent"></a>
 
 ## `@monotykamary/dsh-tool-bash-persistent`
 
@@ -2372,7 +2385,7 @@ export interface Config {
 
 Source: [`packages/shell/tool-bash-persistent/src/index.ts:405`](../packages/shell/tool-bash-persistent/src/index.ts)
 
-<a id="deepseek-aidsh-tool-fs"></a>
+<a id="monotykamarydsh-tool-fs"></a>
 
 ## `@monotykamary/dsh-tool-fs`
 
@@ -2394,7 +2407,7 @@ export interface Config {
 
 Source: [`packages/fs/tool-fs/src/index.ts:25`](../packages/fs/tool-fs/src/index.ts)
 
-<a id="deepseek-aidsh-tool-fs-search"></a>
+<a id="monotykamarydsh-tool-fs-search"></a>
 
 ## `@monotykamary/dsh-tool-fs-search`
 
@@ -2429,7 +2442,7 @@ export interface Config {
 
 Source: [`packages/fs/tool-fs-search/src/index.ts:73`](../packages/fs/tool-fs-search/src/index.ts)
 
-<a id="deepseek-aidsh-tool-goal"></a>
+<a id="monotykamarydsh-tool-goal"></a>
 
 ## `@monotykamary/dsh-tool-goal`
 
@@ -2445,7 +2458,7 @@ export interface Config {
 
 Source: [`packages/goal/tool-goal/src/index.ts:26`](../packages/goal/tool-goal/src/index.ts)
 
-<a id="deepseek-aidsh-tool-jobs"></a>
+<a id="monotykamarydsh-tool-jobs"></a>
 
 ## `@monotykamary/dsh-tool-jobs`
 
@@ -2479,7 +2492,7 @@ export type CompletionDelivery = 'quiet' | 'wakeup'
 
 Source: [`packages/jobs/tool-jobs/src/index.ts:32`](../packages/jobs/tool-jobs/src/index.ts)
 
-<a id="deepseek-aidsh-tool-lsp"></a>
+<a id="monotykamarydsh-tool-lsp"></a>
 
 ## `@monotykamary/dsh-tool-lsp`
 
@@ -2499,7 +2512,7 @@ export interface Config {
 
 Source: [`packages/lsp/tool-lsp/src/index.ts:58`](../packages/lsp/tool-lsp/src/index.ts)
 
-<a id="deepseek-aidsh-tool-pwsh"></a>
+<a id="monotykamarydsh-tool-pwsh"></a>
 
 ## `@monotykamary/dsh-tool-pwsh`
 
@@ -2515,7 +2528,7 @@ export interface Config {
 
 Source: [`packages/shell/tool-pwsh/src/index.ts:52`](../packages/shell/tool-pwsh/src/index.ts)
 
-<a id="deepseek-aidsh-tool-ralph"></a>
+<a id="monotykamarydsh-tool-ralph"></a>
 
 ## `@monotykamary/dsh-tool-ralph`
 
@@ -2537,7 +2550,7 @@ export interface Config {
 
 Source: [`packages/workflow/tool-ralph/src/index.ts:23`](../packages/workflow/tool-ralph/src/index.ts)
 
-<a id="deepseek-aidsh-tool-session-query"></a>
+<a id="monotykamarydsh-tool-session-query"></a>
 
 ## `@monotykamary/dsh-tool-session-query`
 
@@ -2555,7 +2568,7 @@ export interface Config {
 
 Source: [`packages/session-query/tool-session-query/src/index.ts:29`](../packages/session-query/tool-session-query/src/index.ts)
 
-<a id="deepseek-aidsh-tool-skill"></a>
+<a id="monotykamarydsh-tool-skill"></a>
 
 ## `@monotykamary/dsh-tool-skill`
 
@@ -2571,7 +2584,7 @@ export interface Config {
 
 Source: [`packages/skill/tool-skill/src/index.ts:61`](../packages/skill/tool-skill/src/index.ts)
 
-<a id="deepseek-aidsh-tool-str-replace-editor"></a>
+<a id="monotykamarydsh-tool-str-replace-editor"></a>
 
 ## `@monotykamary/dsh-tool-str-replace-editor`
 
@@ -2589,7 +2602,7 @@ export interface Config {
 
 Source: [`packages/fs/tool-str-replace-editor/src/index.ts:497`](../packages/fs/tool-str-replace-editor/src/index.ts)
 
-<a id="deepseek-aidsh-tool-subagent"></a>
+<a id="monotykamarydsh-tool-subagent"></a>
 
 ## `@monotykamary/dsh-tool-subagent`
 
@@ -2654,7 +2667,7 @@ Depends on: [`AgentOptions`](subsystems/core.md)
 
 Source: [`packages/subagent/tool-subagent/src/index.ts:29`](../packages/subagent/tool-subagent/src/index.ts)
 
-<a id="deepseek-aidsh-tool-subagent-report"></a>
+<a id="monotykamarydsh-tool-subagent-report"></a>
 
 ## `@monotykamary/dsh-tool-subagent-report`
 
@@ -2676,7 +2689,7 @@ Depends on: [`SubagentReportDelivery`](subsystems/subagent.md)
 
 Source: [`packages/subagent/tool-subagent-report/src/index.ts:27`](../packages/subagent/tool-subagent-report/src/index.ts)
 
-<a id="deepseek-aidsh-tool-terminal"></a>
+<a id="monotykamarydsh-tool-terminal"></a>
 
 ## `@monotykamary/dsh-tool-terminal`
 
@@ -2694,7 +2707,7 @@ export interface Config {
 
 Source: [`packages/terminal/tool-terminal/src/index.ts:35`](../packages/terminal/tool-terminal/src/index.ts)
 
-<a id="deepseek-aidsh-tool-todo"></a>
+<a id="monotykamarydsh-tool-todo"></a>
 
 ## `@monotykamary/dsh-tool-todo`
 
@@ -2716,7 +2729,7 @@ export interface Config {
 
 Source: [`packages/todo/tool-todo/src/index.ts:29`](../packages/todo/tool-todo/src/index.ts)
 
-<a id="deepseek-aidsh-tool-web"></a>
+<a id="monotykamarydsh-tool-web"></a>
 
 ## `@monotykamary/dsh-tool-web`
 
@@ -2742,7 +2755,7 @@ export interface Config {
 
 Source: [`packages/web/tool-web/src/index.ts:37`](../packages/web/tool-web/src/index.ts)
 
-<a id="deepseek-aidsh-tool-workflow"></a>
+<a id="monotykamarydsh-tool-workflow"></a>
 
 ## `@monotykamary/dsh-tool-workflow`
 
@@ -2760,7 +2773,7 @@ export interface Config {
 
 Source: [`packages/workflow/tool-workflow/src/index.ts:33`](../packages/workflow/tool-workflow/src/index.ts)
 
-<a id="deepseek-aidsh-tools"></a>
+<a id="monotykamarydsh-tools"></a>
 
 ## `@monotykamary/dsh-tools`
 
@@ -2796,7 +2809,7 @@ export type ToolPresentationMode = 'native' | 'code' | 'both'
 
 Source: [`packages/core/tools/src/index.ts:654`](../packages/core/tools/src/index.ts)
 
-<a id="deepseek-aidsh-typert-loader"></a>
+<a id="monotykamarydsh-typert-loader"></a>
 
 ## `@monotykamary/dsh-typert-loader`
 
@@ -2812,7 +2825,7 @@ export interface Config {
 
 Source: [`packages/typert/loader/src/index.ts:47`](../packages/typert/loader/src/index.ts)
 
-<a id="deepseek-aidsh-user-approval"></a>
+<a id="monotykamarydsh-user-approval"></a>
 
 ## `@monotykamary/dsh-user-approval`
 
@@ -2843,7 +2856,7 @@ export type ApprovalPolicy = 'ask' | 'never'
 
 Source: [`packages/interaction/user-approval/src/index.ts:177`](../packages/interaction/user-approval/src/index.ts)
 
-<a id="deepseek-aidsh-web"></a>
+<a id="monotykamarydsh-web"></a>
 
 ## `@monotykamary/dsh-web`
 
@@ -2864,7 +2877,7 @@ export interface WebRuntimeConfig {
 
 Source: [`packages/web/web/src/index.ts:55`](../packages/web/web/src/index.ts)
 
-<a id="deepseek-aidsh-web-app"></a>
+<a id="monotykamarydsh-web-app"></a>
 
 ## `@monotykamary/dsh-web-app`
 
@@ -2889,7 +2902,7 @@ export interface Config {
 
 Source: [`packages/bundle/web-app/src/index.ts:38`](../packages/bundle/web-app/src/index.ts)
 
-<a id="deepseek-aidsh-web-fetch-http"></a>
+<a id="monotykamarydsh-web-fetch-http"></a>
 
 ## `@monotykamary/dsh-web-fetch-http`
 
@@ -2915,7 +2928,7 @@ export interface Config {
 
 Source: [`packages/web/web-fetch-http/src/index.ts:34`](../packages/web/web-fetch-http/src/index.ts)
 
-<a id="deepseek-aidsh-web-search-deepseek"></a>
+<a id="monotykamarydsh-web-search-deepseek"></a>
 
 ## `@monotykamary/dsh-web-search-deepseek`
 
@@ -2943,7 +2956,7 @@ export interface Config {
 
 Source: [`packages/web/web-search-deepseek/src/index.ts:46`](../packages/web/web-search-deepseek/src/index.ts)
 
-<a id="deepseek-aidsh-web-search-exa"></a>
+<a id="monotykamarydsh-web-search-exa"></a>
 
 ## `@monotykamary/dsh-web-search-exa`
 
@@ -2967,7 +2980,7 @@ export interface Config {
 
 Source: [`packages/web/web-search-exa/src/index.ts:38`](../packages/web/web-search-exa/src/index.ts)
 
-<a id="deepseek-aidsh-web-search-perplexity"></a>
+<a id="monotykamarydsh-web-search-perplexity"></a>
 
 ## `@monotykamary/dsh-web-search-perplexity`
 
@@ -2991,7 +3004,7 @@ export interface Config {
 
 Source: [`packages/web/web-search-perplexity/src/index.ts:32`](../packages/web/web-search-perplexity/src/index.ts)
 
-<a id="deepseek-aidsh-workflow-worker-thread"></a>
+<a id="monotykamarydsh-workflow-worker-thread"></a>
 
 ## `@monotykamary/dsh-workflow-worker-thread`
 

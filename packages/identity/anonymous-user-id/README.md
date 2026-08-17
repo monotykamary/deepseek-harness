@@ -12,7 +12,7 @@ Reads and writes are synchronous because both boot-time telemetry construction a
 
 ## Composition
 
-This package is a shared library, not a Cordis plugin. Consumers import `getOrCreateAnonymousUserId()` directly. Its invariant companion is intentionally empty because the package owns no event stream or public mutable relation that can be checked without creating the identity as a side effect. `DSH_TELEMETRY_DISABLED` stops telemetry export only; it does not suppress direct feedback acknowledgement or the DeepSeek provider header.
+This package is a shared library, not a Cordis plugin. Consumers import `getOrCreateAnonymousUserId()` directly. Its invariant companion is intentionally empty because the package owns no event stream or public mutable relation that can be checked without creating the identity as a side effect. The identity never leaves the process by itself: no shipped profile mounts a telemetry backend, the `/feedback` acknowledgement only displays it, and the DeepSeek provider header that carries it defaults off behind `requestHeaders.userId`.
 
 ## Model Experience
 

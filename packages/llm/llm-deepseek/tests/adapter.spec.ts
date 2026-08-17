@@ -80,9 +80,10 @@ describe('DeepSeekAdapter against a mock server', () => {
       stream: true,
       stream_options: { include_usage: true },
     })
-    // App attribution and DeepSeek request identity are independent wire facts.
+    // App attribution ships on every request; harness correlation headers
+    // stay off until a deployment enables them through requestHeaders.
     expect(server.headers[0]?.['user-agent']).toBe(userAgent())
-    expect(server.headers[0]?.['x-deepseek-harness-user-id']).toBe(getOrCreateAnonymousUserId())
+    expect(server.headers[0]).not.toHaveProperty('x-deepseek-harness-user-id')
     expect(server.headers[0]).not.toHaveProperty('x-deepseek-harness-session-id')
     expect(server.headers[0]).not.toHaveProperty('http-referer')
     expect(server.headers[0]).not.toHaveProperty('x-openrouter-title')
@@ -108,9 +109,9 @@ describe('DeepSeekAdapter against a mock server', () => {
     expect(kinds).toEqual(['block-start', 'text-delta', 'block-end', 'usage', 'finish'])
   })
 
-  it('forwards the harness user and session ids for host-side trajectory routing', async () => {
+  it('forwards the harness user and session ids when their headers are enabled', async () => {
     const server = await mockServer([{ kind: 'sse', events: textEvents }])
-    const ctx = await harness(server.url)
+    const ctx = await harness(server.url, { requestHeaders: { userId: true, sessionId: true } })
 
     await assemble(ctx, {
       model: 'deepseek-v4-flash',
@@ -125,9 +126,39 @@ describe('DeepSeekAdapter against a mock server', () => {
     expect(server.headers[0]?.['x-deepseek-harness-user-id']).toBe(getOrCreateAnonymousUserId())
   })
 
-  it('marks the auxiliary compaction call on the wire', async () => {
+  it('resolves the anonymous id only when the userId header is enabled', async () => {
+    // A disabled header must not call the resolver: creating
+    // $DSH_HOME/.anonymous-user-id as a request side effect would defeat the
+    // default-off stance.
+    const server = await mockServer([
+      { kind: 'sse', events: textEvents },
+      { kind: 'sse', events: textEvents },
+    ])
+    const resolveUserId = vi.fn(() => TEST_USER_ID)
+    const drain = async (adapter: DeepSeekAdapter): Promise<void> => {
+      for await (const _chunk of adapter.stream({ provider: 'deepseek-official', model: 'm', messages: [] })) { /* drain */ }
+    }
+
+    await drain(new DeepSeekAdapter({
+      options: () => resolveAdapterOptions({ baseURL: server.url }),
+      resolveApiKey: () => Promise.resolve('k'),
+      resolveUserId,
+    }))
+    expect(resolveUserId).not.toHaveBeenCalled()
+    expect(server.headers[0]).not.toHaveProperty('x-deepseek-harness-user-id')
+
+    await drain(new DeepSeekAdapter({
+      options: () => resolveAdapterOptions({ baseURL: server.url, requestHeaders: { userId: true } }),
+      resolveApiKey: () => Promise.resolve('k'),
+      resolveUserId,
+    }))
+    expect(resolveUserId).toHaveBeenCalledTimes(1)
+    expect(server.headers[1]?.['x-deepseek-harness-user-id']).toBe(TEST_USER_ID)
+  })
+
+  it('marks the auxiliary compaction call on the wire when enabled', async () => {
     const server = await mockServer([{ kind: 'sse', events: textEvents }])
-    const ctx = await harness(server.url)
+    const ctx = await harness(server.url, { requestHeaders: { compact: true } })
 
     await assemble(ctx, {
       model: 'deepseek-v4-flash',
@@ -1011,7 +1042,7 @@ describe('plugin registration and config', () => {
 
   it('resolves connection facts and the credential exactly once per stream call', async () => {
     const server = await mockServer([{ kind: 'sse', events: textEvents }])
-    const options = vi.fn(() => resolveAdapterOptions({ baseURL: server.url }))
+    const options = vi.fn(() => resolveAdapterOptions({ baseURL: server.url, requestHeaders: { userId: true } }))
     const resolveApiKey = vi.fn(() => Promise.resolve('per-request-key'))
     const resolveUserId = vi.fn(() => TEST_USER_ID)
     const adapter = new DeepSeekAdapter({ options, resolveApiKey, resolveUserId })

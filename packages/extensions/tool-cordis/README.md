@@ -59,7 +59,7 @@ Namespace plugin: named exports `name` / `inject` / `apply`, no default export (
 
 #### What the model sees
 
-The conversation model sees the generated [`cordis_inspect`, `cordis_define`, `cordis_run`, `cordis_stop`, and `cordis_undefine` schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-cordis) whenever this plugin is visible.
+The conversation model sees the generated [`cordis_inspect`, `cordis_define`, `cordis_run`, `cordis_stop`, and `cordis_undefine` schemas](../../../docs/tool-catalog.md#monotykamarydsh-tool-cordis) whenever this plugin is visible.
 
 #### Token effect
 

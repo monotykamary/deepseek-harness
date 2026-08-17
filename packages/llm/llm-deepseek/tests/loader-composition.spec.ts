@@ -117,10 +117,12 @@ describe('llm-deepseek real dynamic composition', () => {
     expect(ctx.get('settings')!.describe().map(entry => entry.ns)).toEqual([NS])
     await assemble(ctx, { model: 'deepseek-v4-flash', messages: [] })
     expect(serverA.headers[0]?.authorization).toBe('Bearer boot-key')
-    expect(serverA.headers[0]?.['x-deepseek-harness-user-id']).toBe(getOrCreateAnonymousUserId())
+    expect(serverA.headers[0]).not.toHaveProperty('x-deepseek-harness-user-id')
 
-    // External edits, exactly as a user or the web UI would leave them on disk.
-    await writeFile(settingsPath, `llm-deepseek:\n  baseURL: ${serverB.url}\n`)
+    // External edits, exactly as a user or the web UI would leave them on
+    // disk; enabling the opt-in header here proves the settings-document path
+    // reaches the very next request.
+    await writeFile(settingsPath, `llm-deepseek:\n  baseURL: ${serverB.url}\n  requestHeaders:\n    userId: true\n`)
     await vi.waitFor(() => {
       expect((ctx.get('settings')!.get(NS) as { baseURL?: string }).baseURL).toBe(serverB.url)
     }, { timeout: 5000 })
@@ -132,6 +134,7 @@ describe('llm-deepseek real dynamic composition', () => {
     await assemble(ctx, { model: 'deepseek-v4-flash', messages: [] })
     expect(serverA.requests).toHaveLength(1)
     expect(serverB.headers[0]?.authorization).toBe('Bearer rotated-key')
+    expect(serverB.headers[0]?.['x-deepseek-harness-user-id']).toBe(getOrCreateAnonymousUserId())
   })
 
   it('keeps a stored key writable and rotatable across a real restart', async () => {

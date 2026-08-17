@@ -12,18 +12,17 @@ The user id is transport metadata, not model input. It must not enter the reques
 
 ## Decision
 
-`dsh-llm-deepseek` sends `x-deepseek-harness-user-id` on every provider request sent after successful credential resolution. The value comes from `@monotykamary/dsh-anonymous-user-id` and therefore matches the OpenTelemetry Resource `user.id` and `/feedback` acknowledgement for the same `$DSH_HOME`. The adapter continues to send `x-deepseek-harness-session-id` only when `GenerateOptions.sessionId` is present; the agent loop supplies the current durable `Session.id` for ordinary agent, title-generation, and compaction requests.
+`dsh-llm-deepseek` sends `x-deepseek-harness-user-id` only when `requestHeaders.userId` is enabled; the [headers-opt-in decision](2026-08-17-deepseek-request-headers-opt-in.md) made every harness correlation header default off. When enabled, the value comes from `@monotykamary/dsh-anonymous-user-id` and therefore matches the OpenTelemetry Resource `user.id` and `/feedback` acknowledgement for the same `$DSH_HOME`. The adapter sends `x-deepseek-harness-session-id` only when `requestHeaders.sessionId` is enabled and `GenerateOptions.sessionId` is present; the agent loop supplies the current durable `Session.id` for ordinary agent, title-generation, and compaction requests. `requestHeaders.compact` gates `x-deepseek-harness-compact: 1` on compaction-purpose requests.
 
-The plugin resolves the user id lazily after credentials succeed and memoizes it for that plugin instance. A missing credential therefore does not create `.anonymous-user-id`, while the first authorized provider request can create it even when `DSH_TELEMETRY_DISABLED` is set. The direct adapter constructor accepts a `resolveUserId` dependency so wire behavior remains deterministic in unit tests.
+The plugin resolves the user id lazily after credentials succeed and memoizes it for that plugin instance. A missing credential therefore does not create `.anonymous-user-id`, and a disabled userId header never calls the resolver, so the first authorized provider request can create the id only when the header is enabled. The direct adapter constructor accepts a `resolveUserId` dependency so wire behavior remains deterministic in unit tests.
 
-Both headers are model-hidden HTTP metadata sent to the resolved `baseURL`. They are absent from the JSON request body and do not become model-visible inputs or session events. A configured gateway receives them. SessionTelemetryBackend sharing controls only telemetry export and does not disable provider request identity.
+Enabled headers are model-hidden HTTP metadata sent to the resolved `baseURL`. They are absent from the JSON request body and do not become model-visible inputs or session events. A configured gateway receives them. SessionTelemetryBackend sharing controls only telemetry export; provider request identity is gated by `requestHeaders`.
 
 ## Verification
 
-- The mock provider asserts that an authorized request carries the same user id returned by `getOrCreateAnonymousUserId()` and omits the session header when no session id is supplied.
-- The session-identity wire test asserts both headers and preserves the exact supplied session id.
-- A direct-adapter test asserts that user-id resolution happens once per stream, while the keyless configuration test proves a credential failure does not create `.anonymous-user-id`.
-- The real Loader composition test asserts that the assembled plugin uses the shared user-id package rather than a test-only value.
+- The mock provider asserts that an authorized request omits every harness header by default, and that the enabled configuration carries the same user id returned by `getOrCreateAnonymousUserId()` plus the exact supplied session id.
+- A direct-adapter test asserts that the id resolver is never called while the userId header is off and resolves once per stream when enabled; the keyless configuration test proves a credential failure does not create `.anonymous-user-id`.
+- The real Loader composition test asserts the default wire carries no harness header and that enabling `requestHeaders.userId` through a settings-document edit reaches the very next request.
 - No keyless snapshot changes because the headers are not model-visible or user-visible transcript content.
 
 ## Alternatives considered
@@ -38,7 +37,7 @@ Both headers are model-hidden HTTP metadata sent to the resolved `baseURL`. They
 
 ## Consequences
 
-- DeepSeek support can correlate requests across sessions by one anonymous harness-home id and within a conversation by the durable session id.
-- The first authorized DeepSeek request may create `$DSH_HOME/.anonymous-user-id` independently of telemetry export.
-- Custom DeepSeek gateways receive the stable user id and any available session id, so operators must treat the configured `baseURL` as an identity recipient.
+- DeepSeek support can correlate requests across sessions by one anonymous harness-home id and within a conversation by the durable session id, once the deployment enables the headers.
+- The first authorized DeepSeek request creates `$DSH_HOME/.anonymous-user-id` only while `requestHeaders.userId` is enabled, independently of any telemetry export.
+- Custom DeepSeek gateways receive the stable user id and any available session id only when the matching header is enabled, so operators must treat the configured `baseURL` as an identity recipient.
 - The request body, prompt, token count, KV-cache identity, and session log remain unchanged.

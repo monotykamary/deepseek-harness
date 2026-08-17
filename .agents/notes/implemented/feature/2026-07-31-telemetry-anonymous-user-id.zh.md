@@ -6,7 +6,7 @@ Status: implemented
 
 ## 问题
 
-session telemetry 已默认挂载（[默认挂载 Note](2026-07-31-web-telemetry-default-mount.md)），但 OTel Resource 只有 `service.name`/`service.version`，没有任何用户级标识——接收端无法按用户聚合、无法数活跃用户。此前唯一相关口径是一条未实现的「hostname/本机 IP 哈希派生 user.id」裁定。需要给 OTel 回流一个语义干净的匿名用户身份。
+session telemetry 是任何随附 profile 都不挂载的可选能力（[移除共享遥测挂载 Note](../simplification/2026-08-17-remove-shared-session-telemetry-mount.md)），但自行组合 OTel 后端的部署发现其 Resource 只有 `service.name`/`service.version`，没有任何用户级标识——接收端无法按用户聚合、无法数活跃用户。此前唯一相关口径是一条未实现的「hostname/本机 IP 哈希派生 user.id」裁定。需要给 OTel 回流一个语义干净的匿名用户身份。
 
 ## 决策
 
@@ -23,7 +23,7 @@ session telemetry 已默认挂载（[默认挂载 Note](2026-07-31-web-telemetry
 | 上报位置 | Resource 属性，非逐条 attributes | 每批一次即够接收端按 Resource 维度聚合；逐条注入要动 seam 约定且涨 wire 体积 |
 | semconv 依赖 | 不引 `@opentelemetry/semantic-conventions` 包 | 一个字符串常量不值一个依赖 |
 | 落点 | `@monotykamary/dsh-anonymous-user-id`，由 OTel 后端、`/feedback` 与直连 DeepSeek 请求共享 | 消费方共用同一存储契约，且不依赖导出后端 |
-| 单独开关 | 无 | 任一消费方都可创建该身份；`DSH_TELEMETRY_DISABLED` 会停止遥测上报，但不会禁用反馈确认或 DeepSeek 请求头 |
+| 单独开关 | 无 | 任一消费方都可创建该身份；携带它的 DeepSeek 请求头默认关闭，需经 `requestHeaders.userId` 启用，且任何随附 profile 都不挂载遥测后端 |
 
 ## 考虑过的替代方案
 
@@ -37,7 +37,7 @@ session telemetry 已默认挂载（[默认挂载 Note](2026-07-31-web-telemetry
 
 ## 后果
 
-- 一个 `$DSH_HOME` 在 OTel 回流中是一个稳定用户；不同 home 在构造上就是不同用户，无跨 home 关联机制。
-- OTel 回流、`/feedback` 与直连 DeepSeek 请求共享 `.anonymous-user-id`。
+- 一个 `$DSH_HOME` 对任何已挂载的 OTel 后端都是一个稳定用户；不同 home 在构造上就是不同用户，无跨 home 关联机制。
+- 任何已挂载的 OTel 后端、`/feedback` 与（启用后的）直连 DeepSeek 请求共享 `.anonymous-user-id`。
 - 删除 `.anonymous-user-id` 即重置身份（下次启动生效）；home 不可写时每进程各自持有一个内存 id 直至恢复可写。
-- [默认挂载 Note](2026-07-31-web-telemetry-default-mount.md) 的身份 follow-up 中「匿名用户 id」项由本决定关闭；hostname/surface 维度与脱敏规则、usage-metrics track 仍是待办。
+- hostname/surface 维度、脱敏规则与 usage-metrics track 对自行组合后端的部署仍是待办。

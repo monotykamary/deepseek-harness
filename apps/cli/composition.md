@@ -50,8 +50,6 @@ flowchart LR
   cfg --> plugin_dsh_base_session_query_sqlite
   plugin_dsh_base_session_projection["session-projection<br/>@monotykamary/dsh-session-projection"]
   cfg --> plugin_dsh_base_session_projection
-  plugin_dsh_base_session_telemetry_otel["session-telemetry-otel<br/>@monotykamary/dsh-session-telemetry-otel"]
-  cfg --> plugin_dsh_base_session_telemetry_otel
   plugin_dsh_base_subprocess["subprocess<br/>@monotykamary/dsh-subprocess-local"]
   cfg --> plugin_dsh_base_subprocess
   plugin_dsh_base_sandbox["sandbox<br/>@monotykamary/dsh-sandbox-local"]
@@ -189,7 +187,6 @@ flowchart LR
 | `attachment-local` | `@monotykamary/dsh-attachment-local` |
 | `session-query-sqlite` | `@monotykamary/dsh-session-query-sqlite` |
 | `session-projection` | `@monotykamary/dsh-session-projection` |
-| `session-telemetry-otel` | `@monotykamary/dsh-session-telemetry-otel` |
 | `subprocess` | `@monotykamary/dsh-subprocess-local` |
 | `sandbox` | `@monotykamary/dsh-sandbox-local` |
 | `sandbox-policy` | `@monotykamary/dsh-sandbox-policy` |

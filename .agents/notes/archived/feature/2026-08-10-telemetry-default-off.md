@@ -1,6 +1,7 @@
 # Agent Note: SessionTelemetryBackend requires explicit opt-in
 
 Status: implemented
+Archived: 2026-08-17
 
 English | [中文](2026-08-10-telemetry-default-off.zh.md)
 

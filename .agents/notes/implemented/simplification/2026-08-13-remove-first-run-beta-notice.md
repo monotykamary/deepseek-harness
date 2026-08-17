@@ -6,11 +6,11 @@ English | [中文](2026-08-13-remove-first-run-beta-notice.zh.md)
 
 ## Problem
 
-Every GUI first launch opened with a full-viewport internal-test statement (内测声明): internal-beta framing plus instructions for enabling Session Log upload through `DSH_TELEMETRY_MODE`. Session telemetry already resolves to `DISABLED` when its mode is unset ([telemetry default-off](../feature/2026-08-10-telemetry-default-off.md)), so the only onboarding content about telemetry was a prompt explaining how to turn it on, and the internal-test framing itself must not ship in a release build.
+Every GUI first launch opened with a full-viewport internal-test statement (内测声明): internal-beta framing plus instructions for enabling Session Log upload through `DSH_TELEMETRY_MODE`. No shipped profile mounts session telemetry ([telemetry-mount-removal](2026-08-17-remove-shared-session-telemetry-mount.md)), so the only onboarding content about telemetry was a prompt explaining how to turn it on, and the internal-test framing itself must not ship in a release build.
 
 ## Decision
 
-This decision removed the first-run notice from the assembled product rather than rewording it. `ui-settings-general` seated no `settings.onboarding` step; the notice component, acknowledgement store, copy owner, and locale keys were deleted, while the Host kept the `ui-onboarding` namespace so stored documents remained valid. The later [shared-modal product onboarding](../feature/2026-08-13-shared-modal-product-onboarding.md) restores a new concise testing-stage notice in `ui-settings-models`, reusing that field and backend contract without restoring the removed takeover layout or telemetry instructions. Telemetry opt-in remains an explicit deployment environment choice documented in the [CLI reference README](../../../../apps/cli/reference/README.md); the restored notice says nothing about enabling it.
+This decision removed the first-run notice from the assembled product rather than rewording it. `ui-settings-general` seated no `settings.onboarding` step; the notice component, acknowledgement store, copy owner, and locale keys were deleted, while the Host kept the `ui-onboarding` namespace so stored documents remained valid. The later [shared-modal product onboarding](../feature/2026-08-13-shared-modal-product-onboarding.md) restores a new concise testing-stage notice in `ui-settings-models`, reusing that field and backend contract without restoring the removed takeover layout or telemetry instructions. No shipped profile exports telemetry; deployments that want OTLP reporting compose their own row, as documented in the [CLI reference README](../../../../apps/cli/reference/README.md); the restored notice says nothing about enabling it.
 
 ## Alternatives considered
 

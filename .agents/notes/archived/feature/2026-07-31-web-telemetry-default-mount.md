@@ -1,6 +1,7 @@
 # Agent Note: Default session-telemetry mount (OTel reporting) in the dsh web composition
 
 Status: implemented
+Archived: 2026-08-17
 
 English | [中文](2026-07-31-web-telemetry-default-mount.zh.md)
 

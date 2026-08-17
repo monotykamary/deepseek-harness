@@ -64,20 +64,19 @@ async function bootWeb(
     // back on the next run, so a stored document from any other build decides
     // this test's boot. Same reason the settings row above is pinned.
     { id: 'storage-json', config: { root: storageRoot } },
-    // Host rows with side effects outside this process: a bound port, a served
-    // asset tree, a telemetry exporter. `api-gateway` and `directory-picker`
-    // stay ENABLED on purpose — the api-proxy is the host row that injects
-    // `subagents`, `workspace`, and the rest of the agent plane, so disabling
-    // it would hide exactly the breakage this file exists to catch: a service
-    // moved into the presets that a host row still waits for. The boot audit
-    // is that assertion.
+    // Host rows with side effects outside this process: a bound port and a
+    // served asset tree. `api-gateway` and `directory-picker` stay ENABLED on
+    // purpose — the api-proxy is the host row that injects `subagents`,
+    // `workspace`, and the rest of the agent plane, so disabling it would
+    // hide exactly the breakage this file exists to catch: a service moved
+    // into the presets that a host row still waits for. The boot audit is
+    // that assertion.
     { id: 'webserver', disabled: true },
     // The web bundle's runtime row injects `webServer`, so it cannot
     // activate without the bound port disabled above. It owns dist serving
     // and the URL prompt line — surface glue, not anything that decides an
     // agent's capabilities, which is all this file asserts.
     { id: 'web-runtime', disabled: true },
-    { id: 'session-telemetry-otel', disabled: true },
     // A deployment-level skill on the host registry's GLOBAL layer — the same
     // registration shape a repository plugin's skill root uses. The layered
     // skills test below proves it reaches preset-composed agents.

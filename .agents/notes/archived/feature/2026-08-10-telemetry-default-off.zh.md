@@ -1,6 +1,7 @@
 # Agent Note: 遥测必须显式启用
 
 Status: implemented
+Archived: 2026-08-17
 
 [English](2026-08-10-telemetry-default-off.md) | 中文
 

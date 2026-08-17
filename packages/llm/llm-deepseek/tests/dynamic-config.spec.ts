@@ -8,6 +8,7 @@ import { credentialRef } from '@monotykamary/dsh-credentials'
 import { LocalCredentialProvider } from '@monotykamary/dsh-credentials-local'
 import { settingsNamespace } from '@monotykamary/dsh-settings'
 import { FileSettingsProvider } from '@monotykamary/dsh-settings-file'
+import { getOrCreateAnonymousUserId } from '@monotykamary/dsh-anonymous-user-id'
 import * as LlmDeepSeek from '@monotykamary/dsh-llm-deepseek'
 import { assemble } from './assemble.ts'
 import { closeMockServers, mockServer, textEvents } from './mock-server.ts'
@@ -91,6 +92,24 @@ describe('request-level dynamic configuration', () => {
     await ctx.credentials.set(KEY_REF, 'sk-arrived')
     await prompt(ctx)
     expect(server.headers[0]?.authorization).toBe('Bearer sk-arrived')
+    expect(server.headers[0]).not.toHaveProperty('x-deepseek-harness-user-id')
+    // The userId header is off by default, so no provider request creates the identity.
+    await expect(access(join(dir, '.anonymous-user-id'))).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  it('creates the anonymous id on the first authorized request only when the userId header is enabled', async () => {
+    vi.stubEnv('DEEPSEEK_API_KEY', '')
+    const dir = await home()
+    const server = await mockServer([{ kind: 'sse', events: textEvents }])
+    const { ctx } = await boot(dir, { baseURL: server.url, requestHeaders: { userId: true } })
+
+    const keyless = await prompt(ctx)
+    expect(keyless.finish).toMatchObject({ kind: 'error', failure: { code: 'MISSING_CREDENTIAL' } })
+    await expect(access(join(dir, '.anonymous-user-id'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await ctx.credentials.set(KEY_REF, 'sk-arrived')
+    await prompt(ctx)
+    expect(server.headers[0]?.authorization).toBe('Bearer sk-arrived')
+    expect(server.headers[0]?.['x-deepseek-harness-user-id']).toBe(getOrCreateAnonymousUserId())
     await expect(access(join(dir, '.anonymous-user-id'))).resolves.toBeUndefined()
   })
 

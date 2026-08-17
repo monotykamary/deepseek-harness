@@ -27,6 +27,10 @@ The package root exposes the Cordis plugin contract and `DeepSeekAdapter`; wire 
         maxDelayMs: 10000
         jitterRatio: 0.1
     defaultContextWindow: 1000000 # optional positive-integer fallback; this is the default
+    requestHeaders:          # optional; every field off by default — no harness correlation header ships without opting in
+      userId: true           # send x-deepseek-harness-user-id (the harness-home anonymous id)
+      sessionId: true        # send x-deepseek-harness-session-id when a request carries a session id
+      compact: true          # send x-deepseek-harness-compact: 1 on compaction-purpose requests
     models:                  # optional; defaults to V4 Flash and V4 Pro
       - id: deepseek-v4-flash
         name: DeepSeek-V4-Flash
@@ -60,9 +64,9 @@ The plugin also declares its route in the configurable-provider directory (`ctx.
 
 ## App attribution
 
-Every request carries the shared attribution header from dsh-llm's `attributionHeaders()` - the mandatory `User-Agent` baseline identifying the harness (see [dsh-llm § App attribution](../llm/README.md#app-attribution-attributionts)). Direct DeepSeek requests and OpenAI-compatible gateway requests get no provider-specific app-attribution headers under this adapter contract; OpenRouter app attribution is deferred to a future explicit OpenRouter adapter or mode. A request whose `GenerateOptions.purpose` is `compaction` (dsh-compaction-basic's auxiliary summarization call) additionally carries `x-deepseek-harness-compact: 1`, so the host can separate compaction traffic from conversation requests.
+Every request carries the shared attribution header from dsh-llm's `attributionHeaders()` - the mandatory `User-Agent` baseline identifying the harness (see [dsh-llm § App attribution](../llm/README.md#app-attribution-attributionts)). Direct DeepSeek requests and OpenAI-compatible gateway requests get no provider-specific app-attribution headers under this adapter contract; OpenRouter app attribution is deferred to a future explicit OpenRouter adapter or mode.
 
-DeepSeek request identity is separate from app attribution. After credential resolution, every provider request carries `x-deepseek-harness-user-id` with the stable anonymous id from [`@monotykamary/dsh-anonymous-user-id`](../../identity/anonymous-user-id/README.md); a request carrying `GenerateOptions.sessionId` also sends that exact value as `x-deepseek-harness-session-id`, while a direct call without a session omits the session header. Both headers go to the resolved `baseURL`, including a configured gateway, and remain outside the request body and model-visible content.
+DeepSeek request identity is separate from app attribution and opt-in: all three harness correlation headers default off, so a request sends none of them unless the deployment enables the matching `requestHeaders` field. `requestHeaders.userId` sends `x-deepseek-harness-user-id` with the stable anonymous id from [`@monotykamary/dsh-anonymous-user-id`](../../identity/anonymous-user-id/README.md) (resolved lazily after credentials succeed, so the id file is never created while the header is off); `requestHeaders.sessionId` sends a request's `GenerateOptions.sessionId` value as `x-deepseek-harness-session-id`; `requestHeaders.compact` marks `GenerateOptions.purpose: 'compaction'` calls (dsh-compaction-basic's auxiliary summarization) with `x-deepseek-harness-compact: 1`, so the host can separate compaction traffic from conversation requests. Sent headers go to the resolved `baseURL`, including a configured gateway, and remain outside the request body and model-visible content. The same fields are valid in the `llm-deepseek:` settings section and reach the next request without a restart.
 
 ## Wire-format notes
 

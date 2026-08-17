@@ -6,7 +6,7 @@ English | [中文](2026-07-31-telemetry-anonymous-user-id.zh.md)
 
 ## Problem
 
-Session telemetry is mounted by default ([default-mount Note](2026-07-31-web-telemetry-default-mount.md)), but the OTel Resource carried only `service.name`/`service.version` — no user-level identity at all, so the collector could neither aggregate per user nor count active users. The only prior ruling on point was an unimplemented one to derive a user id by hashing the hostname/local IP. The OTel feed needed an anonymous user identity with clean semantics.
+Session telemetry is an optional capability no shipped profile mounts ([telemetry-mount-removal Note](../simplification/2026-08-17-remove-shared-session-telemetry-mount.md)), but a deployment composing the OTel backend found its Resource carrying only `service.name`/`service.version` — no user-level identity at all, so the collector could neither aggregate per user nor count active users. The only prior ruling on point was an unimplemented one to derive a user id by hashing the hostname/local IP. The OTel feed needed an anonymous user identity with clean semantics.
 
 ## Decision
 
@@ -23,7 +23,7 @@ Session telemetry is mounted by default ([default-mount Note](2026-07-31-web-tel
 | Report position | Resource attribute, not per-record attributes | Once per batch suffices for Resource-dimension aggregation; per-record injection would touch the seam contract and grow the wire |
 | semconv dependency | `@opentelemetry/semantic-conventions` is not imported | One string constant does not justify a dependency |
 | Home | `@monotykamary/dsh-anonymous-user-id`, shared by the OTel backend, `/feedback`, and direct DeepSeek requests | Consumers share one storage contract without depending on an exporter backend |
-| Separate switch | None | Any consumer can create the identity; `DSH_TELEMETRY_DISABLED` stops telemetry reporting but does not disable feedback acknowledgement or the DeepSeek request header |
+| Separate switch | None | Any consumer can create the identity; the DeepSeek request header that carries it defaults off behind `requestHeaders.userId` and no shipped profile mounts a telemetry backend |
 
 ## Alternatives considered
 
@@ -37,7 +37,7 @@ Session telemetry is mounted by default ([default-mount Note](2026-07-31-web-tel
 
 ## Consequences
 
-- One `$DSH_HOME` is one stable user in the OTel feed; separate homes are separate users by construction, with no cross-home linking mechanism.
-- The OTel feed, `/feedback`, and direct DeepSeek requests share `.anonymous-user-id`.
+- One `$DSH_HOME` is one stable user for any mounted OTel backend; separate homes are separate users by construction, with no cross-home linking mechanism.
+- Any mounted OTel backend, `/feedback`, and (when enabled) direct DeepSeek requests share `.anonymous-user-id`.
 - Deleting `.anonymous-user-id` resets the identity (effective next launch); on an unwritable home each process holds its own in-memory id until the home becomes writable.
-- The [default-mount Note](2026-07-31-web-telemetry-default-mount.md)'s identity follow-up is closed for the anonymous-user-id part by this decision; hostname/surface dimensions, the redaction rule, and the usage-metrics track remain open.
+- Hostname/surface dimensions, the redaction rule, and the usage-metrics track remain open for deployments that compose their own backend.

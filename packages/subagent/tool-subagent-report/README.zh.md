@@ -18,7 +18,7 @@
 
 #### 模型看到的内容
 
-已生成的 [`report` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-subagent-report)：包含一个必填 `output` 字符串。其描述说明子级必须在结束前上报一次，上报只会到达启动该子级的 Agent，并且不会结束轮次。它不包含接收方或投递模式参数。独立的 `tool:report` 提示词 section 在 schema 之外重申该义务，使忽略工具描述的子级仍能读到。
+已生成的 [`report` schema](../../../docs/tool-catalog.md#monotykamarydsh-tool-subagent-report)：包含一个必填 `output` 字符串。其描述说明子级必须在结束前上报一次，上报只会到达启动该子级的 Agent，并且不会结束轮次。它不包含接收方或投递模式参数。独立的 `tool:report` 提示词 section 在 schema 之外重申该义务，使忽略工具描述的子级仍能读到。
 
 #### Token 影响
 
