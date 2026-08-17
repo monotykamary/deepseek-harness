@@ -25,6 +25,7 @@ tmp/
 .DS_Store
 .idea
 mise.toml
+dist/
 dist-exe/
 python/sdk-runtime/src/deepseek_harness_runtime/runtime/dsh-jsonrpc-agent-*
 python/sdk-runtime/src/deepseek_harness_runtime/runtime/node/
