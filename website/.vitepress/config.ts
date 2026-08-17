@@ -1,12 +1,17 @@
 /** VitePress configuration for the locally projected documentation site. */
 
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, resolve } from 'node:path'
 import type { DefaultTheme, PageData } from 'vitepress'
 import type { ViteDevServer } from 'vite'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 import { landingLink, orderedPages, routeLink, sectionSpec, type DocsLocale, type DocsPage, type DocsSidebar } from '../docs.ts'
 import { docsSourceFiles, projectDocs } from '../../scripts/project-doc-site.ts'
+
+const require = createRequire(import.meta.url)
+// The website's copy of vitepress owns the single `vue` the site bundles.
+const vuePackageDir = dirname(createRequire(require.resolve('vitepress')).resolve('vue/package.json'))
 
 projectDocs()
 
@@ -319,6 +324,16 @@ export default withMermaid({
     // `srcDir` puts the Vite root inside the disposable generated tree, whose
     // own `public/` no tracked asset can live in.
     publicDir: resolve(import.meta.dirname, '../public'),
+    resolve: {
+      alias: {
+        // vitepress-plugin-mermaid prepends an import of this subpath to
+        // vitepress's own dist file, which pnpm's isolated node_modules
+        // cannot resolve from inside the store; the aliases anchor those
+        // imports to the website's dependency copies.
+        'vitepress-plugin-mermaid/Mermaid.vue': require.resolve('vitepress-plugin-mermaid/Mermaid.vue'),
+        vue: vuePackageDir,
+      },
+    },
     plugins: [
       {
         name: 'deepseek-harness-doc-projector',
