@@ -162,7 +162,9 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
     kind: 'prefix',
     path: API_PATH,
     handler: async (req, res) => {
-      if (!isTrustedApiRequest(req, trustedHosts)) {
+      // The live service list, not the config snapshot: late-bound surface
+      // authorities added after registration reach this fence too.
+      if (!isTrustedApiRequest(req, connection.trustedAuthorities)) {
         res.writeHead(403)
         res.end('forbidden')
         return
@@ -181,7 +183,7 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
       apiCtx.effect(() => apiCtx.webServer.registerUpgrade({
         path,
         handler: (req, socket, head) => {
-          if (!isTrustedApiRequest(req, trustedHosts)) {
+          if (!isTrustedApiRequest(req, connection.trustedAuthorities)) {
             rejectWebSocketUpgrade(socket)
             return
           }

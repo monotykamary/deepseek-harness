@@ -27,11 +27,13 @@ let dist: string | undefined
 afterEach(() => {
   vi.restoreAllMocks()
   internals.resolveDistIndex = originalResolve
+  internals.resolveSurfaces = originalSurfaces
   if (dist !== undefined) rmSync(dist, { recursive: true, force: true })
   dist = undefined
 })
 
 const originalResolve = internals.resolveDistIndex
+const originalSurfaces = internals.resolveSurfaces
 
 /** Stage a dist fixture and point the bundle's resolver at it. */
 function stageDist(): string {
@@ -84,7 +86,7 @@ describe('web-app runtime glue', () => {
     } as never)
     provideLoader(ctx)
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    apply(ctx, new Config({ printUrl: true, surfaceContext: true, trustedHosts: ['lab.internal'] }))
+    apply(ctx, new Config({ printUrl: true, surfaceContext: true, trustedHosts: ['lab.internal'], tailnet: false, portless: false }))
     await ctx.plugin(SystemPrompt, { persona: '' })
     // Settle the injected registrations.
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -112,7 +114,7 @@ describe('web-app runtime glue', () => {
     const ctx = new Context()
     ctx.provide('webServer', fakeHttpServer().server)
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    apply(ctx, new Config({ printUrl: false, surfaceContext: true, trustedHosts: [] }))
+    apply(ctx, new Config({ printUrl: false, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await ctx.plugin(SystemPrompt, { persona: '' })
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(log).not.toHaveBeenCalled()
@@ -133,7 +135,7 @@ describe('web-app runtime glue', () => {
         return () => {}
       },
     } as never)
-    apply(ctx, new Config({ printUrl: false, surfaceContext: false, trustedHosts: [] }))
+    apply(ctx, new Config({ printUrl: false, surfaceContext: false, trustedHosts: [], tailnet: false, portless: false }))
     await ctx.plugin(SystemPrompt, { persona: '' })
     await new Promise(resolve => setTimeout(resolve, 0))
     const assembly = await ctx.systemPrompt.assemble()
@@ -148,7 +150,7 @@ describe('web-app runtime glue', () => {
     const ctx = new Context()
     ctx.provide('webServer', fakeHttpServer().server)
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    apply(ctx, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [] }))
+    apply(ctx, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567')
     await ctx.fiber.dispose()
@@ -164,7 +166,7 @@ describe('web-app runtime glue', () => {
     const settlement = new Promise<void>((resolve) => { release = resolve })
     provideLoader(settled, () => settlement)
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    apply(settled, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [] }))
+    apply(settled, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(log).not.toHaveBeenCalled()
     release!()
@@ -178,7 +180,7 @@ describe('web-app runtime glue', () => {
     const failed = new Context()
     failed.provide('webServer', fakeHttpServer().server)
     provideLoader(failed, async () => { throw new Error('boot failed') })
-    apply(failed, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [] }))
+    apply(failed, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(log).not.toHaveBeenCalled()
     await failed.fiber.dispose()
@@ -194,7 +196,7 @@ describe('web-app runtime glue', () => {
     let releaseTorn: () => void
     const tornSettlement = new Promise<void>((resolve) => { releaseTorn = resolve })
     provideLoader(torn, () => tornSettlement)
-    apply(torn, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [] }))
+    apply(torn, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await child.dispose() // the webServer service goes away
     releaseTorn!()
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -210,10 +212,73 @@ describe('web-app runtime glue', () => {
     const { server } = fakeHttpServer()
     Object.defineProperty(server, 'port', { get: () => undefined })
     ctx.provide('webServer', server)
-    apply(ctx, new Config({ printUrl: false, surfaceContext: true, trustedHosts: [] }))
+    apply(ctx, new Config({ printUrl: false, surfaceContext: true, trustedHosts: [], tailnet: false, portless: false }))
     await ctx.plugin(SystemPrompt, { persona: '' })
     await new Promise(resolve => setTimeout(resolve, 0))
     await expect(ctx.systemPrompt.assemble()).rejects.toThrow('webServer service missing')
+    await ctx.fiber.dispose()
+  })
+
+  it('settles enabled surfaces: derived authorities reach the fence and the URL line announces them', async () => {
+    stageDist()
+    const ctx = new Context()
+    ctx.provide('webServer', fakeHttpServer().server)
+    const added: string[] = []
+    ctx.provide('connection', { addTrustedAuthority: (authority: string) => { added.push(authority) } } as never)
+    internals.resolveSurfaces = async () => ({
+      tailnet: { url: 'https://node.tail.ts.net', authority: 'node.tail.ts.net' },
+      portless: { url: 'https://dsh.localhost', authority: 'dsh.localhost' },
+      warnings: ['portless proxy not running on :443'],
+    })
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+    provideLoader(ctx)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    apply(ctx, new Config({ printUrl: true, surfaceContext: false, trustedHosts: [], tailnet: true, portless: true }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(added).toEqual(['node.tail.ts.net', 'dsh.localhost'])
+    expect(warn).toHaveBeenCalledWith('portless proxy not running on :443')
+    expect(log).toHaveBeenCalledWith(
+      'dsh web: http://127.0.0.1:4567 (tailnet: https://node.tail.ts.net, portless: https://dsh.localhost)',
+    )
+    await ctx.fiber.dispose()
+  })
+
+  it('adds surface authorities even when the URL line is silenced', async () => {
+    stageDist()
+    const ctx = new Context()
+    ctx.provide('webServer', fakeHttpServer().server)
+    const added: string[] = []
+    ctx.provide('connection', { addTrustedAuthority: (authority: string) => { added.push(authority) } } as never)
+    internals.resolveSurfaces = async () => ({
+      tailnet: { url: 'https://node.tail.ts.net', authority: 'node.tail.ts.net' },
+      warnings: [],
+    })
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    apply(ctx, new Config({ printUrl: false, surfaceContext: false, trustedHosts: [], tailnet: true, portless: false }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(added).toEqual(['node.tail.ts.net'])
+    expect(log).not.toHaveBeenCalled()
+    await ctx.fiber.dispose()
+  })
+
+  it('drops a derived surface whose authority the fence refuses and warns instead of widening trust', async () => {
+    stageDist()
+    const ctx = new Context()
+    ctx.provide('webServer', fakeHttpServer().server)
+    ctx.provide('connection', {
+      addTrustedAuthority: (authority: string) => { throw new Error(`refused ${authority}`) },
+    } as never)
+    internals.resolveSurfaces = async () => ({
+      tailnet: { url: 'https://node.tail.ts.net', authority: 'node.tail.ts.net' },
+      warnings: [],
+    })
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+    provideLoader(ctx)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    apply(ctx, new Config({ printUrl: true, surfaceContext: false, trustedHosts: [], tailnet: true, portless: false }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(warn).toHaveBeenCalledWith('derived tailnet surface authority "node.tail.ts.net" refused: refused node.tail.ts.net')
+    expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567')
     await ctx.fiber.dispose()
   })
 

@@ -56,6 +56,16 @@ export interface HostConnectionRpc {
 export interface HostConnectionHandle {
   /** Generic RPC channel registry. */
   readonly rpc: HostConnectionRpc
+
+  /**
+   * Append one deployment authority accepted by trusted-host channels after
+   * registration. Late-bound surface resolution (tailscale and portless
+   * announcements) uses this once a derived name is known; the fence reads
+   * the list per request, so already-registered routes accept the new
+   * authority from the next request on.
+   * @param authority - bare `host` or `host:port`, validated like config.
+   */
+  addTrustedAuthority(authority: string): void
 }
 
 /** Client caller for logical RPC channels carried by the current transport. */

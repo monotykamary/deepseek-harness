@@ -2899,10 +2899,14 @@ export interface Config {
   surfaceContext: boolean
   /** Explicit `--trusted-host` authorities from this invocation. */
   trustedHosts: string[]
+  /** `--tailnet`: resolve the tailscale serve surface, trust its DNS name, and announce its URL. */
+  tailnet: boolean
+  /** `--portless`: resolve the portless HTTPS surface, trust its alias host, and announce it. */
+  portless: boolean
 }
 ```
 
-来源：[`packages/bundle/web-app/src/index.ts:38`](../packages/bundle/web-app/src/index.ts)
+来源：[`packages/bundle/web-app/src/index.ts:41`](../packages/bundle/web-app/src/index.ts)
 
 <a id="monotykamarydsh-web-fetch-http"></a>
 

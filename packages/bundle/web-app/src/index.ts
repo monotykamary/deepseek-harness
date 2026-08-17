@@ -18,9 +18,12 @@ import z from '@monotykamary/schemastery'
 import { addHarnessSourceSection } from '@monotykamary/dsh-app-boot'
 import * as FrontendStatic from '@monotykamary/dsh-host-frontend-static'
 import type {} from '@monotykamary/cordis-plugin-loader'
+// Type-only: resolves `ctx.get('connection')` to the /api fence owner.
+import type {} from '@monotykamary/dsh-client-connection'
 import type {} from '@monotykamary/dsh-host-webserver'
 import type {} from '@monotykamary/dsh-system-prompt'
 import type {} from '@monotykamary/dsh-shell-env'
+import { resolveRemoteSurfaces, type SurfaceResolution } from './surfaces.ts'
 
 /** Stable Cordis plugin name. */
 export const name = 'web-app'
@@ -47,12 +50,18 @@ export interface Config {
   surfaceContext: boolean
   /** Explicit `--trusted-host` authorities from this invocation. */
   trustedHosts: string[]
+  /** `--tailnet`: resolve the tailscale serve surface, trust its DNS name, and announce its URL. */
+  tailnet: boolean
+  /** `--portless`: resolve the portless HTTPS surface, trust its alias host, and announce it. */
+  portless: boolean
 }
 
 export const Config: z<Config> = z.object({
   printUrl: z.boolean().default(true),
   surfaceContext: z.boolean().default(true),
   trustedHosts: z.array(String).default([]),
+  tailnet: z.boolean().default(false),
+  portless: z.boolean().default(false),
 })
 
 /** Bind-dependent Web values shared by the trust fence and URL display. */
@@ -123,8 +132,65 @@ function resolveDistIndex(): string {
   }
 }
 
-/** Test hook: hosts with no built frontend dist substitute the resolver; production never touches this. */
-export const internals: { resolveDistIndex: () => string } = { resolveDistIndex }
+/**
+ * Test hooks: hosts with no built frontend dist substitute the dist resolver;
+ * surface tests substitute the prober. Production never touches these.
+ */
+export const internals: {
+  resolveDistIndex: () => string
+  resolveSurfaces: (port: number, tailnet: boolean, portless: boolean) => Promise<SurfaceResolution>
+} = {
+  resolveDistIndex,
+  resolveSurfaces: resolveRemoteSurfaces,
+}
+
+/**
+ * Resolve the enabled remote surfaces once per boot and publish their
+ * authorities into the /api fence. The add runs only after resolution
+ * commits, and a derived authority failing canonical validation is dropped
+ * from the announcement with a warning instead of silently widening trust.
+ * @param ctx - plugin context carrying the bound webServer and the connection fence owner.
+ * @param config - validated plugin config.
+ * @returns the settled surface snapshot the URL line announces.
+ */
+async function settleSurfaces(ctx: Context, config: Config): Promise<SurfaceResolution> {
+  const resolved = await internals.resolveSurfaces(ctx.webServer.port, config.tailnet, config.portless)
+  const connection = ctx.get('connection')
+  const resolution: SurfaceResolution = { warnings: [...resolved.warnings] }
+  for (const key of ['tailnet', 'portless'] as const) {
+    const surface = resolved[key]
+    if (surface === undefined) continue
+    if (connection !== undefined) {
+      try {
+        connection.addTrustedAuthority(surface.authority)
+      } catch (error) {
+        resolution.warnings.push(
+          `derived ${key} surface authority ${JSON.stringify(surface.authority)} refused: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        continue
+      }
+    }
+    resolution[key] = surface
+  }
+  return resolution
+}
+
+/**
+ * Print the readiness URL line: the loopback URL first (supervisors parse
+ * it), then the LAN snapshot and the derived remote surfaces.
+ * @param ctx - plugin context carrying the bound webServer.
+ * @param runtime - the bind-dependent LAN snapshot.
+ * @param resolution - the settled surface snapshot.
+ */
+function printUrl(ctx: Context, runtime: WebRuntimeValues, resolution: SurfaceResolution): void {
+  const port = ctx.webServer.port
+  const entries: string[] = []
+  const lanCandidate = runtime.lanAddresses[0]
+  if (lanCandidate !== undefined) entries.push(`LAN: http://${lanCandidate}:${String(port)}`)
+  if (resolution.tailnet !== undefined) entries.push(`tailnet: ${resolution.tailnet.url}`)
+  if (resolution.portless !== undefined) entries.push(`portless: ${resolution.portless.url}`)
+  console.log(`dsh web: ${localWebUrl(ctx)}${entries.length === 0 ? '' : ` (${entries.join(', ')})`}`)
+}
 
 /**
  * Mount the Web runtime: dist serving, surface prompt, the bash runtime
@@ -156,30 +222,29 @@ export function apply(ctx: Context, config: Config): void {
       })
     })
   }
-  if (config.printUrl) {
-    // The URL line is a readiness signal: supervisors (and the keyless CLI
-    // smoke) RPC as soon as they observe it, so it must not print while
-    // sibling rows (the /api route owner) are still mounting. Await Loader
-    // settlement first; a hand-built tree without a Loader prints at once.
-    const printUrl = (): void => {
-      // Reuse the exact LAN snapshot provided to the /api trust fence.
-      const lanCandidate = runtime.lanAddresses[0]
-      const port = ctx.webServer.port
-      console.log(`dsh web: ${localWebUrl(ctx)}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
-    }
-    // This row's own activation can precede a sibling failure. The app owns
-    // readiness by waiting for its Loader tree, or prints at once in a
-    // hand-built context without Loader.
-    const settled = ctx.get('loader')?.await()
-    if (settled === undefined) printUrl()
-    else {
-      void settled.then(() => {
-        // The tree can be disposed while the boot was in flight (early
-        // SIGTERM); a URL line for a dead server would only mislead, and
-        // reading the torn-down port would turn a clean shutdown into a crash.
-        if (ctx.get('webServer') !== undefined) printUrl()
+  // Derived remote surfaces resolve once after the Loader tree settles, when
+  // the bound port and the connection fence owner both exist. The URL line is
+  // a readiness signal: supervisors (and the keyless CLI smoke) RPC as soon as
+  // they observe it, so it must not print while sibling rows (the /api route
+  // owner) are still mounting. With both surface flags off the resolution
+  // settles at once, so no probe delays the line.
+  const settled = ctx.get('loader')?.await()
+  const afterSettlement = async (): Promise<void> => {
+    // The tree can be disposed while the boot was in flight (early SIGTERM);
+    // a URL line for a dead server would only mislead, and reading the
+    // torn-down port would turn a clean shutdown into a crash.
+    if (ctx.get('webServer') === undefined) return
+    const resolution = await settleSurfaces(ctx, config)
+    for (const warning of resolution.warnings) ctx.logger.warn(warning)
+    if (config.printUrl) printUrl(ctx, runtime, resolution)
+  }
+  // This row's own activation can precede a sibling failure. The app owns
+  // readiness by waiting for its Loader tree, or runs at once in a
+  // hand-built context without Loader.
+  if (settled === undefined) void afterSettlement()
+  else {
+    void settled.then(afterSettlement, () => {
       // Loader reports a failed boot; this row only stays quiet.
-      }, () => {})
-    }
+    })
   }
 }

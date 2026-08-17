@@ -161,6 +161,38 @@ describe('connection node half', () => {
     await dispose()
   })
 
+  it('accepts a late-bound trusted authority added after route registration', async () => {
+    const ctx = new Context()
+    const routes: WebRoute[] = []
+    const upgrades: WebUpgradeRoute[] = []
+    ctx.provide('webServer', fakeHttpServer(routes, upgrades) as WebServer)
+    ctx.provide('apiProxy', {} as unknown as ApiProxy)
+    const fiber = ctx.plugin({ inject: [...inject], apply }, { trustedHosts: [] })
+    await fiber.await()
+    const connection = ctx.get('connection') as HostConnectionHandle
+
+    // The fence refuses the not-yet-derived tailnet hostname...
+    const before = fakeResponse()
+    await routes[0]!.handler(fakeRequest({
+      host: 'node.tail.ts.net', origin: 'https://node.tail.ts.net', 'sec-fetch-site': 'same-origin',
+    }), before.response)
+    expect(before.state.status).toBe(403)
+
+    // ...and accepts it once surface resolution publishes the authority
+    // (carrier-level 404 from the GET proves the bridge ran).
+    connection.addTrustedAuthority('node.tail.ts.net')
+    const after = fakeResponse()
+    await routes[0]!.handler(fakeRequest({
+      host: 'node.tail.ts.net', origin: 'https://node.tail.ts.net', 'sec-fetch-site': 'same-origin',
+    }), after.response)
+    expect(after.state.status).toBe(404)
+
+    // A malformed late authority fails the add instead of widening trust.
+    expect(() => { connection.addTrustedAuthority('harness.internal/path') })
+      .toThrow(/not a bare host\[:port\] authority/)
+    await fiber.dispose()
+  })
+
   it('pins privileged methods to loopback even for a declared trusted authority', async () => {
     const { routes, dispose } = await mounted({ trustedHosts: ['harness.example'] })
     // The privileged set: native dialogs plus the whole settings/credential

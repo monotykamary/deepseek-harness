@@ -266,6 +266,13 @@ export interface LaunchOptions {
    * 127.0.0.1; a non-resolving authority fails before Host trust is exercised.
    */
   remoteAuthority?: string
+  /**
+   * Enable the web-runtime row's tailnet surface resolution: after the tree
+   * settles, the host probes `tailscale` on PATH and publishes its derived
+   * DNS name into the /api trust fence. Tests shim a fake `tailscale`
+   * binary on PATH to drive the derived authority.
+   */
+  tailnetSurface?: boolean
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
 }
@@ -428,7 +435,14 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     // (apps/web IS @monotykamary/dsh-web-frontend); only the URL line is silenced.
     // Preserve the composed surface-context choice because a patch replaces
     // the row's complete config.
-    { id: 'web-runtime', config: { printUrl: false, surfaceContext } },
+    {
+      id: 'web-runtime',
+      config: {
+        printUrl: false,
+        surfaceContext,
+        ...(options.tailnetSurface === true ? { tailnet: true } : {}),
+      },
+    },
     ...options.remoteAuthority === undefined
       ? []
       : [{ id: 'connection', config: { trustedHosts: [options.remoteAuthority] } }],

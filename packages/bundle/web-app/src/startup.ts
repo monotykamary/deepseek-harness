@@ -1,8 +1,9 @@
 /**
  * The web app's command-line provider: it parses the `dsh --profile web` flag
- * family (`--host`, `--port`, `--trusted-host`) and its `--help`
- * text, then provides the immutable values as {@link WEB_STARTUP_SERVICE}.
- * Ordinary rows inject that service before reading it from lazy config.
+ * family (`--host`, `--port`, `--trusted-host`, `--tailnet`,
+ * `--portless`) and its `--help` text, then provides the immutable values
+ * as {@link WEB_STARTUP_SERVICE}. Ordinary rows inject that service before
+ * reading it from lazy config.
  * @module @monotykamary/dsh-web-app/startup
  */
 
@@ -27,6 +28,10 @@ export interface WebStartupValues {
   port?: number
   /** Explicit `--trusted-host` authorities, in argument order. */
   trustedHosts: string[]
+  /** `--tailnet`: resolve and trust the tailscale serve surface. */
+  tailnet: boolean
+  /** `--portless`: resolve and trust the portless HTTPS surface. */
+  portless: boolean
 }
 
 /** The web flag family, as commander parsed it. */
@@ -34,6 +39,8 @@ interface WebOptions {
   host?: string
   port?: string
   trustedHost?: string[]
+  tailnet?: boolean
+  portless?: boolean
 }
 
 /**
@@ -48,10 +55,13 @@ function webCommand(): Command {
     .option('--host <host>', 'bind host')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
+    .option('--tailnet', 'resolve the tailscale serve surface: trust its DNS name and announce its URL')
+    .option('--portless', 'resolve the portless HTTPS surface: register the dsh alias, trust dsh.localhost, and announce it')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port
   dsh --profile web --port 8080              serve on another port
+  dsh --profile web --tailnet                announce and trust https://<node>.ts.net
 `)
 }
 
@@ -76,6 +86,8 @@ export function apply(ctx: Context): void {
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
       trustedHosts: options.trustedHost ?? [],
+      tailnet: options.tailnet ?? false,
+      portless: options.portless ?? false,
     } satisfies WebStartupValues)
   })
   parseCmdline(ctx, program)

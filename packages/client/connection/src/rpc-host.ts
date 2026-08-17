@@ -12,7 +12,7 @@ import {
   type ServerResponse as RpcServerResponse,
 } from '@monotykamary/dsh-host-apiproxy/api'
 import { bridge, type FetchHandler } from './http-bridge.ts'
-import { isTrustedApiRequest } from './api-request-trust.ts'
+import { assertTrustedAuthority, isTrustedApiRequest } from './api-request-trust.ts'
 import { API_PATH } from './api-path.ts'
 import type {
   ConnectionRpcEndpointMatcher,
@@ -43,13 +43,35 @@ declare module '@monotykamary/cordis' {
 export class HostConnectionService extends Service implements HostConnectionHandle {
   private readonly interceptors = new Map<string, ConnectionRpcInterceptor>()
 
+  /** Deployment authorities accepted by trusted-host channels; appended by late-bound surface resolution. */
+  private readonly trustedHosts: string[]
+
+  /** The live trusted-authority list: per-request fences read it, so late adds apply to every registered route. */
+  get trustedAuthorities(): readonly string[] {
+    return this.trustedHosts
+  }
+
   /**
    * Provide the Host half over the active HTTP server.
    * @param ctx - owning Connection plugin context.
    * @param trustedHosts - deployment authorities accepted by trusted-host channels.
    */
-  constructor(ctx: Context, private readonly trustedHosts: readonly string[]) {
+  constructor(ctx: Context, trustedHosts: readonly string[]) {
     super(ctx, 'connection')
+    this.trustedHosts = [...trustedHosts]
+  }
+
+  /**
+   * Append one deployment authority to the trusted-host fence after routes
+   * are registered. The same validation as the config boundary applies, so a
+   * non-canonical derived authority fails this call instead of silently
+   * widening trust; the per-request fence reads the live list, so no route
+   * re-registration is needed.
+   * @param authority - bare host or host:port authority.
+   */
+  addTrustedAuthority(authority: string): void {
+    assertTrustedAuthority(authority)
+    this.trustedHosts.push(authority)
   }
 
   /** Generic channel registry scoped to the Context reading this service. */

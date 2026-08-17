@@ -124,7 +124,7 @@
     # frontend-static fallback owner, registers the web-surface prompt
     # section and the bash runtime variable, and prints the URL line. The
     # webStartup provider supplies invocation-only values; after the server
-    # binds, this row samples LAN trust once and provides `webRuntime`. A
+    # binds, this row samples LAN trust once, resolves the enabled remote surfaces (tailnet/portless) when the tree settles, and provides `webRuntime`. A
     # complete agent-preset persona suppresses the prompt section for that
     # agent while retaining the host-owned shell variable.
     - id: web-runtime
@@ -134,6 +134,8 @@
         printUrl: true
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
+        tailnet: !!js ctx.webStartup.tailnet
+        portless: !!js ctx.webStartup.portless
 
     # The client-plugin reload chain, always mounted: it is idle until a
     # rebuild watcher (pnpm run dev:web) actually rewrites client bundles. It
