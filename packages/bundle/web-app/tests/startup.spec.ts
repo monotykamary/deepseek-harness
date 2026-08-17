@@ -120,6 +120,33 @@ describe('web command-line provider', () => {
     })
   })
 
+  it('assembles the identity config from the --identity flag family', async () => {
+    const header = await bootProvider([
+      '--identity', 'header',
+      '--identity-header', 'X-Remote-User',
+      '--identity-trusted-proxy', '10.0.0.0/8',
+    ])
+    expect(header.values?.identity).toEqual({
+      provider: 'header',
+      header: 'X-Remote-User',
+      trustedProxy: '10.0.0.0/8',
+    })
+    const passkey = await bootProvider([
+      '--identity', 'passkey',
+      '--identity-registration', 'closed',
+      '--identity-rp-name', 'my-harness',
+    ])
+    expect(passkey.values?.identity).toEqual({
+      provider: 'passkey',
+      registration: 'closed',
+      rpName: 'my-harness',
+    })
+    const bare = await bootProvider(['--identity', 'header'])
+    expect(bare.values?.identity).toEqual({ provider: 'header' })
+    const none = await bootProvider([])
+    expect(none.values?.identity).toBeUndefined()
+  })
+
   it('prints its own help and leaves the consumer pending', async () => {
     const { values, observed } = await bootProvider(['--help'])
     expect(observed.out).toContain('dsh --profile web')

@@ -25,6 +25,6 @@ The `web-runtime` glue plugin gains `tailnet` and `portless` config flags (CLI `
 ## Consequences
 
 - `dsh web --tailnet` resolves, trusts, and announces `https://<node>.ts.net` (any serve port); `--portless` does the same for `https://dsh.localhost`. Both flags off leaves behavior byte-identical: no probes, unchanged URL line.
-- The privileged /api plane stays loopback-pinned: a tailnet or portless authority reaches ordinary RPC only, per the fence's posture until a real authentication layer exists.
+- The privileged /api plane stays loopback-pinned: a tailnet or portless authority reaches ordinary RPC only, per the fence's posture. The [web identity layer](2026-08-17-web-identity-sso.md) supersedes that pin with a real principal: the operator tier (loopback, or the operator bearer token) owns the privileged plane, and partitioned users reach ordinary RPC only.
 - `HostConnectionHandle.addTrustedAuthority` is the late-bound entry the identity layer can reuse for derived authorities.
 - Coverage: surfaces.spec (probe matrix and warning paths), web-app.spec (settlement, fence add, URL line, refusal), node-half.host.spec (live-list fence and validation). Assembled-app proof: tailnet-surface.e2e shims `tailscale` on PATH in a real boot and asserts the derived name passes the fence while an underived authority still 403s.

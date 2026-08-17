@@ -25,6 +25,6 @@ Status: implemented
 ## 后果
 
 - `dsh web --tailnet` 解析、信任并公告 `https://<node>.ts.net`（任意 serve 端口）；`--portless` 对 `https://dsh.localhost` 做同样的事。两个 flag 都关闭时行为逐字节不变：无探测，URL 行不变。
-- 特权 /api 平面保持回环固定：tailnet 或 portless 权威只能到达普通 RPC，符合「在具备真正认证层之前」的栅栏姿态。
+- 特权 /api 平面保持回环固定：tailnet 或 portless 权威只能到达普通 RPC，符合栅栏姿态。[Web 身份层](2026-08-17-web-identity-sso.md) 以真实主体取代了这一固定：运营者层级（回环，或运营者 Bearer 令牌）拥有特权平面，分区用户只能到达普通 RPC。
 - `HostConnectionHandle.addTrustedAuthority` 是身份层将来可复用的晚到权威入口。
 - 覆盖：surfaces.spec（探测矩阵与警告路径）、web-app.spec（结算、栅栏追加、URL 行、拒绝）、node-half.host.spec（实时列表栅栏与校验）。组装应用证明：tailnet-surface.e2e 在真实启动中把 `tailscale` 垫片放到 PATH 上，断言派生名称通过栅栏而未派生的权威仍 403。

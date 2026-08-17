@@ -46,8 +46,8 @@ async function serve(downlinks: WebSocketDownlinks): Promise<{
   const server = createServer()
   server.on('upgrade', (request, socket, head) => {
     const pathname = new URL(request.url ?? '/', 'http://dsh.internal').pathname
-    if (pathname === MUX_EVENTS_PATH) downlinks.handleMux(request, socket, head)
-    else if (pathname === HOST_EVENTS_PATH) downlinks.handleHost(request, socket, head)
+    if (pathname === MUX_EVENTS_PATH) downlinks.handleMux(request, socket, head, null)
+    else if (pathname === HOST_EVENTS_PATH) downlinks.handleHost(request, socket, head, null)
     else socket.destroy()
   })
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))

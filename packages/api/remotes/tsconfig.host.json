@@ -51,6 +51,9 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../identity/web-identity"
     }
   ]
 }

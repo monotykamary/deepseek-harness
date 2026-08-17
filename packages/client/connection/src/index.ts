@@ -3,13 +3,19 @@ import type { Context } from '@monotykamary/cordis'
 import z from '@monotykamary/schemastery'
 import type {} from '@monotykamary/dsh-attachment'
 // Activates the webServer Context merge used below.
-import type { WebRoute, WebUpgradeRoute } from '@monotykamary/dsh-host-webserver'
+import type { WebRoute } from '@monotykamary/dsh-host-webserver'
 import { toFetchHandler } from '@monotykamary/dsh-host-apiproxy'
+import type { IncomingMessage } from 'node:http'
+import type { Duplex } from 'node:stream'
 import { API_PATH, HOST_EVENTS_PATH, MUX_EVENTS_PATH } from './api-path.ts'
 import { bridge, DEFAULT_MAX_REQUEST_BODY_BYTES } from './http-bridge.ts'
 import { assertTrustedAuthority, isTrustedApiRequest } from './api-request-trust.ts'
 import { HostConnectionService } from './rpc-host.ts'
 import { rejectWebSocketUpgrade, WebSocketDownlinks } from './websocket-downlink.ts'
+// Type-only: merges the optional ctx.identity authority the /api route and
+// WebSocket upgrades gate through.
+import type { Admission } from '@monotykamary/dsh-web-identity'
+import type {} from '@monotykamary/dsh-web-identity'
 
 export type {
   ConnectionRpcAuthority,
@@ -142,10 +148,16 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
       const method = pathname.startsWith(`${API_PATH}/`)
         ? pathname.slice(API_PATH.length + 1)
         : undefined
-      if (method !== undefined
-        && PRIVILEGED_METHODS.has(method)
-        && !isTrustedApiRequest(request, [])) {
-        return new Response('forbidden', { status: 403 })
+      // Privileged plane: loopback operator requests (the pre-identity
+      // posture) or any request the identity authority admitted through the
+      // operator bearer token. A partitioned user is refused even on
+      // loopback — the token is how the operator works in passkey mode.
+      if (method !== undefined && PRIVILEGED_METHODS.has(method)) {
+        const admission: Admission = ctx.get('identity')?.current()
+          ?? { owner: null, operator: false }
+        if (admission.owner !== null || (!admission.operator && !isTrustedApiRequest(request, []))) {
+          return new Response('forbidden', { status: 403 })
+        }
       }
       if (request.method === 'GET' && (pathname === MUX_EVENTS_PATH || pathname === HOST_EVENTS_PATH)) {
         return new Response('upgrade required', {
@@ -169,6 +181,20 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
         res.end('forbidden')
         return
       }
+      // Identity gate: a deny-mode provider rejects requests it cannot
+      // authenticate; the admission also scopes every downstream session read
+      // through the async context the bridge dispatches in.
+      const identity = ctx.get('identity')
+      if (identity !== undefined) {
+        const admission = identity.admit(req)
+        if (admission === undefined) {
+          res.writeHead(401, { 'content-type': 'application/json; charset=utf-8' })
+          res.end('{"error":"unauthenticated"}')
+          return
+        }
+        await identity.runWith(admission, () => bridge(req, res, fetchHandler, maxRequestBodyBytes))
+        return
+      }
       await bridge(req, res, fetchHandler, maxRequestBodyBytes)
     },
   }
@@ -178,7 +204,7 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
     const downlinks = new WebSocketDownlinks(apiCtx.apiProxy)
     const registerDownlink = (
       path: string,
-      handle: WebUpgradeRoute['handler'],
+      handle: (req: IncomingMessage, socket: Duplex, head: Buffer, owner: string | null) => void,
     ): void => {
       apiCtx.effect(() => apiCtx.webServer.registerUpgrade({
         path,
@@ -187,12 +213,26 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
             rejectWebSocketUpgrade(socket)
             return
           }
-          return handle(req, socket, head)
+          // The identity gate rejects upgrades a deny-mode provider cannot
+          // authenticate; the resolved owner scopes the downlink's streams
+          // for the connection's whole lifetime. No identity authority means
+          // the legacy operator tier (null owner, unfiltered streams).
+          const identity = apiCtx.get('identity')
+          let owner: string | null = null
+          if (identity !== undefined) {
+            const admitted = identity.admit(req, socket)
+            if (admitted === undefined) {
+              rejectWebSocketUpgrade(socket, 401, 'unauthenticated')
+              return
+            }
+            owner = admitted.owner
+          }
+          handle(req, socket, head, owner)
         },
       }), `client-connection: ${path} WebSocket`)
     }
     apiCtx.effect(() => () => downlinks.close(), 'client-connection: WebSocket downlinks')
-    registerDownlink(MUX_EVENTS_PATH, (req, socket, head) => { downlinks.handleMux(req, socket, head) })
-    registerDownlink(HOST_EVENTS_PATH, (req, socket, head) => { downlinks.handleHost(req, socket, head) })
+    registerDownlink(MUX_EVENTS_PATH, (req, socket, head, owner) => { downlinks.handleMux(req, socket, head, owner) })
+    registerDownlink(HOST_EVENTS_PATH, (req, socket, head, owner) => { downlinks.handleHost(req, socket, head, owner) })
   })
 }

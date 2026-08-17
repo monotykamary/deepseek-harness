@@ -174,6 +174,7 @@ describe('rowToMeta', () => {
       revision: 1,
       delegation_depth: null,
       agent_preset: null,
+      owner: null,
     })).toMatchObject({ id: 'with-origin', origin: 'subagent' })
   })
 
@@ -190,6 +191,7 @@ describe('rowToMeta', () => {
       revision: 1,
       delegation_depth: null,
       agent_preset: null,
+      owner: null,
     })).toThrow('stored session createdAt must be a non-negative safe integer')
   })
 
@@ -208,7 +210,25 @@ describe('rowToMeta', () => {
       revision: 1,
       delegation_depth: null,
       agent_preset: 'minimal',
+      owner: null,
     })).toMatchObject({ agentPreset: 'minimal' })
+  })
+
+  it('restores the identity partition a session was created under', () => {
+    expect(rowToMeta({
+      id: 'owned',
+      version: 0,
+      created_at: 1,
+      cwd: null,
+      parent_session: null,
+      seed_length: null,
+      origin: null,
+      incarnation: 'owned',
+      revision: 1,
+      delegation_depth: null,
+      agent_preset: null,
+      owner: 'alice',
+    })).toMatchObject({ owner: 'alice' })
   })
 })
 
@@ -659,7 +679,7 @@ describe('SqliteSessionPersistence: durability and crash semantics', () => {
   })
 
   it('exposes the schema version constant', () => {
-    expect(SCHEMA_VERSION).toBe(15)
+    expect(SCHEMA_VERSION).toBe(16)
   })
 
   it('keeps the revision stable for an empty repair hook', async () => {

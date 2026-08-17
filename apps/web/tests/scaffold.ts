@@ -273,6 +273,15 @@ export interface LaunchOptions {
    * binary on PATH to drive the derived authority.
    */
   tailnetSurface?: boolean
+  /**
+   * Boot the web identity authority with the header provider; a test drives
+   * per-user partitioning through the identity header on loopback requests.
+   * Omitted, the composition stays the pre-identity operator tier.
+   */
+  identityHeader?: {
+    header?: string
+    trustedProxy?: string
+  }
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
 }
@@ -446,6 +455,12 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     ...options.remoteAuthority === undefined
       ? []
       : [{ id: 'connection', config: { trustedHosts: [options.remoteAuthority] } }],
+    ...options.identityHeader === undefined
+      ? []
+      // The bundle patch already carries the web-identity row; the overlay
+      // replaces its config with the literal test provider instead of the
+      // CLI-driven !!js expression the shipped row reads.
+      : [{ id: 'web-identity', config: { identity: { provider: 'header', ...options.identityHeader } } }],
     { id: 'settings', config: { dshHome: harnessHome } },
     { id: 'credentials', config: { dshHome: harnessHome } },
     // The shipped directory-picker row is the -auto chooser, which resolves

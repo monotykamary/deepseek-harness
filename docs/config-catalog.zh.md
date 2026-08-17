@@ -2934,6 +2934,66 @@ export interface Config {
 
 来源：[`packages/web/web-fetch-http/src/index.ts:34`](../packages/web/web-fetch-http/src/index.ts)
 
+<a id="monotykamarydsh-web-identity"></a>
+
+## `@monotykamary/dsh-web-identity`
+
+需要：`webServer`
+
+```ts config-catalog
+/** Plugin config: the optional identity provider and its state directory. */
+export interface Config {
+  /**
+   * The identity provider to activate. Absent, the plugin provides nothing and
+   * every request is the operator/legacy tier — the byte-identical default.
+   */
+  identity?: IdentityConfig
+  /**
+   * Directory for the passkey stores, the cookie secret, and the generated
+   * operator token; defaults to `identity/` under the harness home.
+   */
+  stateDirectory?: string
+}
+
+/** The identity configuration union; absent config = no provider, legacy tier. */
+export type IdentityConfig = HeaderIdentityConfig | PasskeyIdentityConfig
+
+/** `header` provider configuration. */
+export interface HeaderIdentityConfig {
+  /** Provider discriminant: trust a reverse-proxy-set identity header. */
+  provider: 'header'
+  /** Identity header the trusted proxy sets; defaults to `x-forwarded-user`. */
+  header?: string
+  /**
+   * Source-IP allowlist the identity header is honored from: `loopback`
+   * (default), `private`, a CIDR, or a bare address.
+   */
+  trustedProxy?: string
+}
+
+/** `passkey` provider configuration. */
+export interface PasskeyIdentityConfig {
+  /** Provider discriminant: self-contained WebAuthn authority. */
+  provider: 'passkey'
+  /** WebAuthn relying-party display name; defaults to `dsh`. */
+  rpName?: string
+  /**
+   * `open` (default) = anyone who can reach the server may register a passkey;
+   * `closed` = registration disabled. Open registration is gated by the same
+   * network reachability every other route inherits, so it is "anyone already
+   * trusted enough to use dsh", not the open internet.
+   */
+  registration?: 'open' | 'closed'
+  /**
+   * Bearer token granting the operator tier. Absent, the plugin generates one
+   * on first boot, persists it in the state directory, and prints it once.
+   */
+  operatorToken?: string
+}
+```
+
+来源：[`packages/identity/web-identity/src/index.ts:81`](../packages/identity/web-identity/src/index.ts)
+
 <a id="monotykamarydsh-web-search-deepseek"></a>
 
 ## `@monotykamary/dsh-web-search-deepseek`

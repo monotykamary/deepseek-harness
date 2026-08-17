@@ -17,6 +17,7 @@ import type {} from '@monotykamary/dsh-settings/types'
 export {
   ApiRemoteSessionNotFound,
   ApiRemoteSubagentSessionOwnership,
+  apiRemoteSessionHiddenError,
   apiRemoteSubagentOwnershipError,
   createApiRemoteAgentResolver,
   hasApiRemoteSubagentOwner,

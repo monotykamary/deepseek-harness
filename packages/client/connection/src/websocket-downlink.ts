@@ -8,6 +8,7 @@ import type {
   ApiProxy, HostFrame, MuxFrame, RpcRequest, ServerRequest,
 } from '@monotykamary/dsh-host-apiproxy/api'
 import { RpcId } from '@monotykamary/dsh-host-apiproxy/api'
+import type { SessionOwner } from '@monotykamary/dsh-web-identity'
 
 type Frame = MuxFrame | HostFrame
 
@@ -60,12 +61,14 @@ export class WebSocketDownlinks {
    * @param req - HTTP upgrade request.
    * @param socket - Raw socket transferred by the HTTP server.
    * @param head - Bytes already read after the upgrade headers.
+   * @param owner - The connection's identity owner: null = operator tier
+   *   (every session streams), a string = only that user's sessions.
    */
-  handleMux(req: IncomingMessage, socket: Duplex, head: Buffer): void {
+  handleMux(req: IncomingMessage, socket: Duplex, head: Buffer, owner: SessionOwner): void {
     this.upgrade(req, socket, head, signal => this.api.events.mux({
       rpcId: RpcId(randomUUID()),
       payload: {},
-    }, signal))
+    }, signal, owner))
   }
 
   /**
@@ -73,12 +76,13 @@ export class WebSocketDownlinks {
    * @param req - HTTP upgrade request.
    * @param socket - Raw socket transferred by the HTTP server.
    * @param head - Bytes already read after the upgrade headers.
+   * @param owner - The connection's identity owner (see {@link handleMux}).
    */
-  handleHost(req: IncomingMessage, socket: Duplex, head: Buffer): void {
+  handleHost(req: IncomingMessage, socket: Duplex, head: Buffer, owner: SessionOwner): void {
     this.upgrade(req, socket, head, signal => this.api.events.host({
       rpcId: RpcId(randomUUID()),
       payload: {},
-    }, signal))
+    }, signal, owner))
   }
 
   /**
@@ -138,16 +142,19 @@ export class WebSocketDownlinks {
 }
 
 /**
- * Reject an untrusted upgrade before protocol negotiation.
+ * Reject an untrusted or unauthenticated upgrade before protocol negotiation.
  * @param socket - Raw HTTP socket that remains owned by the caller.
+ * @param status - HTTP status for the refusal (403 untrusted, 401 unauthenticated).
+ * @param reason - short body text.
  */
-export function rejectWebSocketUpgrade(socket: Duplex): void {
+export function rejectWebSocketUpgrade(socket: Duplex, status = 403, reason = 'forbidden'): void {
+  const body = Buffer.from(reason, 'utf8')
   socket.end([
-    'HTTP/1.1 403 Forbidden',
+    `HTTP/1.1 ${status} ${status === 401 ? 'Unauthorized' : 'Forbidden'}`,
     'Connection: close',
     'Content-Type: text/plain; charset=utf-8',
-    'Content-Length: 9',
+    `Content-Length: ${String(body.byteLength)}`,
     '',
-    'forbidden',
+    reason,
   ].join('\r\n'))
 }

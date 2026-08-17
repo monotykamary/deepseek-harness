@@ -32,6 +32,16 @@ export interface WebStartupValues {
   tailnet: boolean
   /** `--portless`: resolve and trust the portless HTTPS surface. */
   portless: boolean
+  /** The identity provider config `--identity` assembled, absent when off. */
+  identity?: {
+    provider: 'header'
+    header?: string
+    trustedProxy?: string
+  } | {
+    provider: 'passkey'
+    rpName?: string
+    registration?: 'open' | 'closed'
+  }
 }
 
 /** The web flag family, as commander parsed it. */
@@ -41,6 +51,11 @@ interface WebOptions {
   trustedHost?: string[]
   tailnet?: boolean
   portless?: boolean
+  identity?: 'header' | 'passkey'
+  identityHeader?: string
+  identityTrustedProxy?: string
+  identityRegistration?: 'open' | 'closed'
+  identityRpName?: string
 }
 
 /**
@@ -57,11 +72,18 @@ function webCommand(): Command {
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
     .option('--tailnet', 'resolve the tailscale serve surface: trust its DNS name and announce its URL')
     .option('--portless', 'resolve the portless HTTPS surface: register the dsh alias, trust dsh.localhost, and announce it')
+    .option('--identity <provider>', 'identity provider: header (trust a reverse proxy) or passkey (WebAuthn)')
+    .option('--identity-header <name>', 'identity header the trusted proxy sets (default x-forwarded-user)')
+    .option('--identity-trusted-proxy <spec>', 'source allowlist for the identity header: loopback (default), private, a CIDR, or an address')
+    .option('--identity-registration <policy>', 'passkey registration: open (default) or closed')
+    .option('--identity-rp-name <name>', 'passkey relying-party display name (default dsh)')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port
   dsh --profile web --port 8080              serve on another port
   dsh --profile web --tailnet                announce and trust https://<node>.ts.net
+  dsh --profile web --identity header        partition sessions by a proxy-set x-forwarded-user
+  dsh --profile web --identity passkey       self-contained WebAuthn login (prints an operator token)
 `)
 }
 
@@ -82,12 +104,26 @@ export function apply(ctx: Context): void {
     if (options.port !== undefined && !/^\d+$/.test(options.port)) {
       program.error(`error: --port must be a number, got ${JSON.stringify(options.port)}`)
     }
+    const identity: WebStartupValues['identity'] = options.identity === 'header'
+      ? {
+        provider: 'header',
+        ...options.identityHeader !== undefined && { header: options.identityHeader },
+        ...options.identityTrustedProxy !== undefined && { trustedProxy: options.identityTrustedProxy },
+      }
+      : options.identity === 'passkey'
+        ? {
+          provider: 'passkey',
+          ...options.identityRegistration !== undefined && { registration: options.identityRegistration },
+          ...options.identityRpName !== undefined && { rpName: options.identityRpName },
+        }
+        : undefined
     ctx.provide(WEB_STARTUP_SERVICE, {
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
       trustedHosts: options.trustedHost ?? [],
       tailnet: options.tailnet ?? false,
       portless: options.portless ?? false,
+      ...identity === undefined ? {} : { identity },
     } satisfies WebStartupValues)
   })
   parseCmdline(ctx, program)

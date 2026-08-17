@@ -1311,6 +1311,8 @@ describe('SessionStore', () => {
       { meta: { delegationDepth: 0.5 }, error: /delegationDepth must be a non-negative safe integer/ },
       { meta: { delegationDepth: -1 }, error: /delegationDepth must be a non-negative safe integer/ },
       { meta: { agentPreset: 1 }, error: /agentPreset must be a string/ },
+      { meta: { owner: 1 }, error: /owner must be a non-empty string/ },
+      { meta: { owner: '' }, error: /owner must be a non-empty string/ },
     ]
 
     for (const [index, { meta, error }] of cases.entries()) {
@@ -1327,6 +1329,15 @@ describe('SessionStore', () => {
       .toThrow(/cwd must be an absolute path/)
     // the rejected session was not registered
     expect(ctx.sessions.get(SessionId('rel'))).toBeUndefined()
+  })
+
+  it('records the identity partition on the session header', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const session = ctx.sessions.create(SessionId('owned'), { meta: { owner: 'alice' } })
+    expect(session.header.owner).toBe('alice')
+    const legacy = ctx.sessions.create(SessionId('legacy'))
+    expect(legacy.header.owner).toBeUndefined()
   })
 
   it('a bare Session() constructed without the store still exposes a current-version header', () => {

@@ -52,14 +52,22 @@ export interface EventsApi {
    * generic projection pair (history-tail projections block + session/projection frames).
    * since: resume hook, unimplemented in v1 (ignored if passed); reconnection = reopen the
    * stream + refetch history.
+   * owner: the identity partition the connection serves — null streams every
+   * session (operator tier), a string streams only that user's sessions. The
+   * connection layer supplies it from its upgrade-time identity admission.
    */
-  mux(request: RpcRequest<{ since?: Record<SessionId, number> }>, signal: AbortSignal): AsyncIterable<RpcRequest<MuxFrame>>
+  mux(
+    request: RpcRequest<{ since?: Record<SessionId, number> }>,
+    signal: AbortSignal,
+    owner?: string | null,
+  ): AsyncIterable<RpcRequest<MuxFrame>>
 
   /**
    * Host-level info stream: session create/destroy, running-status flips, and
-   * agent failures with no turn position. Empty payload uses `{}`.
+   * agent failures with no turn position. Empty payload uses `{}`. `owner`
+   * scopes every session and workspace frame like the mux stream.
    */
-  host(request: RpcRequest<{}>, signal: AbortSignal): AsyncIterable<RpcRequest<HostFrame>>
+  host(request: RpcRequest<{}>, signal: AbortSignal, owner?: string | null): AsyncIterable<RpcRequest<HostFrame>>
 }
 
 /**

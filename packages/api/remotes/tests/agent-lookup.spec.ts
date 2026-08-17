@@ -152,3 +152,75 @@ describe('API Remote Agent resolver races', () => {
     await ctx.fiber.dispose()
   })
 })
+
+/** Identity stub: the ALS-backed mayAccess the real service exposes. */
+function provideIdentity(ctx: Context, owner: string | null): void {
+  ctx.provide('identity', {
+    mayAccess: (sessionOwner: string | undefined): boolean =>
+      owner === null || sessionOwner === owner,
+  } as never)
+}
+
+describe('API Remote Agent resolver identity scoping', () => {
+  it('hides a live cross-tenant session as session-not-found', async () => {
+    const ctx = await createContext()
+    provideIdentity(ctx, 'alice')
+    const sessionId = sid('live-cross-tenant')
+    const session = ctx.sessions.create(sessionId, { meta: { cwd: '/proj', owner: 'bob' } })
+    const live = vi.spyOn(ctx.agents, 'get').mockReturnValue(stubAgent(ctx, session))
+
+    const result = await createApiRemoteAgentResolver(ctx, {})(sessionId)
+
+    expect(result).toMatchObject({ error: { code: 'session-not-found', details: { sessionId } } })
+    live.mockRestore()
+    await ctx.fiber.dispose()
+  })
+
+  it('hides a cold cross-tenant session as session-not-found without resuming it', async () => {
+    const ctx = await createContext()
+    provideIdentity(ctx, 'alice')
+    const sessionId = sid('cold-cross-tenant')
+    const meta = header(sessionId)
+    provideSession(ctx, { ...meta, owner: 'bob' }, () => Promise.resolve({
+      meta: { ...meta, owner: 'bob' },
+      events: [],
+    }))
+    const resume = vi.spyOn(ctx.agents, 'resume')
+
+    const result = await createApiRemoteAgentResolver(ctx, {})(sessionId)
+
+    expect(result).toMatchObject({ error: { code: 'session-not-found', details: { sessionId } } })
+    expect(resume).not.toHaveBeenCalled()
+    await ctx.fiber.dispose()
+  })
+
+  it('lets the owner and the operator tier resolve a partitioned session', async () => {
+    const ctx = await createContext()
+    const sessionId = sid('own-partition')
+    const meta = { ...header(sessionId), owner: 'alice' }
+    let published: Session | undefined
+    provideSession(ctx, meta, () => {
+      published ??= ctx.sessions.create(sessionId, { meta: { cwd: '/proj', owner: 'alice' } })
+      return Promise.resolve({ meta, events: [] })
+    })
+    const resume = vi.spyOn(ctx.agents, 'resume').mockImplementation(async () => {
+      if (published === undefined) throw new Error('Session was not published')
+      return { agent: stubAgent(ctx, published), dispose: () => Promise.resolve() }
+    })
+
+    const holder = { owner: 'alice' as string | null }
+    ctx.provide('identity', {
+      mayAccess: (sessionOwner: string | undefined): boolean =>
+        holder.owner === null || sessionOwner === holder.owner,
+    } as never)
+    const resolver = createApiRemoteAgentResolver(ctx, {})
+    const own = await resolver(sessionId)
+    expect(own).toMatchObject({ agent: { id: sessionId } })
+    resume.mockClear()
+
+    holder.owner = null
+    const operator = await resolver(sessionId)
+    expect(operator).toMatchObject({ agent: { id: sessionId } })
+    await ctx.fiber.dispose()
+  })
+})

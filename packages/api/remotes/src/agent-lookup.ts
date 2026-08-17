@@ -6,6 +6,9 @@ import type { Session, SessionEvent, SessionHeader, SessionId } from '@monotykam
 import type {} from '@monotykamary/dsh-session-persistence'
 import { TypertLookupFailure } from '@monotykamary/dsh-typert-protocol'
 import type {} from '@monotykamary/dsh-typert-registry'
+// Type-only: merges the optional ctx.identity authority whose per-request
+// owner decides which sessions each Remote lookup may resolve.
+import type {} from '@monotykamary/dsh-web-identity'
 
 /** Caller-facing failures preserved by the Gateway's RPC adapter. */
 export type ApiRemoteLookupError =
@@ -40,6 +43,17 @@ export interface ApiRemoteAgentOptions {
 
 /** Cold identity absent from the durable session store. */
 export class ApiRemoteSessionNotFound extends Error {}
+
+/**
+ * The identity layer's not-found refusal: a cross-tenant session id surfaces
+ * exactly like an unknown id, so the partition is invisible to a probing
+ * caller.
+ * @param sessionId - the identity the request may not see.
+ * @returns the session-not-found lookup error.
+ */
+export function apiRemoteSessionHiddenError(sessionId: SessionId): ApiRemoteLookupError {
+  return { code: 'session-not-found', message: `session "${sessionId}" not found`, details: { sessionId } }
+}
 
 /** Session identity whose lifecycle belongs to subagent routing. */
 export class ApiRemoteSubagentSessionOwnership extends Error {
@@ -107,6 +121,14 @@ export async function inspectApiRemoteSession(
   if (inspected.meta.cwd === undefined) {
     throw new ApiRemoteSessionNotFound(`session "${sessionId}" not found`)
   }
+  // The identity layer hides cross-tenant sessions: a partitioned request
+  // resolving another user's session answers not-found, exactly like an
+  // unknown id. Outside a request context (no bound admission) this is the
+  // operator tier and sees everything.
+  const identity = ctx.get('identity')
+  if (identity !== undefined && !identity.mayAccess(inspected.meta.owner)) {
+    throw new ApiRemoteSessionNotFound(`session "${sessionId}" not found`)
+  }
   return { meta: inspected.meta, events: [...inspected.events] }
 }
 
@@ -124,11 +146,20 @@ export function createApiRemoteAgentResolver(
 ): (sessionId: SessionId) => Promise<ApiRemoteAgentResult> {
   const resumes = new Map<SessionId, Promise<Agent>>()
 
+  /** Identity partition check: the current request's owner may see this header. */
+  const mayAccess = (header: { owner?: string }): boolean => {
+    const identity = ctx.get('identity')
+    return identity === undefined || identity.mayAccess(header.owner)
+  }
+
   const fencedLiveAgent = (sessionId: SessionId): ApiRemoteAgentResult | undefined => {
     const live = ctx.agents.get(sessionId)
     if (live === undefined) return undefined
     if (hasApiRemoteSubagentOwner(ctx, live.session, live)) {
       return { error: apiRemoteSubagentOwnershipError(sessionId) }
+    }
+    if (!mayAccess(live.session.header)) {
+      return { error: apiRemoteSessionHiddenError(sessionId) }
     }
     return { agent: live }
   }
@@ -139,6 +170,9 @@ export function createApiRemoteAgentResolver(
     const attached = ctx.sessions.get(sessionId)
     if (attached !== undefined && hasApiRemoteSubagentOwner(ctx, attached, undefined)) {
       return { error: apiRemoteSubagentOwnershipError(sessionId) }
+    }
+    if (attached !== undefined && !mayAccess(attached.header)) {
+      return { error: apiRemoteSessionHiddenError(sessionId) }
     }
     let resume = resumes.get(sessionId)
     if (resume === undefined) {
@@ -158,6 +192,9 @@ export function createApiRemoteAgentResolver(
           if (publishedSession !== undefined
             && hasApiRemoteSubagentOwner(ctx, publishedSession, publishedAgent)) {
             throw new ApiRemoteSubagentSessionOwnership(sessionId)
+          }
+          if (publishedSession !== undefined && !mayAccess(publishedSession.header)) {
+            throw new ApiRemoteSessionNotFound(`session "${sessionId}" not found`)
           }
           const handle = await ctx.agents.resume({
             resumeSessionId: sessionId,

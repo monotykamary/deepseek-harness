@@ -100,6 +100,7 @@
     "@monotykamary/dsh-storage": "workspace:^",
     "@monotykamary/dsh-storage-domain": "workspace:^",
     "@monotykamary/dsh-storage-json": "workspace:^",
+    "@monotykamary/dsh-web-identity": "workspace:^",
     "@monotykamary/dsh-workspace": "workspace:^",
     "@monotykamary/schemastery": "workspace:^",
     "commander": "^15.0.0"

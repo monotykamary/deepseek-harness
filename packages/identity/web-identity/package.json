@@ -1,0 +1,50 @@
+{
+  "name": "@monotykamary/dsh-web-identity",
+  "description": "Web identity authority for dsh web: header and passkey providers that resolve a per-request session owner, gate the API plane, and partition sessions by user",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/identity/web-identity"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@monotykamary/dsh-host-webserver": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@monotykamary/dsh-home-paths": "workspace:^",
+    "@monotykamary/schemastery": "workspace:^",
+    "@simplewebauthn/server": "^13.3.2"
+  },
+  "devDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-host-webserver": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^"
+  }
+}

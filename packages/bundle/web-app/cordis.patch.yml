@@ -144,6 +144,17 @@
     - id: client-hmr
       name: '@monotykamary/dsh-client-hmr'
 
+    # Web identity authority (SSO): absent --identity, provides nothing and the
+    # /api plane stays the pre-identity operator tier. --identity header trusts
+    # a reverse proxy's user header from a trusted source; --identity passkey
+    # runs the WebAuthn login under /auth/passkey and gates /api + WebSocket
+    # upgrades, admitting the operator through the generated bearer token.
+    - id: web-identity
+      name: '@monotykamary/dsh-web-identity'
+      inject: [webStartup]
+      config:
+        identity: !!js ctx.webStartup.identity
+
     # ── browser plugin roster (dsh.client rows; node halves are layer-2 hosts) ──
 
     # Dual-face: the node half scans this tree, composes window.__DSH_BOOT__,

@@ -14,6 +14,9 @@ import type { Scoped } from '@monotykamary/dsh-scope'
 import type { Message } from '@monotykamary/dsh-llm'
 import { SESSION_FORMAT_VERSION, SessionId } from './types.ts'
 import type { TypertLookup } from '@monotykamary/dsh-typert-protocol'
+// Type-only: merges the optional ctx.identity service the typert session
+// lookup consults for cross-tenant scoping.
+import type {} from '@monotykamary/dsh-web-identity'
 import type { CreateSessionOptions, EpochHeader, PrepareSessionOptions, RequestContext, SessionEvent, SessionEventMap, SessionEventType, SessionHeader, SurfaceIntent, SurfaceEventType } from './types.ts'
 import { snapshotJsonValue } from './json.ts'
 import { deriveEventMessage, SurfaceManager } from './surface.ts'
@@ -131,6 +134,9 @@ function validateSessionHeader(id: SessionId, input: unknown): SessionHeader {
   }
   if (record.agentPreset !== undefined && typeof record.agentPreset !== 'string') {
     throw new Error('session header agentPreset must be a string')
+  }
+  if (record.owner !== undefined && (typeof record.owner !== 'string' || record.owner === '')) {
+    throw new Error('session header owner must be a non-empty string')
   }
   return deepFreeze(record as unknown as SessionHeader)
 }
@@ -801,7 +807,16 @@ export class SessionStore extends Service {
         wire: 'sessionId',
         hostTypeSymbol: '@monotykamary/dsh-session#Session',
         wireTypeSymbol: '@monotykamary/dsh-session/types#SessionId',
-        resolve: sessionId => this.get(sessionId),
+        resolve: (sessionId) => {
+          const session = this.get(sessionId)
+          if (session === undefined) return undefined
+          // The identity layer hides cross-tenant sessions: a partitioned
+          // request resolving another user's session id gets lookup-not-found,
+          // exactly like an unknown id.
+          const identity = this.ctx.get('identity')
+          if (identity !== undefined && !identity.mayAccess(session.header.owner)) return undefined
+          return session
+        },
       })
     })
   }
@@ -884,6 +899,7 @@ export class SessionStore extends Service {
       ...meta?.origin === undefined ? {} : { origin: meta.origin },
       ...meta?.delegationDepth === undefined ? {} : { delegationDepth: meta.delegationDepth },
       ...meta?.agentPreset === undefined ? {} : { agentPreset: meta.agentPreset },
+      ...meta?.owner === undefined ? {} : { owner: meta.owner },
     }
     return Session.create(sessionId, seed, header)
   }

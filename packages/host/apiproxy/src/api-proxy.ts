@@ -108,6 +108,9 @@ import {
   hasApiRemoteSubagentOwner,
   inspectApiRemoteSession,
 } from '@monotykamary/dsh-api-remotes'
+// Type-only: merges the optional ctx.identity authority whose per-request
+// owner scopes session listing, creation, and the stream baselines.
+import type {} from '@monotykamary/dsh-web-identity'
 import { canOpenNativePath, openNativePath, openNativeTextFile } from './native-path-opener.ts'
 
 /** Page size when history is called without maxMessages. */
@@ -957,6 +960,34 @@ async function catalogChild(
   error?: RpcError
 }> {
   const { parentSessionId, childSessionId, mode } = address
+  // Identity partition: the parent's catalog is derived from the parent's
+  // data, so a cross-tenant parent answers not-found before any catalog read.
+  const identity = ctx.get('identity')
+  if (identity !== undefined) {
+    const liveParent = ctx.sessions.get(parentSessionId)
+    if (liveParent !== undefined) {
+      if (!identity.mayAccess(liveParent.header.owner)) {
+        return {
+          error: {
+            code: 'subagent-not-found',
+            message: `session "${childSessionId}" is not a ${mode} direct child of "${parentSessionId}"`,
+            details: { parentSessionId, childSessionId },
+          },
+        }
+      }
+    } else {
+      const meta = (await ctx.get('sessionPersistence')?.list())?.find(candidate => candidate.id === parentSessionId)
+      if (meta !== undefined && !identity.mayAccess(meta.owner)) {
+        return {
+          error: {
+            code: 'subagent-not-found',
+            message: `session "${childSessionId}" is not a ${mode} direct child of "${parentSessionId}"`,
+            details: { parentSessionId, childSessionId },
+          },
+        }
+      }
+    }
+  }
   try {
     const entries = await ctx.subagents.listChildren(parentSessionId, signal)
     const entry = entries.find(candidate => candidate.id === childSessionId)
@@ -1496,8 +1527,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
 
   /** Read one stable session prefix without acquiring an Agent owner. */
   async function readSessionState(sessionId: SessionId): Promise<SessionReadState> {
+    const identity = ctx.get('identity')
     const attached = ctx.sessions.get(sessionId)
     if (attached !== undefined) {
+      if (identity !== undefined && !identity.mayAccess(attached.header.owner)) {
+        throw new SessionNotFound(`session "${sessionId}" not found`)
+      }
       return {
         id: attached.id,
         header: attached.header,
@@ -1531,8 +1566,16 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
    * @throws {@link ApiRemoteSessionNotFound} when no project-backed session has that identity.
    */
   async function historySourceFor(sessionId: SessionId): Promise<HistorySource> {
+    const identity = ctx.get('identity')
     const attached = ctx.sessions.get(sessionId)
-    if (attached !== undefined) return { kind: 'attached', session: attached }
+    if (attached !== undefined) {
+      // The live-session fast path still passes the partition fence: a
+      // cross-tenant read answers not-found, like the cold path's inspection.
+      if (identity !== undefined && !identity.mayAccess(attached.header.owner)) {
+        throw new SessionNotFound(`session "${sessionId}" not found`)
+      }
+      return { kind: 'attached', session: attached }
+    }
     const inspected = await inspectServable(sessionId)
     return { kind: 'detached', header: inspected.meta, events: inspected.events }
   }
@@ -1624,10 +1667,16 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     let creation = sessionCreations.get(sessionId)
     if (creation === undefined) {
       creation = (async () => {
+        const identity = ctx.get('identity')
+        const visible = (header: { owner?: string }): boolean =>
+          identity === undefined || identity.mayAccess(header.owner)
         const attached = ctx.sessions.get(sessionId)
         const live = ctx.agents.get(sessionId)
         if (attached !== undefined && hasSubagentOwner(attached, live)) {
           throw new SubagentSessionOwnership(sessionId)
+        }
+        if (attached !== undefined && !visible(attached.header)) {
+          throw new SessionNotFound(`session "${sessionId}" not found`)
         }
         if (live !== undefined) return live
 
@@ -1642,6 +1691,9 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           // cwd (the api/commands.ts contract), not a cwd conflict.
           if (hasSubagentOwner({ header: inspected.meta }, undefined)) {
             throw new SubagentSessionOwnership(sessionId)
+          }
+          if (!visible(inspected.meta)) {
+            throw new SessionNotFound(`session "${sessionId}" not found`)
           }
           if (inspected.meta.cwd !== cwd) {
             throw new SessionCwdConflict(sessionId, cwd, inspected.meta.cwd)
@@ -1667,12 +1719,17 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           throw new Error(`failed to ensure project directory "${cwd}": ${String(error)}`, { cause: error })
         }
         const composition = await composeAgent(presetId)
+        // The identity partition is durable on the session header: a user's
+        // sessions stay theirs across restart, and the operator tier records
+        // no owner at all (byte-identical to the legacy header).
+        const owner = identity?.current().owner ?? null
         return (await ctx.agents.create({
           sessionId,
           agentOptions: agentOptions(),
           meta: {
             cwd,
             ...composition.agentPreset === undefined ? {} : { agentPreset: composition.agentPreset },
+            ...owner === null ? {} : { owner },
           },
           setup: composition.setup,
         })).agent
@@ -1724,6 +1781,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
    */
   async function listVisibleSessionSummaries(signal?: AbortSignal): Promise<SessionSummary[]> {
     signal?.throwIfAborted()
+    // Identity partition: a non-operator request lists exactly its own
+    // sessions; the operator tier lists everything. Read once per request
+    // (the admission is bound for this dispatch's whole async context).
+    const identity = ctx.get('identity')
+    const visible = (header: { owner?: string }): boolean =>
+      identity === undefined || identity.mayAccess(header.owner)
     const summarizeAttached = (session: Session): SessionSummary => {
       const agent = ctx.agents.get(session.id)
       const projections = listProjectionsFor(ctx, session.header, session)
@@ -1732,13 +1795,13 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         ...projections === undefined ? {} : { projections },
       }
     }
-    const items = ctx.sessions.list().map(summarizeAttached)
+    const items = ctx.sessions.list().filter(session => visible(session.header)).map(summarizeAttached)
     signal?.throwIfAborted()
     const attached = new Set(items.map(item => item.sessionId))
     const persistence = ctx.get('sessionPersistence')
     if (persistence !== undefined) {
       const cold = (await persistence.list(signal))
-        .filter(meta => !attached.has(meta.id) && meta.cwd !== undefined)
+        .filter(meta => !attached.has(meta.id) && meta.cwd !== undefined && visible(meta))
       signal?.throwIfAborted()
       for (let offset = 0; offset < cold.length; offset += COLD_SUMMARY_BATCH_SIZE) {
         signal?.throwIfAborted()
@@ -2195,6 +2258,9 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           }
           const refused = presetFailure(request, error)
           if (refused !== undefined) return refused
+          if (error instanceof SessionNotFound) {
+            return err(request, { code: 'session-not-found', message: error.message, details: { sessionId } })
+          }
           if (error instanceof SessionCwdConflict) {
             return err(request, {
               code: 'session-conflict',
@@ -2800,11 +2866,36 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     },
 
     workspace: {
-      list(request) {
-        return Promise.resolve(ok(request, {
-          items: ctx.workspaceRegistry.list().map(workspaceView),
-          archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds],
-        }))
+      async list(request) {
+        // Identity partition: a non-operator request sees workspaces with
+        // exactly its own session ids (workspaces left empty are hidden), and
+        // the archive set filtered the same way. The operator tier sees the
+        // unfiltered registry.
+        const identity = ctx.get('identity')
+        const owner = identity?.current().owner ?? null
+        if (owner === null || identity === undefined) {
+          return ok(request, {
+            items: ctx.workspaceRegistry.list().map(workspaceView),
+            archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds],
+          })
+        }
+        const persistence = ctx.get('sessionPersistence')
+        const coldOwners = persistence === undefined
+          ? new Set<string>()
+          : new Set((await persistence.list()).filter(meta => meta.owner === owner).map(meta => String(meta.id)))
+        const visibleIds = (ids: readonly SessionId[]): SessionId[] => ids.filter((id) => {
+          const live = ctx.sessions.get(id)
+          if (live !== undefined) return live.header.owner === owner
+          return coldOwners.has(String(id))
+        })
+        const items: WorkspaceView[] = []
+        for (const workspace of ctx.workspaceRegistry.list()) {
+          const sessionIds = visibleIds(workspace.sessionIds)
+          if (sessionIds.length === 0) continue
+          items.push(workspaceView({ ...workspace, sessionIds }))
+        }
+        const archivedSessionIds = visibleIds([...ctx.workspaceRegistry.archivedSessionIds] as SessionId[])
+        return ok(request, { items, archivedSessionIds })
       },
 
       async create(request) {
@@ -3209,7 +3300,9 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
       async list(request) {
         const { sessionId } = request.payload
         const session = ctx.sessions.get(sessionId)
-        if (session === undefined) {
+        const identity = ctx.get('identity')
+        if (session === undefined
+          || (identity !== undefined && !identity.mayAccess(session.header.owner))) {
           return err(request, {
             code: 'session-not-found',
             message: `session "${sessionId}" not found (not attached)`,
@@ -3427,13 +3520,23 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     },
 
     events: {
-      mux(_request, signal) {
+      mux(_request, signal, owner = null) {
         const queue = new FrameQueue<RpcRequest<MuxFrame>>()
         muxQueues.add(queue)
+        // Identity partition: a non-operator connection streams exactly its
+        // own sessions. The owner is captured at upgrade time — stream
+        // listeners fire long after any request context has unwound.
+        const visible = (header: { owner?: string }): boolean => owner === null || header.owner === owner
+        const liveSession = (sessionId: SessionId): Session | undefined => {
+          const session = ctx.sessions.get(sessionId)
+          return session !== undefined && visible(session.header) ? session : undefined
+        }
         for (const session of ctx.sessions.list()) {
+          if (!visible(session.header)) continue
           subscribeSession(queue, session)
         }
         for (const pending of pendingQuestions.values()) {
+          if (liveSession(pending.sessionId) === undefined) continue
           queue.push({
             rpcId: pending.rpcId,
             payload: {
@@ -3444,11 +3547,15 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         }
         // Refresh recovery: still-pending approval questions replay with their
         // stable rpcId so a reconnecting client can still answer them.
-        for (const pending of pendingApprovals.values()) queue.push(requestedFrame(pending))
+        for (const pending of pendingApprovals.values()) {
+          if (liveSession(pending.sessionId) === undefined) continue
+          queue.push(requestedFrame(pending))
+        }
         // Queue snapshot baseline (pendingQuestions precedent): frames replayed
         // in arrival order per session; a reconnecting client rebuilds its
         // queue view from these alone.
         for (const session of ctx.sessions.list()) {
+          if (!visible(session.header)) continue
           const agent = ctx.agents.get(session.id)
           if (agent?.session === session && agent.inbox.hasPending) {
             queue.push(frame({ type: 'session/queue', sessionId: session.id, items: queueItems(agent) }))
@@ -3461,6 +3568,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const jobs = ctx.get('jobs')
         if (jobs !== undefined) {
           for (const session of ctx.sessions.list()) {
+            if (!visible(session.header)) continue
             const views = jobViews(jobs.list(ctx.agents.get(session.id)))
             if (views.length > 0) {
               queue.push(frame({ type: 'session/jobs', sessionId: session.id, jobs: views }))
@@ -3473,6 +3581,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const openCalls = new Map<SessionId, Map<string, { name: string; args: unknown }>>()
         const disposers = [
           ctx.on('session/event', (session: Session, event: SessionEvent) => {
+            if (!visible(session.header)) return
             if (event.type === 'tool/call') {
               const data = event.data as ToolCallData
               try {
@@ -3493,6 +3602,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             queue.push(frame({ type: 'session/event', sessionId: session.id, event, ...view === undefined ? {} : { view } }))
           }),
           ctx.on('session/created', (session: Session) => {
+            if (!visible(session.header)) return
             subscribeSession(queue, session)
             // The subscribe frame clears the client's task mirror, and a
             // session born after the stream opened missed the baseline loop.
@@ -3506,17 +3616,19 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           ctx.on('session/disposed', (session: Session) => {
             openCalls.delete(session.id)
           }),
-          ...jobs === undefined ? [] : [jobs.onJobsChanged((owner) => {
-            if (owner !== undefined) {
+          ...jobs === undefined ? [] : [jobs.onJobsChanged((ownerAgent) => {
+            if (ownerAgent !== undefined) {
+              if (!visible(ownerAgent.session.header)) return
               // The exact owner instance the fence compares against, so the
               // push stays correct even while that Agent's scope is tearing
               // down and a lookup by id would already miss.
-              queue.push(frame({ type: 'session/jobs', sessionId: owner.id, jobs: jobViews(jobs.list(owner)) }))
+              queue.push(frame({ type: 'session/jobs', sessionId: ownerAgent.id, jobs: jobViews(jobs.list(ownerAgent)) }))
               return
             }
             // An unowned task is visible to every caller, so every subscribed
             // session's set changed with it.
             for (const session of ctx.sessions.list()) {
+              if (!visible(session.header)) continue
               queue.push(frame({
                 type: 'session/jobs',
                 sessionId: session.id,
@@ -3531,8 +3643,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         })
       },
 
-      host(_request, signal) {
+      host(_request, signal, owner = null) {
         const queue = new FrameQueue<RpcRequest<HostFrame>>()
+        // Identity partition, captured at upgrade time (see the mux stream).
+        // Live workspace pushes stay operator-only: a partitioned client
+        // re-baselines through the filtered workspace.list RPC instead.
+        const visible = (header: { owner?: string }): boolean => owner === null || header.owner === owner
         const committedWorkspaces = ctx.workspaceRegistry.list()
         const committedWorkspaceIds = new Set(
           committedWorkspaces.map(workspace => String(workspace.id)),
@@ -3544,6 +3660,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         let archivedSessionIds = ctx.workspaceRegistry.archivedSessionIds
         const disposers = [
           ctx.on('session/created', (session: Session) => {
+            if (!visible(session.header)) return
             queue.push(frame({
               type: 'host/session-added',
               sessionId: session.id,
@@ -3555,16 +3672,20 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             }))
           }),
           ctx.on('session/disposed', (session: Session) => {
+            if (!visible(session.header)) return
             queue.push(frame({ type: 'host/session-removed', sessionId: session.id }))
           }),
           ctx.on('agent/status', ({ agent, status }: { agent: Agent; status: AgentStatus }) => {
+            if (!visible(agent.session.header)) return
             queue.push(frame({ type: 'host/session-status', sessionId: agent.id, running: status === 'running' }))
           }),
           ctx.on('agent/error', ({ agent, error }: { agent: Agent; error: unknown }) => {
+            if (!visible(agent.session.header)) return
             queue.push(frame({ type: 'host/agent-error', sessionId: agent.id, message: errorChain(error) }))
           }),
           ctx.on('domain/changed', (change) => {
             if (change.domain !== 'workspace') return
+            if (owner !== null) return
             if (change.table === '') {
               if (change.operation !== 'put') return
               const state = workspaceDomainState.parse(change.value)

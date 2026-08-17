@@ -96,6 +96,14 @@ export interface SessionHeader {
    * would replay history the model can no longer act on.
    */
   readonly agentPreset?: string
+  /**
+   * Identity partition key the session was created under, when the deployment
+   * runs a web identity provider. Durable because the partition must survive
+   * restart: the identity layer hides a session from every request whose
+   * owner is not this value (and from every non-operator request when
+   * absent). Absent = created by the operator tier.
+   */
+  readonly owner?: string
 }
 
 /**
@@ -118,6 +126,7 @@ export interface CreateSessionOptions {
     readonly origin?: 'subagent'
     readonly delegationDepth?: number
     readonly agentPreset?: string
+    readonly owner?: string
   }
 }
 
