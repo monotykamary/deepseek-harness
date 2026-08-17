@@ -15,7 +15,6 @@ import { basename, extname } from 'node:path'
 import type { Context } from '@monotykamary/cordis'
 import { AttachmentError, AttachmentId } from '@monotykamary/dsh-attachment'
 import type { ImageAttachmentRef, ImageMediaType } from '@monotykamary/dsh-attachment'
-import { createUserMessage } from '@monotykamary/dsh-llm'
 import type { ContentBlock } from '@monotykamary/dsh-llm'
 import { defineTool } from '@monotykamary/dsh-tools'
 import type { GenericCallView, ToolExecution } from '@monotykamary/dsh-tools'
@@ -208,12 +207,6 @@ export function applyReadImageTool(ctx: Context): void {
           height: ref.height,
           ...ref.name === undefined ? {} : { name: ref.name },
         },
-      }
-      if (exec.parent !== undefined) {
-        exec.deferContext(createUserMessage({
-          content: imageReadContent(value),
-          source: { kind: 'plugin', plugin: 'tool-fs' },
-        }))
       }
       return value
     },

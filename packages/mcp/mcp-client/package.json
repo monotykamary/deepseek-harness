@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-mcp-client",
   "description": "MCP client bridge: connects to MCP servers and registers their tools on ctx.tools",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.7",
   "publishConfig": {
     "access": "public"
   },
@@ -32,6 +32,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
+    "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-llm": "workspace:^",
     "@monotykamary/dsh-subprocess": "workspace:^",
@@ -45,6 +46,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@monotykamary/dsh-attachment": "workspace:^",
+    "@monotykamary/dsh-attachment-local": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-llm": "workspace:^",
     "@monotykamary/dsh-subprocess": "workspace:^",

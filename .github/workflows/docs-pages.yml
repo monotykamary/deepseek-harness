@@ -23,6 +23,9 @@ permissions:
 
 env:
   PRIMARY_NODE_VERSION: '24'
+  # Projected source links target the public repository, whose history can
+  # differ from this workflow's source repository.
+  DOCS_REPOSITORY_REF: master
 
 jobs:
   build:

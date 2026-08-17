@@ -1,0 +1,42 @@
+# Keyless replay combines Code Mode with the durable image store and an exact
+# image-capable replay route. The scenario generates its tiny PNG inside the
+# run_code program, then exercises read_image as a nested dispatch.
+- id: base
+  name: '@monotykamary/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: llm-deepseek
+        name: '@monotykamary/dsh-llm-deepseek'
+        disabled: true
+      - id: acp-agent
+        name: '@monotykamary/dsh-acp-demo'
+        config:
+          provider: deepseek-official
+          model: deepseek-v4-flash
+          persistenceRoot: !!js process.env.DSH_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: none
+          workspaceContext:
+            maxBytes: 65536
+          tools:
+            mode: code
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: attachment-local
+            name: '@monotykamary/dsh-attachment-local'
+          - id: code-runtime
+            name: '@monotykamary/dsh-code-runtime-worker-thread'
+          - id: llm-replay
+            name: '@monotykamary/dsh-llm-replay'
+            config:
+              providers:
+                - id: deepseek-official
+                  name: DeepSeek
+                  models:
+                    - id: deepseek-v4-flash
+                      inputModalities: [text, image]
+                    - id: deepseek-v4-pro
+                      inputModalities: [text]

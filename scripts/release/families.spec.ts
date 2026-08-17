@@ -57,7 +57,7 @@ describe('release families', () => {
       member('packages/a/zebra', '@monotykamary/dsh-zebra'),
     ]
 
-    expect(dsh.publishOrder(members).map(entry => entry.name)).toEqual([
+    expect(dsh.publishOrder(members).order.map(entry => entry.name)).toEqual([
       '@monotykamary/dsh-library',
       '@monotykamary/dsh-consumer',
       '@monotykamary/dsh-zebra',
@@ -72,6 +72,92 @@ describe('release families', () => {
     ]
 
     expect(() => { dsh.publishOrder(members) }).toThrow(/dependency cycle/)
+  })
+
+  it('publishes a peer before its consumer', () => {
+    const dsh = releaseFamily('dsh')
+    const members = [
+      member('packages/a/consumer', '@monotykamary/dsh-consumer', { peerDependencies: { '@monotykamary/dsh-zebra': 'workspace:^' } }),
+      member('packages/a/zebra', '@monotykamary/dsh-zebra'),
+    ]
+
+    // Name order alone would place the consumer first; the peer edge moves it.
+    expect(dsh.publishOrder(members).order.map(entry => entry.name)).toEqual([
+      '@monotykamary/dsh-zebra',
+      '@monotykamary/dsh-consumer',
+    ])
+  })
+
+  it('orders around a peer cycle rather than refusing to publish, and reports the edge it dropped', () => {
+    const dsh = releaseFamily('dsh')
+    const members = [
+      member('packages/a/left', '@monotykamary/dsh-left', { peerDependencies: { '@monotykamary/dsh-right': 'workspace:^' } }),
+      member('packages/a/right', '@monotykamary/dsh-right', { peerDependencies: { '@monotykamary/dsh-left': 'workspace:^' } }),
+    ]
+
+    // Sibling packages declare each other as peers, and npm treats an unmet peer
+    // as a warning, so this pair has to publish rather than fail the release.
+    const plan = dsh.publishOrder(members)
+    expect(plan.order.map(entry => entry.name)).toEqual([
+      '@monotykamary/dsh-right',
+      '@monotykamary/dsh-left',
+    ])
+    // One of the two edges has to give, and which one it is belongs in the log.
+    expect(plan.droppedPeerEdges).toEqual([
+      { consumer: '@monotykamary/dsh-right', peer: '@monotykamary/dsh-left' },
+    ])
+  })
+
+  it('honours an install edge even when a peer cycle surrounds it', () => {
+    const dsh = releaseFamily('dsh')
+    const members = [
+      member('packages/a/base', '@monotykamary/dsh-base', { peerDependencies: { '@monotykamary/dsh-consumer': 'workspace:^' } }),
+      member('packages/a/consumer', '@monotykamary/dsh-consumer', {
+        dependencies: { '@monotykamary/dsh-base': 'workspace:^' },
+        peerDependencies: { '@monotykamary/dsh-base': 'workspace:^' },
+      }),
+    ]
+
+    // The install edge is absolute: base publishes first, and the peer edge that
+    // would reverse it is the one dropped.
+    const plan = dsh.publishOrder(members)
+    expect(plan.order.map(entry => entry.name)).toEqual([
+      '@monotykamary/dsh-base',
+      '@monotykamary/dsh-consumer',
+    ])
+    expect(plan.droppedPeerEdges).toEqual([
+      { consumer: '@monotykamary/dsh-base', peer: '@monotykamary/dsh-consumer' },
+    ])
+  })
+
+  it('refuses an order that would publish a consumer before a dependency it installs', () => {
+    const dsh = releaseFamily('dsh')
+    const members = [
+      member('packages/a/alpha', '@monotykamary/dsh-alpha', { peerDependencies: { '@monotykamary/dsh-bravo': 'workspace:^' } }),
+      member('packages/a/bravo', '@monotykamary/dsh-bravo', { peerDependencies: { '@monotykamary/dsh-charlie': 'workspace:^' } }),
+      member('packages/a/charlie', '@monotykamary/dsh-charlie', { dependencies: { '@monotykamary/dsh-alpha': 'workspace:^' } }),
+    ]
+
+    // A cycle of two peer edges closed by one install edge: dropping a peer edge
+    // would order this, and the traversal drops the install edge instead. That
+    // order would publish charlie before the alpha it installs, so it is refused
+    // here rather than published.
+    expect(() => { dsh.publishOrder(members) }).toThrow(/no publish order honours @monotykamary\/dsh-charlie -> @monotykamary\/dsh-alpha/)
+  })
+
+  it('ignores devDependencies when ordering', () => {
+    const dsh = releaseFamily('dsh')
+    const members = [
+      member('packages/a/alpha', '@monotykamary/dsh-alpha', { devDependencies: { '@monotykamary/dsh-zebra': 'workspace:^' } }),
+      member('packages/a/zebra', '@monotykamary/dsh-zebra'),
+    ]
+
+    // A dev dependency is absent from the published package, so it must not move
+    // the consumer behind it.
+    expect(dsh.publishOrder(members).order.map(entry => entry.name)).toEqual([
+      '@monotykamary/dsh-alpha',
+      '@monotykamary/dsh-zebra',
+    ])
   })
 
   it('applies the harness payload policy to dsh and keeps upstream payloads for vendored packages', () => {
