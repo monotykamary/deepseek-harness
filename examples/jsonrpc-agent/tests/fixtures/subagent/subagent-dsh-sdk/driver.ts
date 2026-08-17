@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /** Test driver: one delegation turn through a headless Loader composition. */
 
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
+import { boot, resolveConfigPath } from '@monotykamary/dsh-app-boot'
+import { runFixtureTurn } from '@monotykamary/dsh-loader-smoke'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('sdk-subagent cwd driver requires a config path')

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
+import type { SettingsNamespaceView } from '@monotykamary/dsh-api-remotes/client'
 import {
   PermissionPresetSettingsController, permissionDefaultOf, refreshPermissionIfLoaded,
 } from '../src/client/settings-store.ts'

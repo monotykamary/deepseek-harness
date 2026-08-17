@@ -1,20 +1,20 @@
 /**
  * Service Definition for the approval capability seam, covering requests, cancellation, audit, and per-session policy. Missing
  * answerers fail closed; grants apply only to the requested action.
- * @module @deepseek-ai/dsh-user-approval
+ * @module @monotykamary/dsh-user-approval
  */
 
 import { randomUUID } from 'node:crypto'
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { createUserMessage, type CallId } from '@deepseek-ai/dsh-llm'
-import { scopeTarget } from '@deepseek-ai/dsh-scope'
-import type { Scoped } from '@deepseek-ai/dsh-scope'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import { Context, Service } from '@monotykamary/cordis'
+import z from '@monotykamary/schemastery'
+import type { Agent } from '@monotykamary/dsh-agent'
+import { createUserMessage, type CallId } from '@monotykamary/dsh-llm'
+import { scopeTarget } from '@monotykamary/dsh-scope'
+import type { Scoped } from '@monotykamary/dsh-scope'
+import type { Session, SessionEvent } from '@monotykamary/dsh-session'
+import type {} from '@monotykamary/dsh-system-prompt'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@monotykamary/cordis' {
   interface Context {
     approval: ApprovalService
   }
@@ -23,7 +23,7 @@ declare module '@deepseek-ai/cordis' {
     /**
      * Ask composed answerers for one decision. Return an outcome to claim the
      * request or call `next()`; failure yields the fail-closed default.
-     * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+     * Scope-filtered dispatch (`@monotykamary/dsh-scope`): agent-scoped listeners receive only that agent.
      * @param req - the pending decision (agent, tool identity, reason, signal).
      * @mode waterfall
      */
@@ -31,7 +31,7 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@monotykamary/dsh-session/types' {
   interface SessionEventMap {
     /**
      * An approval question was put to the answerer chain — log-only audit

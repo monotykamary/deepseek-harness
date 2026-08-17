@@ -3,23 +3,23 @@ import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { boot, healProfilesModuleFallback, loadOverlayPatches } from '@deepseek-ai/dsh-app-boot'
-import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import { Context } from '@monotykamary/cordis'
+import { boot, healProfilesModuleFallback, loadOverlayPatches } from '@monotykamary/dsh-app-boot'
+import { provideCmdline } from '@monotykamary/dsh-cmdline'
+import { SessionId } from '@monotykamary/dsh-session'
+import type { Agent } from '@monotykamary/dsh-agent'
+import type { PatchOptions } from '@monotykamary/cordis-plugin-include'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
-import { resolveSessionPreset, SETTINGS_NAMESPACE } from '@deepseek-ai/dsh-agent-presets'
-import { applyChildComposition, childSessionMeta } from '@deepseek-ai/dsh-subagent'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-compaction-basic'
-import type {} from '@deepseek-ai/dsh-skill'
-import type {} from '@deepseek-ai/dsh-tools'
+import { settingsNamespace } from '@monotykamary/dsh-settings'
+import { resolveSessionPreset, SETTINGS_NAMESPACE } from '@monotykamary/dsh-agent-presets'
+import { applyChildComposition, childSessionMeta } from '@monotykamary/dsh-subagent'
+import { CallId } from '@monotykamary/dsh-llm'
+import type {} from '@monotykamary/dsh-compaction-basic'
+import type {} from '@monotykamary/dsh-skill'
+import type {} from '@monotykamary/dsh-tools'
 // Type-only: resolves `ctx.get('sessionProjections')` and `ctx.get('tokenMeter')`.
-import type {} from '@deepseek-ai/dsh-session-projection'
-import type {} from '@deepseek-ai/dsh-token-meter'
+import type {} from '@monotykamary/dsh-session-projection'
+import type {} from '@monotykamary/dsh-token-meter'
 
 const CONFIG_DIR = fileURLToPath(new URL('../config/', import.meta.url))
 const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
@@ -92,8 +92,8 @@ async function bootWeb(
     // supplies `directoryPicker` without one.
     { id: 'directory-picker', disabled: true },
     { insert: [
-      { id: 'directory-picker-browse', name: '@deepseek-ai/dsh-host-directory-picker-browse' },
-      { id: 'ui-directory-picker-browse', name: '@deepseek-ai/dsh-client-ui-directory-picker-browse' },
+      { id: 'directory-picker-browse', name: '@monotykamary/dsh-host-directory-picker-browse' },
+      { id: 'ui-directory-picker-browse', name: '@monotykamary/dsh-client-ui-directory-picker-browse' },
     ] },
     // The roster AppCLIEntry would patch in; only the shipped root, so a
     // developer's own `~/.dsh/.preset` cannot change this test's outcome.
@@ -448,8 +448,8 @@ describe('product subagent rows in user presets', () => {
     }
     productCtx = await bootWeb(settingsFile, [
       { insert: [
-        { id: 'subagent-codex', name: '@deepseek-ai/dsh-subagent-codex' },
-        { id: 'subagent-claude-code', name: '@deepseek-ai/dsh-subagent-claude-code' },
+        { id: 'subagent-codex', name: '@monotykamary/dsh-subagent-codex' },
+        { id: 'subagent-claude-code', name: '@monotykamary/dsh-subagent-claude-code' },
       ] },
       {
         id: 'agent-presets',
@@ -660,7 +660,7 @@ describe('a launcher that configures no writable root', () => {
     await mkdir(join(home, '.agent-presets', 'derived-mine'), { recursive: true })
     await writeFile(
       join(home, '.agent-presets', 'derived-mine', 'agent.cordis.yml'),
-      '- id: tool-todo\n  name: \'@deepseek-ai/dsh-tool-todo\'\n  config:\n    allowParallelInProgress: true\n',
+      '- id: tool-todo\n  name: \'@monotykamary/dsh-tool-todo\'\n  config:\n    allowParallelInProgress: true\n',
     )
     const settingsFile = join(await mkdtemp(join(tmpdir(), 'dsh-preset-derived-settings-')), 'settings.yaml')
     await writeFile(settingsFile, '{}\n')

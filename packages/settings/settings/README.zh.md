@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-settings
+# @monotykamary/dsh-settings
 
 [English](README.md) | 中文
 

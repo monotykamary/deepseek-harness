@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-tmux-context",
+  "name": "@monotykamary/dsh-tmux-context",
   "description": "Opt-in durable per-step context with this agent's tmux pane and window location",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,22 +32,22 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@monotykamary/schemastery": "workspace:^"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-shell": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-shell": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   }
 }

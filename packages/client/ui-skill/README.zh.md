@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-skill
+# @monotykamary/dsh-client-ui-skill
 
 [English](README.md) | 中文
 

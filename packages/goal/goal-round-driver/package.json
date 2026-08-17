@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-goal-round-driver",
+  "name": "@monotykamary/dsh-goal-round-driver",
   "description": "Race-fenced same-session goal-round driver",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,23 +32,23 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-goal": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-goal": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:^",
-    "@deepseek-ai/dsh-goal": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-agent-loop": "workspace:^",
+    "@monotykamary/dsh-agent-loop-testkit": "workspace:^",
+    "@monotykamary/dsh-goal": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   }
 }

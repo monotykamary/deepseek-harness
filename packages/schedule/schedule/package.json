@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-schedule",
+  "name": "@monotykamary/dsh-schedule",
   "description": "Agent-scoped durable after, at, and fixed-rate reminders over the session event log",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,28 +32,28 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-brand": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-session-persistence": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-agent-loop": "workspace:^",
+    "@monotykamary/dsh-agent-loop-testkit": "workspace:^",
+    "@monotykamary/dsh-brand": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-session-persistence": "workspace:^",
+    "@monotykamary/dsh-session-persistence-jsonl": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   }
 }

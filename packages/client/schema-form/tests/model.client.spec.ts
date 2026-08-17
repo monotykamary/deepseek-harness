@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import Schema from '@deepseek-ai/schemastery'
+import Schema from '@monotykamary/schemastery'
 import {
   deletePath, getPath, hasPath, nodeAtPath, rehydrateSchema, setPath, validateDraft,
 } from '../src/model.ts'

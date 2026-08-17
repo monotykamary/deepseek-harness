@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-workflow-run",
+  "name": "@monotykamary/dsh-client-ui-workflow-run",
   "description": "Durable workflow-run Conversation Node and nested member disclosure for dsh web",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,9 +32,9 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-conversation"
+        "@monotykamary/dsh-client-locale",
+        "@monotykamary/dsh-client-runtime",
+        "@monotykamary/dsh-client-ui-conversation"
       ],
       "platform": "web"
     }
@@ -54,29 +54,29 @@
     "react": "^18.2.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-conversation": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-tool-workflow": "workspace:^",
-    "@deepseek-ai/dsh-workflow": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-client-locale": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-tool-workflow": "workspace:^",
+    "@monotykamary/dsh-workflow": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-conversation": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-tool-workflow": "workspace:^",
-    "@deepseek-ai/dsh-workflow": "workspace:^",
+    "@monotykamary/dsh-client-locale": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-test-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-tool-workflow": "workspace:^",
+    "@monotykamary/dsh-workflow": "workspace:^",
     "@types/react": "~18.3.1",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^"
   }
 }

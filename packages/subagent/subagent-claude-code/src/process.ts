@@ -2,7 +2,7 @@
  * Projection from the shared managed-process handle to the official Claude
  * Agent SDK's custom-spawn process interface.
  *
- * @module @deepseek-ai/dsh-subagent-claude-code/process
+ * @module @monotykamary/dsh-subagent-claude-code/process
  */
 
 import { EventEmitter } from 'node:events'
@@ -15,7 +15,7 @@ import {
   scrubbedParentEnv,
   type SubprocessHandle,
   type SubprocessSpawnSpec,
-} from '@deepseek-ai/dsh-subprocess'
+} from '@monotykamary/dsh-subprocess'
 
 const WINDOWS_BATCH_EXECUTABLE_ENV = 'DSH_CLAUDE_CODE_EXECUTABLE'
 

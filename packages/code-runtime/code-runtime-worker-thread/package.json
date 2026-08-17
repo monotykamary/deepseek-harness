@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-code-runtime-worker-thread",
+  "name": "@monotykamary/dsh-code-runtime-worker-thread",
   "description": "Worker-thread implementation of the DeepSeek Harness code-execution seam",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -36,20 +36,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-code-runtime": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-code-runtime": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-timeout": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@monotykamary/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-code-runtime": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-code-runtime": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-timeout": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   }
 }

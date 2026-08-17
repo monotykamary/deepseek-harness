@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-web-react
+# @monotykamary/dsh-client-web-react
 
 English | [中文](README.zh.md)
 

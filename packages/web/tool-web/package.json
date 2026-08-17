@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-tool-web",
+  "name": "@monotykamary/dsh-tool-web",
   "description": "Model-facing web tools (web_search, web_fetch) over the DeepSeek Harness web capability seam (ctx.web)",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,32 +32,32 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-web": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/dsh-web": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   },
   "dependencies": {
     "@joplin/turndown-plugin-gfm": "^1.0.67",
-    "@deepseek-ai/schemastery": "workspace:^",
+    "@monotykamary/schemastery": "workspace:^",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
     "@types/turndown": "^5.0.6",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-spill-local": "workspace:^",
-    "@deepseek-ai/dsh-spill-policy": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tool-call-timeout-policy": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-web": "workspace:^",
-    "@deepseek-ai/dsh-web-fetch-http": "workspace:^",
-    "@deepseek-ai/dsh-web-search-exa": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-spill-local": "workspace:^",
+    "@monotykamary/dsh-spill-policy": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tool-call-timeout-policy": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/dsh-web": "workspace:^",
+    "@monotykamary/dsh-web-fetch-http": "workspace:^",
+    "@monotykamary/dsh-web-search-exa": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
   }
 }

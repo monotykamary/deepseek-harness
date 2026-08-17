@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-primitives
+# @monotykamary/dsh-client-ui-primitives
 
 English | [中文](README.zh.md)
 

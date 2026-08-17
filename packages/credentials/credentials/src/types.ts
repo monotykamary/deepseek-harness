@@ -4,15 +4,15 @@
  * and nothing here reaches a Host-only symbol, so a Client compilation face
  * reads exactly the signature the Host emits.
  *
- * @module @deepseek-ai/dsh-credentials/types
+ * @module @monotykamary/dsh-credentials/types
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@monotykamary/dsh-brand'
 
 /** Nominal reference to one credential: a POSIX-style environment-variable name. */
 export type CredentialRef = Branded<'CredentialRef'>
 
-declare module '@deepseek-ai/cordis' {
+declare module '@monotykamary/cordis' {
   interface Events {
     /**
      * Committed change to a provider-managed credential source: a `set`, an

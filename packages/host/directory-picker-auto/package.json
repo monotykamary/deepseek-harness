@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-host-directory-picker-auto",
+  "name": "@monotykamary/dsh-host-directory-picker-auto",
   "description": "Adaptive chooser of the directory-picker seam: resolves the host situation at boot and mounts the native or browse backend for the DeepSeek Harness web GUI host",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,25 +32,25 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-directory-picker-browse": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-directory-picker-native": "workspace:^",
-    "@deepseek-ai/dsh-host-directory-picker-browse": "workspace:^",
-    "@deepseek-ai/dsh-host-directory-picker-native": "workspace:^",
-    "@deepseek-ai/dsh-host-webserver": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-client-ui-directory-picker-browse": "workspace:^",
+    "@monotykamary/dsh-client-ui-directory-picker-native": "workspace:^",
+    "@monotykamary/dsh-host-directory-picker-browse": "workspace:^",
+    "@monotykamary/dsh-host-directory-picker-native": "workspace:^",
+    "@monotykamary/dsh-host-webserver": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/cordis-plugin-include": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-directory-picker-browse": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-directory-picker-native": "workspace:^",
-    "@deepseek-ai/dsh-host-directory-picker": "workspace:^",
-    "@deepseek-ai/dsh-host-directory-picker-browse": "workspace:^",
-    "@deepseek-ai/dsh-host-directory-picker-native": "workspace:^",
-    "@deepseek-ai/dsh-host-webserver": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/cordis-plugin-include": "workspace:^",
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-client-ui-directory-picker-browse": "workspace:^",
+    "@monotykamary/dsh-client-ui-directory-picker-native": "workspace:^",
+    "@monotykamary/dsh-host-directory-picker": "workspace:^",
+    "@monotykamary/dsh-host-directory-picker-browse": "workspace:^",
+    "@monotykamary/dsh-host-directory-picker-native": "workspace:^",
+    "@monotykamary/dsh-host-webserver": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^"
   }
 }

@@ -1,17 +1,17 @@
 import { PassThrough } from 'node:stream'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
+import { Context } from '@monotykamary/cordis'
+import Loader from '@monotykamary/cordis-plugin-loader'
 import { describe, expect, it, vi } from 'vitest'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { Agent } from '@monotykamary/dsh-agent'
+import type { InvariantInstaller } from '@monotykamary/dsh-invariants'
+import type { ContentBlock } from '@monotykamary/dsh-llm'
+import SubagentRuntime from '@monotykamary/dsh-subagent'
+import { MAX_TIMER_DELAY_MS } from '@monotykamary/dsh-timeout'
 import type {
   SubprocessHandle,
   SubprocessOutcome,
-} from '@deepseek-ai/dsh-subprocess'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
+} from '@monotykamary/dsh-subprocess'
+import LocalSubprocessRuntime from '@monotykamary/dsh-subprocess-local'
 import * as codex from '../src/index.ts'
 import * as invariant from '../src/invariant.ts'
 import {
@@ -350,7 +350,7 @@ describe('task admission and package contracts', () => {
     const ctx = { invariants: { register } } as unknown as Context
     await expect(invariant.apply(ctx)).resolves.toBe(dispose)
     expect(register).toHaveBeenCalledWith(
-      '@deepseek-ai/dsh-subagent-codex',
+      '@monotykamary/dsh-subagent-codex',
       expect.any(Function),
     )
     const install = register.mock.calls[0]![1]

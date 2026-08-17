@@ -5,9 +5,9 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import { AttachmentId } from '@deepseek-ai/dsh-attachment'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { AttachmentId } from '@monotykamary/dsh-attachment'
+import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
+import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
 import { AssistantMarkdown } from '../src/client/chat/AssistantMarkdown.tsx'
 import { attachmentErrorText, imageSizeText } from '../src/client/image-labels.ts'
 import { en, zh } from '../src/client/locales.ts'

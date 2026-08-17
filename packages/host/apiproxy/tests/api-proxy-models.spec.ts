@@ -6,21 +6,21 @@
  */
 
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { agentEvents } from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import LlmRuntime, { LlmAdapter, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { Context } from '@monotykamary/cordis'
+import AgentRegistry, { agentEvents } from '@monotykamary/dsh-agent'
+import type { Agent } from '@monotykamary/dsh-agent'
+import LlmRuntime, { LlmAdapter, ReasoningEffortId } from '@monotykamary/dsh-llm'
 import type {
   GenerateOptions, LlmCallConfig, LlmModelInfo, LlmModelReasoningInfo, LlmProviderInfo,
   LlmResolvedModelInfo, StreamChunk,
   UserMessage,
-} from '@deepseek-ai/dsh-llm'
-import SessionStore from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import UserQuestionService from '@deepseek-ai/dsh-user-questions'
-import type { RpcRequest } from '@deepseek-ai/dsh-host-apiproxy/api/rpc'
-import { RpcId } from '@deepseek-ai/dsh-host-apiproxy/api/rpc'
+} from '@monotykamary/dsh-llm'
+import SessionStore from '@monotykamary/dsh-session'
+import type { SessionId } from '@monotykamary/dsh-session'
+import SystemPrompt from '@monotykamary/dsh-system-prompt'
+import UserQuestionService from '@monotykamary/dsh-user-questions'
+import type { RpcRequest } from '@monotykamary/dsh-host-apiproxy/api/rpc'
+import { RpcId } from '@monotykamary/dsh-host-apiproxy/api/rpc'
 import { createApiProxy } from '../src/api-proxy.ts'
 
 let nextRpc = 1

@@ -9,12 +9,12 @@
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ToolResultNode } from '@deepseek-ai/dsh-client-runtime/client'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import type { ToolResultNode } from '@monotykamary/dsh-client-runtime/client'
+import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
+import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
 // Export discipline: packages/client/AGENTS.md.
 import { AskQuestionRow, askQuestionToolview } from '../src/client/tool/toolviews/ask-question-row.tsx'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
+import { zh } from '@monotykamary/dsh-client-ui-conversation/src/client/locales.ts'
 
 afterEach(cleanup)
 

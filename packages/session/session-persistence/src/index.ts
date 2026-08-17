@@ -2,16 +2,16 @@
  * Durable session-persistence Service Definition (`ctx.sessionPersistence`). Backends store
  * {@link SessionEvent}s as the event-sourced log and carry non-replayable
  * {@link SessionHeader} metadata separately.
- * @module @deepseek-ai/dsh-session-persistence
+ * @module @monotykamary/dsh-session-persistence
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import { SessionPreparation } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionId, SessionHeader } from '@deepseek-ai/dsh-session'
+import { Context, Service } from '@monotykamary/cordis'
+import { SessionPreparation } from '@monotykamary/dsh-session'
+import type { SessionEvent, SessionId, SessionHeader } from '@monotykamary/dsh-session'
 import type { SessionPersistenceRevision } from './revision.ts'
 
 // Re-export the metadata vocabulary so Consumers import it from the Service Definition.
-export type { SessionHeader } from '@deepseek-ai/dsh-session'
+export type { SessionHeader } from '@monotykamary/dsh-session'
 export { SessionPersistenceRevision } from './revision.ts'
 
 /** Lightweight immutable source identity returned without loading a full log. */
@@ -57,7 +57,7 @@ export type {
   StoredSuffix,
 } from './coordinator.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@monotykamary/cordis' {
   interface Context {
     sessionPersistence: SessionPersistence
   }

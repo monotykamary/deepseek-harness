@@ -66,8 +66,8 @@ First-party plugin authors can use the `defineTool()` helper (exported from this
 
 ```ts
 import { readFile } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@monotykamary/cordis'
+import { defineTool } from '@monotykamary/dsh-tools'
 
 declare const ctx: Context
 
@@ -192,7 +192,7 @@ Append-only; newly visible content follows the reusable request prefix and does 
 - **Concurrency policy is not an event gate** — `executionMode()` reads the resolved tool definition directly; plugins can only declare a classifier on definitions they own.
 - **`tools/pre-execute` deliberately cannot rewrite `exec.arguments`** — logged and rendered args would desync from what ran; the rewrite design is [a proposed Agent Note](../../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.md).
 - **Caller-defined subagent and workflow structured outputs remain object-rooted** — this is a consumer-level guard; the shared schema vocabulary and tool outputs support every JSON root.
-- **`timeoutMs` on a definition is declarative only** — the registry never enforces deadlines; enforcement requires the `@deepseek-ai/dsh-tool-call-timeout-policy` wrapper.
+- **`timeoutMs` on a definition is declarative only** — the registry never enforces deadlines; enforcement requires the `@monotykamary/dsh-tool-call-timeout-policy` wrapper.
 - **Code Mode's SDK language follows the one loaded runtime, and a presentation is per agent rather than per tool** — `mode: code`/`both` rejects prompt assembly unless `ctx.codeRuntime.language` has a registered SDK renderer (TypeScript or Python); scoped restrictions/shadows and `presentAs` choose each agent's visible bindings and their form, but within one agent no tool can be native-only while another is code-only.
 - **Code Mode intermediate values are execution-local and unbounded by bytes** — the canonical typed values cannot be reconstructed from session replay and may exhaust process or worker memory; only the outer `run_code` output has the worker's configurable hard cap. The durable log copy of each sub-call IS bounded: the `tools/code-dispatch-log` waterfall lets the spill policy replace an oversized `tool/code-dispatch` content with a preview + locator ([rationale](../../../.agents/notes/implemented/feature/2026-07-26-code-dispatch-log-spill.md)).
 - **`run_code` state is fresh per run** — a persistent REPL-style kernel is rejected for the MVP (cross-call state would be invisible to the log); see [the Code Mode Agent Note](../../../.agents/notes/implemented/feature/2026-06-15-code-mode.md).

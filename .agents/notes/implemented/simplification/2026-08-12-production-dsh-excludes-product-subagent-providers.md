@@ -6,11 +6,11 @@ English | [中文](2026-08-12-production-dsh-excludes-product-subagent-providers
 
 ## Problem
 
-`@deepseek-ai/dsh` receives the `@deepseek-ai/dsh-base` dependency closure. Including the Codex and Claude Code subagent providers there makes every production install download optional product integration code, including the Claude Agent SDK, even when neither integration is used.
+`@monotykamary/dsh` receives the `@monotykamary/dsh-base` dependency closure. Including the Codex and Claude Code subagent providers there makes every production install download optional product integration code, including the Claude Agent SDK, even when neither integration is used.
 
 ## Decision
 
-This decision supersedes the [shared-host placement](../architecture/2026-08-10-product-subagent-providers-in-shared-host.md): `@deepseek-ai/dsh-base` does not depend on or mount the Codex and Claude Code subagent providers. Their packages remain available for Profiles that install and mount them explicitly. Repository examples keep direct development dependencies so their explicit provider configurations continue to resolve.
+This decision supersedes the [shared-host placement](../architecture/2026-08-10-product-subagent-providers-in-shared-host.md): `@monotykamary/dsh-base` does not depend on or mount the Codex and Claude Code subagent providers. Their packages remain available for Profiles that install and mount them explicitly. Repository examples keep direct development dependencies so their explicit provider configurations continue to resolve.
 
 ## Verification
 
@@ -22,4 +22,4 @@ The base bundle test rejects both provider dependencies and configuration rows. 
 
 ## Consequences
 
-Installing `@deepseek-ai/dsh` does not download either product provider through the base bundle. Using either integration requires explicit Profile configuration.
+Installing `@monotykamary/dsh` does not download either product provider through the base bundle. Using either integration requires explicit Profile configuration.

@@ -71,7 +71,7 @@
         "**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@monotykamary/.+"
       ]
     },
     "packages/util/home": {
@@ -94,8 +94,8 @@
     },
     "packages/host/directory-picker-auto": {
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-client-ui-directory-picker-browse",
-        "@deepseek-ai/dsh-client-ui-directory-picker-native"
+        "@monotykamary/dsh-client-ui-directory-picker-browse",
+        "@monotykamary/dsh-client-ui-directory-picker-native"
       ]
     },
     "packages/extensions/cordis-host-runner": {
@@ -147,7 +147,7 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-api-gateway"
+        "@monotykamary/dsh-api-gateway"
       ]
     },
     "packages/client/ui-primitives": {
@@ -692,7 +692,7 @@
         "tests/**/*.tsx"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-client-ui-theme"
+        "@monotykamary/dsh-client-ui-theme"
       ]
     },
     "packages/client/ui-settings": {
@@ -717,9 +717,9 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-client-ui-primitives",
-        "@deepseek-ai/dsh-client-ui-slots",
-        "@deepseek-ai/dsh-client-web-react",
+        "@monotykamary/dsh-client-ui-primitives",
+        "@monotykamary/dsh-client-ui-slots",
+        "@monotykamary/dsh-client-web-react",
         "@types/react",
         "@types/react-dom",
         "react",
@@ -737,7 +737,7 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@monotykamary/.+"
       ]
     },
     "packages/client/modules": {
@@ -770,17 +770,17 @@
     },
     "packages/bundle/base": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@monotykamary/.+"
       ]
     },
     "packages/bundle/headless": {
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-code-runtime-worker-thread"
+        "@monotykamary/dsh-code-runtime-worker-thread"
       ]
     },
     "packages/bundle/web-app": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@monotykamary/.+"
       ]
     }
   }

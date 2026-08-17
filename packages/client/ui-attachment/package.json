@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-attachment",
+  "name": "@monotykamary/dsh-client-ui-attachment",
   "description": "Pure React attachment atoms for the dsh web UI: draft-image rail, message image gallery, and original-image lightbox (zero cordis)",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -27,15 +27,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "clsx": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
     "@types/react-dom": "~18.3.0"
   },
@@ -45,7 +45,7 @@
     "lib/types/**/*.d.ts"
   ],
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^"
   }
 }

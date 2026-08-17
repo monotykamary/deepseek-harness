@@ -13,13 +13,13 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import HttpServer from '@deepseek-ai/dsh-host-webserver'
-import type { DirectoryPicker } from '@deepseek-ai/dsh-host-directory-picker'
-import BrowseDirectoryPicker from '@deepseek-ai/dsh-host-directory-picker-browse'
-import NativeDirectoryPicker from '@deepseek-ai/dsh-host-directory-picker-native'
+import { Context } from '@monotykamary/cordis'
+import Loader from '@monotykamary/cordis-plugin-loader'
+import Include from '@monotykamary/cordis-plugin-include'
+import HttpServer from '@monotykamary/dsh-host-webserver'
+import type { DirectoryPicker } from '@monotykamary/dsh-host-directory-picker'
+import BrowseDirectoryPicker from '@monotykamary/dsh-host-directory-picker-browse'
+import NativeDirectoryPicker from '@monotykamary/dsh-host-directory-picker-native'
 import * as DirectoryPickerAuto from '../src/index.ts'
 
 const renameControl = vi.hoisted(() => ({
@@ -45,11 +45,11 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   }
 })
 
-const AUTO = '@deepseek-ai/dsh-host-directory-picker-auto'
-const NATIVE = '@deepseek-ai/dsh-host-directory-picker-native'
-const BROWSE = '@deepseek-ai/dsh-host-directory-picker-browse'
-const NATIVE_SURFACE = '@deepseek-ai/dsh-client-ui-directory-picker-native'
-const BROWSE_SURFACE = '@deepseek-ai/dsh-client-ui-directory-picker-browse'
+const AUTO = '@monotykamary/dsh-host-directory-picker-auto'
+const NATIVE = '@monotykamary/dsh-host-directory-picker-native'
+const BROWSE = '@monotykamary/dsh-host-directory-picker-browse'
+const NATIVE_SURFACE = '@monotykamary/dsh-client-ui-directory-picker-native'
+const BROWSE_SURFACE = '@monotykamary/dsh-client-ui-directory-picker-browse'
 
 /**
  * Loader-visible stand-in for a client surface package: the surfaces belong to
@@ -95,7 +95,7 @@ async function loadComposition(
   root = await mkdtemp(join(tmpdir(), 'dsh-directory-picker-auto-'))
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
-    "- name: '@deepseek-ai/dsh-host-webserver'",
+    "- name: '@monotykamary/dsh-host-webserver'",
     '  config:',
     `    host: '${bindHost}'`,
     '    port: 0',
@@ -108,7 +108,7 @@ async function loadComposition(
   await context.plugin(Loader)
   context.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-host-webserver', HttpServer],
+    ['@monotykamary/dsh-host-webserver', HttpServer],
     [AUTO, DirectoryPickerAuto],
     [NATIVE, NativeDirectoryPicker],
     [BROWSE, BrowseDirectoryPicker],

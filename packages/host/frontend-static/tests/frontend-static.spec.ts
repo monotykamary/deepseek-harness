@@ -11,10 +11,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import HttpServer from '@deepseek-ai/dsh-host-webserver'
+import { Context } from '@monotykamary/cordis'
+import Loader from '@monotykamary/cordis-plugin-loader'
+import Include from '@monotykamary/cordis-plugin-include'
+import HttpServer from '@monotykamary/dsh-host-webserver'
 import * as FrontendStatic from '../src/index.ts'
 
 let root: string | undefined
@@ -39,12 +39,12 @@ async function loadComposition(): Promise<Context> {
   await writeFile(join(dist, 'manifest.webmanifest'), '{}')
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
-    "- name: '@deepseek-ai/dsh-host-webserver'",
+    "- name: '@monotykamary/dsh-host-webserver'",
     '  config:',
     "    host: '127.0.0.1'",
     '    port: 0',
     '- id: frontend',
-    "  name: '@deepseek-ai/dsh-host-frontend-static'",
+    "  name: '@monotykamary/dsh-host-frontend-static'",
     '  config:',
     `    distIndex: '${distIndex}'`,
     '',
@@ -55,8 +55,8 @@ async function loadComposition(): Promise<Context> {
   await context.plugin(Loader)
   context.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-host-webserver', HttpServer],
-    ['@deepseek-ai/dsh-host-frontend-static', FrontendStatic],
+    ['@monotykamary/dsh-host-webserver', HttpServer],
+    ['@monotykamary/dsh-host-frontend-static', FrontendStatic],
   ])
   context.loader.internal = {
     version: 'v2',

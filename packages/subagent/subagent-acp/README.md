@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-subagent-acp
+# @monotykamary/dsh-subagent-acp
 
 English | [中文](README.zh.md)
 
@@ -35,7 +35,7 @@ ACP advertises no start-time capabilities because this process cannot enforce th
 
 ```yaml
 - id: subagent-acp
-  name: '@deepseek-ai/dsh-subagent-acp'
+  name: '@monotykamary/dsh-subagent-acp'
   config:
     providerName: acp
     command: node

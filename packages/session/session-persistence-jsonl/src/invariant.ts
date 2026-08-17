@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-session-persistence-jsonl`.
- * @module @deepseek-ai/dsh-session-persistence-jsonl/invariant
+ * Package-owned invariant companion for `@monotykamary/dsh-session-persistence-jsonl`.
+ * @module @monotykamary/dsh-session-persistence-jsonl/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@monotykamary/cordis'
+import type { InvariantInstaller } from '@monotykamary/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-session-persistence-jsonl'
+const PACKAGE_NAME = '@monotykamary/dsh-session-persistence-jsonl'
 
 /** Cordis companion plugin name. */
 export const name = 'session-persistence-jsonl-invariant'

@@ -14,8 +14,8 @@
  * more than the row it targeted.
  */
 
-import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import type { IApiClient } from '@monotykamary/dsh-api-remotes/client'
+import { createSnapshotStore, type SnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import { beginRosterRead, messageOf, writeDefaultPreset } from './settings-store.ts'
 
 /** Ids a preset directory may be named, mirroring the host's own rule. */

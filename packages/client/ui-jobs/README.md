@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-jobs
+# @monotykamary/dsh-client-ui-jobs
 
 English | [中文](README.zh.md)
 

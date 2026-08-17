@@ -1,15 +1,15 @@
-/** Package-owned compaction log-stream invariants. @module @deepseek-ai/dsh-compaction/invariant */
+/** Package-owned compaction log-stream invariants. @module @monotykamary/dsh-compaction/invariant */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { isReplacementSurfaceEvent } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import type { InvariantFailure, InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@monotykamary/cordis'
+import { isReplacementSurfaceEvent } from '@monotykamary/dsh-session'
+import type { Session, SessionEvent } from '@monotykamary/dsh-session'
+import type { InvariantFailure, InvariantInstaller } from '@monotykamary/dsh-invariants'
 import type { CompactionId } from './brand.ts'
 import { isCompactCheckpointSource } from './checkpoint.ts'
 import type { CompactionCheckpointSource } from './checkpoint.ts'
 import type {} from './types.ts'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-compaction'
+const PACKAGE_NAME = '@monotykamary/dsh-compaction'
 
 /** Cordis companion plugin name. */
 export const name = 'compaction-invariant'

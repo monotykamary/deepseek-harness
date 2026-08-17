@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-bash-local",
+  "name": "@monotykamary/dsh-bash-local",
   "description": "Local-subprocess implementation of the DeepSeek Harness bash executor seam",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,23 +32,23 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-subprocess": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^"
+    "@monotykamary/dsh-shell": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-subprocess": "workspace:^",
+    "@monotykamary/dsh-timeout": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@monotykamary/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-subprocess": "workspace:^",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^"
+    "@monotykamary/dsh-shell": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-subprocess": "workspace:^",
+    "@monotykamary/dsh-subprocess-local": "workspace:^",
+    "@monotykamary/dsh-timeout": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   }
 }

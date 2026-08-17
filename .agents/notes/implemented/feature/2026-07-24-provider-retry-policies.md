@@ -12,7 +12,7 @@ Provider policy must follow the request that actually failed, including a route 
 
 ## Decision
 
-Each concrete adapter accepts an optional `retryPolicy` inside its provider configuration. The adapter validates and resolves the policy, and `ctx.llm` captures it when that exact provider route registers. When a call enters its final adapter boundary, `ctx.llm` binds the serving registration's immutable policy to that call; the agent loop passes it to closed-step recovery even if the route is disposed or replaced while the request is in flight. `@deepseek-ai/dsh-llm-retry` combines that call-local policy with the failed step's durable provider identity. A call that never reaches a final adapter has no serving policy and delegates. A provider without `retryPolicy` uses the normal defaults.
+Each concrete adapter accepts an optional `retryPolicy` inside its provider configuration. The adapter validates and resolves the policy, and `ctx.llm` captures it when that exact provider route registers. When a call enters its final adapter boundary, `ctx.llm` binds the serving registration's immutable policy to that call; the agent loop passes it to closed-step recovery even if the route is disposed or replaced while the request is in flight. `@monotykamary/dsh-llm-retry` combines that call-local policy with the failed step's durable provider identity. A call that never reaches a final adapter has no serving policy and delegates. A provider without `retryPolicy` uses the normal defaults.
 
 ```yaml
 providers:

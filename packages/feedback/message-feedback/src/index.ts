@@ -1,17 +1,17 @@
 /**
  * Durable, lifecycle-bound feedback for finalized assistant messages.
- * @module @deepseek-ai/dsh-message-feedback
+ * @module @monotykamary/dsh-message-feedback
  */
 
 import { Buffer } from 'node:buffer'
 import { randomUUID } from 'node:crypto'
-import { Context, Service } from '@deepseek-ai/cordis'
-import s from '@deepseek-ai/schemastery'
-import { deriveEventMessage, isAppendSurfaceEvent } from '@deepseek-ai/dsh-session/surface'
-import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence'
-import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
-import { TypertRemoteService, Remote } from '@deepseek-ai/dsh-typert-protocol'
+import { Context, Service } from '@monotykamary/cordis'
+import s from '@monotykamary/schemastery'
+import { deriveEventMessage, isAppendSurfaceEvent } from '@monotykamary/dsh-session/surface'
+import type { SessionHeader, SessionId } from '@monotykamary/dsh-session/types'
+import type { SessionInspection } from '@monotykamary/dsh-session-persistence'
+import type { KvTable } from '@monotykamary/dsh-storage-domain'
+import { TypertRemoteService, Remote } from '@monotykamary/dsh-typert-protocol'
 import { messageFeedbackDomainSpec } from './spec.ts'
 import type { MessageFeedbackRow, MessageFeedbackSessionIdentity } from './spec.ts'
 import type {
@@ -51,7 +51,7 @@ export interface Config {
   readonly maxNoteBytes: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@monotykamary/cordis' {
   interface Context {
     messageFeedback: MessageFeedbackService
   }

@@ -2,36 +2,36 @@
 # e2b.cwd and sandbox-policy.workspaceRoot must name the same remote directory,
 # which is also bash-local's implicit default workdir.
 - id: e2b
-  name: '@deepseek-ai/dsh-e2b'
+  name: '@monotykamary/dsh-e2b'
   config:
     cwd: !!js process.cwd()
     timeoutMs: 180000
 
 - id: subprocess-e2b
-  name: '@deepseek-ai/dsh-subprocess-e2b'
+  name: '@monotykamary/dsh-subprocess-e2b'
 
 - id: bash
-  name: '@deepseek-ai/dsh-bash-local'
+  name: '@monotykamary/dsh-bash-local'
   config:
     timeoutMs: 30000
 
 - id: fs-e2b
-  name: '@deepseek-ai/dsh-fs-e2b'
+  name: '@monotykamary/dsh-fs-e2b'
 
 - id: agents
-  name: '@deepseek-ai/dsh-agent'
+  name: '@monotykamary/dsh-agent'
 
 - id: sandbox-policy
-  name: '@deepseek-ai/dsh-sandbox-policy'
+  name: '@monotykamary/dsh-sandbox-policy'
   config:
     mode: danger-full-access
     workspaceRoot: !!js process.cwd()
 
 - id: pty
-  name: '@deepseek-ai/dsh-terminal'
+  name: '@monotykamary/dsh-terminal'
 
 - id: terminal-bash
-  name: '@deepseek-ai/dsh-terminal-bash'
+  name: '@monotykamary/dsh-terminal-bash'
   config:
     pollIntervalMs: 25
     exactProbeAfterMs: 150
@@ -41,10 +41,10 @@
     disposeGraceMs: 1000
 
 - id: lsp
-  name: '@deepseek-ai/dsh-lsp'
+  name: '@monotykamary/dsh-lsp'
 
 - id: lsp-stdio
-  name: '@deepseek-ai/dsh-lsp-stdio'
+  name: '@monotykamary/dsh-lsp-stdio'
   config:
     servers:
       fixture:

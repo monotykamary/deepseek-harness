@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-directory-picker-browse
+# @monotykamary/dsh-client-ui-directory-picker-browse
 
 English | [中文](README.zh.md)
 

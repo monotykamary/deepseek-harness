@@ -5,11 +5,11 @@
  * `dsh-tool-bash` defaults a bash `workdir` to the session cwd.
  * Non-agent calls return `undefined`, leaving the fallback in the provider rather than reading
  * `process.cwd()` at the tool boundary.
- * @module @deepseek-ai/dsh-tool-fs/session-cwd
+ * @module @monotykamary/dsh-tool-fs/session-cwd
  */
 
-import type { ToolExecution } from '@deepseek-ai/dsh-tools'
-import { canonicalPath } from '@deepseek-ai/dsh-sandbox'
+import type { ToolExecution } from '@monotykamary/dsh-tools'
+import { canonicalPath } from '@monotykamary/dsh-sandbox'
 
 const PARENT_PATH_SEGMENT = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 

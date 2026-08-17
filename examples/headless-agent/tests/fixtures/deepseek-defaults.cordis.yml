@@ -1,5 +1,5 @@
 - id: base
-  name: '@deepseek-ai/cordis-plugin-include'
+  name: '@monotykamary/cordis-plugin-include'
   config:
     path: ../../cordis.yml
     patches:

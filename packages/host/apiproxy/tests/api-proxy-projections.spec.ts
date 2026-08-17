@@ -8,22 +8,22 @@
  */
 
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@monotykamary/cordis'
 import { z } from 'zod'
-import AgentRegistry, { Inbox } from '@deepseek-ai/dsh-agent'
-import { AttachmentStore } from '@deepseek-ai/dsh-attachment'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import type { Session } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
-import UserQuestionService from '@deepseek-ai/dsh-user-questions'
-import type { MuxFrame, RpcRequest } from '@deepseek-ai/dsh-host-apiproxy/api'
-import { RpcId } from '@deepseek-ai/dsh-host-apiproxy/api/rpc'
-import { createApiProxy } from '@deepseek-ai/dsh-host-apiproxy'
+import AgentRegistry, { Inbox } from '@monotykamary/dsh-agent'
+import { AttachmentStore } from '@monotykamary/dsh-attachment'
+import type { Agent } from '@monotykamary/dsh-agent'
+import { createUserMessage } from '@monotykamary/dsh-llm'
+import SessionStore, { SessionId } from '@monotykamary/dsh-session'
+import type { Session } from '@monotykamary/dsh-session'
+import SessionProjectionRegistry from '@monotykamary/dsh-session-projection'
+import type { ProjectionDefinition } from '@monotykamary/dsh-session-projection'
+import UserQuestionService from '@monotykamary/dsh-user-questions'
+import type { MuxFrame, RpcRequest } from '@monotykamary/dsh-host-apiproxy/api'
+import { RpcId } from '@monotykamary/dsh-host-apiproxy/api/rpc'
+import { createApiProxy } from '@monotykamary/dsh-host-apiproxy'
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@monotykamary/dsh-session-projection/types' {
   interface SessionProjectionMap {
     'test/last-user': { text: string } | null
   }

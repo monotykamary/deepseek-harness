@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-projection-cache
+# @monotykamary/dsh-session-projection-cache
 
 English | [中文](README.zh.md)
 
@@ -39,7 +39,7 @@ The read ladder, zero full-log load on the happy path: cached rows → `sessionP
 
 ```yaml
 - id: session-projection-cache
-  name: '@deepseek-ai/dsh-session-projection-cache'
+  name: '@monotykamary/dsh-session-projection-cache'
   config:
     writeEveryEvents: 200
     writeIntervalMs: 5000

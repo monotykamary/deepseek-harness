@@ -2,9 +2,9 @@
 /** First-run DeepSeek prompt behavior over the shared Models join. */
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Schema from '@deepseek-ai/schemastery'
-import type { RpcResponse, SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-web-react'
+import Schema from '@monotykamary/schemastery'
+import type { RpcResponse, SettingsNamespaceView } from '@monotykamary/dsh-api-remotes/client'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
 import { DeepSeekOnboardingDialog } from '../src/client/DeepSeekOnboardingDialog.tsx'
 import type { DeepSeekOnboardingDialogProps } from '../src/client/DeepSeekOnboardingDialog.tsx'
 import { ModelsSettingsStore } from '../src/client/store.ts'

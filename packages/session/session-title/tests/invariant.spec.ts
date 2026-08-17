@@ -1,10 +1,10 @@
 // Title-source invariant: `messageSeqs` is empty iff `source.kind` is `user`.
 // — the durable relationship every appended session/title event must keep.
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import * as SessionTitleInvariantCompanion from '@deepseek-ai/dsh-session-title/invariant'
-import InvariantRegistry, { InvariantError } from '@deepseek-ai/dsh-invariants'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import { Context } from '@monotykamary/cordis'
+import * as SessionTitleInvariantCompanion from '@monotykamary/dsh-session-title/invariant'
+import InvariantRegistry, { InvariantError } from '@monotykamary/dsh-invariants'
+import SessionStore, { SessionId } from '@monotykamary/dsh-session'
 
 async function setup(): Promise<Context> {
   const ctx = new Context()
@@ -31,13 +31,13 @@ describe('session-title source invariant', () => {
       session.append('session/title', { title: 'auto', messageSeqs: [], source: { kind: 'fallback' } })
     }).toThrow(expect.objectContaining<Partial<InvariantError>>({
       code: 'INVARIANT',
-      packageName: '@deepseek-ai/dsh-session-title',
+      packageName: '@monotykamary/dsh-session-title',
     }))
     expect(() => {
       session.append('session/title', { title: 'named', messageSeqs: [1], source: { kind: 'user' } })
     }).toThrow(expect.objectContaining<Partial<InvariantError>>({
       code: 'INVARIANT',
-      packageName: '@deepseek-ai/dsh-session-title',
+      packageName: '@monotykamary/dsh-session-title',
     }))
     expect(session.seq).toBe(0)
   })

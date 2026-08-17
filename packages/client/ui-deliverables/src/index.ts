@@ -5,8 +5,8 @@
  * dsh.client declaration.
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type { Context } from '@monotykamary/cordis'
+import type {} from '@monotykamary/dsh-system-prompt'
 
 /** Services required for the model guidance paired with the browser renderer. */
 export const inject = ['systemPrompt']

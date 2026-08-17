@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-sandbox-windows-acl`.
- * @module @deepseek-ai/dsh-sandbox-windows-acl/invariant
+ * Package-owned invariant companion for `@monotykamary/dsh-sandbox-windows-acl`.
+ * @module @monotykamary/dsh-sandbox-windows-acl/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@monotykamary/cordis'
+import type { InvariantInstaller } from '@monotykamary/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-sandbox-windows-acl'
+const PACKAGE_NAME = '@monotykamary/dsh-sandbox-windows-acl'
 
 /** Cordis companion plugin name. */
 export const name = 'sandbox-windows-acl-invariant'

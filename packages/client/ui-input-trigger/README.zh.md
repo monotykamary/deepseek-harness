@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-input-trigger
+# @monotykamary/dsh-client-ui-input-trigger
 
 [English](README.md) | 中文
 

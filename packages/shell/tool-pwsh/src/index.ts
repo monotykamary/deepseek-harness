@@ -1,7 +1,7 @@
 /**
  * Model-facing PowerShell Consumer of the `ctx.shell` capability seam. Intended for
  * Windows compositions where a PowerShell executor (e.g.
- * `@deepseek-ai/dsh-pwsh-local`) backs `ctx.shell`; the tool contract is
+ * `@monotykamary/dsh-pwsh-local`) backs `ctx.shell`; the tool contract is
  * PowerShell-dialect: native `C:\...` paths and `$env:NAME` variables.
  *
  * Behavior mirrors `dsh-tool-bash` call-for-call: foreground and
@@ -14,32 +14,32 @@
  * `ctx.approval`), and the bash marker/truncation rendering story. UI
  * presentation mirrors the bash tool's too: a completed foreground call is
  * a terminal card with the parsed exit-status pill, using the shared
- * exit-status parse from `@deepseek-ai/dsh-shell`.
+ * exit-status parse from `@monotykamary/dsh-shell`.
  *
- * @module @deepseek-ai/dsh-tool-pwsh
+ * @module @monotykamary/dsh-tool-pwsh
  */
 
 import { isAbsolute, resolve as resolvePath } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { defineTool, TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
-import type { GenericCallView, TerminalCallView, ToolExecution, ToolResult, ToolResultView } from '@deepseek-ai/dsh-tools'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-system-prompt'
-import type {} from '@deepseek-ai/dsh-jobs'
-import type {} from '@deepseek-ai/dsh-shell-env'
-import type {} from '@deepseek-ai/dsh-user-approval'
-import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import { ESCALATION_TARGETS, approveEscalation, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
-import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
-import { parseExitStatus } from '@deepseek-ai/dsh-shell'
+import type { Context } from '@monotykamary/cordis'
+import z from '@monotykamary/schemastery'
+import { defineTool, TOOL_ABORTED } from '@monotykamary/dsh-tools'
+import type { GenericCallView, TerminalCallView, ToolExecution, ToolResult, ToolResultView } from '@monotykamary/dsh-tools'
+import { HarnessError } from '@monotykamary/dsh-llm'
+import type { Agent } from '@monotykamary/dsh-agent'
+import type {} from '@monotykamary/dsh-system-prompt'
+import type {} from '@monotykamary/dsh-jobs'
+import type {} from '@monotykamary/dsh-shell-env'
+import type {} from '@monotykamary/dsh-user-approval'
+import type { SandboxExecutionPolicy, SandboxMode } from '@monotykamary/dsh-sandbox'
+import { ESCALATION_TARGETS, approveEscalation, validateEscalationArgs } from '@monotykamary/dsh-sandbox'
+import type { SandboxPolicyService } from '@monotykamary/dsh-sandbox-policy'
+import type { ShellRunResult } from '@monotykamary/dsh-shell'
+import { parseExitStatus } from '@monotykamary/dsh-shell'
 import { processOutcome } from './background.ts'
 import { renderPwshProcessRead, renderPwshResult } from './render.ts'
 import type { RenderablePwshResult } from './render.ts'
 
-declare module '@deepseek-ai/dsh-jobs' {
+declare module '@monotykamary/dsh-jobs' {
   interface JobKindMap {
     pwsh: 'pwsh'
   }
@@ -370,7 +370,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         }
         const jobs = ctx.get('jobs')
         if (jobs === undefined) {
-          throw new Error('background jobs unavailable: load @deepseek-ai/dsh-jobs and @deepseek-ai/dsh-tool-jobs')
+          throw new Error('background jobs unavailable: load @monotykamary/dsh-jobs and @monotykamary/dsh-tool-jobs')
         }
         // The caller owns cancellation until ctx.jobs commits detached ownership.
         if (exec.signal.aborted) {

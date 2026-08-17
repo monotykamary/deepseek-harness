@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-host-directory-picker
+# @monotykamary/dsh-host-directory-picker
 
 English | [中文](README.zh.md)
 

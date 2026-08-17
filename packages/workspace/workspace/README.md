@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-workspace
+# @monotykamary/dsh-workspace
 
 English | [中文](README.zh.md)
 

@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-storage-json
+# @monotykamary/dsh-storage-json
 
 [English](README.md) | 中文
 

@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-headless`
+# `@monotykamary/dsh-headless`
 
 [English](README.md) | 中文
 

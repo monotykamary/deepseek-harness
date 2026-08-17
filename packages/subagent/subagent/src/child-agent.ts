@@ -5,26 +5,26 @@
  * provider driver and the continuation manager compose children this way, so
  * depth accounting, lineage stamping, and delegation policy have one home.
  *
- * @module @deepseek-ai/dsh-subagent/child-agent
+ * @module @monotykamary/dsh-subagent/child-agent
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent, AgentOptions, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
-import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import type { Session, SessionId } from '@deepseek-ai/dsh-session'
-import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@monotykamary/cordis'
+import type { Agent, AgentOptions, CreateAgentOptions } from '@monotykamary/dsh-agent'
+import type { SandboxMode } from '@monotykamary/dsh-sandbox'
+import type { Session, SessionId } from '@monotykamary/dsh-session'
+import type { ToolRestriction } from '@monotykamary/dsh-tools'
 // Type-only: make `ctx.get('sandboxPolicy')` / `ctx.get('approval')` resolve
 // to the policy services when composed — delegation consumes both
 // opportunistically (the documented `ctx.get` pattern), never as a hard dep —
 // and merge the `sandbox/mode` / `approval/policy` session-event payloads.
-import type {} from '@deepseek-ai/dsh-sandbox-policy'
-import type {} from '@deepseek-ai/dsh-user-approval'
+import type {} from '@monotykamary/dsh-sandbox-policy'
+import type {} from '@monotykamary/dsh-user-approval'
 // Type-only: make `ctx.get('agentPresets')` resolve to the preset roster when
 // composed — a child inherits its parent's composition opportunistically (the
 // documented `ctx.get` pattern), never as a hard dep. A rosterless deployment
 // keeps its model-facing rows on the host plane, where the child already sees
 // them through the tool registry's global layer.
-import type {} from '@deepseek-ai/dsh-agent-presets'
+import type {} from '@monotykamary/dsh-agent-presets'
 import { delegationDepthOf } from './depth.ts'
 
 /** Thrown when starting a child would exceed the requested depth cap. */

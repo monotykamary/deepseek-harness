@@ -31,13 +31,13 @@ A new package group `packages/subagent/`:
 
 | Package | Role |
 |---|---|
-| `@deepseek-ai/dsh-subagent` | interface: `SubagentRuntime` (`ctx.subagents`), `SubagentProvider`, `SubagentRun`, the request/result/capability vocabulary, the `subagent/*` events |
-| `@deepseek-ai/dsh-subagent-spawn-in-process` | implementation: a fresh in-process child via `ctx.agents.create` |
-| `@deepseek-ai/dsh-subagent-fork-in-process` | implementation: an in-process child seeded with a snapshot of the parent's log |
-| `@deepseek-ai/dsh-subagent-acp` | implementation: an ACP client driving a configured child process |
-| `@deepseek-ai/dsh-subagent-codex` | implementation: a one-shot official Codex app-server process |
-| `@deepseek-ai/dsh-subagent-claude-code` | implementation: a one-shot official Claude Code process through the Agent SDK |
-| `@deepseek-ai/dsh-tool-subagent` | consumer: the model-facing `subagent` tool over `ctx.subagents` |
+| `@monotykamary/dsh-subagent` | interface: `SubagentRuntime` (`ctx.subagents`), `SubagentProvider`, `SubagentRun`, the request/result/capability vocabulary, the `subagent/*` events |
+| `@monotykamary/dsh-subagent-spawn-in-process` | implementation: a fresh in-process child via `ctx.agents.create` |
+| `@monotykamary/dsh-subagent-fork-in-process` | implementation: an in-process child seeded with a snapshot of the parent's log |
+| `@monotykamary/dsh-subagent-acp` | implementation: an ACP client driving a configured child process |
+| `@monotykamary/dsh-subagent-codex` | implementation: a one-shot official Codex app-server process |
+| `@monotykamary/dsh-subagent-claude-code` | implementation: a one-shot official Claude Code process through the Agent SDK |
+| `@monotykamary/dsh-tool-subagent` | consumer: the model-facing `subagent` tool over `ctx.subagents` |
 
 ### The primitive: async `start → SubagentRun`
 

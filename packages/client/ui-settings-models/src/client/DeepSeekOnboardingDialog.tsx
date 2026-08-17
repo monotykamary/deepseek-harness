@@ -8,9 +8,9 @@
 
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
-import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { IApiClient } from '@monotykamary/dsh-api-remotes/client'
+import type { SnapshotStore } from '@monotykamary/dsh-client-runtime/client'
+import type { InjectFace, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import type { ModelsSettingsState, ModelsSettingsStore } from './store.ts'
 import { onboardingReadiness } from './store.ts'
 import { ProviderEditor } from './ProviderEditor.tsx'

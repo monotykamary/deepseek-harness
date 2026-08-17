@@ -2,15 +2,15 @@
 # the real ACP composition. The model is told not to call it; the scenario pins
 # the assembled request schema without starting Codex.
 - id: base
-  name: '@deepseek-ai/cordis-plugin-include'
+  name: '@monotykamary/cordis-plugin-include'
   config:
     path: ./cordis.yml
     patches:
       - insert:
           - id: subagent-codex
-            name: '@deepseek-ai/dsh-subagent-codex'
+            name: '@monotykamary/dsh-subagent-codex'
           - id: tool-subagent-codex
-            name: '@deepseek-ai/dsh-tool-subagent'
+            name: '@monotykamary/dsh-tool-subagent'
             config:
               provider: codex
               toolName: subagent_codex

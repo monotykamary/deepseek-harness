@@ -3,12 +3,12 @@
  * connection handle, stream-loop sink wiring into the object layer, and the
  * fiber-scoped loop teardown.
  */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@monotykamary/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import type { ConnectionHandle } from '@deepseek-ai/dsh-api-remotes/client'
-import type { ConnectionSinks } from '@deepseek-ai/dsh-api-remotes/client'
-import { SESSION_SEARCH_RESULT_LIMIT } from '@deepseek-ai/dsh-host-apiproxy/api'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+import type { ConnectionHandle } from '@monotykamary/dsh-api-remotes/client'
+import type { ConnectionSinks } from '@monotykamary/dsh-api-remotes/client'
+import { SESSION_SEARCH_RESULT_LIMIT } from '@monotykamary/dsh-host-apiproxy/api'
+import TypertRegistry from '@monotykamary/dsh-typert-registry'
 import * as RuntimeClient from '../src/client/index.ts'
 import type { ConversationNodeDefinition } from '../src/client/contract/conversation.ts'
 import { Session } from '../src/client/sessions/session.ts'

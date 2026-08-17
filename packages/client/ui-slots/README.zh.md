@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-slots
+# @monotykamary/dsh-client-ui-slots
 
 [English](README.md) | 中文
 

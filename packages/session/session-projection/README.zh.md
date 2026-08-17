@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-projection
+# @monotykamary/dsh-session-projection
 
 [English](README.md) | 中文
 

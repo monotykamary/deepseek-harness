@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-sdk-jsonrpc-demo
+# @monotykamary/dsh-sdk-jsonrpc-demo
 
 [English](README.md) | 中文
 

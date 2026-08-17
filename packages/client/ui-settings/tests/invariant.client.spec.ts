@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import * as SettingsInvariant from '@deepseek-ai/dsh-client-ui-settings/invariant'
-import InvariantRegistry from '@deepseek-ai/dsh-invariants'
+import { Context } from '@monotykamary/cordis'
+import * as SettingsInvariant from '@monotykamary/dsh-client-ui-settings/invariant'
+import InvariantRegistry from '@monotykamary/dsh-invariants'
 
 describe('invariant companion', () => {
   it('registers under the package name with an empty installer', async () => {
@@ -11,7 +11,7 @@ describe('invariant companion', () => {
   })
 
   it('node-half apply is a no-op host placeholder', async () => {
-    const { apply } = await import('@deepseek-ai/dsh-client-ui-settings')
+    const { apply } = await import('@monotykamary/dsh-client-ui-settings')
     apply()
     expect(true).toBe(true) // reaching here without throw is the contract
   })

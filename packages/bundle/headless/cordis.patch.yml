@@ -22,14 +22,14 @@
 - insert:
     # Code Mode is a core execution capability, not a Web component.
     - id: code-runtime
-      name: '@deepseek-ai/dsh-code-runtime-worker-thread'
+      name: '@monotykamary/dsh-code-runtime-worker-thread'
 
     - id: headless-startup
-      name: '@deepseek-ai/dsh-headless/startup'
+      name: '@monotykamary/dsh-headless/startup'
 
     # Reads its task from the ordinary headlessStartup provider.
     - id: headless-runner
-      name: '@deepseek-ai/dsh-headless'
+      name: '@monotykamary/dsh-headless'
       inject: [headlessStartup]
       config:
         task: !!js ctx.headlessStartup.task

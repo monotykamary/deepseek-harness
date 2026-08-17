@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import JobRegistry, { JobId } from '@deepseek-ai/dsh-jobs'
-import type { JobDoneListener, JobSnapshot } from '@deepseek-ai/dsh-jobs'
-import * as JobsInvariant from '@deepseek-ai/dsh-jobs/invariant'
-import InvariantRegistry from '@deepseek-ai/dsh-invariants'
+import { Context } from '@monotykamary/cordis'
+import type { Agent } from '@monotykamary/dsh-agent'
+import { SessionId } from '@monotykamary/dsh-session'
+import JobRegistry, { JobId } from '@monotykamary/dsh-jobs'
+import type { JobDoneListener, JobSnapshot } from '@monotykamary/dsh-jobs'
+import * as JobsInvariant from '@monotykamary/dsh-jobs/invariant'
+import InvariantRegistry from '@monotykamary/dsh-invariants'
 
 const BASE: JobSnapshot = {
   id: JobId('bash-1'),

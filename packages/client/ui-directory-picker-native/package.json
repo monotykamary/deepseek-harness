@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-directory-picker-native",
+  "name": "@monotykamary/dsh-client-ui-directory-picker-native",
   "description": "Native directory-picker surface: the renderless workspace directory-flow occupant driving the host's OS chooser",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,8 +32,8 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-workspace"
+        "@monotykamary/dsh-client-runtime",
+        "@monotykamary/dsh-client-ui-workspace"
       ],
       "platform": "web"
     }
@@ -44,21 +44,21 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-workspace": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-workspace": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-workspace": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-workspace": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
     "@testing-library/react": "^16.1.0",
     "@types/react": "~18.3.1",
-    "@deepseek-ai/cordis": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

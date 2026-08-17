@@ -3,16 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type {
   ConversationSnapshot, SessionId, SessionListState, WorkspaceListState,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import { PendingWait } from '@deepseek-ai/dsh-client-runtime/client'
-import type { RpcReceipt } from '@deepseek-ai/dsh-api-remotes/client'
-import { RpcId } from '@deepseek-ai/dsh-client-connection/client'
-import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@monotykamary/dsh-client-runtime/client'
+import { PendingWait } from '@monotykamary/dsh-client-runtime/client'
+import type { RpcReceipt } from '@monotykamary/dsh-api-remotes/client'
+import { RpcId } from '@monotykamary/dsh-client-connection/client'
+import type { SnapshotSelectorHook } from '@monotykamary/dsh-client-ui-slots'
 import { PendingQuestion, type QuestionComposerProps } from '../src/client/contract/slots.ts'
 import { QuestionComposer, parseRecommendedLabel } from '../src/client/QuestionComposer.tsx'
 import { en, zh } from '../src/client/locales.ts'
-import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { en as commonEn } from '@monotykamary/dsh-client-locale/src/locales/en.ts'
+import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
 
 afterEach(cleanup)
 

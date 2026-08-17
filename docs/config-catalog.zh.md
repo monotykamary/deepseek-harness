@@ -13,7 +13,7 @@
 
 <a id="deepseek-aidsh-acp"></a>
 
-## `@deepseek-ai/dsh-acp`
+## `@monotykamary/dsh-acp`
 
 需要：`agents`
 
@@ -35,7 +35,7 @@ export interface AcpConfig {
 
 <a id="deepseek-aidsh-acp-demo"></a>
 
-## `@deepseek-ai/dsh-acp-demo`
+## `@monotykamary/dsh-acp-demo`
 
 ```ts config-catalog
 /**
@@ -90,7 +90,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-agent-default-model"></a>
 
-## `@deepseek-ai/dsh-agent-default-model`
+## `@monotykamary/dsh-agent-default-model`
 
 ```ts config-catalog
 /** Composition entry for the default model selection. */
@@ -106,7 +106,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-agent-instructions"></a>
 
-## `@deepseek-ai/dsh-agent-instructions`
+## `@monotykamary/dsh-agent-instructions`
 
 ```ts config-catalog
 /** User-facing workspace instruction loader configuration. */
@@ -136,7 +136,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-agent-loop"></a>
 
-## `@deepseek-ai/dsh-agent-loop`
+## `@monotykamary/dsh-agent-loop`
 
 需要：`agents` · `sessions` · `llm` · `tools` · `systemPrompt`
 
@@ -168,7 +168,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-agent-presets"></a>
 
-## `@deepseek-ai/dsh-agent-presets`
+## `@monotykamary/dsh-agent-presets`
 
 需要：`loader`
 
@@ -206,7 +206,7 @@ export type PresetTrust = 'system' | 'user'
 
 <a id="deepseek-aidsh-agent-spine-demo"></a>
 
-## `@deepseek-ai/dsh-agent-spine-demo`
+## `@monotykamary/dsh-agent-spine-demo`
 
 ```ts config-catalog
 /**
@@ -298,7 +298,7 @@ export interface GoalConfig {
 
 <a id="deepseek-aidsh-agent-tool-presentation"></a>
 
-## `@deepseek-ai/dsh-agent-tool-presentation`
+## `@monotykamary/dsh-agent-tool-presentation`
 
 需要：`tools`
 
@@ -322,7 +322,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-attachment-local"></a>
 
-## `@deepseek-ai/dsh-attachment-local`
+## `@monotykamary/dsh-attachment-local`
 
 ```ts config-catalog
 /** Local attachment backend configuration. */
@@ -344,7 +344,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-bash-local"></a>
 
-## `@deepseek-ai/dsh-bash-local`
+## `@monotykamary/dsh-bash-local`
 
 需要：`subprocess`
 
@@ -370,7 +370,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-bash-sandbox"></a>
 
-## `@deepseek-ai/dsh-bash-sandbox`
+## `@monotykamary/dsh-bash-sandbox`
 
 需要：`subprocess` · `sandbox` · `sandboxPolicy`
 
@@ -378,7 +378,7 @@ export interface Config {
 /**
  * Plugin config: the local executor's knobs, verbatim. The sandbox policy —
  * the default mode and fallback `workspace-write` root — is NOT here: it lives
- * on `ctx.sandboxPolicy` (`@deepseek-ai/dsh-sandbox-policy`), which resolves
+ * on `ctx.sandboxPolicy` (`@monotykamary/dsh-sandbox-policy`), which resolves
  * each calling session's mode and cwd for every enforcing capability. The runner
  * choice is likewise the `ctx.sandbox` provider's config, not this executor's.
  */
@@ -391,7 +391,7 @@ export type Config = LocalConfig
 
 <a id="deepseek-aidsh-client-connection"></a>
 
-## `@deepseek-ai/dsh-client-connection`
+## `@monotykamary/dsh-client-connection`
 
 需要：`webServer`
 
@@ -416,7 +416,7 @@ export interface ConnectionConfig {
 
 <a id="deepseek-aidsh-client-hmr"></a>
 
-## `@deepseek-ai/dsh-client-hmr`
+## `@monotykamary/dsh-client-hmr`
 
 需要：`clientModuleHost` · `webServer`
 
@@ -432,7 +432,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-code-runtime-worker-thread"></a>
 
-## `@deepseek-ai/dsh-code-runtime-worker-thread`
+## `@monotykamary/dsh-code-runtime-worker-thread`
 
 ```ts config-catalog
 /** Plugin config: every execution cap, changeable from `cordis.yml` (no hardcoded tunables). */
@@ -469,7 +469,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-compaction-basic"></a>
 
-## `@deepseek-ai/dsh-compaction-basic`
+## `@monotykamary/dsh-compaction-basic`
 
 需要：`llm` · `tokenMeter` · `sessions`
 
@@ -515,7 +515,7 @@ export interface ModelCompactPolicyConfig extends CompactionPolicyConfig {
 
 <a id="deepseek-aidsh-compaction-tool-result-pruner"></a>
 
-## `@deepseek-ai/dsh-compaction-tool-result-pruner`
+## `@monotykamary/dsh-compaction-tool-result-pruner`
 
 需要：`tokenMeter`
 
@@ -535,7 +535,7 @@ export interface ToolResultPruneConfig {
 
 <a id="deepseek-aidsh-cordis-host-runner"></a>
 
-## `@deepseek-ai/dsh-cordis-host-runner`
+## `@monotykamary/dsh-cordis-host-runner`
 
 需要：`tools`
 
@@ -551,7 +551,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-credentials-local"></a>
 
-## `@deepseek-ai/dsh-credentials-local`
+## `@monotykamary/dsh-credentials-local`
 
 ```ts config-catalog
 /** Plugin config: file location and hot-reload behavior. */
@@ -571,7 +571,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-e2b"></a>
 
-## `@deepseek-ai/dsh-e2b`
+## `@monotykamary/dsh-e2b`
 
 ```ts config-catalog
 /** Configuration for the shared E2B sandbox owner. */
@@ -589,7 +589,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-fs-local"></a>
 
-## `@deepseek-ai/dsh-fs-local`
+## `@monotykamary/dsh-fs-local`
 
 ```ts config-catalog
 /** Configuration for the local filesystem backend. */
@@ -608,7 +608,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-fs-sandbox"></a>
 
-## `@deepseek-ai/dsh-fs-sandbox`
+## `@monotykamary/dsh-fs-sandbox`
 
 需要：`sandboxPolicy`
 
@@ -628,7 +628,7 @@ export type Config = LocalConfig
 
 <a id="deepseek-aidsh-goal"></a>
 
-## `@deepseek-ai/dsh-goal`
+## `@monotykamary/dsh-goal`
 
 需要：`agents`
 
@@ -644,7 +644,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-headless"></a>
 
-## `@deepseek-ai/dsh-headless`
+## `@monotykamary/dsh-headless`
 
 需要：`agentDefaultModel` · `agents` · `sessions`
 
@@ -660,7 +660,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-hooks-claude-code"></a>
 
-## `@deepseek-ai/dsh-hooks-claude-code`
+## `@monotykamary/dsh-hooks-claude-code`
 
 需要：`bash`
 
@@ -698,7 +698,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-hooks-codex"></a>
 
-## `@deepseek-ai/dsh-hooks-codex`
+## `@monotykamary/dsh-hooks-codex`
 
 需要：`bash`
 
@@ -725,7 +725,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-host-apiproxy"></a>
 
-## `@deepseek-ai/dsh-host-apiproxy`
+## `@monotykamary/dsh-host-apiproxy`
 
 需要：`agentDefaultModel` · `agents` · `attachments` · `directoryPicker` · `llm` · `sessions` · `subagents` · `sessionQuery` · `tools` · `userInteraction` · `workspace`
 
@@ -759,7 +759,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 
-## `@deepseek-ai/dsh-host-directory-picker-browse`
+## `@monotykamary/dsh-host-directory-picker-browse`
 
 ```ts config-catalog
 /** Validated plugin configuration. */
@@ -773,7 +773,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-host-frontend-static"></a>
 
-## `@deepseek-ai/dsh-host-frontend-static`
+## `@monotykamary/dsh-host-frontend-static`
 
 需要：`webServer`
 
@@ -789,7 +789,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-host-webserver"></a>
 
-## `@deepseek-ai/dsh-host-webserver`
+## `@monotykamary/dsh-host-webserver`
 
 ```ts config-catalog
 /** Gateway config: the listen address. */
@@ -805,7 +805,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-invariants"></a>
 
-## `@deepseek-ai/dsh-invariants`
+## `@monotykamary/dsh-invariants`
 
 ```ts config-catalog
 /** Runtime invariant selection configured on the service plugin. */
@@ -823,7 +823,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-jobs-local"></a>
 
-## `@deepseek-ai/dsh-jobs-local`
+## `@monotykamary/dsh-jobs-local`
 
 ```ts config-catalog
 /** Configuration for the process-local job registry. */
@@ -840,7 +840,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-llm-deepseek"></a>
 
-## `@deepseek-ai/dsh-llm-deepseek`
+## `@monotykamary/dsh-llm-deepseek`
 
 需要：`llm`
 
@@ -895,7 +895,7 @@ export interface DeepSeekCatalogModel {
 
 <a id="deepseek-aidsh-llm-pi-ai"></a>
 
-## `@deepseek-ai/dsh-llm-pi-ai`
+## `@monotykamary/dsh-llm-pi-ai`
 
 需要：`llm`
 
@@ -1085,7 +1085,7 @@ type WithheldThinkingFormat = 'chat-template' | 'qwen-chat-template'
 
 <a id="deepseek-aidsh-llm-replay"></a>
 
-## `@deepseek-ai/dsh-llm-replay`
+## `@monotykamary/dsh-llm-replay`
 
 需要：`llm`
 
@@ -1153,7 +1153,7 @@ export interface ReplayModelConfig {
 
 <a id="deepseek-aidsh-llm-retry"></a>
 
-## `@deepseek-ai/dsh-llm-retry`
+## `@monotykamary/dsh-llm-retry`
 
 需要：`agents`
 
@@ -1166,7 +1166,7 @@ export type Config = Readonly<Record<string, never>>
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
-## `@deepseek-ai/dsh-lsp-stdio`
+## `@monotykamary/dsh-lsp-stdio`
 
 需要：`fs` · `lsp` · `subprocess`
 
@@ -1208,7 +1208,7 @@ export interface LspLocalServerConfig {
 
 <a id="deepseek-aidsh-mcp-client"></a>
 
-## `@deepseek-ai/dsh-mcp-client`
+## `@monotykamary/dsh-mcp-client`
 
 需要：`tools`
 
@@ -1281,7 +1281,7 @@ export interface ReconnectConfig {
 
 <a id="deepseek-aidsh-message-feedback"></a>
 
-## `@deepseek-ai/dsh-message-feedback`
+## `@monotykamary/dsh-message-feedback`
 
 需要：`storageDomain` · `sessionPersistence` · `sessions`
 
@@ -1297,7 +1297,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-permission-presets"></a>
 
-## `@deepseek-ai/dsh-permission-presets`
+## `@monotykamary/dsh-permission-presets`
 
 需要：`bash` · `approval` · `sessions`
 
@@ -1336,7 +1336,7 @@ export interface PresetSpec {
 
 <a id="deepseek-aidsh-persona"></a>
 
-## `@deepseek-ai/dsh-persona`
+## `@monotykamary/dsh-persona`
 
 需要：`systemPrompt`
 
@@ -1360,7 +1360,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-plan-mode"></a>
 
-## `@deepseek-ai/dsh-plan-mode`
+## `@monotykamary/dsh-plan-mode`
 
 需要：`tools` · `systemPrompt`
 
@@ -1376,7 +1376,7 @@ export interface PlanModeConfig {
 
 <a id="deepseek-aidsh-pwsh-local"></a>
 
-## `@deepseek-ai/dsh-pwsh-local`
+## `@monotykamary/dsh-pwsh-local`
 
 需要：`subprocess`
 
@@ -1409,7 +1409,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-pwsh-sandbox"></a>
 
-## `@deepseek-ai/dsh-pwsh-sandbox`
+## `@monotykamary/dsh-pwsh-sandbox`
 
 需要：`subprocess` · `sandbox` · `sandboxPolicy`
 
@@ -1417,7 +1417,7 @@ export interface Config {
 /**
  * Plugin config: the local executor's knobs, verbatim. The sandbox policy —
  * the default mode and fallback `workspace-write` root — is NOT here: it lives
- * on `ctx.sandboxPolicy` (`@deepseek-ai/dsh-sandbox-policy`), which resolves
+ * on `ctx.sandboxPolicy` (`@monotykamary/dsh-sandbox-policy`), which resolves
  * each calling session's mode and cwd for every enforcing capability. The
  * runner choice is likewise the `ctx.sandbox` provider's config, not this
  * executor's.
@@ -1431,7 +1431,7 @@ export type Config = LocalConfig
 
 <a id="deepseek-aidsh-repeat-tool-reminder"></a>
 
-## `@deepseek-ai/dsh-repeat-tool-reminder`
+## `@monotykamary/dsh-repeat-tool-reminder`
 
 ```ts config-catalog
 /**
@@ -1465,7 +1465,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 
-## `@deepseek-ai/dsh-sandbox-local`
+## `@monotykamary/dsh-sandbox-local`
 
 ```ts config-catalog
 /** Plugin config. All optional — `static Config` supplies the defaults. */
@@ -1497,7 +1497,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-sandbox-policy"></a>
 
-## `@deepseek-ai/dsh-sandbox-policy`
+## `@monotykamary/dsh-sandbox-policy`
 
 ```ts config-catalog
 /**
@@ -1524,7 +1524,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-sdk-jsonrpc-server"></a>
 
-## `@deepseek-ai/dsh-sdk-jsonrpc-server`
+## `@monotykamary/dsh-sdk-jsonrpc-server`
 
 需要：`agents`
 
@@ -1548,7 +1548,7 @@ export interface JsonRpcConfig {
 
 <a id="deepseek-aidsh-session-persistence-jsonl"></a>
 
-## `@deepseek-ai/dsh-session-persistence-jsonl`
+## `@monotykamary/dsh-session-persistence-jsonl`
 
 需要：`sessions`
 
@@ -1587,7 +1587,7 @@ export type JsonlCompression = 'zstd' | 'none'
 
 <a id="deepseek-aidsh-session-persistence-sqlite"></a>
 
-## `@deepseek-ai/dsh-session-persistence-sqlite`
+## `@monotykamary/dsh-session-persistence-sqlite`
 
 需要：`sessions`
 
@@ -1632,7 +1632,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 <a id="deepseek-aidsh-session-projection-cache"></a>
 
-## `@deepseek-ai/dsh-session-projection-cache`
+## `@monotykamary/dsh-session-projection-cache`
 
 需要：`storageDomain` · `sessionProjections` · `sessionPersistence` · `sessions`
 
@@ -1655,7 +1655,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-session-query-sqlite"></a>
 
-## `@deepseek-ai/dsh-session-query-sqlite`
+## `@monotykamary/dsh-session-query-sqlite`
 
 需要：`sessions`
 
@@ -1701,7 +1701,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 <a id="deepseek-aidsh-session-reference"></a>
 
-## `@deepseek-ai/dsh-session-reference`
+## `@monotykamary/dsh-session-reference`
 
 需要：`sessionQuery`
 
@@ -1721,7 +1721,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-session-telemetry-otel"></a>
 
-## `@deepseek-ai/dsh-session-telemetry-otel`
+## `@monotykamary/dsh-session-telemetry-otel`
 
 需要：`sessions`
 
@@ -1767,7 +1767,7 @@ export enum SessionTelemetryMode {
 
 <a id="deepseek-aidsh-session-title"></a>
 
-## `@deepseek-ai/dsh-session-title`
+## `@monotykamary/dsh-session-title`
 
 需要：`sessions`
 
@@ -1787,7 +1787,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-session-title-all-prompts-llm"></a>
 
-## `@deepseek-ai/dsh-session-title-all-prompts-llm`
+## `@monotykamary/dsh-session-title-all-prompts-llm`
 
 需要：`sessionTitle` · `llm` · `sessions`
 
@@ -1802,7 +1802,7 @@ export type Config = SessionTitleLlmConfig
 
 <a id="deepseek-aidsh-session-title-first-prompt-llm"></a>
 
-## `@deepseek-ai/dsh-session-title-first-prompt-llm`
+## `@monotykamary/dsh-session-title-first-prompt-llm`
 
 需要：`sessionTitle` · `llm` · `sessions`
 
@@ -1817,7 +1817,7 @@ export type Config = SessionTitleLlmConfig
 
 <a id="deepseek-aidsh-settings-file"></a>
 
-## `@deepseek-ai/dsh-settings-file`
+## `@monotykamary/dsh-settings-file`
 
 ```ts config-catalog
 /** Plugin config: file location and hot-reload behavior. */
@@ -1837,7 +1837,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-shell-env"></a>
 
-## `@deepseek-ai/dsh-shell-env`
+## `@monotykamary/dsh-shell-env`
 
 ```ts config-catalog
 /** Plugin config (all optional — the built-in facts resolve without defaults). */
@@ -1851,7 +1851,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-skill"></a>
 
-## `@deepseek-ai/dsh-skill`
+## `@monotykamary/dsh-skill`
 
 ```ts config-catalog
 /** Skill registry configuration. */
@@ -1865,7 +1865,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-skill-filesystem"></a>
 
-## `@deepseek-ai/dsh-skill-filesystem`
+## `@monotykamary/dsh-skill-filesystem`
 
 需要：`skills`
 
@@ -1903,7 +1903,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-spill-local"></a>
 
-## `@deepseek-ai/dsh-spill-local`
+## `@monotykamary/dsh-spill-local`
 
 ```ts config-catalog
 /** Plugin config (all optional — `static Config` supplies the defaults). */
@@ -1921,7 +1921,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-spill-policy"></a>
 
-## `@deepseek-ai/dsh-spill-policy`
+## `@monotykamary/dsh-spill-policy`
 
 需要：`tools`
 
@@ -1941,7 +1941,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-storage-domain"></a>
 
-## `@deepseek-ai/dsh-storage-domain`
+## `@monotykamary/dsh-storage-domain`
 
 需要：`storage`
 
@@ -1964,7 +1964,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-storage-json"></a>
 
-## `@deepseek-ai/dsh-storage-json`
+## `@monotykamary/dsh-storage-json`
 
 需要：`storage`
 
@@ -1985,7 +1985,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-storage-sqlite"></a>
 
-## `@deepseek-ai/dsh-storage-sqlite`
+## `@monotykamary/dsh-storage-sqlite`
 
 需要：`storage`
 
@@ -2025,7 +2025,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 <a id="deepseek-aidsh-subagent-acp"></a>
 
-## `@deepseek-ai/dsh-subagent-acp`
+## `@monotykamary/dsh-subagent-acp`
 
 需要：`subagents` · `subprocess`
 
@@ -2078,7 +2078,7 @@ export type PermissionPolicy = 'allow' | 'reject'
 
 <a id="deepseek-aidsh-subagent-claude-code"></a>
 
-## `@deepseek-ai/dsh-subagent-claude-code`
+## `@monotykamary/dsh-subagent-claude-code`
 
 需要：`subagents` · `subprocess`
 
@@ -2099,7 +2099,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-subagent-codex"></a>
 
-## `@deepseek-ai/dsh-subagent-codex`
+## `@monotykamary/dsh-subagent-codex`
 
 需要：`subagents` · `subprocess`
 
@@ -2120,7 +2120,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-subagent-dsh-sdk"></a>
 
-## `@deepseek-ai/dsh-subagent-dsh-sdk`
+## `@monotykamary/dsh-subagent-dsh-sdk`
 
 需要：`subagents`
 
@@ -2173,7 +2173,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-subagent-fork-in-process"></a>
 
-## `@deepseek-ai/dsh-subagent-fork-in-process`
+## `@monotykamary/dsh-subagent-fork-in-process`
 
 需要：`subagents`
 
@@ -2189,7 +2189,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-subagent-spawn-in-process"></a>
 
-## `@deepseek-ai/dsh-subagent-spawn-in-process`
+## `@monotykamary/dsh-subagent-spawn-in-process`
 
 需要：`subagents`
 
@@ -2205,7 +2205,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-subprocess-e2b"></a>
 
-## `@deepseek-ai/dsh-subprocess-e2b`
+## `@monotykamary/dsh-subprocess-e2b`
 
 需要：`e2b`
 
@@ -2221,7 +2221,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-system-prompt"></a>
 
-## `@deepseek-ai/dsh-system-prompt`
+## `@monotykamary/dsh-system-prompt`
 
 ```ts config-catalog
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.persona} for its contract). */
@@ -2248,7 +2248,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-terminal-bash"></a>
 
-## `@deepseek-ai/dsh-terminal-bash`
+## `@monotykamary/dsh-terminal-bash`
 
 需要：`pty` · `sandboxPolicy` · `subprocess`
 
@@ -2293,7 +2293,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-time-context"></a>
 
-## `@deepseek-ai/dsh-time-context`
+## `@monotykamary/dsh-time-context`
 
 需要：`agents`
 
@@ -2311,7 +2311,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tmux-context"></a>
 
-## `@deepseek-ai/dsh-tmux-context`
+## `@monotykamary/dsh-tmux-context`
 
 需要：`agents`
 
@@ -2327,7 +2327,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-token-meter"></a>
 
-## `@deepseek-ai/dsh-token-meter`
+## `@monotykamary/dsh-token-meter`
 
 ```ts config-catalog
 /** Token-meter plugin configuration; the fixed estimator has no settings. */
@@ -2338,7 +2338,7 @@ export type TokenMeterConfig = Record<string, never>
 
 <a id="deepseek-aidsh-tool-bash"></a>
 
-## `@deepseek-ai/dsh-tool-bash`
+## `@monotykamary/dsh-tool-bash`
 
 需要：`tools` · `bash` · `systemPrompt` · `bashEnv`
 
@@ -2354,7 +2354,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-bash-persistent"></a>
 
-## `@deepseek-ai/dsh-tool-bash-persistent`
+## `@monotykamary/dsh-tool-bash-persistent`
 
 需要：`tools` · `pty`
 
@@ -2376,7 +2376,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-fs"></a>
 
-## `@deepseek-ai/dsh-tool-fs`
+## `@monotykamary/dsh-tool-fs`
 
 需要：`tools` · `fs` · `systemPrompt`
 
@@ -2398,7 +2398,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-fs-search"></a>
 
-## `@deepseek-ai/dsh-tool-fs-search`
+## `@monotykamary/dsh-tool-fs-search`
 
 需要：`tools` · `systemPrompt` · `subprocess`
 
@@ -2423,7 +2423,7 @@ export interface Config {
   stderrMaxBytes?: number
   /**
    * Cooperative tool-call timeout budget (ms) on both tools, enforced by
-   * `@deepseek-ai/dsh-tool-call-timeout-policy` through `exec.signal`.
+   * `@monotykamary/dsh-tool-call-timeout-policy` through `exec.signal`.
    */
   timeoutMs?: number
 }
@@ -2433,7 +2433,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-goal"></a>
 
-## `@deepseek-ai/dsh-tool-goal`
+## `@monotykamary/dsh-tool-goal`
 
 需要：`agents` · `goals` · `tools` · `systemPrompt`
 
@@ -2449,7 +2449,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-jobs"></a>
 
-## `@deepseek-ai/dsh-tool-jobs`
+## `@monotykamary/dsh-tool-jobs`
 
 需要：`tools` · `tasks` · `systemPrompt`
 
@@ -2483,7 +2483,7 @@ export type CompletionDelivery = 'quiet' | 'wakeup'
 
 <a id="deepseek-aidsh-tool-lsp"></a>
 
-## `@deepseek-ai/dsh-tool-lsp`
+## `@monotykamary/dsh-tool-lsp`
 
 需要：`tools` · `lsp` · `systemPrompt`
 
@@ -2503,7 +2503,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-pwsh"></a>
 
-## `@deepseek-ai/dsh-tool-pwsh`
+## `@monotykamary/dsh-tool-pwsh`
 
 需要：`tools` · `bash` · `systemPrompt` · `bashEnv`
 
@@ -2519,7 +2519,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-ralph"></a>
 
-## `@deepseek-ai/dsh-tool-ralph`
+## `@monotykamary/dsh-tool-ralph`
 
 需要：`tools` · `workflows` · `subagents` · `systemPrompt`
 
@@ -2541,7 +2541,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-session-query"></a>
 
-## `@deepseek-ai/dsh-tool-session-query`
+## `@monotykamary/dsh-tool-session-query`
 
 需要：`tools` · `systemPrompt` · `sessionQuery`
 
@@ -2559,7 +2559,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-skill"></a>
 
-## `@deepseek-ai/dsh-tool-skill`
+## `@monotykamary/dsh-tool-skill`
 
 需要：`agents` · `tools` · `skills`
 
@@ -2575,7 +2575,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-str-replace-editor"></a>
 
-## `@deepseek-ai/dsh-tool-str-replace-editor`
+## `@monotykamary/dsh-tool-str-replace-editor`
 
 需要：`tools` · `fs`
 
@@ -2593,7 +2593,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-subagent"></a>
 
-## `@deepseek-ai/dsh-tool-subagent`
+## `@monotykamary/dsh-tool-subagent`
 
 需要：`tools` · `subagents` · `systemPrompt`
 
@@ -2658,7 +2658,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-subagent-report"></a>
 
-## `@deepseek-ai/dsh-tool-subagent-report`
+## `@monotykamary/dsh-tool-subagent-report`
 
 需要：`subagents` · `tools` · `systemPrompt`
 
@@ -2680,7 +2680,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-terminal"></a>
 
-## `@deepseek-ai/dsh-tool-terminal`
+## `@monotykamary/dsh-tool-terminal`
 
 需要：`pty` · `tools` · `systemPrompt`
 
@@ -2698,7 +2698,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-todo"></a>
 
-## `@deepseek-ai/dsh-tool-todo`
+## `@monotykamary/dsh-tool-todo`
 
 需要：`tools`
 
@@ -2720,7 +2720,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-web"></a>
 
-## `@deepseek-ai/dsh-tool-web`
+## `@monotykamary/dsh-tool-web`
 
 需要：`tools` · `web` · `systemPrompt`
 
@@ -2746,7 +2746,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tool-workflow"></a>
 
-## `@deepseek-ai/dsh-tool-workflow`
+## `@monotykamary/dsh-tool-workflow`
 
 需要：`tools` · `workflows` · `systemPrompt`
 
@@ -2764,7 +2764,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-tools"></a>
 
-## `@deepseek-ai/dsh-tools`
+## `@monotykamary/dsh-tools`
 
 需要：`systemPrompt`
 
@@ -2800,7 +2800,7 @@ export type ToolPresentationMode = 'native' | 'code' | 'both'
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
-## `@deepseek-ai/dsh-typert-loader`
+## `@monotykamary/dsh-typert-loader`
 
 需要：`typert` · `loader`
 
@@ -2816,7 +2816,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-user-approval"></a>
 
-## `@deepseek-ai/dsh-user-approval`
+## `@monotykamary/dsh-user-approval`
 
 ```ts config-catalog
 /** Plugin config. All optional — `static Config` supplies the defaults. */
@@ -2847,7 +2847,7 @@ export type ApprovalPolicy = 'ask' | 'never'
 
 <a id="deepseek-aidsh-web"></a>
 
-## `@deepseek-ai/dsh-web`
+## `@monotykamary/dsh-web`
 
 ```ts config-catalog
 /**
@@ -2868,7 +2868,7 @@ export interface WebRuntimeConfig {
 
 <a id="deepseek-aidsh-web-app"></a>
 
-## `@deepseek-ai/dsh-web-app`
+## `@monotykamary/dsh-web-app`
 
 需要：`webServer`
 
@@ -2893,7 +2893,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-web-fetch-http"></a>
 
-## `@deepseek-ai/dsh-web-fetch-http`
+## `@monotykamary/dsh-web-fetch-http`
 
 需要：`web`
 
@@ -2919,7 +2919,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-web-search-deepseek"></a>
 
-## `@deepseek-ai/dsh-web-search-deepseek`
+## `@monotykamary/dsh-web-search-deepseek`
 
 需要：`web`
 
@@ -2947,7 +2947,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-web-search-exa"></a>
 
-## `@deepseek-ai/dsh-web-search-exa`
+## `@monotykamary/dsh-web-search-exa`
 
 需要：`web`
 
@@ -2971,7 +2971,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-web-search-perplexity"></a>
 
-## `@deepseek-ai/dsh-web-search-perplexity`
+## `@monotykamary/dsh-web-search-perplexity`
 
 需要：`web`
 
@@ -2995,7 +2995,7 @@ export interface Config {
 
 <a id="deepseek-aidsh-workflow-worker-thread"></a>
 
-## `@deepseek-ai/dsh-workflow-worker-thread`
+## `@monotykamary/dsh-workflow-worker-thread`
 
 需要：`subagents`
 
@@ -3027,126 +3027,126 @@ export interface Config {
 
 这些插件通过 `cordis.yml` 中不含 `config:` 块的条目加载；它们未声明任何配置接口。
 
-- `@deepseek-ai/dsh-agent`（[`packages/core/agent/src/index.ts`](../packages/core/agent/src/index.ts)）
-- `@deepseek-ai/dsh-api-gateway` — 需要 `typert`（[`packages/api/gateway/src/index.ts`](../packages/api/gateway/src/index.ts)）
-- `@deepseek-ai/dsh-api-remotes`（[`packages/api/remotes/src/index.ts`](../packages/api/remotes/src/index.ts)）
-- `@deepseek-ai/dsh-client-locale`（[`packages/client/locale/src/index.ts`](../packages/client/locale/src/index.ts)）
-- `@deepseek-ai/dsh-client-modules` — 需要 `webServer` · `loader`（[`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts)）
-- `@deepseek-ai/dsh-client-runtime`（[`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-agent-preset`（[`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-commands`（[`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-conversation`（[`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-cordis`（[`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-deliverables` — 需要 `systemPrompt`（[`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-directory-picker-browse`（[`packages/client/ui-directory-picker-browse/src/index.ts`](../packages/client/ui-directory-picker-browse/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-directory-picker-native`（[`packages/client/ui-directory-picker-native/src/index.ts`](../packages/client/ui-directory-picker-native/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-goal`（[`packages/client/ui-goal/src/index.ts`](../packages/client/ui-goal/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-input-trigger`（[`packages/client/ui-input-trigger/src/index.ts`](../packages/client/ui-input-trigger/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-jobs`（[`packages/client/ui-jobs/src/index.ts`](../packages/client/ui-jobs/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-layout`（[`packages/client/ui-layout/src/index.ts`](../packages/client/ui-layout/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-message-feedback`（[`packages/client/ui-message-feedback/src/index.ts`](../packages/client/ui-message-feedback/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-model-selection`（[`packages/client/ui-model-selection/src/index.ts`](../packages/client/ui-model-selection/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-permission-presets`（[`packages/client/ui-permission-presets/src/index.ts`](../packages/client/ui-permission-presets/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-plan`（[`packages/client/ui-plan/src/index.ts`](../packages/client/ui-plan/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-settings`（[`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-settings-general`（[`packages/client/ui-settings-general/src/index.ts`](../packages/client/ui-settings-general/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-settings-models`（[`packages/client/ui-settings-models/src/index.ts`](../packages/client/ui-settings-models/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-settings-plugin-inventory`（[`packages/client/ui-settings-plugin-inventory/src/index.ts`](../packages/client/ui-settings-plugin-inventory/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-settings-plugins`（[`packages/client/ui-settings-plugins/src/index.ts`](../packages/client/ui-settings-plugins/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-sidebar`（[`packages/client/ui-sidebar/src/index.ts`](../packages/client/ui-sidebar/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-skill`（[`packages/client/ui-skill/src/index.ts`](../packages/client/ui-skill/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-subagent`（[`packages/client/ui-subagent/src/index.ts`](../packages/client/ui-subagent/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-theme`（[`packages/client/ui-theme/src/index.ts`](../packages/client/ui-theme/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-tool`（[`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-trajectory`（[`packages/client/ui-trajectory/src/index.ts`](../packages/client/ui-trajectory/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-user-questions`（[`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-workflow-run`（[`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-workspace`（[`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts)）
-- `@deepseek-ai/dsh-command-compact` — 需要 `commands` · `compact`（[`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts)）
-- `@deepseek-ai/dsh-command-feedback` — 需要 `commands`（[`packages/feedback/command-feedback/src/index.ts`](../packages/feedback/command-feedback/src/index.ts)）
-- `@deepseek-ai/dsh-command-goal` — 需要 `commands` · `goals`（[`packages/goal/command-goal/src/index.ts`](../packages/goal/command-goal/src/index.ts)）
-- `@deepseek-ai/dsh-commands`（[`packages/interaction/commands/src/index.ts`](../packages/interaction/commands/src/index.ts)）
-- `@deepseek-ai/dsh-cordis-client-runner`（[`packages/extensions/cordis-client-runner/src/index.ts`](../packages/extensions/cordis-client-runner/src/index.ts)）
-- `@deepseek-ai/dsh-fs-e2b` — 需要 `e2b`（[`packages/e2b/fs-e2b/src/index.ts`](../packages/e2b/fs-e2b/src/index.ts)）
-- `@deepseek-ai/dsh-fs-observation-policy`（[`packages/fs/fs-observation-policy/src/index.ts`](../packages/fs/fs-observation-policy/src/index.ts)）
-- `@deepseek-ai/dsh-goal-round-driver` — 需要 `agents` · `goals` · `sessions`（[`packages/goal/goal-round-driver/src/index.ts`](../packages/goal/goal-round-driver/src/index.ts)）
-- `@deepseek-ai/dsh-host-directory-picker-auto` — 需要 `webServer` · `loader`（[`packages/host/directory-picker-auto/src/index.ts`](../packages/host/directory-picker-auto/src/index.ts)）
-- `@deepseek-ai/dsh-host-directory-picker-native`（[`packages/host/directory-picker-native/src/index.ts`](../packages/host/directory-picker-native/src/index.ts)）
-- `@deepseek-ai/dsh-host-plugin-inventory` — 需要 `loader`（[`packages/host/plugin-inventory/src/index.ts`](../packages/host/plugin-inventory/src/index.ts)）
-- `@deepseek-ai/dsh-llm`（[`packages/llm/llm/src/index.ts`](../packages/llm/llm/src/index.ts)）
-- `@deepseek-ai/dsh-lsp`（[`packages/lsp/lsp/src/index.ts`](../packages/lsp/lsp/src/index.ts)）
-- `@deepseek-ai/dsh-schedule` — 需要 `agents` · `sessions` · `tools` · `sessionPersistence`（[`packages/schedule/schedule/src/index.ts`](../packages/schedule/schedule/src/index.ts)）
-- `@deepseek-ai/dsh-session`（[`packages/core/session/src/index.ts`](../packages/core/session/src/index.ts)）
-- `@deepseek-ai/dsh-session-checkpoint-policy` — 需要 `llm` · `sessionPersistence` · `sessions` · `tools`（[`packages/session/session-checkpoint-policy/src/index.ts`](../packages/session/session-checkpoint-policy/src/index.ts)）
-- `@deepseek-ai/dsh-session-log-export` — 需要 `commands`（[`packages/session-query/session-log-export/src/index.ts`](../packages/session-query/session-log-export/src/index.ts)）
-- `@deepseek-ai/dsh-session-projection`（[`packages/session/session-projection/src/index.ts`](../packages/session/session-projection/src/index.ts)）
-- `@deepseek-ai/dsh-session-stats` — 需要 `sessionProjections`（[`packages/session/session-stats/src/index.ts`](../packages/session/session-stats/src/index.ts)）
-- `@deepseek-ai/dsh-skill-badge` — 需要 `skills`（[`packages/skill/skill-badge/src/index.ts`](../packages/skill/skill-badge/src/index.ts)）
-- `@deepseek-ai/dsh-storage`（[`packages/storage/storage/src/index.ts`](../packages/storage/storage/src/index.ts)）
-- `@deepseek-ai/dsh-subagent`（[`packages/subagent/subagent/src/index.ts`](../packages/subagent/subagent/src/index.ts)）
-- `@deepseek-ai/dsh-subprocess-local`（[`packages/subprocess/subprocess-local/src/index.ts`](../packages/subprocess/subprocess-local/src/index.ts)）
-- `@deepseek-ai/dsh-terminal`（[`packages/terminal/terminal/src/index.ts`](../packages/terminal/terminal/src/index.ts)）
-- `@deepseek-ai/dsh-tool-ask-user` — 需要 `tools` · `userInteraction`（[`packages/interaction/tool-ask-user/src/index.ts`](../packages/interaction/tool-ask-user/src/index.ts)）
-- `@deepseek-ai/dsh-tool-call-timeout-policy` — 需要 `tools`（[`packages/guard/timeout-policy/src/index.ts`](../packages/guard/timeout-policy/src/index.ts)）
-- `@deepseek-ai/dsh-tool-cordis` — 需要 `tools` · `systemPrompt` · `dynamicCordisRunner` · `cordisInspect`（[`packages/extensions/tool-cordis/src/index.ts`](../packages/extensions/tool-cordis/src/index.ts)）
-- `@deepseek-ai/dsh-tool-subagent-control` — 需要 `tools` · `subagents`（[`packages/subagent/tool-subagent-control/src/index.ts`](../packages/subagent/tool-subagent-control/src/index.ts)）
-- `@deepseek-ai/dsh-user-questions`（[`packages/interaction/user-questions/src/index.ts`](../packages/interaction/user-questions/src/index.ts)）
-- `@deepseek-ai/dsh-workspace` — 需要 `storageDomain` · `sessionPersistence`（[`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts)）
+- `@monotykamary/dsh-agent`（[`packages/core/agent/src/index.ts`](../packages/core/agent/src/index.ts)）
+- `@monotykamary/dsh-api-gateway` — 需要 `typert`（[`packages/api/gateway/src/index.ts`](../packages/api/gateway/src/index.ts)）
+- `@monotykamary/dsh-api-remotes`（[`packages/api/remotes/src/index.ts`](../packages/api/remotes/src/index.ts)）
+- `@monotykamary/dsh-client-locale`（[`packages/client/locale/src/index.ts`](../packages/client/locale/src/index.ts)）
+- `@monotykamary/dsh-client-modules` — 需要 `webServer` · `loader`（[`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts)）
+- `@monotykamary/dsh-client-runtime`（[`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts)）
+- `@monotykamary/dsh-client-ui-agent-preset`（[`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts)）
+- `@monotykamary/dsh-client-ui-commands`（[`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts)）
+- `@monotykamary/dsh-client-ui-conversation`（[`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts)）
+- `@monotykamary/dsh-client-ui-cordis`（[`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts)）
+- `@monotykamary/dsh-client-ui-deliverables` — 需要 `systemPrompt`（[`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts)）
+- `@monotykamary/dsh-client-ui-directory-picker-browse`（[`packages/client/ui-directory-picker-browse/src/index.ts`](../packages/client/ui-directory-picker-browse/src/index.ts)）
+- `@monotykamary/dsh-client-ui-directory-picker-native`（[`packages/client/ui-directory-picker-native/src/index.ts`](../packages/client/ui-directory-picker-native/src/index.ts)）
+- `@monotykamary/dsh-client-ui-goal`（[`packages/client/ui-goal/src/index.ts`](../packages/client/ui-goal/src/index.ts)）
+- `@monotykamary/dsh-client-ui-input-trigger`（[`packages/client/ui-input-trigger/src/index.ts`](../packages/client/ui-input-trigger/src/index.ts)）
+- `@monotykamary/dsh-client-ui-jobs`（[`packages/client/ui-jobs/src/index.ts`](../packages/client/ui-jobs/src/index.ts)）
+- `@monotykamary/dsh-client-ui-layout`（[`packages/client/ui-layout/src/index.ts`](../packages/client/ui-layout/src/index.ts)）
+- `@monotykamary/dsh-client-ui-message-feedback`（[`packages/client/ui-message-feedback/src/index.ts`](../packages/client/ui-message-feedback/src/index.ts)）
+- `@monotykamary/dsh-client-ui-model-selection`（[`packages/client/ui-model-selection/src/index.ts`](../packages/client/ui-model-selection/src/index.ts)）
+- `@monotykamary/dsh-client-ui-permission-presets`（[`packages/client/ui-permission-presets/src/index.ts`](../packages/client/ui-permission-presets/src/index.ts)）
+- `@monotykamary/dsh-client-ui-plan`（[`packages/client/ui-plan/src/index.ts`](../packages/client/ui-plan/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings`（[`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings-general`（[`packages/client/ui-settings-general/src/index.ts`](../packages/client/ui-settings-general/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings-models`（[`packages/client/ui-settings-models/src/index.ts`](../packages/client/ui-settings-models/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings-plugin-inventory`（[`packages/client/ui-settings-plugin-inventory/src/index.ts`](../packages/client/ui-settings-plugin-inventory/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings-plugins`（[`packages/client/ui-settings-plugins/src/index.ts`](../packages/client/ui-settings-plugins/src/index.ts)）
+- `@monotykamary/dsh-client-ui-sidebar`（[`packages/client/ui-sidebar/src/index.ts`](../packages/client/ui-sidebar/src/index.ts)）
+- `@monotykamary/dsh-client-ui-skill`（[`packages/client/ui-skill/src/index.ts`](../packages/client/ui-skill/src/index.ts)）
+- `@monotykamary/dsh-client-ui-subagent`（[`packages/client/ui-subagent/src/index.ts`](../packages/client/ui-subagent/src/index.ts)）
+- `@monotykamary/dsh-client-ui-theme`（[`packages/client/ui-theme/src/index.ts`](../packages/client/ui-theme/src/index.ts)）
+- `@monotykamary/dsh-client-ui-tool`（[`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts)）
+- `@monotykamary/dsh-client-ui-trajectory`（[`packages/client/ui-trajectory/src/index.ts`](../packages/client/ui-trajectory/src/index.ts)）
+- `@monotykamary/dsh-client-ui-user-questions`（[`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts)）
+- `@monotykamary/dsh-client-ui-workflow-run`（[`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts)）
+- `@monotykamary/dsh-client-ui-workspace`（[`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts)）
+- `@monotykamary/dsh-command-compact` — 需要 `commands` · `compact`（[`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts)）
+- `@monotykamary/dsh-command-feedback` — 需要 `commands`（[`packages/feedback/command-feedback/src/index.ts`](../packages/feedback/command-feedback/src/index.ts)）
+- `@monotykamary/dsh-command-goal` — 需要 `commands` · `goals`（[`packages/goal/command-goal/src/index.ts`](../packages/goal/command-goal/src/index.ts)）
+- `@monotykamary/dsh-commands`（[`packages/interaction/commands/src/index.ts`](../packages/interaction/commands/src/index.ts)）
+- `@monotykamary/dsh-cordis-client-runner`（[`packages/extensions/cordis-client-runner/src/index.ts`](../packages/extensions/cordis-client-runner/src/index.ts)）
+- `@monotykamary/dsh-fs-e2b` — 需要 `e2b`（[`packages/e2b/fs-e2b/src/index.ts`](../packages/e2b/fs-e2b/src/index.ts)）
+- `@monotykamary/dsh-fs-observation-policy`（[`packages/fs/fs-observation-policy/src/index.ts`](../packages/fs/fs-observation-policy/src/index.ts)）
+- `@monotykamary/dsh-goal-round-driver` — 需要 `agents` · `goals` · `sessions`（[`packages/goal/goal-round-driver/src/index.ts`](../packages/goal/goal-round-driver/src/index.ts)）
+- `@monotykamary/dsh-host-directory-picker-auto` — 需要 `webServer` · `loader`（[`packages/host/directory-picker-auto/src/index.ts`](../packages/host/directory-picker-auto/src/index.ts)）
+- `@monotykamary/dsh-host-directory-picker-native`（[`packages/host/directory-picker-native/src/index.ts`](../packages/host/directory-picker-native/src/index.ts)）
+- `@monotykamary/dsh-host-plugin-inventory` — 需要 `loader`（[`packages/host/plugin-inventory/src/index.ts`](../packages/host/plugin-inventory/src/index.ts)）
+- `@monotykamary/dsh-llm`（[`packages/llm/llm/src/index.ts`](../packages/llm/llm/src/index.ts)）
+- `@monotykamary/dsh-lsp`（[`packages/lsp/lsp/src/index.ts`](../packages/lsp/lsp/src/index.ts)）
+- `@monotykamary/dsh-schedule` — 需要 `agents` · `sessions` · `tools` · `sessionPersistence`（[`packages/schedule/schedule/src/index.ts`](../packages/schedule/schedule/src/index.ts)）
+- `@monotykamary/dsh-session`（[`packages/core/session/src/index.ts`](../packages/core/session/src/index.ts)）
+- `@monotykamary/dsh-session-checkpoint-policy` — 需要 `llm` · `sessionPersistence` · `sessions` · `tools`（[`packages/session/session-checkpoint-policy/src/index.ts`](../packages/session/session-checkpoint-policy/src/index.ts)）
+- `@monotykamary/dsh-session-log-export` — 需要 `commands`（[`packages/session-query/session-log-export/src/index.ts`](../packages/session-query/session-log-export/src/index.ts)）
+- `@monotykamary/dsh-session-projection`（[`packages/session/session-projection/src/index.ts`](../packages/session/session-projection/src/index.ts)）
+- `@monotykamary/dsh-session-stats` — 需要 `sessionProjections`（[`packages/session/session-stats/src/index.ts`](../packages/session/session-stats/src/index.ts)）
+- `@monotykamary/dsh-skill-badge` — 需要 `skills`（[`packages/skill/skill-badge/src/index.ts`](../packages/skill/skill-badge/src/index.ts)）
+- `@monotykamary/dsh-storage`（[`packages/storage/storage/src/index.ts`](../packages/storage/storage/src/index.ts)）
+- `@monotykamary/dsh-subagent`（[`packages/subagent/subagent/src/index.ts`](../packages/subagent/subagent/src/index.ts)）
+- `@monotykamary/dsh-subprocess-local`（[`packages/subprocess/subprocess-local/src/index.ts`](../packages/subprocess/subprocess-local/src/index.ts)）
+- `@monotykamary/dsh-terminal`（[`packages/terminal/terminal/src/index.ts`](../packages/terminal/terminal/src/index.ts)）
+- `@monotykamary/dsh-tool-ask-user` — 需要 `tools` · `userInteraction`（[`packages/interaction/tool-ask-user/src/index.ts`](../packages/interaction/tool-ask-user/src/index.ts)）
+- `@monotykamary/dsh-tool-call-timeout-policy` — 需要 `tools`（[`packages/guard/timeout-policy/src/index.ts`](../packages/guard/timeout-policy/src/index.ts)）
+- `@monotykamary/dsh-tool-cordis` — 需要 `tools` · `systemPrompt` · `dynamicCordisRunner` · `cordisInspect`（[`packages/extensions/tool-cordis/src/index.ts`](../packages/extensions/tool-cordis/src/index.ts)）
+- `@monotykamary/dsh-tool-subagent-control` — 需要 `tools` · `subagents`（[`packages/subagent/tool-subagent-control/src/index.ts`](../packages/subagent/tool-subagent-control/src/index.ts)）
+- `@monotykamary/dsh-user-questions`（[`packages/interaction/user-questions/src/index.ts`](../packages/interaction/user-questions/src/index.ts)）
+- `@monotykamary/dsh-workspace` — 需要 `storageDomain` · `sessionPersistence`（[`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts)）
 
 ## Seam 包（不可直接加载）
 
 抽象服务类——部署时应改为加载具体的实现包（参见[能力 seam](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md)）。
 
-- `@deepseek-ai/dsh-attachment` — 抽象 `AttachmentStore`（[`packages/attachment/attachment/src/index.ts`](../packages/attachment/attachment/src/index.ts)）
-- `@deepseek-ai/dsh-code-runtime` — 抽象 `CodeRuntime`（[`packages/code-runtime/code-runtime/src/index.ts`](../packages/code-runtime/code-runtime/src/index.ts)）
-- `@deepseek-ai/dsh-compaction` — 抽象 `CompactionEngine`（[`packages/compaction/compaction/src/index.ts`](../packages/compaction/compaction/src/index.ts)）
-- `@deepseek-ai/dsh-credentials` — 抽象 `Credentials`（[`packages/credentials/credentials/src/index.ts`](../packages/credentials/credentials/src/index.ts)）
-- `@deepseek-ai/dsh-fs` — 抽象 `FileSystem`（[`packages/fs/fs/src/index.ts`](../packages/fs/fs/src/index.ts)）
-- `@deepseek-ai/dsh-host-directory-picker` — 抽象 `DirectoryPicker`（[`packages/host/directory-picker/src/index.ts`](../packages/host/directory-picker/src/index.ts)）
-- `@deepseek-ai/dsh-jobs` — 抽象 `JobRegistry`（[`packages/jobs/jobs/src/index.ts`](../packages/jobs/jobs/src/index.ts)）
-- `@deepseek-ai/dsh-sandbox` — 抽象 `SandboxProvider`（[`packages/sandbox/sandbox/src/index.ts`](../packages/sandbox/sandbox/src/index.ts)）
-- `@deepseek-ai/dsh-session-persistence` — 抽象 `SessionPersistence`（[`packages/session/session-persistence/src/index.ts`](../packages/session/session-persistence/src/index.ts)）
-- `@deepseek-ai/dsh-session-query` — 抽象 `SessionQueryEngine`（[`packages/session-query/session-query/src/index.ts`](../packages/session-query/session-query/src/index.ts)）
-- `@deepseek-ai/dsh-settings` — 抽象 `Settings`（[`packages/settings/settings/src/index.ts`](../packages/settings/settings/src/index.ts)）
-- `@deepseek-ai/dsh-shell` — 抽象 `ShellExecutor`（[`packages/shell/shell/src/index.ts`](../packages/shell/shell/src/index.ts)）
-- `@deepseek-ai/dsh-spill` — 抽象 `SpillStore`（[`packages/spill/spill/src/index.ts`](../packages/spill/spill/src/index.ts)）
-- `@deepseek-ai/dsh-subprocess` — 抽象 `SubprocessRuntime`（[`packages/subprocess/subprocess/src/index.ts`](../packages/subprocess/subprocess/src/index.ts)）
-- `@deepseek-ai/dsh-workflow` — 抽象 `WorkflowEngine`（[`packages/workflow/workflow/src/index.ts`](../packages/workflow/workflow/src/index.ts)）
+- `@monotykamary/dsh-attachment` — 抽象 `AttachmentStore`（[`packages/attachment/attachment/src/index.ts`](../packages/attachment/attachment/src/index.ts)）
+- `@monotykamary/dsh-code-runtime` — 抽象 `CodeRuntime`（[`packages/code-runtime/code-runtime/src/index.ts`](../packages/code-runtime/code-runtime/src/index.ts)）
+- `@monotykamary/dsh-compaction` — 抽象 `CompactionEngine`（[`packages/compaction/compaction/src/index.ts`](../packages/compaction/compaction/src/index.ts)）
+- `@monotykamary/dsh-credentials` — 抽象 `Credentials`（[`packages/credentials/credentials/src/index.ts`](../packages/credentials/credentials/src/index.ts)）
+- `@monotykamary/dsh-fs` — 抽象 `FileSystem`（[`packages/fs/fs/src/index.ts`](../packages/fs/fs/src/index.ts)）
+- `@monotykamary/dsh-host-directory-picker` — 抽象 `DirectoryPicker`（[`packages/host/directory-picker/src/index.ts`](../packages/host/directory-picker/src/index.ts)）
+- `@monotykamary/dsh-jobs` — 抽象 `JobRegistry`（[`packages/jobs/jobs/src/index.ts`](../packages/jobs/jobs/src/index.ts)）
+- `@monotykamary/dsh-sandbox` — 抽象 `SandboxProvider`（[`packages/sandbox/sandbox/src/index.ts`](../packages/sandbox/sandbox/src/index.ts)）
+- `@monotykamary/dsh-session-persistence` — 抽象 `SessionPersistence`（[`packages/session/session-persistence/src/index.ts`](../packages/session/session-persistence/src/index.ts)）
+- `@monotykamary/dsh-session-query` — 抽象 `SessionQueryEngine`（[`packages/session-query/session-query/src/index.ts`](../packages/session-query/session-query/src/index.ts)）
+- `@monotykamary/dsh-settings` — 抽象 `Settings`（[`packages/settings/settings/src/index.ts`](../packages/settings/settings/src/index.ts)）
+- `@monotykamary/dsh-shell` — 抽象 `ShellExecutor`（[`packages/shell/shell/src/index.ts`](../packages/shell/shell/src/index.ts)）
+- `@monotykamary/dsh-spill` — 抽象 `SpillStore`（[`packages/spill/spill/src/index.ts`](../packages/spill/spill/src/index.ts)）
+- `@monotykamary/dsh-subprocess` — 抽象 `SubprocessRuntime`（[`packages/subprocess/subprocess/src/index.ts`](../packages/subprocess/subprocess/src/index.ts)）
+- `@monotykamary/dsh-workflow` — 抽象 `WorkflowEngine`（[`packages/workflow/workflow/src/index.ts`](../packages/workflow/workflow/src/index.ts)）
 ## 库包（无插件入口）
 
 由其他包作为库导入；`cordis.yml` 无法加载它们。
 
-- `@deepseek-ai/dsh-acp-snapshot`（[`packages/test-support/acp-snapshot/src/index.ts`](../packages/test-support/acp-snapshot/src/index.ts)）
-- `@deepseek-ai/dsh-agent-loop-testkit`（[`packages/test-support/agent-loop-testkit/src/index.ts`](../packages/test-support/agent-loop-testkit/src/index.ts)）
-- `@deepseek-ai/dsh-anonymous-user-id`（[`packages/identity/anonymous-user-id/src/index.ts`](../packages/identity/anonymous-user-id/src/index.ts)）
-- `@deepseek-ai/dsh-app-boot`（[`packages/boot/app-boot/src/index.ts`](../packages/boot/app-boot/src/index.ts)）
-- `@deepseek-ai/dsh-atomic-write`（[`packages/util/atomic-write/src/index.ts`](../packages/util/atomic-write/src/index.ts)）
-- `@deepseek-ai/dsh-base`（[`packages/bundle/base/src/index.ts`](../packages/bundle/base/src/index.ts)）
-- `@deepseek-ai/dsh-brand`（[`packages/util/brand/src/index.ts`](../packages/util/brand/src/index.ts)）
-- `@deepseek-ai/dsh-client-schema-form`（[`packages/client/schema-form/src/index.ts`](../packages/client/schema-form/src/index.ts)）
-- `@deepseek-ai/dsh-client-test-runtime`（[`packages/test-support/client-runtime/src/index.ts`](../packages/test-support/client-runtime/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-attachment`（[`packages/client/ui-attachment/src/index.ts`](../packages/client/ui-attachment/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-primitives`（[`packages/client/ui-primitives/src/index.ts`](../packages/client/ui-primitives/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-slots`（[`packages/client/ui-slots/src/index.ts`](../packages/client/ui-slots/src/index.ts)）
-- `@deepseek-ai/dsh-client-web`（[`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts)）
-- `@deepseek-ai/dsh-client-web-react`（[`packages/client/web-react/src/index.ts`](../packages/client/web-react/src/index.ts)）
-- `@deepseek-ai/dsh-cmdline`（[`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts)）
-- `@deepseek-ai/dsh-home-paths`（[`packages/util/home-paths/src/index.ts`](../packages/util/home-paths/src/index.ts)）
-- `@deepseek-ai/dsh-hook-protocol`（[`packages/hooks/hook-protocol/src/index.ts`](../packages/hooks/hook-protocol/src/index.ts)）
-- `@deepseek-ai/dsh-launch-environment`（[`packages/util/launch-environment/src/index.ts`](../packages/util/launch-environment/src/index.ts)）
-- `@deepseek-ai/dsh-llm-mock-server`（[`packages/test-support/llm-mock-server/src/index.ts`](../packages/test-support/llm-mock-server/src/index.ts)）
-- `@deepseek-ai/dsh-loader-smoke`（[`packages/test-support/loader-smoke/src/index.ts`](../packages/test-support/loader-smoke/src/index.ts)）
-- `@deepseek-ai/dsh-native-command`（[`packages/util/native-command/src/index.ts`](../packages/util/native-command/src/index.ts)）
-- `@deepseek-ai/dsh-output-retention`（[`packages/util/output-retention/src/index.ts`](../packages/util/output-retention/src/index.ts)）
-- `@deepseek-ai/dsh-sandbox-windows-acl`（[`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts)）
-- `@deepseek-ai/dsh-scope`（[`packages/core/scope/src/index.ts`](../packages/core/scope/src/index.ts)）
-- `@deepseek-ai/dsh-sdk-client`（[`packages/sdk/client/src/index.ts`](../packages/sdk/client/src/index.ts)）
-- `@deepseek-ai/dsh-sdk-jsonrpc-demo`（[`packages/examples/jsonrpc-demo/src/index.ts`](../packages/examples/jsonrpc-demo/src/index.ts)）
-- `@deepseek-ai/dsh-sdk-protocol`（[`packages/sdk/protocol/src/index.ts`](../packages/sdk/protocol/src/index.ts)）
-- `@deepseek-ai/dsh-session-telemetry`（[`packages/session/session-telemetry/src/index.ts`](../packages/session/session-telemetry/src/index.ts)）
-- `@deepseek-ai/dsh-session-title-llm`（[`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts)）
-- `@deepseek-ai/dsh-subagent-in-process-driver`（[`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts)）
-- `@deepseek-ai/dsh-timeout`（[`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts)）
-- `@deepseek-ai/dsh-typert-generator`（[`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts)）
-- `@deepseek-ai/dsh-typert-protocol`（[`packages/typert/protocol/src/index.ts`](../packages/typert/protocol/src/index.ts)）
-- `@deepseek-ai/dsh-typert-registry`（[`packages/typert/registry/src/index.ts`](../packages/typert/registry/src/index.ts)）
+- `@monotykamary/dsh-acp-snapshot`（[`packages/test-support/acp-snapshot/src/index.ts`](../packages/test-support/acp-snapshot/src/index.ts)）
+- `@monotykamary/dsh-agent-loop-testkit`（[`packages/test-support/agent-loop-testkit/src/index.ts`](../packages/test-support/agent-loop-testkit/src/index.ts)）
+- `@monotykamary/dsh-anonymous-user-id`（[`packages/identity/anonymous-user-id/src/index.ts`](../packages/identity/anonymous-user-id/src/index.ts)）
+- `@monotykamary/dsh-app-boot`（[`packages/boot/app-boot/src/index.ts`](../packages/boot/app-boot/src/index.ts)）
+- `@monotykamary/dsh-atomic-write`（[`packages/util/atomic-write/src/index.ts`](../packages/util/atomic-write/src/index.ts)）
+- `@monotykamary/dsh-base`（[`packages/bundle/base/src/index.ts`](../packages/bundle/base/src/index.ts)）
+- `@monotykamary/dsh-brand`（[`packages/util/brand/src/index.ts`](../packages/util/brand/src/index.ts)）
+- `@monotykamary/dsh-client-schema-form`（[`packages/client/schema-form/src/index.ts`](../packages/client/schema-form/src/index.ts)）
+- `@monotykamary/dsh-client-test-runtime`（[`packages/test-support/client-runtime/src/index.ts`](../packages/test-support/client-runtime/src/index.ts)）
+- `@monotykamary/dsh-client-ui-attachment`（[`packages/client/ui-attachment/src/index.ts`](../packages/client/ui-attachment/src/index.ts)）
+- `@monotykamary/dsh-client-ui-primitives`（[`packages/client/ui-primitives/src/index.ts`](../packages/client/ui-primitives/src/index.ts)）
+- `@monotykamary/dsh-client-ui-slots`（[`packages/client/ui-slots/src/index.ts`](../packages/client/ui-slots/src/index.ts)）
+- `@monotykamary/dsh-client-web`（[`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts)）
+- `@monotykamary/dsh-client-web-react`（[`packages/client/web-react/src/index.ts`](../packages/client/web-react/src/index.ts)）
+- `@monotykamary/dsh-cmdline`（[`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts)）
+- `@monotykamary/dsh-home-paths`（[`packages/util/home-paths/src/index.ts`](../packages/util/home-paths/src/index.ts)）
+- `@monotykamary/dsh-hook-protocol`（[`packages/hooks/hook-protocol/src/index.ts`](../packages/hooks/hook-protocol/src/index.ts)）
+- `@monotykamary/dsh-launch-environment`（[`packages/util/launch-environment/src/index.ts`](../packages/util/launch-environment/src/index.ts)）
+- `@monotykamary/dsh-llm-mock-server`（[`packages/test-support/llm-mock-server/src/index.ts`](../packages/test-support/llm-mock-server/src/index.ts)）
+- `@monotykamary/dsh-loader-smoke`（[`packages/test-support/loader-smoke/src/index.ts`](../packages/test-support/loader-smoke/src/index.ts)）
+- `@monotykamary/dsh-native-command`（[`packages/util/native-command/src/index.ts`](../packages/util/native-command/src/index.ts)）
+- `@monotykamary/dsh-output-retention`（[`packages/util/output-retention/src/index.ts`](../packages/util/output-retention/src/index.ts)）
+- `@monotykamary/dsh-sandbox-windows-acl`（[`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts)）
+- `@monotykamary/dsh-scope`（[`packages/core/scope/src/index.ts`](../packages/core/scope/src/index.ts)）
+- `@monotykamary/dsh-sdk-client`（[`packages/sdk/client/src/index.ts`](../packages/sdk/client/src/index.ts)）
+- `@monotykamary/dsh-sdk-jsonrpc-demo`（[`packages/examples/jsonrpc-demo/src/index.ts`](../packages/examples/jsonrpc-demo/src/index.ts)）
+- `@monotykamary/dsh-sdk-protocol`（[`packages/sdk/protocol/src/index.ts`](../packages/sdk/protocol/src/index.ts)）
+- `@monotykamary/dsh-session-telemetry`（[`packages/session/session-telemetry/src/index.ts`](../packages/session/session-telemetry/src/index.ts)）
+- `@monotykamary/dsh-session-title-llm`（[`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts)）
+- `@monotykamary/dsh-subagent-in-process-driver`（[`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts)）
+- `@monotykamary/dsh-timeout`（[`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts)）
+- `@monotykamary/dsh-typert-generator`（[`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts)）
+- `@monotykamary/dsh-typert-protocol`（[`packages/typert/protocol/src/index.ts`](../packages/typert/protocol/src/index.ts)）
+- `@monotykamary/dsh-typert-registry`（[`packages/typert/registry/src/index.ts`](../packages/typert/registry/src/index.ts)）

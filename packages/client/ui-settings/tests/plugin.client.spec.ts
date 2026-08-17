@@ -3,7 +3,7 @@
  * `ctx.settingsScope` for every feature that owns a preference row, and the
  * service retires with its fiber.
  */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@monotykamary/cordis'
 import { describe, expect, it } from 'vitest'
 import { apply, inject, SettingsScopeBinder } from '../src/client/index.ts'
 

@@ -6,15 +6,15 @@
  * permission decisions; presentation and human-interaction features stay with
  * the harness's UI modules.
  *
- * @module @deepseek-ai/dsh-acp
+ * @module @monotykamary/dsh-acp
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@monotykamary/cordis'
 import { randomUUID } from 'node:crypto'
 import { isAbsolute } from 'node:path'
 import { Readable, Writable } from 'node:stream'
-import Schema from '@deepseek-ai/schemastery'
-import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
+import Schema from '@monotykamary/schemastery'
+import { createUserMessage, errorChain } from '@monotykamary/dsh-llm'
 import {
   AgentSideConnection,
   ndJsonStream,
@@ -33,10 +33,10 @@ import {
   type StopReason,
   type Stream,
 } from '@agentclientprotocol/sdk'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId, type SessionEvent, type TurnEndReason } from '@deepseek-ai/dsh-session'
+import type { Agent } from '@monotykamary/dsh-agent'
+import { SessionId, type SessionEvent, type TurnEndReason } from '@monotykamary/dsh-session'
 // Side-effect type import: declaration-merges the approval waterfall answered below.
-import type {} from '@deepseek-ai/dsh-user-approval'
+import type {} from '@monotykamary/dsh-user-approval'
 import { acpPromptToText, promptHasUnsupportedContent, turnEndToStopReason } from './codec.ts'
 
 export const name = 'acp'
@@ -255,7 +255,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
         // No preset composition: the ACP bundle keeps the model-facing rows in
         // the host plane, so this agent reads them from the global layer. A
         // deployment that configures a roster has to join one here first
-        // (@deepseek-ai/dsh-agent-presets README, "Composing a child agent").
+        // (@monotykamary/dsh-agent-presets README, "Composing a child agent").
         const handle = await agents.create({
           sessionId,
           meta: { cwd: params.cwd },

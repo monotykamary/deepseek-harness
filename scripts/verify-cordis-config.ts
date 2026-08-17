@@ -41,7 +41,7 @@ const appOverlayFiles = new Set([
 const metadataFields = ['id', 'name', 'group', 'inject', 'intercept', 'isolate'] as const
 
 /** The adaptive directory-picker chooser package (mounts a backend row at boot). */
-const CHOOSER_PACKAGE = '@deepseek-ai/dsh-host-directory-picker-auto'
+const CHOOSER_PACKAGE = '@monotykamary/dsh-host-directory-picker-auto'
 
 /**
  * The packages the chooser mounts by runtime string (mirror of its exported
@@ -51,10 +51,10 @@ const CHOOSER_PACKAGE = '@deepseek-ai/dsh-host-directory-picker-auto'
  * until a macOS boot.
  */
 const CHOOSER_BACKEND_PACKAGES = [
-  '@deepseek-ai/dsh-host-directory-picker-native',
-  '@deepseek-ai/dsh-host-directory-picker-browse',
-  '@deepseek-ai/dsh-client-ui-directory-picker-browse',
-  '@deepseek-ai/dsh-client-ui-directory-picker-native',
+  '@monotykamary/dsh-host-directory-picker-native',
+  '@monotykamary/dsh-host-directory-picker-browse',
+  '@monotykamary/dsh-client-ui-directory-picker-browse',
+  '@monotykamary/dsh-client-ui-directory-picker-native',
 ]
 const jsExprType = new yaml.Type('tag:yaml.org,2002:js', {
   kind: 'scalar',
@@ -204,7 +204,7 @@ function validateEntry(value: unknown, file: string, path: string): void {
   }
   recordPlugin(value, file)
   validateMetadata(value, file, path)
-  if ((value.group === true || value.name === '@deepseek-ai/cordis-plugin-group') && isUnknownArray(value.config)) {
+  if ((value.group === true || value.name === '@monotykamary/cordis-plugin-group') && isUnknownArray(value.config)) {
     for (let index = 0; index < value.config.length; index++) {
       validateEntry(value.config[index], file, `${path}.config[${index}]`)
     }
@@ -214,7 +214,7 @@ function validateEntry(value: unknown, file: string, path: string): void {
       validateEntry(value.insert[index], file, `${path}.insert[${index}]`)
     }
   }
-  if (value.name !== '@deepseek-ai/cordis-plugin-include') return
+  if (value.name !== '@monotykamary/cordis-plugin-include') return
   const config = value.config
   if (!isRecord(config) || !isUnknownArray(config.patches)) return
   for (let index = 0; index < config.patches.length; index++) {

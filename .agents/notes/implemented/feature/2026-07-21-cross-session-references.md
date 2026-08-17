@@ -10,7 +10,7 @@ TUI users need to bring relevant work from another conversation into one new mes
 
 ## Decision
 
-`@deepseek-ai/dsh-session-reference` is one context consumer service at `ctx.sessionReferenceResolver`. Hosts normalize their protocol into `SessionReferenceInput[]` and call `prepare()` before delivery. The service returns detached readable content plus an optional identified, frozen `UserMessage` snapshot; core agent packages do not parse session URIs or read another log.
+`@monotykamary/dsh-session-reference` is one context consumer service at `ctx.sessionReferenceResolver`. Hosts normalize their protocol into `SessionReferenceInput[]` and call `prepare()` before delivery. The service returns detached readable content plus an optional identified, frozen `UserMessage` snapshot; core agent packages do not parse session URIs or read another log.
 
 `dsh-session:<base64url(JSON.stringify(sessionId))>` is the canonical host-independent identifier. JSON string encoding precedes base64url so quotes, slashes, backslashes, Unicode, newlines, and every other JavaScript string value round-trip without delimiter ambiguity. TUI renders that URI inside `@[label](uri)`; text-only clients may use the same inline mention. Explicit Markdown mentions reject malformed URIs. Bare text becomes a reference only for a non-empty base64url-shaped payload, whose decode must still be canonical; empty or punctuation-only uses remain ordinary discussion text.
 

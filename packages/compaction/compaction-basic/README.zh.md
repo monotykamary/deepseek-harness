@@ -1,8 +1,8 @@
-# @deepseek-ai/dsh-compaction-basic
+# @monotykamary/dsh-compaction-basic
 
 [English](README.md) | 中文
 
-**基础压缩（compaction）后端**：`BasicCompactionEngine` 实现 `@deepseek-ai/dsh-compaction` Service Definition，使用可复用的 `ctx.tokenMeter` 压力、token 预算保留与摘要。摘要是直接的一次性 `ctx.llm.stream()` 调用，它会回放会话前缀以复用提供方的 KV Cache（可在 `llm/stream` 处拦截）。
+**基础压缩（compaction）后端**：`BasicCompactionEngine` 实现 `@monotykamary/dsh-compaction` Service Definition，使用可复用的 `ctx.tokenMeter` 压力、token 预算保留与摘要。摘要是直接的一次性 `ctx.llm.stream()` 调用，它会回放会话前缀以复用提供方的 KV Cache（可在 `llm/stream` 处拦截）。
 
 本包承担压缩能力的 Service Provider 角色；其约定见 [Service Definition 包](../compaction/README.md)，设计见 [能力 seam Agent Note](../../../.agents/notes/implemented/feature/2026-06-18-compaction-capability-seam.md)。
 
@@ -49,10 +49,10 @@
 `BasicCompactionEngine` 需要 `ctx.llm`、`ctx.tokenMeter` 和 `ctx.sessions`。以下组合从其宿主接收 `ctx.llm`，并安装另外两项服务：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import { BasicCompactionEngine } from '@deepseek-ai/dsh-compaction-basic'
-import SessionStore from '@deepseek-ai/dsh-session'
-import TokenMeter from '@deepseek-ai/dsh-token-meter'
+import type { Context } from '@monotykamary/cordis'
+import { BasicCompactionEngine } from '@monotykamary/dsh-compaction-basic'
+import SessionStore from '@monotykamary/dsh-session'
+import TokenMeter from '@monotykamary/dsh-token-meter'
 
 export const name = 'compaction-basic'
 export const inject = ['llm']
@@ -69,7 +69,7 @@ export function apply(ctx: Context): void {
 例如，同一个压缩插件可以安全服务于容量不同的模型，并应用一项目标特定策略：
 
 ```yaml
-- name: '@deepseek-ai/dsh-compaction-basic'
+- name: '@monotykamary/dsh-compaction-basic'
   config:
     thresholdRatio: 0.8
     retainRatio: 0.16

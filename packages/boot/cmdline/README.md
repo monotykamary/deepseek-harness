@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-cmdline`
+# `@monotykamary/dsh-cmdline`
 
 English | [中文](README.zh.md)
 
@@ -32,14 +32,14 @@ Its Loader row carries no launcher marker or special kind:
 
 ```yaml
 - id: web-startup
-  name: '@deepseek-ai/dsh-web-app/startup'
+  name: '@monotykamary/dsh-web-app/startup'
 ```
 
 Every row configured from those values uses ordinary service injection and direct lazy config access:
 
 ```yaml
 - id: webserver
-  name: '@deepseek-ai/dsh-host-webserver'
+  name: '@monotykamary/dsh-host-webserver'
   inject: [webStartup]
   config:
     host: !!js ctx.webStartup.host ?? '127.0.0.1'
