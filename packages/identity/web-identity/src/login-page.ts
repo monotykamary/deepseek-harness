@@ -15,11 +15,11 @@ import { OPERATOR_TOKEN_STORAGE_KEY } from './constants.ts'
  */
 export function renderLoginPage(): string {
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DeepSeek Harness 登录</title>
+<title>DeepSeek Harness Sign in</title>
 <style>
   :root { color-scheme: dark; }
   body {
@@ -49,17 +49,17 @@ export function renderLoginPage(): string {
 <body>
 <main>
   <h1>DeepSeek Harness</h1>
-  <p class="sub">此实例启用了 Passkey 身份验证。</p>
-  <label for="username">用户名</label>
-  <input id="username" autocomplete="username webauthn" placeholder="登录可留空；注册必填">
-  <button id="login" class="primary">登录 Passkey</button>
-  <button id="register">注册新 Passkey</button>
+  <p class="sub">This instance uses passkey authentication.</p>
+  <label for="username">Username</label>
+  <input id="username" autocomplete="username webauthn" placeholder="Leave blank to sign in; required to register">
+  <button id="login" class="primary">Sign in with passkey</button>
+  <button id="register">Register a new passkey</button>
   <hr>
-  <label for="operator-token">运营者令牌（可选）</label>
-  <input id="operator-token" type="password" placeholder="Bearer 令牌">
-  <button id="operator">以运营者身份进入</button>
+  <label for="operator-token">Operator token (optional)</label>
+  <input id="operator-token" type="password" placeholder="Bearer token">
+  <button id="operator">Enter as operator</button>
   <div id="status"></div>
-  <p class="hint">Passkey 绑定当前网址；在另一个地址（例如 tailnet 域名）访问时需要重新注册。</p>
+  <p class="hint">A passkey is bound to this origin; visiting through another address (for example the tailnet domain) requires registering again.</p>
 </main>
 <script>
 (function () {
@@ -96,7 +96,7 @@ export function renderLoginPage(): string {
   }
   function fail(result) {
     var error = result.payload && result.payload.error
-    setStatus('操作失败' + (error ? '：' + error : '') + '（HTTP ' + result.status + '）')
+    setStatus('Operation failed' + (error ? ': ' + error : '') + ' (HTTP ' + result.status + ')')
   }
   function authenticate() {
     var username = usernameEl.value.trim()
@@ -141,14 +141,14 @@ export function renderLoginPage(): string {
         window.location.replace('/')
       })
       .catch(function (error) {
-        if (error && error.name === 'NotAllowedError') setStatus('已取消或验证失败，请重试。')
-        else setStatus('验证失败：' + (error && error.message ? error.message : String(error)))
+        if (error && error.name === 'NotAllowedError') setStatus('Cancelled or verification failed; try again.')
+        else setStatus('Verification failed: ' + (error && error.message ? error.message : String(error)))
       })
       .finally(function () { setBusy(false) })
   }
   function register() {
     var username = usernameEl.value.trim()
-    if (!username) { setStatus('注册需要填写用户名。'); return }
+    if (!username) { setStatus('Registering requires a username.'); return }
     setBusy(true)
     setStatus('')
     post('/auth/passkey/register/options', { username: username })
@@ -191,14 +191,14 @@ export function renderLoginPage(): string {
         window.location.replace('/')
       })
       .catch(function (error) {
-        if (error && error.name === 'NotAllowedError') setStatus('已取消或注册失败，请重试。')
-        else setStatus('注册失败：' + (error && error.message ? error.message : String(error)))
+        if (error && error.name === 'NotAllowedError') setStatus('Cancelled or registration failed; try again.')
+        else setStatus('Registration failed: ' + (error && error.message ? error.message : String(error)))
       })
       .finally(function () { setBusy(false) })
   }
   function operator() {
     var token = document.getElementById('operator-token').value.trim()
-    if (!token) { setStatus('请输入运营者令牌。'); return }
+    if (!token) { setStatus('Please enter the operator token.'); return }
     try { localStorage.setItem('${OPERATOR_TOKEN_STORAGE_KEY}', token) } catch (error) { /* storage unavailable */ }
     window.location.replace('/')
   }
