@@ -73,20 +73,27 @@ export const Config: z<ConnectionConfig> = z.object({
 })
 
 /**
- * Methods gated to loopback even on a trusted-host deployment. Native dialogs
- * act on the host machine; the settings and credential domains mutate the
- * user's configuration and secret store, and READING them is equally
- * privileged — `settings.describe` returns every exposed namespace's
- * configuration and `credentials.describe` reports whether an arbitrary
- * environment-variable name is configured and where from, which is
- * reconnaissance no anonymous caller should have. `trustedHosts` is a
- * DNS-rebinding fence, explicitly not authentication, so the whole
- * configuration plane stays loopback-same-origin until a real authentication
- * layer exists. `llm.discoverModels` belongs to that plane on both counts: it
- * carries a draft credential, and it makes the HOST issue a GET to a URL the
- * caller chose and reports back the status or the parsed body — an anonymous
- * LAN caller would have a probe for whatever the host can reach and the
- * browser cannot.
+ * Methods gated to the operator-eligible plane. Native dialogs act on the
+ * host machine; the settings and credential domains mutate the user's
+ * configuration and secret store, and READING them is equally privileged —
+ * `settings.describe` returns every exposed namespace's configuration and
+ * `credentials.describe` reports whether an arbitrary environment-variable
+ * name is configured and where from, which is reconnaissance no anonymous
+ * caller should have. `llm.discoverModels` belongs to that plane on both
+ * counts: it carries a draft credential, and it makes the HOST issue a GET to
+ * a URL the caller chose and reports back the status or the parsed body — a
+ * caller on the wire would have a probe for whatever the host can reach and
+ * the browser cannot.
+ *
+ * Admission is the operator tier: owner null, admitted by surface (loopback,
+ * or any authority in the deployment's live trusted list — `trustedHosts`
+ * plus the tailnet/portless authorities `dsh web` derives) or by the
+ * operator bearer token when an identity authority is configured. The fence
+ * is still a reachability policy, not authentication: the surface the
+ * deployment named is trusted for its own configuration plane, and
+ * DNS-rebinding plus cross-site markers still bind every caller. A partitioned
+ * user (owner non-null) is refused even on loopback — the token is how the
+ * operator works in passkey mode.
  *
  * The model catalog (`llm.providers`, `llm.models`) is deliberately NOT here:
  * it carries provider ids, display names, and model lists — no endpoints,
@@ -128,8 +135,9 @@ const PRIVILEGED_METHODS = new Set([
  * Mounts the API gateway under the browser transport prefix. Every request on
  * the prefix passes the browser-trust fence first (DNS-rebinding and
  * cross-site defense — [api-request-trust](./api-request-trust.ts));
- * privileged methods additionally pass it with an empty trust list, which
- * pins them to loopback.
+ * privileged methods additionally require the operator-eligible plane:
+ * loopback or one of the deployment's live trusted authorities, or the
+ * operator bearer token when an identity authority is configured.
  * @param ctx - Host plugin context.
  * @param config - resolved plugin config (schema defaults applied).
  */
@@ -148,14 +156,15 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
       const method = pathname.startsWith(`${API_PATH}/`)
         ? pathname.slice(API_PATH.length + 1)
         : undefined
-      // Privileged plane: loopback operator requests (the pre-identity
-      // posture) or any request the identity authority admitted through the
-      // operator bearer token. A partitioned user is refused even on
-      // loopback — the token is how the operator works in passkey mode.
+      // Privileged plane: the operator tier owns it — admitted by surface
+      // (loopback or a deployment trusted authority, the live list the
+      // ordinary fence reads) or by the operator bearer token. A partitioned
+      // user is refused even on loopback — the token is how the operator
+      // works in passkey mode.
       if (method !== undefined && PRIVILEGED_METHODS.has(method)) {
         const admission: Admission = ctx.get('identity')?.current()
           ?? { owner: null, operator: false }
-        if (admission.owner !== null || (!admission.operator && !isTrustedApiRequest(request, []))) {
+        if (admission.owner !== null || (!admission.operator && !isTrustedApiRequest(request, connection.trustedAuthorities))) {
           return new Response('forbidden', { status: 403 })
         }
       }

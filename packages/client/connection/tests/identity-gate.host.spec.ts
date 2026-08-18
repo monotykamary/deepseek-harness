@@ -77,7 +77,7 @@ afterEach(() => {
   dirs = []
 })
 
-async function mounted(config?: { trustedHosts?: string[] }): Promise<{
+async function mounted(config?: { trustedHosts?: string[]; identity?: boolean }): Promise<{
   ctx: Context
   routes: WebRoute[]
   upgrades: WebUpgradeRoute[]
@@ -92,11 +92,14 @@ async function mounted(config?: { trustedHosts?: string[] }): Promise<{
   const upgrades: WebUpgradeRoute[] = []
   ctx.provide('webServer', fakeHttpServer(routes, upgrades) as WebServer)
   // Passkey mode with a fixed operator token: the gate denies everything but
-  // the bearer token and a valid session cookie.
-  applyIdentity(ctx, new IdentityConfig({
-    identity: { provider: 'passkey', operatorToken: 'op-token' },
-    stateDirectory,
-  }))
+  // the bearer token and a valid session cookie. `identity: false` leaves the
+  // authority unmounted, exercising the legacy operator tier.
+  if (config?.identity !== false) {
+    applyIdentity(ctx, new IdentityConfig({
+      identity: { provider: 'passkey', operatorToken: 'op-token' },
+      stateDirectory,
+    }))
+  }
   const seenOwners: (string | null)[] = []
   const apiProxy = {
     sessions: {
@@ -177,6 +180,26 @@ describe('connection identity gate', () => {
     }, API_PATH + '/settings.describe', envelope), op.response)
     expect(op.state.status).toBe(200)
     expect(seenOwners).toEqual([null])
+    await dispose()
+  })
+
+  it('admits the privileged plane from a declared trusted surface in the legacy tier', async () => {
+    // No identity authority: the operator tier is granted by surface alone —
+    // loopback or any authority in the deployment's live trusted list.
+    const { routes, dispose } = await mounted({ trustedHosts: ['x.ts.net'], identity: false })
+    const envelope = { type: 'client-request', rpcId: RpcId('gate-3'), method: 'settings.describe', payload: {} }
+    const admitted = fakeResponse()
+    await apiRoute(routes).handler(fakePost({
+      host: 'x.ts.net', origin: 'https://x.ts.net', 'sec-fetch-site': 'same-origin',
+    }, API_PATH + '/settings.describe', envelope), admitted.response)
+    expect(admitted.state.status).toBe(200)
+
+    // An undeclared authority is still refused at the outer fence.
+    const refused = fakeResponse()
+    await apiRoute(routes).handler(fakePost({
+      host: 'evil.example', origin: 'https://evil.example', 'sec-fetch-site': 'cross-site',
+    }, API_PATH + '/settings.describe', envelope), refused.response)
+    expect(refused.state.status).toBe(403)
     await dispose()
   })
 
