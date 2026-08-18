@@ -43,7 +43,6 @@
     "tests/declared-reasoning.e2e.ts",
     "tests/onboarding-deepseek-config.e2e.ts",
     "tests/onboarding-usable-provider.e2e.ts",
-    "tests/remote-welcome.e2e.ts",
     "tests/tailnet-surface.e2e.ts",
     "tests/identity-header.e2e.ts",
     "tests/workspace-management.e2e.ts",

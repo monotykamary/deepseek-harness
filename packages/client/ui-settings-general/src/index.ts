@@ -8,7 +8,7 @@ import { settingsNamespace } from '@monotykamary/dsh-settings'
 const ONBOARDING_SETTINGS_NAMESPACE = 'ui-onboarding'
 
 interface OnboardingSettings {
-  /** Last version acknowledged by the current product welcome step. */
+  /** Last welcome-notice version a user acknowledged; stays registered so stored documents remain valid. */
   welcomeNoticeVersion?: string
 }
 

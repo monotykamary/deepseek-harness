@@ -203,10 +203,6 @@
     "margins": 2,
     "zindexes": 0
   },
-  "packages/client/ui-settings-models/src/client/WelcomeNotice.module.css": {
-    "margins": 4,
-    "zindexes": 0
-  },
   "packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.module.css": {
     "margins": 4,
     "zindexes": 0

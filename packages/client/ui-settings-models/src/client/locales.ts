@@ -1,7 +1,5 @@
 /** Copy dictionaries for the Models settings section. */
 
-import { WELCOME_NOTICE_COPY } from '../onboarding-copy.ts'
-
 /** English strings (the key-set source of truth for this pair). */
 export const en = {
   nav: 'Models',
@@ -87,10 +85,6 @@ export const en = {
   customNeedsModels: 'A custom provider needs at least one model.',
   create: 'Create provider',
   creating: 'Creating\u2026',
-  welcomeTitle: WELCOME_NOTICE_COPY.en.title,
-  welcomeBody: WELCOME_NOTICE_COPY.en.body,
-  welcomeContinue: WELCOME_NOTICE_COPY.en.continueLabel,
-  welcomeError: 'The acknowledgement could not be saved. Please try again.',
   onboardingTitle: 'Add an API key to get started',
   onboardingDescription: 'Configure the official DeepSeek provider to start building.',
   onboardingLater: 'Configure later',
@@ -187,10 +181,6 @@ export const zh: { [Key in keyof typeof en]: string } = {
   customNeedsModels: '自定义提供方至少需要一个模型。',
   create: '创建提供方',
   creating: '创建中\u2026',
-  welcomeTitle: WELCOME_NOTICE_COPY.zh.title,
-  welcomeBody: WELCOME_NOTICE_COPY.zh.body,
-  welcomeContinue: WELCOME_NOTICE_COPY.zh.continueLabel,
-  welcomeError: '暂时无法保存确认状态，请重试。',
   onboardingTitle: '添加一个 API Key 开始使用',
   onboardingDescription: '配置 DeepSeek 官方模型，即可开始使用。',
   onboardingLater: '稍后配置',
