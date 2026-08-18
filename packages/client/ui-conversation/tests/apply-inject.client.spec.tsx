@@ -3,8 +3,8 @@
 // API: the strict session API (views triple, draft mirror), the
 // provide-channel input face (machine-sink submit choreography incl.
 // optimistic clear + failure restore), the resident API (selectWorkspace
-// draft carrying), the composer-bar stop face, openDetails = select action +
-// layout orchestration, and the closeDetails details API. Complements
+// draft carrying), the composer-bar stop face, Tool Inspect = selection +
+// workbench activation, and the inspector-to-Trajectory handoff. Complements
 // chat-apply.spec.tsx (registration) and selection-survival.spec.tsx (store
 // axis). History opening is NOT an inject concern — the runtime sessions
 // service opens on watch (sessions-service.spec.ts owns that behavior).
@@ -22,7 +22,7 @@ import type { ISession, SessionId } from '@monotykamary/dsh-client-runtime/clien
 import { apply, inject } from '@monotykamary/dsh-client-ui-conversation/client'
 import type {
   ChatViewInjected, ComposerBarInjected, ConversationInjected, ConversationSessionHeaderInjected,
-  ConversationSessionInjected, DetailsInjected,
+  ConversationSessionInjected, DetailsSurfaceInjected,
 } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { createChatStore } from '../src/client/stores.ts'
 
@@ -57,8 +57,8 @@ async function bench() {
     summary: { title: 'R', displayTitle: 'R', cwd: '/proj' },
     session: sessionFake,
   })
-  const layoutFake = { openDetails: vi.fn(), closeDetails: vi.fn() }
-  runtime.provide('layout', layoutFake)
+  const workbenchFake = { open: vi.fn(), close: vi.fn() }
+  runtime.provide('workbench', workbenchFake)
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
   runtime.slots.installLocale(locale)
@@ -67,7 +67,7 @@ async function bench() {
   // live entry before apply can contribute into them.
   await runtime.root.declare({
     'conversation': { kind: 'single', scope: 'session-maybe' },
-    'details': { kind: 'single', scope: 'session' },
+    'workbench.surface': { kind: 'list', scope: 'session' },
   }, (_p: { renderSlot?: unknown }) => null)
 
   const feature = await runtime.mount({ inject: [...inject], apply })
@@ -75,7 +75,7 @@ async function bench() {
   // The host face (store resolution) exists only inside the installed
   // renderer, so materialize it the way the shell does.
   runtime.renderRoot()
-  const entryOf = (key: 'conversation' | 'conversation.session' | 'conversation.session.header' | 'conversation.composer.bar' | 'conversation.view' | 'details') =>
+  const entryOf = (key: 'conversation' | 'conversation.session' | 'conversation.session.header' | 'conversation.composer.bar' | 'conversation.view' | 'workbench.surface') =>
     runtime.slots.entries(key)[0]!
   /** Resolve store instance + call the inject the way the outlet would. */
   const conversationApi = (id: SessionId) => {
@@ -124,7 +124,7 @@ async function bench() {
   return {
     runtime, feature, slots: runtime.slots, entryOf,
     conversationApi, conversationHeaderApi, residentApi, composerApi, chatViewApi, inputApi,
-    sessionFake, layoutFake,
+    sessionFake, workbenchFake,
   }
 }
 
@@ -217,12 +217,12 @@ describe('conversation slot inject API', () => {
     await b.runtime.dispose()
   })
 
-  it('openDetails (chat view face) writes the selection through the store actions and opens the panel', async () => {
+  it('inspectCall writes the selected call and opens the workbench Inspect surface', async () => {
     const b = await bench()
     const { instance, injected } = b.chatViewApi(ROOT)
-    injected.openDetails({ turnSeq: 2, callId: 'c1' })
-    expect(instance.store.getSnapshot().selection).toEqual({ turnSeq: 2, callId: 'c1' })
-    expect(b.layoutFake.openDetails).toHaveBeenCalledTimes(1)
+    injected.inspectCall('c1')
+    expect(instance.store.getSnapshot().selection).toEqual({ callId: 'c1' })
+    expect(b.workbenchFake.open).toHaveBeenCalledWith('inspect')
     // The chat view shares the conversation entry's store instance: selection
     // writes land where the skeleton and details read.
     const conv = b.conversationApi(ROOT)
@@ -335,18 +335,19 @@ describe('conversation slot inject API', () => {
   })
 })
 
-describe('details inject API', () => {
-  it('details injects the one layout callback; selection rides the shared store instead', async () => {
+describe('workbench inspector inject API', () => {
+  it('hands the selected call to Trajectory and shares the conversation store', async () => {
     const b = await bench()
-    const entry = b.entryOf('details')
-    const injected = (entry.inject as unknown as () => DetailsInjected)()
-    expect(Object.keys(injected)).toEqual(['closeDetails'])
-    injected.closeDetails()
-    expect(b.layoutFake.closeDetails).toHaveBeenCalledTimes(1)
-    // The shared handle: details resolves the SAME instance conversation writes.
-    const conv = b.runtime.storeOf('conversation.session', ROOT)
-    const details = b.runtime.storeOf('details', ROOT)
-    expect(details).toBe(conv)
+    const entry = b.entryOf('workbench.surface')
+    const instance = b.runtime.storeOf('workbench.surface', ROOT) as ChatInstance
+    const injected = (entry.inject as unknown as (
+      sessionId: SessionId, actions: ChatActions,
+    ) => DetailsSurfaceInjected)(ROOT, instance.actions)
+    injected.openTrajectory('c1')
+    expect(instance.store.getSnapshot().inspect).toEqual({ callId: 'c1' })
+    expect(instance.store.getSnapshot().view).toBe('trajectory')
+    const conversation = b.runtime.storeOf('conversation.session', ROOT)
+    expect(instance).toBe(conversation)
     await b.runtime.dispose()
   })
 })

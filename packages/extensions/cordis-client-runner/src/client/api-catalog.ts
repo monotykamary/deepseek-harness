@@ -297,6 +297,23 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'workbench',
+    summary: 'Cross-plugin workbench navigation face.',
+    description: 'Cross-plugin workbench navigation face.',
+    methods: [
+      {
+        signature: 'open(id: WorkbenchSurfaceId): void',
+        description: 'Open and activate one registered surface, then reveal the Details region.',
+        parameters: [{ name: 'id', description: 'registered workbench surface id.' }],
+      },
+      {
+        signature: 'close(): void',
+        description: 'Hide the workbench while retaining its per-session tab set.',
+        parameters: [],
+      },
+    ],
+  },
+  {
     key: 'workspaces',
     summary: 'The workspaces-service face injected as `ctx.workspaces`.',
     description: 'The workspaces-service face injected as `ctx.workspaces`.',
@@ -864,6 +881,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'UserMessageNode',
     declaration: 'export interface UserMessageNode {\n    kind: \'user\';\n    seq: number;\n    time: number;\n    content: readonly ContentBlock[];\n    source: unknown;\n}',
+  },
+  {
+    name: 'WorkbenchSurfaceId',
+    declaration: 'export type WorkbenchSurfaceId = Branded<\'WorkbenchSurfaceId\'>;',
   },
 ]
 

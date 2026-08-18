@@ -36,7 +36,7 @@ export interface ToolCallOwnerProps {
   cwd?: string | undefined
   /** Open a Tool argument path through the Host. */
   openFile: (path: string) => void
-  /** Inspect this call in the trajectory view when available. */
+  /** Open this call in the workbench Inspect surface when available. */
   inspect?: (() => void) | undefined
 }
 

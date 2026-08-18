@@ -7,14 +7,14 @@ import {
 // Type-only: the ctx.settingsScope Context merge. Cross-plugin collaboration
 // goes through the service, never a value import (client bundle purity gate).
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
-import type {} from '@monotykamary/dsh-client-ui-layout/client'
+import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type { ViewTab } from './contract/views.ts'
 import type {
   ApprovalWait, ChatNodeTurnDataInjected, ChatScrollPosition, ChatViewInjected, ComposerBarInjected,
   ComposerChainProps, ConversationInjected, ConversationSessionHeaderInjected, ConversationSessionInjected,
-  DetailsInjected,
+  DetailsSurfaceInjected,
 } from './contract/slots.ts'
 import type { InputNotice } from './input/contract.ts'
 import { createChatStore } from './stores.ts'
@@ -49,7 +49,7 @@ declare module '@monotykamary/dsh-client-ui-slots' {
 
 /** Services required by the conversation plugin. */
 export const inject = [
-  'slots', 'layout', 'sessions', 'workspaces', 'locale', 'connection', 'remote', 'settingsScope',
+  'slots', 'workbench', 'sessions', 'workspaces', 'locale', 'connection', 'remote', 'settingsScope',
   'conversationEvents', 'conversationViews',
 ]
 
@@ -70,6 +70,8 @@ const ABSENT_LEXICON = {
   getSnapshot: () => EMPTY_LEXICON,
   subscribe: () => () => {},
 }
+const INSPECT_SURFACE_ID = 'inspect' as WorkbenchSurfaceId
+
 const ABSENT_MENU_LAUNCHER = {
   getSnapshot: (): string | null => null,
   subscribe: () => () => {},
@@ -115,7 +117,7 @@ function selectApproval({ interactions }: ComposerChainProps): ApprovalWait | nu
 export function apply(ctx: Context): void {
   const sessions = ctx.sessions
   const workspaces = ctx.workspaces
-  const layout = ctx.layout
+  const workbench = ctx.workbench
   const slots = ctx.slots
 
   registerConversationNodes(ctx)
@@ -387,10 +389,6 @@ export function apply(ctx: Context): void {
       const conversation = concreteConversation(ctx)
       const scoped = scopedConversation(sessions, sessionId)
       return {
-        openDetails: (target) => {
-          actions.select(target)
-          layout.openDetails()
-        },
         fileMentions: owner => ctx.get('chatFileMentions')?.forClosing(owner),
         openFile: (path) => {
           const cwd = sessions.list.getSnapshot().byId[sessionId]?.cwd
@@ -401,11 +399,9 @@ export function apply(ctx: Context): void {
         },
         loadOlder: () => { void scoped.loadOlder() },
         loadImage: attachment => conversation.resolveImage(sessionId, attachment),
-        // Unregistered 'trajectory' id is safe: the tab ring falls back to
-        // the first view, and the untouched inspect target stays inert.
         inspectCall: (callId) => {
-          actions.setInspect({ callId })
-          actions.setView('trajectory')
+          actions.select({ callId })
+          workbench.open(INSPECT_SURFACE_ID)
         },
         chatScroll: {
           save: (position) => {
@@ -441,16 +437,22 @@ export function apply(ctx: Context): void {
   // registration path into the input dock declared above.
   ctx.plugin(queueDockEntry)
 
-  slots.register({
-    name: 'details',
+  ctx.slots.inject('workbench.surface', () => ctx.slots.register({
+    name: 'workbench.surface',
+    id: INSPECT_SURFACE_ID,
+    order: 0,
+    label: () => t('workbench.inspect'),
     locale: NS,
     children: {
       'conversation.details.tool': { kind: 'single', scope: 'session' },
     },
     store: chatStore,
-    inject: (): DetailsInjected => ({
-      closeDetails: () => { layout.closeDetails() },
+    inject: (_sessionId: SessionId, surfaceActions): DetailsSurfaceInjected => ({
+      openTrajectory: (callId) => {
+        surfaceActions.setInspect({ callId })
+        surfaceActions.setView('trajectory')
+      },
     }),
-  }, DetailsPanel)
+  }, DetailsPanel))
 
 }

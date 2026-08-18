@@ -1372,6 +1372,9 @@ importers:
       '@monotykamary/dsh-client-ui-user-questions':
         specifier: workspace:^
         version: link:../../client/ui-user-questions
+      '@monotykamary/dsh-client-ui-workbench':
+        specifier: workspace:^
+        version: link:../../client/ui-workbench
       '@monotykamary/dsh-client-ui-workflow-run':
         specifier: workspace:^
         version: link:../../client/ui-workflow-run
@@ -1892,6 +1895,9 @@ importers:
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
+      '@monotykamary/dsh-client-ui-workbench':
+        specifier: workspace:^
+        version: link:../ui-workbench
       '@monotykamary/dsh-commands':
         specifier: workspace:^
         version: link:../../interaction/commands
@@ -1959,9 +1965,15 @@ importers:
       '@monotykamary/dsh-client-ui-conversation':
         specifier: workspace:^
         version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
+      '@monotykamary/dsh-client-ui-workbench':
+        specifier: workspace:^
+        version: link:../ui-workbench
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -3038,6 +3050,42 @@ importers:
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
+
+  packages/client/ui-workbench:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@monotykamary/dsh-client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-layout':
+        specifier: workspace:^
+        version: link:../ui-layout
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
 
   packages/client/ui-workflow-run:
     dependencies:

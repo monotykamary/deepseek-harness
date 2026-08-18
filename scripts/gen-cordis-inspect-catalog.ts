@@ -15,6 +15,7 @@ const CLIENT_SERVICES: Readonly<Record<string, readonly string[]>> = {
   sessions: ['open', 'openSubagent', 'setSubagentCatalogOpen', 'refreshSubagents', 'search', 'fork', 'scope', 'binding'],
   slots: ['register', 'inject'],
   theme: ['getTheme', 'setTheme', 'register', 'overrideTokens'],
+  workbench: ['open', 'close'],
   workspaces: [
     'connectWorkspace', 'startSession', 'create', 'pickDirectory', 'listDirectory', 'createDirectory',
     'openPath', 'rename', 'delete', 'insertSessionBefore', 'archiveSession',

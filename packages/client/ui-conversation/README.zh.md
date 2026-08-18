@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-会话领域：骨架（标题栏／标签页／编辑器／空状态）、聊天视图（分组步骤摘要流、流式尾部隔离与轮次状态）、编辑器 dock（与输入区一同 sticky 的会话统计行）、输入区 dock（队列行加 todo 计划条）、详情壳层，以及按 scope 寻址的 ConversationController。工具展示属于 [`ui-tool`](../ui-tool/README.md)。
+会话领域：骨架（标题栏／标签页／编辑器／空状态）、聊天视图（分组步骤摘要流、流式尾部隔离与轮次状态）、编辑器 dock（与输入区一同 sticky 的会话统计行）、输入区 dock（队列行加 todo 计划条）、Workbench Inspect 贡献，以及按 scope 寻址的 ConversationController。工具展示属于 [`ui-tool`](../ui-tool/README.md)。
 
 渲染后的 chrome 改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`：会话作用域的 `#fcfcfc`／`#0a0a0a` 画布、位于 DSH 视图标签上方的 52px 标题节奏、12px transcript 间距、15/24 消息排版、最大宽度 80% 的中性用户气泡、细指针设备上的 hover／focus 操作，以及 22px 半透明编辑器。常驻 Hero、sticky 滚动持有者、共享宽度轴、编辑器 dock 与 keyed Chat Node slot 仍是 DSH 行为。时钟与上下文元数据会先收缩并省略，避免在紧凑栏中形成 Chat 最小宽度；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整的 T3 MIT 文本。
 
@@ -22,7 +22,7 @@ Chat 业务行是彼此独立的注册表贡献，不是封闭的内建联合。
 
 Think 行默认保持折叠，并在不展开思维链的情况下暴露实时推理（reasoning）吞吐：当推理块是流式输出尾部时，摘要从结算后的首行切换到最新的非空行，其单行滚动区会随每个 delta 追到行内末端。展开该行会移除移动摘要，让完整推理进入普通页面流，因此页面阅读不会与内部跟随器争夺滚动；结算后恢复左对齐的稳定首行摘要（[决策](../../../.agents/notes/implemented/feature/2026-08-02-web-thinking-tail-scroll.md)）。
 
-聊天视图保留工具的消息流位置，但委托其展示。每个已排序的 `tool-call` Conversation Node 都通过 `conversation.chat.node` 的同名 key 分发；详情壳层则通过 `conversation.details.tool` 传递当前选中的调用。组装后的 Web bundle 为该 Chat Node key 注册 [`ui-tool`](../ui-tool/README.md)，由后者渲染运行时已投影的递归 root/child 树，并负责按名称分发、通用展示和 render-intent 卡片；只有详情席位会在该 renderer 缺席时保留 raw-result fallback。
+聊天视图保留工具的消息流位置，但委托其展示。每个已排序的 `tool-call` Conversation Node 都通过 `conversation.chat.node` 的同名 key 分发。该包另行把 **Inspect** 注册进 [`ui-workbench`](../ui-workbench/README.md)，让该 entry 共享 chat store，并在其下声明 `conversation.details.tool`；Tool 的 **Inspect** 会选择调用并打开标签页，标签页标题栏可把同一调用交给 Trajectory。组装后的 Web bundle 为 Chat Node 与 inspector 席位注册 [`ui-tool`](../ui-tool/README.md)，由后者渲染运行时已投影的递归 root/child 树，并负责按名称分发、通用展示和 render-intent 卡片；只有 Inspect 会在该 renderer 缺席时保留 raw-result fallback。
 
 聊天流会将跨重试轮次连续出现的模型重试节点投影为一个稳定的弱化状态行，并用最新一次尝试更新该行；每个重试事件仍保留在运行时快照与会话日志中。前端倒计时以客户端收到事件的时刻为计划延迟的起点，避免 Host 与浏览器的时钟偏差；剩余时间向上取整到秒，且下限为 1 秒。最近一次尚未完成的重试会显示从左到右的文字渐变动画。后续轮次事实用于区分已开始的尝试与在退避期间取消的尝试，Host 的 running 位只控制实时动画；随后该行会显示静态的已完成或已取消标签。normal 策略行显示有限重试上限；always 策略行显示 `∞`。激活该行会显示最近一次重试的精确延迟和失败消息。客户端运行时会在相应重试节点到达前移除每个失败步骤的流式输出尾部；后续某次尝试成功后，该状态仍保持可见。未进入重试的终态失败会在其轮次边界渲染为持久的内联状态，展示适合显示的持久消息与可选错误码，但不会提供 Host 无法兑现的操作；AUTH 文案绝不会回显提供方给出的凭据片段。
 
@@ -36,7 +36,7 @@ Host 带 placement 的 `session/queue` 快照也会携带待处理 steering。Qu
 
 键盘消息提交会根据所寻址会话的运行状态和 steering 能力解析投递方式。空闲时，Enter 和 Cmd/Ctrl+Enter 都执行普通 Queue 发送。主会话运行期间，由 Host settings 支撑的 `ui-conversation.busyEnter` General Settings 偏好会把普通 Enter 分配为 `Queue`（默认值）或 `Steer`，Cmd/Ctrl+Enter 则执行另一种行为；本地 settings 提供方将其存入 `$DSH_HOME/settings.yaml`，因此该选择会跟随同一个用户 home 跨越 Web 端口。Shift+Enter 仍然换行。草稿为空时，Cmd/Ctrl+Enter 改为按 FIFO 顺序把仍在排队的消息全部插话进运行中的轮次（把 dock 的逐条严格 steer 操作应用于整个队列）；空草稿 + 普通 Enter 仍是无操作。这个整队列手势可用时，文本框 placeholder 会提示该手势；owner 提供的 placeholder 仍然优先。已寻址 subagent 即使正在运行，也会让这两个手势都使用其仅支持 Queue 的继续执行传输。该偏好只影响支持 steering 的繁忙态手势对，发送按钮与非键盘提交操作仍使用 Queue。Composer Steer 复用现有尽力而为的 `session.prompt(mode: 'steer')` 约定：如果当前 next-step 窗口在接纳前关闭，AgentLoop 会把消息接纳为下一条唤醒 Queue 轮次，不显示失败，也不会丢失草稿事务。该持久化边界由[Host settings 支撑的偏好决策](../../../.agents/notes/implemented/bug-fix/2026-08-06-host-backed-web-preferences.md)拥有。
 
-逐会话 UI 状态中的选择与活跃视图位于已声明的聊天 store（`stores.ts` `createChatStore`）中；InputHub 拥有输入区状态机，并将草稿镜像到该 store 以便持久化。apply 将同一个 store handle 传给严格限定于会话的子树、聊天视图和详情注册，因此每个会话内共享一个实例，框架拥有其生命周期。组件保持纯粹：框架标准工具包提供 `useSession`／`sessionId`、全局 `useSessions`／`useWorkspaces`，以及输入状态机的 `useInput`／`inputActions`；store 表层与 inject factory 提供其余状态和回调。
+逐会话 UI 状态中的选择与活跃视图位于已声明的聊天 store（`stores.ts` `createChatStore`）中；InputHub 拥有输入区状态机，并将草稿镜像到该 store 以便持久化。apply 将同一个 store handle 传给严格限定于会话的子树、聊天视图和 Workbench Inspect 注册，因此每个会话内共享一个实例，框架拥有其生命周期。组件保持纯粹：框架标准工具包提供 `useSession`／`sessionId`、全局 `useSessions`／`useWorkspaces`，以及输入状态机的 `useInput`／`inputActions`；store 表层与 inject factory 提供其余状态和回调。
 
 图片经粘贴与整页拖放进入：输入栏绑定 document 级拖拽监听（composer-bar slot 为 `kind: 'single'`，同一时刻至多一个 bar 绑定），文件拖拽悬停窗口时显示 `DropOverlay` 原子组件——纯文本拖拽不受影响，锁定或忙碌的 composer 显示禁用遮罩并拒绝 drop。两种手势共用一条对宿主 `imageLimits` 投影的加入预检（数量、单图字节、总字节）：会突破上限的加入整批拒收，立刻弹出点名上限的横幅，完全不进入附件栏。仍然到达的宿主侧拒绝按 `attachment-error` 原因映射为产品文案（`image-labels.ts` 的 `attachmentErrorText`）；用户无法解决的原因折叠为一条带原因码的发送失败文案，非附件错误码保留开发者可读的原文加错误码。
 
@@ -59,7 +59,7 @@ Host 带 placement 的 `session/queue` 快照也会携带待处理 steering。Qu
 ## 已知限制与暂缓事项
 
 - **统计行的回退折算只覆盖窗口内消息流**：未组合 `sessionStats` 投影单元的装配中，所有数字由快照的 assistant `timing` 与工具 call/result 配对折算，落在已加载事件窗口之外的节点（更早的历史）不计入，数字随加载页数增长。
-- **详情面板没有入口**：`ChatViewInjected.openDetails` 虽已实现却无人调用，因此以原始形式显示已选择调用的那部分在组装后的应用中不可达。没有 Input/Output/Metadata 切换、Prev/Next 步进，也没有 trajectory 深链接。
+- **Inspect 面向单个已选调用，而非导航器**：它渲染从 Chat 选择的调用之 Input 与 Output，并可把该调用交给 Trajectory，但没有 Metadata 模式或 Prev／Next 步进。
 - **assistant 逐消息分页是预留 slot**：设计中已有图稿，尚未实现。已定稿的内容 IconActions 行（复制／时钟／分支）只挂在每个已结束轮次中最后一条带 text 内容的 assistant 下；轮次中间的叙述、纯 Think 节点，以及仍在产出步骤的轮次里的所有节点都不带 chrome。除非该消息同时也是已完成轮次的最后一个 transcript 节点，否则分支保持禁用；启用后，它会 fork 到该轮次末尾，在 client 端递增继承标题并打开子会话。fork 或改名失败时源会话保持选中（[决策](../../../.agents/notes/implemented/bug-fix/2026-08-02-message-fork-actions-require-completed-turn-tail.md)）。
 - **已发送的 user 消息无法编辑**：user 气泡保留时钟和复制；分支只存在于 assistant 回答之下（[决策](../../../.agents/notes/implemented/simplification/2026-08-06-user-bubbles-drop-the-branch-action.md)）。编辑功能要与其背后的能力一起回归：既需要针对已定稿 user 消息的 client 变更，也需要 host 侧对已经消费过它的轮次给出行为（[决策](../../../.agents/notes/implemented/simplification/2026-07-31-drop-user-message-edit-stub.md)）。
 - **others 工具行的闪光图标是手绘近似版本**：无法在本地导出设计字形的矢量几何；等到存在精确导出后再将其提升到 ui-primitives。

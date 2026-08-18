@@ -9,7 +9,7 @@ import { Context } from '@monotykamary/cordis'
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  ConversationEventRegistry, ConversationNodeAssembler, SlotRegistry,
+  ConversationEventRegistry, ConversationNodeAssembler, ConversationViewRegistry, SlotRegistry,
 } from '@monotykamary/dsh-client-runtime/client'
 import type {
   ConversationEventInput, ConversationLocationDataStore, ConversationMatch, ConversationNodeDefinition,
@@ -18,15 +18,18 @@ import type {
 } from '@monotykamary/dsh-client-runtime/client'
 import { apply as applyLocale, inject as localeInject } from '@monotykamary/dsh-client-locale/client'
 import type { ChatFileMentions, TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
+import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import { makeTranslate, stubSettingsScope } from '@monotykamary/dsh-client-test-runtime'
 import {
-  fitProducedFiles, ProducedFiles, type ProducedFilesProps,
+  fitProducedFiles, ProducedFiles, type ProducedFilesInjected, type ProducedFilesProps,
 } from '../src/client/ProducedFiles.tsx'
 import {
   basename, deliverablesDefinition, producedFileMentions, producedForClosing, selectProducedFiles,
   type DeliverablesTurnData,
 } from '../src/client/turn-deliverables.ts'
 import { apply, inject } from '../src/client/index.ts'
+import { deliverablesViewDefinition } from '../src/client/deliverables-view.ts'
+import type { DeliverablesSnapshot } from '../src/client/contract.ts'
 import { apply as applyInvariant } from '../src/invariant.ts'
 import { en, zh } from '../src/client/locales.ts'
 
@@ -68,6 +71,7 @@ const turnLocation = (turn: number, deliverables?: DeliverablesTurnData): TurnLo
 
 const produced = (...values: ReadonlyArray<readonly [seq: number, path: string]>): DeliverablesTurnData => ({
   produced: values.map(([seq, path]) => ({ seq, path })),
+  changes: [],
 })
 
 function tailOwner(
@@ -89,7 +93,7 @@ class TestEventDefinitions {
 }
 
 class TestViewDefinitions {
-  entries(): readonly ConversationViewDefinition[] { return [timelineViewDefinition] }
+  entries(): readonly ConversationViewDefinition[] { return [timelineViewDefinition, deliverablesViewDefinition] }
 }
 
 const timelineViewDefinition: ConversationViewDefinition<ConversationViewNode, TimelineSnapshot> = {
@@ -137,7 +141,9 @@ function call(
   )
 }
 
-function result(seq: number, callId: string, isError = false, turn = 1): ConversationEventInput {
+function result(
+  seq: number, callId: string, isError = false, turn = 1, view?: Exclude<ToolResultNode['resultView'], null>,
+): ConversationEventInput {
   return at(seq, 'tool/result', {
     turn,
     step: 1,
@@ -145,7 +151,7 @@ function result(seq: number, callId: string, isError = false, turn = 1): Convers
       source: { type: 'tool-result', callId },
       content: [{ type: 'tool-result', content: [], isError }],
     },
-  })
+  }, view === undefined ? undefined : { for: 'result', view })
 }
 
 function diff(...paths: string[]): ToolResultNode['callView'] {
@@ -172,6 +178,10 @@ function deliverablesOf(value: ConversationNodeAssembler, turn = 1): Readonly<De
   return snapshot.timeline.turns.get(turn)?.data.get('deliverables')
 }
 
+function changesOf(value: ConversationNodeAssembler): DeliverablesSnapshot {
+  return value.snapshot('deliverables') as DeliverablesSnapshot
+}
+
 describe('produced-file Turn data', () => {
   it('deduplicates paths in first-seen order and stops at the closing Assistant seq', () => {
     const data = produced(
@@ -181,7 +191,21 @@ describe('produced-file Turn data', () => {
       [8, 'after.txt'],
     )
     expect(producedForClosing(data, 6)).toEqual(['out/index.html', 'out/app.css'])
-    expect(selectProducedFiles(tailOwner(data, 6))).toEqual(['out/index.html', 'out/app.css'])
+    expect(selectProducedFiles(tailOwner(data, 6))).toEqual({
+      paths: ['out/index.html', 'out/app.css'], hasChanges: false,
+    })
+    const changed: DeliverablesTurnData = {
+      ...data,
+      changes: [{
+        seq: 4, turn: 1, callId: 'write', title: 'Write',
+        diffs: [{ path: 'out/index.html', oldText: null, newText: 'x' }],
+      }, {
+        seq: 8, turn: 1, callId: 'later', title: 'Later',
+        diffs: [{ path: 'after.txt', oldText: null, newText: 'y' }],
+      }],
+    }
+    expect(selectProducedFiles(tailOwner(changed, 6))?.hasChanges).toBe(true)
+    expect(selectProducedFiles(tailOwner({ ...changed, changes: changed.changes.slice(1) }, 6))?.hasChanges).toBe(false)
     expect(producedForClosing(undefined)).toEqual([])
     expect(selectProducedFiles(tailOwner(undefined, 9, () => {}, 2))).toBeNull()
   })
@@ -204,6 +228,53 @@ describe('produced-file Turn data', () => {
     expect(producedForClosing(deliverablesOf(value))).toEqual([
       'out/index.html', 'out/app.css', 'notes.md',
     ])
+  })
+
+  it('publishes validated result-time changes to the incremental view target', () => {
+    const applied = {
+      card: 'diff' as const, title: 'Updated config',
+      diffs: [{ path: 'src/config.ts', oldText: 'false', newText: 'true' }],
+    }
+    const value = assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      call(2, 'write', diff('src/config.ts')),
+      result(3, 'write', false, 1, applied),
+    ])
+    expect(changesOf(value).changes).toEqual([{
+      seq: 3, turn: 1, callId: 'write', title: 'Updated config', diffs: applied.diffs,
+    }])
+    expect(deliverablesOf(value)?.changes).toEqual(changesOf(value).changes)
+
+    const malformed = assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      call(2, 'bad', diff('bad.ts')),
+      result(3, 'bad', false, 1, { card: 'diff', diffs: [{ path: 1 }] } as never),
+    ])
+    // A malformed authoritative result stays off the Changes surface.
+    expect(changesOf(malformed)).toEqual({ changes: [] })
+  })
+
+  it('falls back through call titles and call ids while rejecting non-object diff entries', () => {
+    const value = assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      call(2, 'fallback-title', diff('fallback.ts')),
+      result(3, 'fallback-title', false, 1, {
+        card: 'diff', diffs: [{ path: 'fallback.ts', oldText: null, newText: 'next' }],
+      }),
+      result(4, 'orphan-title', false, 1, {
+        card: 'diff', diffs: [{ path: 'orphan.ts', oldText: null, newText: 'orphan' }],
+      }),
+    ])
+    expect(changesOf(value).changes.map(change => change.title)).toEqual([
+      'Write fallback.ts', 'orphan-title',
+    ])
+
+    const malformed = assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      call(2, 'bad', diff('bad.ts')),
+      result(3, 'bad', false, 1, { card: 'diff', diffs: [null] } as never),
+    ])
+    expect(changesOf(malformed)).toEqual({ changes: [] })
   })
 
   it('ignores calls without mutation locations, orphan results, and replacement results', () => {
@@ -283,12 +354,13 @@ describe('ProducedFiles row', () => {
   const capability = (
     canOpenPath: boolean | undefined,
     isLoopback = true,
-  ): Pick<ProducedFilesProps, 'isLoopback' | 'useHostDescription'> => {
+  ): Pick<ProducedFilesProps, 'isLoopback' | 'openChanges' | 'useHostDescription'> => {
     const description = canOpenPath === undefined
       ? undefined
       : { version: 'test', cwd: '/workspace', attachedSessions: 1, canOpenPath }
     return {
       isLoopback,
+      openChanges: vi.fn(),
       useHostDescription: selector => selector(description),
     }
   }
@@ -337,7 +409,7 @@ describe('ProducedFiles row', () => {
       })
 
     const view = render(
-      <ProducedFiles matched={paths} openFile={openFile} {...capability(true)} t={t} />,
+      <ProducedFiles matched={{ paths, hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
     )
     expect(view.getByText('产物')).toBeTruthy()
     const row = view.container.querySelector('[data-produced-files-row]')
@@ -371,7 +443,7 @@ describe('ProducedFiles row', () => {
     // shrinks; the replacement observer must skip those stale slots.
     observeNode.mockClear()
     view.rerender(
-      <ProducedFiles matched={paths.slice(0, 1)} openFile={openFile} {...capability(true)} t={t} />,
+      <ProducedFiles matched={{ paths: paths.slice(0, 1), hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
     )
     expect(within(row).getAllByRole('button')).toHaveLength(1)
     expect(observeNode).toHaveBeenCalledTimes(3)
@@ -381,15 +453,32 @@ describe('ProducedFiles row', () => {
     bounds.mockRestore()
   })
 
+  it('opens workbench Changes only when the matched Turn carries a diff', () => {
+    const props = capability(false)
+    const view = render(
+      <ProducedFiles
+        matched={{ paths: ['a.md'], hasChanges: true }} openFile={() => {}} {...props} t={t}
+      />,
+    )
+    fireEvent.click(view.getByRole('button', { name: '查看更改' }))
+    expect(props.openChanges).toHaveBeenCalledTimes(1)
+    view.rerender(
+      <ProducedFiles
+        matched={{ paths: ['a.md'], hasChanges: false }} openFile={() => {}} {...props} t={t}
+      />,
+    )
+    expect(view.queryByRole('button', { name: '查看更改' })).toBeNull()
+  })
+
   it('keeps the folder action absent without overflow or a local native opener', () => {
     const openFile = vi.fn<(path: string) => void>()
     const view = render(
-      <ProducedFiles matched={['a.md']} openFile={openFile} {...capability(true)} t={t} />,
+      <ProducedFiles matched={{ paths: ['a.md'], hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
     )
     const overflowing = ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md']
     expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
     for (const unavailable of [capability(false), capability(true, false), capability(undefined)]) {
-      view.rerender(<ProducedFiles matched={overflowing} openFile={openFile} {...unavailable} t={t} />)
+      view.rerender(<ProducedFiles matched={{ paths: overflowing, hasChanges: false }} openFile={openFile} {...unavailable} t={t} />)
       expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
     }
   })
@@ -397,7 +486,7 @@ describe('ProducedFiles row', () => {
   it('uses singular English copy when exactly one file is hidden', () => {
     const view = render(
       <ProducedFiles
-        matched={['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md']}
+        matched={{ paths: ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md'], hasChanges: false }}
         openFile={() => {}}
         {...capability(false)}
         t={makeTranslate(en)}
@@ -455,12 +544,18 @@ describe('plugin registration', () => {
     const ctx = new Context()
     await ctx.plugin(SlotRegistry).await()
     await ctx.plugin(ConversationEventRegistry).await()
+    await ctx.plugin(ConversationViewRegistry).await()
     // The owning view's child declaration, stood up by a bench root entry.
     ctx.slots.register({
       name: 'root',
-      children: { 'conversation.chat.turnTail': { kind: 'chain', scope: 'session' } },
+      children: {
+        'conversation.chat.turnTail': { kind: 'chain', scope: 'session' },
+        'workbench.surface': { kind: 'list', scope: 'session' },
+      },
     } as never, () => null)
     const hostDescription = { getSnapshot: () => undefined, subscribe: () => () => {} }
+    const workbench = { open: vi.fn(), close: vi.fn() }
+    ctx.provide('workbench', workbench)
     ctx.provide('connection', {
       api: { settings: {} },
       isLoopback: false,
@@ -475,7 +570,13 @@ describe('plugin registration', () => {
     await fiber.await()
     const [entry] = ctx.slots.entries('conversation.chat.turnTail')
     expect(entry).toBeDefined()
-    expect(entry?.inject?.()).toEqual({ isLoopback: false, hooks: { hostDescription } })
+    const injected = entry?.inject?.() as unknown as ProducedFilesInjected
+    expect(injected).toMatchObject({ isLoopback: false, hooks: { hostDescription } })
+    injected.openChanges()
+    expect(workbench.open).toHaveBeenCalledWith('changes')
+    const changes = ctx.slots.entries('workbench.surface')[0]
+    expect(changes?.options.id).toBe('changes')
+    expect(resolveSlotLabel(changes?.options.label)).toBe('Changes')
 
     // The prose face is live while the plugin is: a produced turn yields a
     // resolver whose matches open through the owner-supplied opener.
@@ -494,6 +595,7 @@ describe('plugin registration', () => {
 
     await fiber.dispose()
     expect(ctx.slots.entries('conversation.chat.turnTail')).toHaveLength(0)
+    expect(ctx.slots.entries('workbench.surface')).toHaveLength(0)
     // Fiber teardown retracts the service: the consumer's ctx.get sees the off state.
     expect((ctx as unknown as { get(name: string): unknown }).get('chatFileMentions')).toBeUndefined()
   })

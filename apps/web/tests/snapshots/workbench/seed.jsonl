@@ -1,0 +1,13 @@
+{"type":"session","version":0,"id":"{{sessionId}}","createdAt":1787059000000,"cwd":"{{cwd}}/workspace"}
+{"type":"turn/start","seq":0,"time":1787059000010,"data":{"turn":1,"trigger":{"kind":"message","source":{"kind":"user","rpcId":"{{rpcId}}"}}}}
+{"type":"user/message","seq":1,"time":1787059000020,"data":{"content":[{"type":"text","text":"Create src/workbench.ts with one exported constant, then summarize the change."}],"source":{"kind":"user","rpcId":"{{rpcId}}"}},"surfaceOp":"append"}
+{"type":"session/title","seq":2,"time":1787059000030,"data":{"title":"Workbench changes","messageSeqs":[1],"source":{"kind":"fallback"}}}
+{"type":"step/start","seq":3,"time":1787059000040,"data":{"turn":1,"step":1}}
+{"type":"assistant/message","seq":4,"time":1787059000050,"data":{"turn":1,"step":1,"content":[{"type":"tool-call","id":"call-workbench-write","name":"write","arguments":"{\"file_path\":\"src/workbench.ts\",\"content\":\"export const workbench = true\\n\"}"}],"provenance":{"provider":"deepseek-official","model":"deepseek-v4-flash"}},"surfaceOp":"append"}
+{"type":"tool/call","seq":5,"time":1787059000060,"data":{"turn":1,"step":1,"callId":"call-workbench-write","name":"write","arguments":"{\"file_path\":\"src/workbench.ts\",\"content\":\"export const workbench = true\\n\"}"}}
+{"type":"tool/result","seq":6,"time":1787059000070,"data":{"turn":1,"step":1,"callId":"call-workbench-write","content":[{"type":"text","text":"Wrote src/workbench.ts"}],"isError":false},"sourceEventSeqs":[5],"surfaceOp":"append"}
+{"type":"step/end","seq":7,"time":1787059000080,"data":{"turn":1,"step":1}}
+{"type":"step/start","seq":8,"time":1787059000090,"data":{"turn":1,"step":2}}
+{"type":"assistant/message","seq":9,"time":1787059000100,"data":{"turn":1,"step":2,"content":[{"type":"text","text":"Created `src/workbench.ts` with the requested exported constant."}],"provenance":{"provider":"deepseek-official","model":"deepseek-v4-flash"}},"surfaceOp":"append"}
+{"type":"step/end","seq":10,"time":1787059000110,"data":{"turn":1,"step":2}}
+{"type":"turn/end","seq":11,"time":1787059000120,"data":{"turn":1,"reason":{"kind":"completed"}}}

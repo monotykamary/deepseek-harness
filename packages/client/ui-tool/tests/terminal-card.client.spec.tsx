@@ -474,7 +474,7 @@ describe('DetailsPanel Output section', () => {
         useProjection={(() => undefined)}
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
-        closeDetails={vi.fn()}
+        openTrajectory={vi.fn()}
         t={t}
       />,
     )
@@ -635,11 +635,12 @@ describe('DetailsPanel Output section', () => {
     expect(view.getByText('点击消息流中的工具行查看详情')).toBeTruthy()
   })
 
-  it('the close button reaches closeDetails', () => {
+  it('the workbench inspector can hand the selected call to Trajectory', () => {
     localStorage.clear()
     const chat = createChatStore().create()
-    const closeDetails = vi.fn()
-    const snap = snapshot()
+    chat.actions.select({ callId: 'c1' })
+    const openTrajectory = vi.fn()
+    const snap = snapshot({ nodes: [settled()] })
     const view = render(
       <DetailsPanel
         SessionProvider={SessionProviderStub}
@@ -660,12 +661,12 @@ describe('DetailsPanel Output section', () => {
         useProjection={(() => undefined)}
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
-        closeDetails={closeDetails}
+        openTrajectory={openTrajectory}
         t={t}
       />,
     )
-    fireEvent.click(view.getByRole('button', { name: '关闭详情' }))
-    expect(closeDetails).toHaveBeenCalledTimes(1)
+    fireEvent.click(view.getByRole('button', { name: '在轨迹中查看' }))
+    expect(openTrajectory).toHaveBeenCalledWith('c1')
   })
 
   it('a non-text result block renders as JSON, and an empty result falls back to its error', () => {

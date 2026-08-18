@@ -151,7 +151,6 @@ function emptyWorkspaces() {
 
 function makeHarness(init?: Partial<ConversationSnapshot>) {
   const { set, source } = makeSource(init)
-  const openDetails = vi.fn<(t: SelectionTarget) => void>()
   const openFile = vi.fn<(path: string) => void>()
   const loadOlder = vi.fn()
   const inspectCall = vi.fn<(callId: string) => void>()
@@ -280,7 +279,6 @@ function makeHarness(init?: Partial<ConversationSnapshot>) {
     actions: chat.actions,
     renderSlot,
     SessionProvider: SessionProviderStub,
-    openDetails,
     openFile,
     loadOlder,
     loadImage: vi.fn(() => Promise.reject(new Error('not used'))),
@@ -294,7 +292,7 @@ function makeHarness(init?: Partial<ConversationSnapshot>) {
   }
   const setSelection = (next: SelectionTarget | null): void => { chat.actions.select(next) }
   return {
-    set, ChatView, props, openDetails, openFile, loadOlder, inspectCall,
+    set, ChatView, props, openFile, loadOlder, inspectCall,
     chatScroll, forkAt, setSelection, toolOwners,
   }
 }

@@ -21,7 +21,13 @@
       "path": "../ui-conversation"
     },
     {
+      "path": "../ui-primitives"
+    },
+    {
       "path": "../ui-slots"
+    },
+    {
+      "path": "../ui-workbench"
     },
     {
       "path": "../../runtime-diagnostics/invariants"

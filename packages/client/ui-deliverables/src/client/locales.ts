@@ -9,7 +9,12 @@ export const zh = {
   'produced.moreOne': '+ 1 个文件',
   'produced.more': '+ {count} 个文件',
   'produced.open': '打开 {name}',
+  'produced.viewChanges': '查看更改',
   'produced.showInFolder': '在文件夹中显示',
+  'changes.tab': '更改',
+  'changes.title': '已载入的更改',
+  'changes.summary': '{changes} 次更改 · {files} 个文件',
+  'changes.empty': '当前载入的会话窗口中没有文件更改',
 }
 
 /** English dictionary (same key set). */
@@ -18,7 +23,12 @@ export const en: Record<DeliverablesKey, string> = {
   'produced.moreOne': '+ 1 file',
   'produced.more': '+ {count} files',
   'produced.open': 'Open {name}',
+  'produced.viewChanges': 'View changes',
   'produced.showInFolder': 'Show in folder',
+  'changes.tab': 'Changes',
+  'changes.title': 'Loaded changes',
+  'changes.summary': 'Changes {changes} · Files {files}',
+  'changes.empty': 'No file changes are present in the loaded Session window',
 }
 
 /** Union of this namespace's dictionary keys. */

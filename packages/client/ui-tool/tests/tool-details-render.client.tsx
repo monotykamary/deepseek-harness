@@ -3,7 +3,7 @@ import type {
   ChatConversationViewNode, ChatSnapshot, ConversationNode, RunningToolCall, SessionId,
 } from '@monotykamary/dsh-client-runtime/client'
 import type { SessionProviderComponent, TranslateNS } from '@monotykamary/dsh-client-ui-slots'
-import type { DetailsSlotProps, DetailsToolOwnerProps } from '@monotykamary/dsh-client-ui-conversation/src/client/contract/slots.ts'
+import type { DetailsSurfaceProps, DetailsToolOwnerProps } from '@monotykamary/dsh-client-ui-conversation/src/client/contract/slots.ts'
 import { ToolDetails } from '../src/client/tool/ToolDetails.tsx'
 
 /** Framework session-area seat used by direct DetailsPanel tests. */
@@ -53,7 +53,7 @@ export function toolChatSnapshot(
  * @param t - conversation locale seat used by Tool cards.
  * @returns a direct-test renderSlot implementation.
  */
-export function renderToolDetails(t: TranslateNS<'conversation'>): DetailsSlotProps['renderSlot'] {
+export function renderToolDetails(t: TranslateNS<'conversation'>): DetailsSurfaceProps['renderSlot'] {
   return (_key, owner) => {
     // PropsRenderSlots keeps its key generic even for this one-key share;
     // recover the concrete owner selected by the adapter's fixed slot.

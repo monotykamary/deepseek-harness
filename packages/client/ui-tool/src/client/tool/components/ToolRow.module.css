@@ -136,7 +136,7 @@
   flex-direction: column;
 }
 
-/* Hover-revealed jump to the trajectory record: a small pill in real flow
+/* Hover-revealed workbench Inspect action: a small pill in real flow
    under the expanded body's bottom-left corner (it reserves its line, so
    revealing never shifts layout); revealed by hovering anywhere on the tool
    call — title row included — or by keyboard focus. */

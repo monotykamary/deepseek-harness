@@ -28,7 +28,7 @@ async function bench() {
   await runtime.sessions.add({ id: ROOT, summary: { title: 'R', displayTitle: 'R' } }, { current: false })
   await runtime.sessions.add(
     { id: CHILD, summary: { title: 'C', displayTitle: 'C', parentId: ROOT } }, { current: false })
-  runtime.provide('layout', { openDetails: vi.fn(), closeDetails: vi.fn() })
+  runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
   runtime.slots.installLocale(locale)
@@ -37,7 +37,7 @@ async function bench() {
   // them here so the contributions land.
   await runtime.root.declare({
     'conversation': { kind: 'single', scope: 'session-maybe' },
-    'details': { kind: 'single', scope: 'session' },
+    'workbench.surface': { kind: 'list', scope: 'session' },
     'settings.general.item': { kind: 'list', scope: 'root' },
   }, (_p: { renderSlot?: unknown }) => null)
 
@@ -46,7 +46,7 @@ async function bench() {
 }
 
 /** First stored entry for a key (inject/store live directly on StoredEntry). */
-function renderEntryOf(slots: Awaited<ReturnType<typeof bench>>['slots'], key: 'conversation' | 'conversation.session' | 'conversation.session.header' | 'conversation.view' | 'details') {
+function renderEntryOf(slots: Awaited<ReturnType<typeof bench>>['slots'], key: 'conversation' | 'conversation.session' | 'conversation.session.header' | 'conversation.view' | 'workbench.surface') {
   return slots.entries(key)[0] as undefined | { inject?: unknown; store?: unknown }
 }
 
@@ -78,15 +78,15 @@ describe('apply wiring', () => {
     const conversationSession = renderEntryOf(b.slots, 'conversation.session')
     const conversationHeader = renderEntryOf(b.slots, 'conversation.session.header')
     const chatView = renderEntryOf(b.slots, 'conversation.view')
-    const details = renderEntryOf(b.slots, 'details')
+    const inspector = renderEntryOf(b.slots, 'workbench.surface')
     expect(conversation?.inject).toBeTypeOf('function')
     expect(chatView?.inject).toBeTypeOf('function')
-    expect(details?.inject).toBeTypeOf('function')
+    expect(inspector?.inject).toBeTypeOf('function')
     // The shared handle: one apply-built store value on ALL session entries
     // (the session-maybe 'conversation' shell carries no store by design).
     expect(conversationSession?.store).toBeDefined()
     expect(conversationHeader?.store).toBe(conversationSession?.store)
-    expect(details?.store).toBe(conversationSession?.store)
+    expect(inspector?.store).toBe(conversationSession?.store)
     expect(chatView?.store).toBe(conversationSession?.store)
     // The hero holes ride the conversation entry's children declaration (the
     // empty-state occupant is gone). Both are root-scoped: the new-session
@@ -118,7 +118,7 @@ describe('apply wiring', () => {
     expect(b.slots.entries('conversation.view')).toHaveLength(0)
     expect(b.slots.entries('conversation.chat.node')).toHaveLength(0)
     expect(b.slots.spec('conversation.chat.node')).toBeUndefined()
-    expect(b.slots.entries('details')).toHaveLength(0)
+    expect(b.slots.entries('workbench.surface')).toHaveLength(0)
     expect(b.slots.entries('settings.general.item')).toHaveLength(0)
     expect(b.runtime.ctx.get('conversation')).toBeUndefined()
     await b.runtime.dispose()

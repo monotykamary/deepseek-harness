@@ -64,7 +64,7 @@
     "zindexes": 5
   },
   "packages/client/ui-conversation/src/client/skeleton/DetailsPanel.module.css": {
-    "margins": 3,
+    "margins": 1,
     "zindexes": 0
   },
   "packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css": {

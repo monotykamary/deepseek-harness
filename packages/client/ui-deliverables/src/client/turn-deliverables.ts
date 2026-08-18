@@ -4,21 +4,14 @@
  * `locations`, never the closing prose.
  */
 import type {
-  ConversationNodeDefinition, ToolResultNode,
+  ConversationMatch, ConversationNodeDefinition, ToolResultNode,
 } from '@monotykamary/dsh-client-runtime/client'
 import { isAppendSurfaceEvent } from '@monotykamary/dsh-client-runtime/client'
-import type { MarkdownFileMentions } from '@monotykamary/dsh-client-ui-primitives'
+import type { DiffHunk, MarkdownFileMentions } from '@monotykamary/dsh-client-ui-primitives'
 import type { TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
+import type { DeliverableChange, DeliverablesTurnData } from './contract.ts'
 
-interface ProducedPath {
-  readonly seq: number
-  readonly path: string
-}
-
-/** Immutable produced-file facts published against one Turn. */
-export interface DeliverablesTurnData {
-  readonly produced: readonly ProducedPath[]
-}
+export type { DeliverableChange, DeliverablesTurnData } from './contract.ts'
 
 declare module '@monotykamary/dsh-client-runtime/client' {
   interface ConversationTurnDataMap {
@@ -47,6 +40,45 @@ function producedPaths(view: ToolResultNode['callView']): readonly string[] {
     return (view.locations ?? []).map(location => location.path)
   }
   return []
+}
+
+/** Narrow wire-derived diff values before they reach the strict DiffBlock primitive. */
+function narrowDiffs(value: unknown): readonly DiffHunk[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null
+  const diffs: DiffHunk[] = []
+  for (const candidate of value) {
+    if (typeof candidate !== 'object' || candidate === null || Array.isArray(candidate)) return null
+    const { path, oldText, newText } = candidate as Record<string, unknown>
+    if (typeof path !== 'string' || (oldText !== null && typeof oldText !== 'string') || typeof newText !== 'string') {
+      return null
+    }
+    diffs.push({ path, oldText, newText })
+  }
+  return diffs
+}
+
+/** Build one successful mutation group from result-time or call-time diff intent. */
+function changeFrom(
+  match: ConversationMatch,
+  callView: ToolResultNode['callView'],
+  callId: string,
+  turn: number,
+): DeliverableChange | null {
+  const resultView = match.view?.for === 'result' && match.view.view.card === 'diff'
+    ? match.view.view
+    : null
+  const fallbackView = callView?.card === 'diff' ? callView : null
+  const view = resultView ?? fallbackView
+  if (view === null) return null
+  const diffs = narrowDiffs(view.diffs)
+  if (diffs === null) return null
+  return {
+    seq: match.event.seq,
+    turn,
+    callId,
+    title: view.title ?? fallbackView?.title ?? callId,
+    diffs,
+  }
 }
 
 /**
@@ -84,19 +116,28 @@ export function producedForClosing(
   return paths
 }
 
+/** Produced-files row currency, including whether its Turn has a rendered diff. */
+export interface ProducedFilesMatch {
+  readonly paths: readonly string[]
+  readonly hasChanges: boolean
+}
+
 /**
  * Claim the turn-tail chain only when its closing turn produced files.
  * @param owner - Turn-tail owner currency for the closing assistant.
- * @returns Produced paths as the component's match, or null to decline before mount.
+ * @returns Produced paths and Changes availability, or null to decline before mount.
  */
-export function selectProducedFiles(owner: TurnTailOwnerProps): readonly string[] | null {
-  const paths = producedForClosing(owner.turn.data.get('deliverables'), owner.seq)
-  return paths.length === 0 ? null : paths
+export function selectProducedFiles(owner: TurnTailOwnerProps): ProducedFilesMatch | null {
+  const data = owner.turn.data.get('deliverables')
+  const paths = producedForClosing(data, owner.seq)
+  if (paths.length === 0) return null
+  return { paths, hasChanges: data?.changes.some(change => change.seq <= owner.seq) === true }
 }
 
 /** Turn-local successful mutation accumulator; it publishes no view Node. */
 export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesState> = {
   kind: 'deliverables',
+  target: 'deliverables',
   match: (event) => {
     if (event.type === 'turn/start') return { id: String(event.data.turn), role: 'start' }
     if (event.type === 'tool/call') return { id: String(event.data.turn), role: 'update' }
@@ -107,7 +148,7 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
   },
   start: (_context, match) => {
     if (match.event.type !== 'turn/start') throw new Error('deliverables start requires turn/start')
-    return { turn: match.event.data.turn, calls: new Map(), produced: [] }
+    return { turn: match.event.data.turn, calls: new Map(), produced: [], changes: [] }
   },
   update: (context, match) => {
     if (match.event.type === 'tool/call') {
@@ -122,11 +163,15 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
     const result = match.event.data.message.content[0]
     if (result.isError === true) return context.state
     const callId = String(match.event.data.message.source.callId)
-    const additions = producedPaths(context.state.calls.get(callId) ?? null)
-      .map(path => ({ seq: match.event.seq, path }))
-    return additions.length === 0
-      ? context.state
-      : { ...context.state, produced: [...context.state.produced, ...additions] }
+    const callView = context.state.calls.get(callId) ?? null
+    const additions = producedPaths(callView).map(path => ({ seq: match.event.seq, path }))
+    const change = changeFrom(match, callView, callId, context.state.turn)
+    if (additions.length === 0 && change === null) return context.state
+    return {
+      ...context.state,
+      produced: additions.length === 0 ? context.state.produced : [...context.state.produced, ...additions],
+      changes: change === null ? context.state.changes : [...context.state.changes, change],
+    }
   },
   buildLocationData: (context, scope) => scope !== 'turn' || context.state === undefined
     ? null
@@ -134,7 +179,20 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
       kind: 'turn',
       turn: context.state.turn,
       key: 'deliverables',
-      value: { produced: context.state.produced },
+      value: { produced: context.state.produced, changes: context.state.changes },
+    },
+  buildViewNode: context => context.state === undefined || context.state.changes.length === 0
+    ? null
+    : {
+      key: context.key,
+      kind: 'deliverables',
+      id: String(context.state.turn),
+      target: 'deliverables',
+      data: {
+        turn: context.state.turn,
+        produced: context.state.produced,
+        changes: context.state.changes,
+      },
     },
 }
 

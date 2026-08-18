@@ -13,6 +13,7 @@ import type {
 import type { MarkdownFileMentions } from '@monotykamary/dsh-client-ui-primitives'
 import type { MessageId } from '@monotykamary/dsh-client-connection/client'
 import type {} from '@monotykamary/dsh-client-ui-layout/client'
+import type {} from '@monotykamary/dsh-client-ui-workbench/client'
 import type { ComposerBlock } from '../input/blocks.ts'
 import type {
   ComposerKeyboard, DraftAttachmentId, EditSelection, InputActions, InputNotice, InputState,
@@ -20,7 +21,7 @@ import type {
 import type { createChatStore } from '../stores.ts'
 import type { ComposerSubmitGesture, InputSubmitMode } from './composer-submission.ts'
 import type { ChatNode, ChatNodeKind } from './chat-nodes.ts'
-import type { CallId, SelectionTarget, ViewTab } from './views.ts'
+import type { CallId, ViewTab } from './views.ts'
 
 /** Browser-owned image that has not crossed the durable host boundary. */
 export interface ComposerAttachment {
@@ -668,13 +669,8 @@ export interface ChatScrollPosition {
   readonly scrollTop: number
 }
 
-/**
- * Injected share of the chat view entry: the two callbacks whose targets live
- * outside the view (layout orchestration; the session object layer).
- */
+/** Injected share of the chat view entry. */
 export interface ChatViewInjected {
-  /** Selection write + details panel opening in one gesture (store action + layout orchestration). */
-  openDetails: (target: SelectionTarget) => void
   /**
    * Open a tool-arg filesystem path with the host OS default application
    * (relative paths resolve against the session cwd).
@@ -683,7 +679,7 @@ export interface ChatViewInjected {
   loadOlder: () => void
   /** Resolve a session-authorized historical image for inline display. */
   loadImage: (attachment: ImageAttachmentRef) => Promise<string>
-  /** Hand a call off to the trajectory view: write the one-shot inspect target and switch tabs. */
+  /** Select a call and open the workbench Inspect surface. */
   inspectCall: (callId: CallId) => void
   /**
    * Per-session scroll memory surviving view switches (in-memory, never
@@ -712,18 +708,15 @@ export type ChatViewSlotProps =
   PropsRuntime<'conversation.view'> & PropsRenderSlots<'conversation.chat.node'>
   & PropsStore<ChatStore> & ChatViewInjected & PropsLocale<'conversation'>
 
-/**
- * Injected share of the details slot: the panel is otherwise a pure reader of
- * the shared chat store, but its close button is a layout orchestration call.
- */
-export interface DetailsInjected {
-  /** Close the details panel (layout geometry stays with ctx.layout). */
-  closeDetails: () => void
+/** Inspector callbacks injected into the workbench surface registration. */
+export interface DetailsSurfaceInjected {
+  /** Switch the center view to Trajectory and reveal the selected call. */
+  openTrajectory: (callId: CallId) => void
 }
 
-/** Full details-slot props: selection store, Tool output seat, injected close callback, and locale. */
-export type DetailsSlotProps = PropsRuntime<'details'> & PropsRenderSlots<'conversation.details.tool'>
-  & PropsStore<ChatStore> & DetailsInjected & PropsLocale<'conversation'>
+/** Full Inspect-surface props: selection store, Tool output seat, callback, and locale. */
+export type DetailsSurfaceProps = PropsRuntime<'workbench.surface'> & PropsRenderSlots<'conversation.details.tool'>
+  & PropsStore<ChatStore> & DetailsSurfaceInjected & PropsLocale<'conversation'>
 
 /** Owner share common to the hero / New-Session Workspace pickers. */
 export interface EmptyWorkspaceOwnerProps {

@@ -95,7 +95,7 @@ export interface ToolRowProps {
   /** Open the path with the host OS default application (already cwd-resolved). */
   onOpenFile?: ((path: string) => void) | undefined
   /**
-   * Jump to this call in the trajectory view: a hover-revealed Inspect pill
+   * Open this call in the workbench: a hover-revealed Inspect pill
    * over the expanded body. Absent = no affordance.
    */
   inspect?: (() => void) | undefined

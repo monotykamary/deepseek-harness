@@ -61,13 +61,13 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      */
     'conversation': { kind: 'single'; scope: 'session-maybe'; owner: ConvOwnerProps }
     /**
-     * The right details column, shown when the layout opens it. OCCUPIED by
-     * ui-conversation's DetailsPanel, which declares the tool-details seat
-     * inside it — registering here replaces the column and takes that seat
-     * with it. Absent an occupant the column renders nothing.
+     * The right details region, shown when the layout opens it. OCCUPIED by
+     * ui-workbench, which declares its additive surface list; registering here
+     * replaces the whole region and takes every surface registration with it.
      *
-     * No owner props: the framework injects the session id and hooks for the
-     * `session` scope, and `ctx.layout` owns whether the column is open.
+     * The owner reports whether the concession solver can host an inline
+     * column. An open panel that cannot fit receives `sheet` and owns its
+     * portaled presentation; `closePanel` always closes the layout preference.
      */
     'details': { kind: 'single'; scope: 'session'; owner: DetailsOwnerProps }
     /**
@@ -108,8 +108,13 @@ export interface SidebarOwnerProps {
 /** Conversation owner share: business state and actions belong to the registrant. */
 export interface ConvOwnerProps {}
 
-/** Details owner share: empty — sessionId arrives as a framework-standard prop. */
-export interface DetailsOwnerProps {}
+/** Details owner share: hosting mode and layout-owned close gesture. */
+export interface DetailsOwnerProps {
+  /** Inline grid column when it fits; right Sheet when concession resolves zero width. */
+  mode: 'column' | 'sheet'
+  /** Close the Details preference from either host mode. */
+  closePanel: () => void
+}
 
 /** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
 export const inject = ['slots', 'theme']

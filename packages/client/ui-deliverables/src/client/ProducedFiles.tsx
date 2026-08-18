@@ -8,7 +8,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import type { HostDescriptionSource } from '@monotykamary/dsh-client-connection/client'
 import type { InjectFace, PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
-import { basename } from './turn-deliverables.ts'
+import { basename, type ProducedFilesMatch } from './turn-deliverables.ts'
 import type { NS } from './locales.ts'
 import css from './ProducedFiles.module.css'
 
@@ -50,6 +50,8 @@ export function fitProducedFiles(
 export interface ProducedFilesInjected {
   /** Whether the browser itself is connected over loopback. */
   isLoopback: boolean
+  /** Open the workbench Changes surface for this Session. */
+  openChanges: () => void
   hooks: {
     /** Current generation's Host description, bound by the slot renderer. */
     hostDescription: HostDescriptionSource
@@ -58,7 +60,7 @@ export interface ProducedFilesInjected {
 
 /** Matched paths plus the opener, locale, and injected Host capability. */
 export type ProducedFilesProps = Pick<TurnTailOwnerProps, 'openFile'> & {
-  matched: readonly string[]
+  matched: ProducedFilesMatch
 } & PropsLocale<typeof NS> & InjectFace<ProducedFilesInjected>
 
 function moreLabel(t: ProducedFilesProps['t'], count: number): string {
@@ -71,7 +73,7 @@ function moreLabel(t: ProducedFilesProps['t'], count: number): string {
  * @returns The produced-files row.
  */
 export function ProducedFiles({
-  matched: paths, openFile, isLoopback, useHostDescription, t,
+  matched: { paths, hasChanges }, openFile, openChanges, isLoopback, useHostDescription, t,
 }: ProducedFilesProps) {
   const hostCanOpenPath = useHostDescription(description => description?.canOpenPath === true)
   const canOpenPath = isLoopback && hostCanOpenPath
@@ -132,10 +134,19 @@ export function ProducedFiles({
         ))}
         {hidden > 0 && <span className={css.more}>{moreLabel(t, hidden)}</span>}
       </div>
-      {hidden > 0 && canOpenPath && (
-        <button type="button" className={css.showFolder} onClick={() => { openFile('.') }}>
-          {t('produced.showInFolder')}
-        </button>
+      {(hasChanges || (hidden > 0 && canOpenPath)) && (
+        <div className={css.actions}>
+          {hasChanges && (
+            <button type="button" className={css.secondaryAction} onClick={openChanges}>
+              {t('produced.viewChanges')}
+            </button>
+          )}
+          {hidden > 0 && canOpenPath && (
+            <button type="button" className={css.secondaryAction} onClick={() => { openFile('.') }}>
+              {t('produced.showInFolder')}
+            </button>
+          )}
+        </div>
       )}
       <div className={css.measure} aria-hidden="true">
         {paths.slice(0, limit).map((path, index) => (

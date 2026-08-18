@@ -10,9 +10,12 @@
 import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/client'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 import type { ChatFileMentions } from '@monotykamary/dsh-client-ui-conversation/client'
+import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
+import { ChangesPanel } from './ChangesPanel.tsx'
 import { ProducedFiles } from './ProducedFiles.tsx'
 import { en, NS, zh, type DeliverablesKey } from './locales.ts'
+import { deliverablesViewDefinition } from './deliverables-view.ts'
 import {
   deliverablesDefinition, producedFileMentions, selectProducedFiles,
 } from './turn-deliverables.ts'
@@ -27,8 +30,10 @@ declare module '@monotykamary/dsh-client-ui-slots' {
 export { ProducedFiles, type ProducedFilesProps } from './ProducedFiles.tsx'
 export { producedForClosing } from './turn-deliverables.ts'
 
-/** Required services for the tail-slot registration and its dictionaries. */
-export const inject = ['slots', 'locale', 'conversationEvents', 'connection']
+const CHANGES_SURFACE_ID = 'changes' as WorkbenchSurfaceId
+
+/** Required services for projections, workbench navigation, slots, and dictionaries. */
+export const inject = ['slots', 'locale', 'conversationEvents', 'conversationViews', 'connection', 'workbench']
 
 /**
  * Client plugin body: register the dictionaries and the turn-tail entry.
@@ -37,7 +42,9 @@ export const inject = ['slots', 'locale', 'conversationEvents', 'connection']
 export function apply(ctx: ClientContext): void {
   const connection = ctx.get('connection') as ConnectionHandle
   ctx.conversationEvents.register(deliverablesDefinition)
+  ctx.conversationViews.register(deliverablesViewDefinition)
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-deliverables: dictionaries')
+  const t = ctx.locale.bind(NS)
   ctx.slots.inject(
     'conversation.chat.turnTail',
     () => ctx.slots.register({
@@ -46,20 +53,27 @@ export function apply(ctx: ClientContext): void {
       locale: NS,
       inject: () => ({
         isLoopback: connection.isLoopback,
+        openChanges: () => { ctx.workbench.open(CHANGES_SURFACE_ID) },
         hooks: { hostDescription: connection.hostDescription },
       }),
     }, ProducedFiles),
   )
+  ctx.slots.inject('workbench.surface', () => ctx.slots.register({
+    name: 'workbench.surface',
+    id: CHANGES_SURFACE_ID,
+    order: 10,
+    label: () => t('changes.tab'),
+    locale: NS,
+  }, ChangesPanel))
   // The prose side of the same vocabulary: the chat view reaches this face
   // via ctx.get, so its absence — this plugin composed out — is the off state.
-  const t = ctx.locale.bind(NS)
   const mentions: ChatFileMentions = {
     forClosing(owner) {
       // Same claim test the turn-tail chain entry runs: no produced files,
       // no vocabulary — the two surfaces agree by construction.
-      const paths = selectProducedFiles(owner)
-      if (paths === null) return undefined
-      return producedFileMentions(paths, owner.openFile, path => t('produced.open', { name: path }))
+      const match = selectProducedFiles(owner)
+      if (match === null) return undefined
+      return producedFileMentions(match.paths, owner.openFile, path => t('produced.open', { name: path }))
     },
   }
   ctx.provide('chatFileMentions', mentions)

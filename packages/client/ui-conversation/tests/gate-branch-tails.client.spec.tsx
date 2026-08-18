@@ -9,7 +9,7 @@ import {
 import type { UseSession } from '@monotykamary/dsh-client-web-react'
 import type { ConversationSnapshot, SessionId, SessionListState, WorkspaceListState } from '@monotykamary/dsh-client-runtime/client'
 import type { SessionProviderComponent } from '@monotykamary/dsh-client-ui-slots'
-import type { DetailsSlotProps, DetailsToolOwnerProps, SelectionTarget } from '@monotykamary/dsh-client-ui-conversation/client'
+import type { DetailsSurfaceProps, DetailsToolOwnerProps, SelectionTarget } from '@monotykamary/dsh-client-ui-conversation/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
 import { createChatStore } from '../src/client/stores.ts'
@@ -41,7 +41,7 @@ const SID = 's1' as SessionId
 const SessionProviderStub: SessionProviderComponent = ({ children }) => children(SID)
 
 /** Observe the owner currency without importing the Tool details renderer. */
-function renderToolDetailsProbe(owners?: DetailsToolOwnerProps[]): DetailsSlotProps['renderSlot'] {
+function renderToolDetailsProbe(owners?: DetailsToolOwnerProps[]): DetailsSurfaceProps['renderSlot'] {
   return (_key, owner) => {
     owners?.push(owner as unknown as DetailsToolOwnerProps)
     return <div data-testid="tool-details-seat" />
@@ -135,7 +135,7 @@ describe('render branch tails', () => {
         }}
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
-        closeDetails={vi.fn()}
+        openTrajectory={vi.fn()}
         t={t}
       />,
     )
@@ -192,7 +192,7 @@ describe('render branch tails', () => {
         }}
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
-        closeDetails={vi.fn()}
+        openTrajectory={vi.fn()}
         t={t}
       />,
     )

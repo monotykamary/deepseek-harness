@@ -91,7 +91,7 @@ function snapshotWith(
 }
 
 /** Test-owned AppFrame role: declares and renders the resident conversation area. */
-type AppRootProps = PropsRenderSlots<'conversation' | 'details'>
+type AppRootProps = PropsRenderSlots<'conversation' | 'workbench.surface'>
 function AppRoot({ renderSlot }: AppRootProps) {
   return <>{renderSlot('conversation', {})}</>
 }
@@ -116,7 +116,7 @@ async function bench(snapshot: ConversationSnapshot) {
     phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined,
   })
   const scoped = { send: vi.fn(async () => {}), cancel: vi.fn(async () => {}) }
-  const layout = { openDetails: vi.fn(), closeDetails: vi.fn() }
+  const workbench = { open: vi.fn(), close: vi.fn() }
   // Provide-channel contributions land in this bundle the way the runtime
   // materializes them; the renderer host serves it through provideInfo.
   const provided: { hooks: Record<string, unknown>; props: Record<string, unknown> } = { hooks: {}, props: {} }
@@ -157,7 +157,7 @@ async function bench(snapshot: ConversationSnapshot) {
     openPath: vi.fn(async () => {}),
   }
   ctx.provide('workspaces', workspaces)
-  ctx.provide('layout', layout)
+  ctx.provide('workbench', workbench)
   ctx.provide('connection', { api: { settings: {} }, isLoopback: false } as never)
   // ui-theme's Appearance row binds a durable scope through these two.
   ctx.provide('remote', { $on: () => () => {} } as never)
@@ -171,7 +171,7 @@ async function bench(snapshot: ConversationSnapshot) {
     name: 'root',
     children: {
       'conversation': { kind: 'single', scope: 'session-maybe' },
-      'details': { kind: 'single', scope: 'session' },
+      'workbench.surface': { kind: 'list', scope: 'session' },
     },
   }, AppRoot)
 
@@ -179,7 +179,7 @@ async function bench(snapshot: ConversationSnapshot) {
   await fiber.await()
   const toolFiber = ctx.plugin({ inject: [...injectTool], apply: applyTool })
   await toolFiber.await()
-  return { ctx, slots, fiber, toolFiber, session, layout, workspaces }
+  return { ctx, slots, fiber, toolFiber, session, workbench, workspaces }
 }
 
 function mountApp(slots: SlotRegistry) {
@@ -271,12 +271,12 @@ describe('run_code sub-calls through the real chat machinery', () => {
     const b = await bench(snapshotWith([codeResult(10, parent)], subCalls))
     const view = mountApp(b.slots)
     view.getByText('notes/demo.txt').click()
-    expect(b.layout.openDetails).not.toHaveBeenCalled()
+    expect(b.workbench.open).not.toHaveBeenCalled()
     await vi.waitFor(() => {
       expect(b.workspaces.openPath).toHaveBeenCalledWith('notes/demo.txt')
     })
     view.getByText('List notes').click()
-    expect(b.layout.openDetails).not.toHaveBeenCalled()
+    expect(b.workbench.open).not.toHaveBeenCalled()
   })
 
   it('a RUNNING run_code call nests its so-far dispatches under the spinner row', async () => {

@@ -31,19 +31,19 @@ describe('view-ring type negatives (compile-time; body never runs)', () => {
         return null
       }
       void renderless
-      // 5. The chat entry's face is its own: openDetails does not exist on the
+      // 5. The chat entry's face is its own: inspectCall does not exist on the
       //    base view props (store-less riders never see it).
       const baseOnly = (props: ConvViewProps): ReactNode => {
-        // @ts-expect-error openDetails lives on ChatViewSlotProps, not the base
-        void props.openDetails
+        // @ts-expect-error inspectCall lives on ChatViewSlotProps, not the base
+        void props.inspectCall
         return null
       }
       void baseOnly
       // 6. ChatViewSlotProps carries the full composition (standard kit +
       //    store + inject face) — a handler with a wrong signature is red.
       const chatProps = (props: ChatViewSlotProps): ReactNode => {
-        // @ts-expect-error openDetails takes a SelectionTarget, not a string
-        props.openDetails('nope')
+        // @ts-expect-error inspectCall takes a CallId string, not an object
+        props.inspectCall({ callId: 'nope' })
         // @ts-expect-error openFile takes a path string, not a SelectionTarget
         props.openFile({ turnSeq: 1, callId: 'c' })
         return null

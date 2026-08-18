@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/dsh-client-ui-deliverables",
-  "description": "Produced-files turn tail and clickable final-response file references for Web",
+  "description": "Produced-files turn tail, file references, and loaded mutation Changes surface for Web",
   "version": "0.1.0-rc.7",
   "publishConfig": {
     "access": "public"
@@ -35,7 +35,8 @@
         "@monotykamary/dsh-client-connection",
         "@monotykamary/dsh-client-locale",
         "@monotykamary/dsh-client-runtime",
-        "@monotykamary/dsh-client-ui-conversation"
+        "@monotykamary/dsh-client-ui-conversation",
+        "@monotykamary/dsh-client-ui-workbench"
       ],
       "platform": "web"
     }
@@ -53,7 +54,9 @@
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/cordis": "workspace:^"
@@ -64,7 +67,9 @@
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-test-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@types/react": "~18.3.1",

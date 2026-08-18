@@ -89,7 +89,7 @@ function historySnapshot(
   return {
     sessionId: SID,
     views: {
-      get: target => target === 'trajectory' ? trajectory : undefined,
+      get: ((target: string) => target === 'trajectory' ? trajectory : undefined) as ConversationSnapshot['views']['get'],
     },
     chat: EMPTY_CHAT_SNAPSHOT,
     nodes,

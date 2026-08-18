@@ -54,7 +54,7 @@
 }
 
 .file:focus-visible,
-.showFolder:focus-visible {
+.secondaryAction:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
 }
@@ -66,10 +66,16 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
-.showFolder {
+.actions {
   grid-column: 2;
   grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   justify-self: start;
+}
+
+.secondaryAction {
   margin: 0;
   padding: 0 2px;
   border: none;
@@ -81,7 +87,7 @@
   cursor: pointer;
 }
 
-.showFolder:hover {
+.secondaryAction:hover {
   color: var(--dsw-alias-label-secondary);
   text-decoration: underline;
 }

@@ -63,6 +63,7 @@
     "@monotykamary/dsh-client-ui-message-feedback": "workspace:^",
     "@monotykamary/dsh-client-ui-goal": "workspace:^",
     "@monotykamary/dsh-client-ui-layout": "workspace:^",
+    "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-client-ui-model-selection": "workspace:^",
     "@monotykamary/dsh-client-ui-settings-models": "workspace:^",
     "@monotykamary/dsh-client-ui-settings-plugin-inventory": "workspace:^",

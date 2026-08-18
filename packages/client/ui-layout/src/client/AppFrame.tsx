@@ -141,6 +141,10 @@ export function AppFrame({
     ? 0
     : panels.sidebar === 0 ? SIDEBAR_DEFAULT : panels.sidebar
   const cols = computeColumns(viewport, sidebarPreference, detailsSession === undefined ? 0 : panels.details)
+  // A requested Details panel that the concession chain cannot fit moves into
+  // its occupant-owned right Sheet instead of becoming unreachable at zero width.
+  const detailsAsSheet = detailsSession !== undefined && panels.details > 0 && cols.details === 0
+  const closeDetails = useCallback(() => { actions.closeDetails() }, [actions])
   const colsRef = useRef(cols)
   colsRef.current = cols
 
@@ -180,6 +184,7 @@ export function AppFrame({
         : `${cols.sidebar}px minmax(0, 1fr) ${cols.details}px` }}
       data-sidebar-collapsed={!compact && sidebarCollapsed ? true : undefined}
       data-details-collapsed={cols.details === 0 || undefined}
+      data-details-sheet={detailsAsSheet || undefined}
       data-dragging={dragging || undefined}
       data-sidebar-drawer={compact || undefined}
     >
@@ -201,7 +206,10 @@ export function AppFrame({
             is session-maybe; the strict details entry naturally renders
             empty while no session is current. */}
         <CenterColumn>{renderSlot('conversation', {})}</CenterColumn>
-        <DetailsColumn>{renderSlot('details', {})}</DetailsColumn>
+        <DetailsColumn>{renderSlot('details', {
+          mode: detailsAsSheet ? 'sheet' : 'column',
+          closePanel: closeDetails,
+        })}</DetailsColumn>
       </>
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}

@@ -153,7 +153,12 @@ describe('AppFrame', () => {
     expect(keys).toContain('details')
     expect(keys).not.toContain('conversation.empty')
     expect(slotCalls.find(c => c.key === 'conversation')!.props).toEqual({})
-    expect(slotCalls.find(c => c.key === 'details')!.props).toEqual({})
+    const detailsOwner = slotCalls.find(c => c.key === 'details')?.props as {
+      mode?: unknown
+      closePanel?: unknown
+    } | undefined
+    expect(detailsOwner?.mode).toBe('column')
+    expect(detailsOwner?.closePanel).toBeTypeOf('function')
   })
 
   it('keeps the conversation slot mounted while no session is current', () => {
@@ -327,6 +332,24 @@ describe('AppFrame — narrow-viewport auto-collapse', () => {
     frameWidth = 1920
     act(() => { fireResize?.(); vi.advanceTimersByTime(20) })
     expect(tracks(frame)).toEqual([400, 0])
+  })
+})
+
+describe('AppFrame — responsive Details hosting', () => {
+  it('hands an open conceded panel to its occupant as a right Sheet and closes through the owner callback', () => {
+    frameWidth = 900
+    const { frame, instance, slotCalls } = mountFrame()
+    act(() => { instance.actions.openDetails() })
+    expect(tracks(frame)).toEqual([SIDEBAR_COLLAPSED, 0])
+    expect(frame.hasAttribute('data-details-sheet')).toBe(true)
+    const owner = slotCalls.filter(call => call.key === 'details').at(-1)?.props as {
+      mode: string
+      closePanel: () => void
+    }
+    expect(owner.mode).toBe('sheet')
+    act(() => { owner.closePanel() })
+    expect(instance.getSnapshot().details).toBe(0)
+    expect(frame.hasAttribute('data-details-sheet')).toBe(false)
   })
 })
 

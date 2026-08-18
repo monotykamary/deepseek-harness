@@ -70,6 +70,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/identity/web-identity': { kind: 'none', reason: 'The identity authority gates HTTP requests and partitions session reads; nothing it registers reaches a model request.' },
   'packages/client/runtime': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-layout': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
+  'packages/client/ui-workbench': { kind: 'none', reason: 'Browser-side panel navigation and presentation; registers nothing model-facing.' },
   'packages/client/ui-command-palette': { kind: 'none', reason: 'Browser-side Session navigation and creation UI; registers nothing model-facing.' },
   'packages/client/ui-sidebar': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-conversation': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
