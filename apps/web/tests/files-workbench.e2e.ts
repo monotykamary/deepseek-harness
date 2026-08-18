@@ -1,6 +1,6 @@
-// Keyless browser journey for the T3-adapted Files workbench: the session
-// header opens a lazy tree backed by the real Host Remote, previews a file,
-// filters loaded nodes, and keeps the same view in the compact right Sheet.
+// Keyless browser journey for the T3-adapted Files workbench: the Session
+// header toggles an empty right panel, its launcher opens a lazy real-Host tree,
+// and the syntax editor autosaves through the version-guarded write Remote.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
@@ -38,8 +38,12 @@ function renderGolden(values: {
   compactWidth: number
   desktopOverflow: number
   desktopWidth: number
+  editedSource: string
+  emptyCards: string[]
   expandedRows: string[]
   filteredRows: string[]
+  iconBeforeHover: boolean
+  closeAfterHover: boolean
   preview: string
   rootRows: string[]
   tabs: string[]
@@ -47,9 +51,13 @@ function renderGolden(values: {
   return [
     '# Files workbench',
     '',
+    `- empty cards: ${values.emptyCards.join(' → ')}`,
     `- root rows: ${values.rootRows.join(' → ')}`,
     `- expanded rows: ${values.expandedRows.join(' → ')}`,
     `- preview: ${JSON.stringify(values.preview)}`,
+    `- edited source: ${JSON.stringify(values.editedSource)}`,
+    `- tab icon before hover: ${String(values.iconBeforeHover)}`,
+    `- tab close after hover: ${String(values.closeAfterHover)}`,
     `- filtered rows: ${values.filteredRows.join(' → ')}`,
     `- tabs: ${values.tabs.join(' → ')}`,
     `- desktop width: ${String(values.desktopWidth)}px`,
@@ -89,25 +97,57 @@ describe('web e2e: Files workbench', () => {
     await scaffold?.close()
   })
 
-  it.skipIf(MODE === 'record')('browses, previews, filters, and adapts through the assembled app', async () => {
+  it.skipIf(MODE === 'record')('opens, edits, filters, and adapts through the assembled app', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-files-workbench'))
-    await page.getByRole('button', { name: 'Open files', exact: true }).click()
+    const frame = page.locator('[class*="frame"]').first()
+    await page.getByRole('button', { name: 'Open right panel', exact: true }).click()
+    const collapseToggle = page.getByRole('button', { name: 'Collapse right panel', exact: true })
+    await collapseToggle.waitFor()
+    expect(await collapseToggle.getAttribute('aria-expanded')).toBe('true')
+    await collapseToggle.click()
+    await page.locator('[data-details-collapsed]').waitFor({ timeout: 5_000 })
+    expect(await frame.getAttribute('data-details-collapsed')).not.toBeNull()
+    const openToggle = page.getByRole('button', { name: 'Open right panel', exact: true })
+    expect(await openToggle.getAttribute('aria-expanded')).toBe('false')
+    await openToggle.click()
+    await page.getByRole('button', { name: 'Collapse right panel', exact: true }).waitFor()
     const workbench = page.locator('[data-workbench]')
-    const panel = workbench.locator('[data-workbench-files]')
     await workbench.waitFor({ timeout: 10_000 })
+    await workbench.getByRole('heading', { name: 'Open a surface', exact: true }).waitFor()
+    const launcherCards = workbench.locator('[data-workbench-launcher-card]')
+    const emptyCards = await launcherCards.evaluateAll(cards => cards.flatMap((card) => {
+      const id = card.getAttribute('data-workbench-launcher-card')
+      return id === null ? [] : [id]
+    }))
+    await workbench.getByRole('button', { name: 'Files', exact: true }).click()
+
+    const panel = workbench.locator('[data-workbench-files]')
     const treeRows = panel.getByRole('treeitem')
     await treeRows.filter({ hasText: /^src$/u }).waitFor({ timeout: 10_000 })
     const rootRows = await rowLabels(treeRows)
+
+    const filesTab = workbench.locator('[data-workbench-tab="files"]')
+    const icon = filesTab.locator('[data-workbench-tab-icon]')
+    const closeGlyph = filesTab.locator('[data-workbench-tab-close-glyph]')
+    const iconBeforeHover = await icon.evaluate(element => getComputedStyle(element).display !== 'none')
+    await filesTab.hover()
+    const closeAfterHover = await closeGlyph.evaluate(element => getComputedStyle(element).display !== 'none')
 
     await treeRows.filter({ hasText: /^src$/u }).click()
     await treeRows.filter({ hasText: /^index\.ts$/u }).waitFor({ timeout: 10_000 })
     const expandedRows = await rowLabels(treeRows)
 
     await treeRows.filter({ hasText: /^index\.ts$/u }).click()
-    await panel.getByText('src/index.ts', { exact: true }).waitFor({ timeout: 10_000 })
-    await panel.locator('pre').getByText('export const answer = 42', { exact: false })
-      .waitFor({ timeout: 10_000 })
-    const preview = await panel.locator('pre').innerText()
+    const editor = panel.getByRole('textbox', { name: 'Edit src/index.ts', exact: true })
+    await editor.waitFor({ timeout: 10_000 })
+    const preview = await editor.inputValue()
+    const editedSource = 'export const answer = 43\n'
+    await editor.fill(editedSource)
+    await panel.getByText('Saved', { exact: true }).waitFor({ timeout: 10_000 })
+    await expect.poll(
+      async () => readFile(join(scaffold.workspaceCwd, 'src/index.ts'), 'utf8'),
+      { timeout: 10_000 },
+    ).toBe(editedSource)
 
     await panel.getByRole('button', { name: 'Back to files', exact: true }).click()
     await panel.getByPlaceholder('Filter loaded files').fill('README')
@@ -129,13 +169,17 @@ describe('web e2e: Files workbench', () => {
     }))
 
     await compareOrRefreshGolden(EXPECTED, renderGolden({
+      closeAfterHover,
       compactOverflow: compact.overflow,
       compactSide: await dialog.getAttribute('data-side'),
       compactWidth: compact.width,
       desktopOverflow: desktop.overflow,
       desktopWidth: desktop.width,
+      editedSource,
+      emptyCards,
       expandedRows,
       filteredRows,
+      iconBeforeHover,
       preview,
       rootRows,
       tabs,

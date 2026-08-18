@@ -31,7 +31,7 @@ beforeEach(() => {
 
 type AppRootProps = PropsRenderSlots<'conversation' | 'workbench.surface'>
 function AppRoot({ renderSlot }: AppRootProps) {
-  return <>{renderSlot('conversation', {})}</>
+  return <>{renderSlot('conversation', { detailsOpen: false })}</>
 }
 
 const LAYOUT_CHILDREN = {
@@ -54,7 +54,7 @@ async function bench(opts?: { blank?: boolean }) {
   // The plugin injects both; these specs exercise no settings path.
   runtime.provide('remote', { $on: () => () => {} })
   runtime.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
-  runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
+  runtime.provide('workbench', { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
   runtime.slots.installLocale(locale)
@@ -82,7 +82,7 @@ describe('resident composer', () => {
     // The plugin injects both; these specs exercise no settings path.
     runtime.provide('remote', { $on: () => () => {} })
     runtime.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
-    runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
+    runtime.provide('workbench', { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) })
     const locale = new LocaleRuntime(runtime.ctx)
     runtime.provide('locale', locale)
     runtime.slots.installLocale(locale)
@@ -112,7 +112,7 @@ describe('resident composer', () => {
     // The plugin injects both; these specs exercise no settings path.
     runtime.provide('remote', { $on: () => () => {} })
     runtime.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
-    runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
+    runtime.provide('workbench', { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) })
     const locale = new LocaleRuntime(runtime.ctx)
     runtime.provide('locale', locale)
     runtime.slots.installLocale(locale)
@@ -181,7 +181,7 @@ describe('prompt rejection through the assembled composer', () => {
     // The plugin injects both; these specs exercise no settings path.
     runtime.provide('remote', { $on: () => () => {} })
     runtime.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
-    runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
+    runtime.provide('workbench', { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) })
     const locale = new LocaleRuntime(runtime.ctx)
     runtime.provide('locale', locale)
     runtime.slots.installLocale(locale)

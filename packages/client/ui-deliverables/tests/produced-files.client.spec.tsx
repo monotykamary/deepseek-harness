@@ -554,7 +554,14 @@ describe('plugin registration', () => {
       },
     } as never, () => null)
     const hostDescription = { getSnapshot: () => undefined, subscribe: () => () => {} }
-    const workbench = { open: vi.fn(), close: vi.fn() }
+    const disposePresentation = vi.fn()
+    const workbench = {
+      open: vi.fn(), close: vi.fn(), show: vi.fn(),
+      registerPresentation: vi.fn((
+        _id: string,
+        _presentation: { icon: string; description: string | (() => string) },
+      ) => disposePresentation),
+    }
     ctx.provide('workbench', workbench)
     ctx.provide('connection', {
       api: { settings: {} },
@@ -577,6 +584,11 @@ describe('plugin registration', () => {
     const changes = ctx.slots.entries('workbench.surface')[0]
     expect(changes?.options.id).toBe('changes')
     expect(resolveSlotLabel(changes?.options.label)).toBe('Changes')
+    expect(workbench.registerPresentation).toHaveBeenCalledOnce()
+    const [presentationId, presentation] = workbench.registerPresentation.mock.calls[0]!
+    expect(presentationId).toBe('changes')
+    expect(presentation.icon).toBe('changes')
+    expect(presentation.description).toBeTypeOf('function')
 
     // The prose face is live while the plugin is: a produced turn yields a
     // resolver whose matches open through the owner-supplied opener.
@@ -596,6 +608,7 @@ describe('plugin registration', () => {
     await fiber.dispose()
     expect(ctx.slots.entries('conversation.chat.turnTail')).toHaveLength(0)
     expect(ctx.slots.entries('workbench.surface')).toHaveLength(0)
+    expect(disposePresentation).toHaveBeenCalledOnce()
     // Fiber teardown retracts the service: the consumer's ctx.get sees the off state.
     expect((ctx as unknown as { get(name: string): unknown }).get('chatFileMentions')).toBeUndefined()
   })

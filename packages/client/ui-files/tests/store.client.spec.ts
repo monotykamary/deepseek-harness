@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { WorkspaceDirectoryListing, WorkspaceFilePreview } from '@monotykamary/dsh-api-remotes/client'
+import type {
+  WorkspaceDirectoryListing, WorkspaceFilePreview, WorkspaceFileVersion,
+} from '@monotykamary/dsh-api-remotes/client'
 import { createFilesStore } from '../src/client/store.ts'
 import { locatorKey } from '../src/client/presentation.ts'
 
@@ -13,6 +15,7 @@ const listing: WorkspaceDirectoryListing = {
 }
 const preview: WorkspaceFilePreview = {
   kind: 'text', file, name: 'index.ts', content: 'text', byteLength: 4,
+  version: 'fixture-version' as WorkspaceFileVersion,
 }
 
 describe('Files store', () => {
@@ -62,6 +65,13 @@ describe('Files store', () => {
     expect(instance.store.getSnapshot().preview?.phase).toBe('loading')
     actions.resolvePreview(3, preview)
     expect(instance.store.getSnapshot().preview).toMatchObject({ phase: 'ready', value: preview })
+    actions.commitPreview({ ...preview, file: { segments: ['other.ts'] }, content: 'ignored' })
+    expect(instance.store.getSnapshot().preview?.value).toEqual(preview)
+    const saved = {
+      ...preview, content: 'saved', byteLength: 5, version: 'saved-version' as WorkspaceFileVersion,
+    }
+    actions.commitPreview(saved)
+    expect(instance.store.getSnapshot().preview).toMatchObject({ phase: 'ready', value: saved })
     actions.beginPreview(file, 4)
     actions.rejectPreview(4)
     expect(instance.store.getSnapshot().preview?.phase).toBe('error')

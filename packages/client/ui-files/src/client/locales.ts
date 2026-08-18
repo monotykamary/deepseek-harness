@@ -8,6 +8,7 @@ export type FilesKey = keyof typeof zh
 export const zh = {
   'tab': '文件',
   'open': '打开文件',
+  'launcher.description': '浏览和编辑工作区文件',
   'tree.aria': '工作区文件',
   'tree.filter': '筛选已加载的文件',
   'tree.filterAria': '筛选已加载的工作区文件',
@@ -28,14 +29,19 @@ export const zh = {
   'preview.tooLarge': '文件超过 {limit} 的预览上限',
   'preview.notText': '无法预览二进制或非 UTF-8 文件',
   'preview.notFile': '此路径不是常规文件',
-  'preview.copy': '复制',
-  'preview.copied': '复制成功',
+  'editor.label': '编辑 {path}',
+  'editor.saving': '正在保存…',
+  'editor.saved': '已保存',
+  'editor.conflict': '文件已在编辑器外更改；请刷新后重试',
+  'editor.tooLarge': '文件过大，无法保存',
+  'editor.error': '无法保存文件',
 } as const
 
 /** English Files dictionary, checked against the Chinese key set. */
 export const en: Record<FilesKey, string> = {
   'tab': 'Files',
   'open': 'Open files',
+  'launcher.description': 'Browse and edit workspace files',
   'tree.aria': 'Workspace files',
   'tree.filter': 'Filter loaded files',
   'tree.filterAria': 'Filter loaded workspace files',
@@ -56,6 +62,10 @@ export const en: Record<FilesKey, string> = {
   'preview.tooLarge': 'File exceeds the {limit} preview limit',
   'preview.notText': 'Binary or non-UTF-8 files cannot be previewed',
   'preview.notFile': 'This path is not a regular file',
-  'preview.copy': 'Copy',
-  'preview.copied': 'Copied',
+  'editor.label': 'Edit {path}',
+  'editor.saving': 'Saving…',
+  'editor.saved': 'Saved',
+  'editor.conflict': 'File changed outside the editor; refresh before retrying',
+  'editor.tooLarge': 'File is too large to save',
+  'editor.error': 'Unable to save file',
 }

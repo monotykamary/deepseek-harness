@@ -14,7 +14,9 @@ import { Workbench } from '../src/client/Workbench.tsx'
 
 const SID = 'session' as SessionId
 const id = (value: string) => value as WorkbenchSurfaceId
-const surface = (value: string, label: string): WorkbenchSurface => ({ id: id(value), label })
+const surface = (value: string, label: string): WorkbenchSurface => ({
+  id: id(value), label, icon: value === 'changes' ? 'changes' : 'inspect', description: `${label} description`,
+})
 const inputActions: WorkbenchProps['inputActions'] = {
   setDraft: () => {}, addImages: () => true, removeImage: () => {}, pruneImages: () => {}, submit: () => {},
 }
@@ -93,6 +95,7 @@ describe('Workbench', () => {
     const mounted = mountWorkbench({ open: [id('inspect')] })
     expect(screen.getByRole('tab', { name: 'Inspect' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByTestId('surface-inspect')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '关闭Inspect' }).querySelector('[data-workbench-tab-icon]')).toBeTruthy()
 
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Inspect' }), { key: 'x' })
     fireEvent.click(screen.getByRole('button', { name: '添加面板' }))
@@ -120,15 +123,17 @@ describe('Workbench', () => {
     expect(mounted.closePanel).toHaveBeenCalledTimes(1)
   })
 
-  it('closes with the last tab and reconciles surfaces removed by plugin disposal', async () => {
+  it('leaves the launcher open after the last tab and reconciles plugin disposal', async () => {
     const mounted = mountWorkbench({ open: [id('inspect'), id('changes')] })
     mounted.setSurfaces([surface('inspect', 'Inspect')])
     await waitFor(() => { expect(screen.queryByRole('tab', { name: 'Changes' })).toBeNull() })
     expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [id('inspect')], activeId: id('inspect') })
 
     fireEvent.click(screen.getByRole('button', { name: '关闭Inspect' }))
-    expect(mounted.closePanel).toHaveBeenCalled()
+    expect(mounted.closePanel).not.toHaveBeenCalled()
     expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [], activeId: null })
+    expect(screen.getByRole('heading', { name: '打开面板' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Inspect' })).toBeTruthy()
   })
 
   it('renders as a localized right Sheet when layout concession cannot fit the column', () => {
@@ -160,9 +165,11 @@ describe('Workbench', () => {
     expect(closePanel).toHaveBeenCalledTimes(1)
   })
 
-  it('closes an empty direct layout opening', () => {
-    const mounted = mountWorkbench({ surfaces: [], open: [] })
-    expect(screen.getByText('从“添加面板”中选择一个面板')).toBeTruthy()
-    expect(mounted.closePanel).toHaveBeenCalledTimes(1)
+  it('keeps an empty direct opening visible and launches a registered surface card', () => {
+    const mounted = mountWorkbench({ open: [] })
+    expect(screen.getByText('选择要在右侧面板中显示的内容。')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Changes' }))
+    expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [id('changes')], activeId: id('changes') })
+    expect(mounted.closePanel).not.toHaveBeenCalled()
   })
 })

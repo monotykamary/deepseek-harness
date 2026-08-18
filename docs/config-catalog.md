@@ -812,12 +812,14 @@ export interface Config {
   maxDirectoryEntries?: number
   /** Inclusive UTF-8 byte cap for one complete file preview. Defaults to 1 MiB. */
   maxPreviewBytes?: number
+  /** Inclusive UTF-8 byte cap for one complete browser replacement. Defaults to 1 MiB. */
+  maxWriteBytes?: number
   /** Maximum locator segments traversed from the Session root. Defaults to 64. */
   maxDepth?: number
 }
 ```
 
-Source: [`packages/host/workspace-files/src/index.ts:26`](../packages/host/workspace-files/src/index.ts)
+Source: [`packages/host/workspace-files/src/index.ts:30`](../packages/host/workspace-files/src/index.ts)
 
 <a id="monotykamarydsh-invariants"></a>
 

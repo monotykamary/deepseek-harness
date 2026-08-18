@@ -271,6 +271,7 @@ function mount(slots: SlotRegistry, nodes: ConversationSnapshot['nodes'] = NODES
         useProjection={(() => undefined)}
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
+        detailsOpen={false}
         renderSlot={() => null}
         views={views}
         useInput={useInput}

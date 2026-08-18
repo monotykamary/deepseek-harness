@@ -205,7 +205,9 @@ export function AppFrame({
             the shell's own pending rendering. The conversation
             is session-maybe; the strict details entry naturally renders
             empty while no session is current. */}
-        <CenterColumn>{renderSlot('conversation', {})}</CenterColumn>
+        <CenterColumn>{renderSlot('conversation', {
+          detailsOpen: detailsSession !== undefined && panels.details > 0,
+        })}</CenterColumn>
         <DetailsColumn>{renderSlot('details', {
           mode: detailsAsSheet ? 'sheet' : 'column',
           closePanel: closeDetails,

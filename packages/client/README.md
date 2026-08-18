@@ -21,7 +21,7 @@ The browser side of the dsh web GUI: shell boot, browser-host communication, sha
 | [`ui-attachment/`](ui-attachment/README.md) | Provides attachment display atoms: draft-image rail, message gallery, and lightbox. |
 | [`ui-layout/`](ui-layout/README.md) | Arranges the main application regions. |
 | [`ui-workbench/`](ui-workbench/README.md) | Hosts tabbed, plugin-registered right-panel views. |
-| [`ui-files/`](ui-files/README.md) | Browses and previews Session-authorized workspace files in Workbench. |
+| [`ui-files/`](ui-files/README.md) | Browses and edits Session-authorized workspace files in Workbench. |
 | [`ui-sidebar/`](ui-sidebar/README.md) | Presents workspace and session navigation. |
 | [`ui-workspace/`](ui-workspace/README.md) | Provides workspace selection and creation surfaces. |
 | [`ui-conversation/`](ui-conversation/README.md) | Presents the active conversation and its input surface. |

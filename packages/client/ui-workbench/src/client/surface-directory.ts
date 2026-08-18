@@ -1,6 +1,8 @@
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import type { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
-import type { WorkbenchSurface, WorkbenchSurfaceId } from './contract.ts'
+import type {
+  WorkbenchSurface, WorkbenchSurfaceId, WorkbenchSurfacePresentation,
+} from './contract.ts'
 
 interface LocaleSource {
   subscribe(listener: () => void): () => void
@@ -10,7 +12,11 @@ function sameSurfaces(left: readonly WorkbenchSurface[], right: readonly Workben
   return left.length === right.length
     && left.every((surface, index) => {
       const other = right[index]
-      return other !== undefined && surface.id === other.id && surface.label === other.label
+      return other !== undefined
+        && surface.id === other.id
+        && surface.label === other.label
+        && surface.icon === other.icon
+        && surface.description === other.description
     })
 }
 
@@ -18,6 +24,7 @@ function sameSurfaces(left: readonly WorkbenchSurface[], right: readonly Workben
 export class WorkbenchSurfaceDirectory {
   private snapshot: readonly WorkbenchSurface[] = []
   private readonly listeners = new Set<() => void>()
+  private readonly presentations = new Map<WorkbenchSurfaceId, WorkbenchSurfacePresentation>()
 
   /**
    * @param slots - slot registry that owns surface registrations.
@@ -61,6 +68,25 @@ export class WorkbenchSurfaceDirectory {
   }
 
   /**
+   * Register plugin-owned icon and launcher copy for one surface id.
+   * @param id - stable workbench surface id.
+   * @param presentation - icon kind and locale-aware launcher description.
+   * @returns disposer that retracts this exact presentation.
+   */
+  registerPresentation(id: WorkbenchSurfaceId, presentation: WorkbenchSurfacePresentation): () => void {
+    if (this.presentations.has(id)) {
+      throw new Error(`workbench surface presentation already registered: ${String(id)}`)
+    }
+    this.presentations.set(id, presentation)
+    this.refresh()
+    return () => {
+      if (this.presentations.get(id) !== presentation) return
+      this.presentations.delete(id)
+      this.refresh()
+    }
+  }
+
+  /**
    * Test current registration of one surface id.
    * @param id - surface id to test.
    * @returns whether the surface is registered now.
@@ -87,9 +113,17 @@ export class WorkbenchSurfaceDirectory {
     for (const entry of this.slots.entries('workbench.surface')) {
       /* v8 ignore next -- list registration requires an id at load. */
       if (entry.options.id === undefined) continue
+      const id = entry.options.id as WorkbenchSurfaceId
+      const presentation = this.presentations.get(id)
       surfaces.push({
-        id: entry.options.id as WorkbenchSurfaceId,
+        id,
         label: resolveSlotLabel(entry.options.label) ?? entry.options.id,
+        icon: presentation?.icon ?? 'generic',
+        description: presentation === undefined
+          ? ''
+          : typeof presentation.description === 'function'
+            ? presentation.description()
+            : presentation.description,
       })
     }
     return surfaces

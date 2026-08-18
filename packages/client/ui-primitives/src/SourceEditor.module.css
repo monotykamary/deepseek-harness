@@ -1,0 +1,80 @@
+.root {
+  --dsh-source-editor-gutter: 48px;
+  --dsh-source-editor-line-height: 22px;
+
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--dsw-specific-workbench-canvas);
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-markdown-code-block);
+  line-height: var(--dsh-source-editor-line-height);
+}
+
+.backdrop,
+.input {
+  position: absolute;
+  inset: 0;
+  tab-size: 2;
+}
+
+.backdrop {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.backdropContent {
+  width: max-content;
+  min-width: 100%;
+  padding: 12px 14px 12px 0;
+  box-sizing: border-box;
+}
+
+.line {
+  display: flex;
+  min-width: max-content;
+  min-height: var(--dsh-source-editor-line-height);
+  white-space: pre;
+}
+
+.gutter {
+  flex: none;
+  width: var(--dsh-source-editor-gutter);
+  padding-right: 14px;
+  box-sizing: border-box;
+  color: var(--dsw-alias-label-tertiary);
+  text-align: right;
+  user-select: none;
+}
+
+.content {
+  color: var(--dsw-alias-label-primary);
+}
+
+.input {
+  width: 100%;
+  height: 100%;
+  padding: 12px 14px 12px var(--dsh-source-editor-gutter);
+  box-sizing: border-box;
+  resize: none;
+  overflow: auto;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--dsw-alias-label-primary);
+  font: inherit;
+  line-height: inherit;
+  white-space: pre;
+  -webkit-text-fill-color: transparent;
+}
+
+.input::selection {
+  background: var(--dsw-alias-interactive-bg-active);
+}
+
+.input:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--dsw-alias-border-l2);
+}

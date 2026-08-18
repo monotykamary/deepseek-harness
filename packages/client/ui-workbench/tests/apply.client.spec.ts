@@ -56,12 +56,20 @@ describe('ui-workbench apply', () => {
       'session', instance.actions,
     ) as { hooks: { surfaces: { getSnapshot(): readonly { id: WorkbenchSurfaceId }[] } } }
     b.slots.register({ name: 'workbench.surface', id: INSPECT, label: 'Inspect' } as never, () => null)
+    const disposePresentation = b.ctx.workbench.registerPresentation(INSPECT, {
+      icon: 'inspect', description: 'Inspect a tool call',
+    })
     await Promise.resolve()
-    expect(face.hooks.surfaces.getSnapshot().map(surface => surface.id)).toEqual([INSPECT])
+    expect(face.hooks.surfaces.getSnapshot()).toEqual([{
+      id: INSPECT, label: 'Inspect', icon: 'inspect', description: 'Inspect a tool call',
+    }])
 
+    b.ctx.workbench.show()
+    expect(b.layout.openDetails).toHaveBeenCalledTimes(1)
     b.ctx.workbench.open(INSPECT)
     expect(instance.store.getSnapshot().activeId).toBe(INSPECT)
-    expect(b.layout.openDetails).toHaveBeenCalledTimes(1)
+    expect(b.layout.openDetails).toHaveBeenCalledTimes(2)
+    disposePresentation()
     b.ctx.workbench.close()
     expect(b.layout.closeDetails).toHaveBeenCalledTimes(1)
 

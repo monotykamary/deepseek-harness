@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-产出文件、可点击文件引用与已载入 Changes 功能的属主。Node 侧向系统提示词 registry 注册最终回复指引；浏览器侧把已完成轮次末尾的产出文件行注册到 chat 视图的 `conversation.chat.turnTail` slot，将收尾正文中匹配的行内代码引用转换为链接，并向 [`ui-workbench`](../ui-workbench/README.md) 贡献 Changes。正式提供的组合中只有 Web patch 加载本包；从 cordis.yml 中删去这一项会一并移除提示词、文件行、正文链接、变更投影与 Workbench 标签页。
+产出文件、可点击文件引用与已载入 Changes 功能的属主。Node 侧向系统提示词 registry 注册最终回复指引；浏览器侧把已完成轮次末尾的产出文件行注册到 chat 视图的 `conversation.chat.turnTail` slot，将收尾正文中匹配的行内代码引用转换为链接，并向 [`ui-workbench`](../ui-workbench/README.md) 贡献 Changes 及其图标与启动器说明。正式提供的组合中只有 Web patch 加载本包；从 cordis.yml 中删去这一项会一并移除提示词、文件行、正文链接、变更投影与 Workbench 标签页。
 
 `deliverablesDefinition` 把每个轮次中成功的修改调用折叠进引擎发布的 `DeliverablesTurnData`；`producedForClosing` 结合收尾 Assistant 的 seq 读取这份数据。同一个 Definition 会验证结果时的 diff intent，在没有结果 view 时回退到有效的调用时 diff intent，并通过增量 `deliverables` Conversation target 发布变更组。依据的是修改工具自身附带的 `locations`，而不是收尾正文：无论模型是否记得点名，产出文件都会被列出。修改操作按渲染意图而非工具名识别：diff 卡片，或 `kind` 为 `edit` 的通用卡片（即 `str_replace_editor` 的 insert 操作所呈现的形态）；因此新的修改工具只需声明自身行为即可加入。读取、删除和失败的调用不贡献任何条目；同一路径在一个轮次内按首见顺序只出现一次。Conversation Location 索引负责维护轮次归属关系，因此一个轮次即使先修改文件、随后没有正文内容就结束，也不会溢进下一个轮次的行里。
 

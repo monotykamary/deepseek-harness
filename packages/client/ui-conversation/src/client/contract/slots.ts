@@ -50,7 +50,7 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * seat is declared by whoever occupies this one, so replacing the header
      * takes every action entry down with it.
      */
-    'conversation.session.header': { kind: 'single'; scope: 'session' }
+    'conversation.session.header': { kind: 'single'; scope: 'session'; owner: ConversationSessionHeaderOwnerProps }
     /**
      * One button in the session header's action row — the additive way to put
      * a per-session control beside the title without replacing the header.
@@ -65,8 +65,9 @@ declare module '@monotykamary/dsh-client-ui-slots' {
     /**
      * Right-aligned Session utilities kept outside the title-adjacent action
      * group, so an optional utility cannot reorder session context or lineage.
+     * The header forwards the frame's live details state for panel toggles.
      */
-    'conversation.session.header.utilities': { kind: 'list'; scope: 'session'; owner: ConversationHeaderActionOwnerProps }
+    'conversation.session.header.utilities': { kind: 'list'; scope: 'session'; owner: ConversationHeaderUtilityOwnerProps }
     /**
      * The conversation view ring: one list entry per view tab (chat here;
      * trajectory/waterfall from ui-trajectory), rendered one-at-a-time by
@@ -263,8 +264,20 @@ export interface ConversationSessionOwnerProps {
   wrapActiveBody?: (view: ReactNode) => ReactNode
 }
 
+/** Header owner share forwarded from the resident conversation shell. */
+export interface ConversationSessionHeaderOwnerProps {
+  /** True while the right details panel is requested open, including sheet hosting. */
+  detailsOpen: boolean
+}
+
 /** Header actions derive their state from the standard session/global kit. */
 export interface ConversationHeaderActionOwnerProps {}
+
+/** Right-aligned utility owner share for controls coupled to frame layout state. */
+export interface ConversationHeaderUtilityOwnerProps {
+  /** True while the right details panel is requested open, including sheet hosting. */
+  detailsOpen: boolean
+}
 
 /**
  * The input-region slot currency: dock/left/right entries read

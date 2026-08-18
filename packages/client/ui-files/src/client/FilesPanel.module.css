@@ -251,17 +251,33 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
-.previewScroll {
+.editorSurface {
+  position: relative;
+  isolation: isolate;
+  display: flex;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  padding: 0 12px 12px;
-  overflow: auto;
+  overflow: hidden;
 }
 
-.code {
-  width: 100%;
-  min-width: 0;
+.saveState {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  padding: 3px 8px;
+  border: 1px solid var(--dsw-specific-workbench-divider);
+  border-radius: 6px;
+  background: var(--dsw-specific-workbench-tab-bar);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  pointer-events: none;
+}
+
+.saveState[data-error] {
+  color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-border-l2);
 }
 
 .spinning {

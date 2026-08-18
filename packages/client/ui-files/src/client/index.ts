@@ -1,7 +1,8 @@
 /** Browser plugin registering the Files workbench surface and session-header opener. */
 import type { ClientContext, SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type {
-  WorkspaceDirectoryListing, WorkspaceFileLocator, WorkspaceFilePreview,
+  WorkspaceDirectoryListing, WorkspaceFileLocator, WorkspaceFilePreview, WorkspaceFileVersion,
+  WorkspaceFileWriteResult,
 } from '@monotykamary/dsh-api-remotes/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
@@ -21,10 +22,10 @@ declare module '@monotykamary/dsh-client-ui-slots' {
   }
 }
 
-/** Required services for Remote reads, workbench navigation, slots, and locale. */
+/** Required services for Remote file operations, workbench navigation, slots, and locale. */
 export const inject = ['slots', 'locale', 'workbench', 'remote', 'remote.workspaceFiles']
 
-function remoteFailure(operation: 'list' | 'read', result: { error: { code: string; message: string } }): Error {
+function remoteFailure(operation: 'list' | 'read' | 'write', result: { error: { code: string; message: string } }): Error {
   return new Error(`workspaceFiles.${operation} failed: ${result.error.code}: ${result.error.message}`)
 }
 
@@ -54,7 +55,22 @@ export function apply(ctx: ClientContext): void {
     if (!result.ok) throw remoteFailure('read', result)
     return result.value
   }
+  const write = async (
+    sessionId: SessionId,
+    file: WorkspaceFileLocator,
+    content: string,
+    expectedVersion: WorkspaceFileVersion,
+    signal?: AbortSignal,
+  ): Promise<WorkspaceFileWriteResult> => {
+    const result = await ctx.remote.workspaceFiles.write(sessionId, file, content, expectedVersion, signal)
+    if (!result.ok) throw remoteFailure('write', result)
+    return result.value
+  }
 
+  ctx.effect(() => ctx.workbench.registerPresentation(FILES_SURFACE_ID, {
+    icon: 'files',
+    description: () => t('launcher.description'),
+  }), 'ui-files: Files workbench presentation')
   ctx.slots.inject('workbench.surface', () => ctx.slots.register({
     name: 'workbench.surface',
     id: FILES_SURFACE_ID,
@@ -65,6 +81,7 @@ export function apply(ctx: ClientContext): void {
     inject: (sessionId: SessionId): FilesInjected => ({
       list: (directory, signal) => list(sessionId, directory, signal),
       read: (file, signal) => read(sessionId, file, signal),
+      write: (file, content, version, signal) => write(sessionId, file, content, version, signal),
     }),
   }, FilesPanel))
 

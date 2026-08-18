@@ -59,7 +59,7 @@ function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrum
  * @returns the hidden blank-session header or visible title and tabs.
  */
 export function ConversationSessionHeader({
-  sessionId, useSession, useSessions, useStore, actions,
+  sessionId, useSession, useSessions, useStore, actions, detailsOpen,
   renderSlot, views, open, t,
 }: ConversationSessionHeaderProps) {
   useSyncExternalStore(views.subscribe, views.version)
@@ -104,7 +104,7 @@ export function ConversationSessionHeader({
               </div>
             </div>
             <div className={css.headerUtilities}>
-              {renderSlot('conversation.session.header.utilities', {})}
+              {renderSlot('conversation.session.header.utilities', { detailsOpen })}
             </div>
           </div>
           {tabs.length > 1 && (

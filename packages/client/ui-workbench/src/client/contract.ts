@@ -9,12 +9,27 @@ import type { NS } from './locales.ts'
 /** Opaque id of one registered workbench surface. */
 export type WorkbenchSurfaceId = Branded<'WorkbenchSurfaceId'>
 
+/** Icon vocabulary rendered by the workbench shell for registered surfaces. */
+export type WorkbenchSurfaceIcon = 'inspect' | 'changes' | 'files' | 'generic'
+
+/** Plugin-owned presentation registered beside one workbench surface. */
+export interface WorkbenchSurfacePresentation {
+  /** Stable shell-rendered icon kind. */
+  readonly icon: WorkbenchSurfaceIcon
+  /** Locale-aware launcher description. */
+  readonly description: string | (() => string)
+}
+
 /** One surface projected from the workbench slot ledger. */
 export interface WorkbenchSurface {
   /** Stable slot registration id. */
   readonly id: WorkbenchSurfaceId
   /** Locale-resolved tab and launcher label. */
   readonly label: string
+  /** Shell-rendered icon kind, or `generic` without plugin presentation metadata. */
+  readonly icon: WorkbenchSurfaceIcon
+  /** Locale-resolved launcher description; empty without plugin presentation metadata. */
+  readonly description: string
 }
 
 /** Registration-private live surface directory. */

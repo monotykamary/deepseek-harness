@@ -21,7 +21,7 @@ dsh web GUI 的浏览器侧：shell 启动、浏览器与宿主通信、共享 U
 | [`ui-attachment/`](ui-attachment/README.md) | 提供附件展示原子组件：草稿图片栏、消息画廊与灯箱。 |
 | [`ui-layout/`](ui-layout/README.md) | 排列应用的主要区域。 |
 | [`ui-workbench/`](ui-workbench/README.md) | 承载由插件注册的标签式右侧面板视图。 |
-| [`ui-files/`](ui-files/README.md) | 在 Workbench 中浏览并预览 Session 授权的工作区文件。 |
+| [`ui-files/`](ui-files/README.md) | 在 Workbench 中浏览并编辑 Session 授权的工作区文件。 |
 | [`ui-sidebar/`](ui-sidebar/README.md) | 展示工作区与会话导航。 |
 | [`ui-workspace/`](ui-workspace/README.md) | 提供工作区选择与创建界面。 |
 | [`ui-conversation/`](ui-conversation/README.md) | 展示当前对话及其输入界面。 |

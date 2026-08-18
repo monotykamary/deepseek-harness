@@ -11,7 +11,7 @@ import css from './FilesPanel.module.css'
 let requestSerial = 0
 
 /** Session-scoped Files workbench surface over cancellable Remote reads. */
-export function FilesPanel({ useStore, actions, list, read, t }: FilesPanelProps) {
+export function FilesPanel({ useStore, actions, list, read, write, t }: FilesPanelProps) {
   const directories = useStore(state => state.directories)
   const expandedKeys = useStore(state => state.expandedKeys)
   const selected = useStore(state => state.selected)
@@ -141,6 +141,8 @@ export function FilesPanel({ useStore, actions, list, read, t }: FilesPanelProps
           onBack={actions.showTree}
           onRefresh={() => { stopRequests(); loadPreview(selected) }}
           onRetry={() => { loadPreview(selected) }}
+          onWrite={write}
+          onCommit={actions.commitPreview}
         />
       )}
     </div>

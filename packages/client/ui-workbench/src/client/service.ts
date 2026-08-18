@@ -1,6 +1,6 @@
 import type { BoundActions } from '@monotykamary/dsh-client-ui-slots'
 import type { ILayout } from '@monotykamary/dsh-client-ui-layout/client'
-import type { WorkbenchSurfaceId } from './contract.ts'
+import type { WorkbenchSurfaceId, WorkbenchSurfacePresentation } from './contract.ts'
 import type { createWorkbenchStore } from './store.ts'
 import type { WorkbenchSurfaceDirectory } from './surface-directory.ts'
 
@@ -9,6 +9,15 @@ type WorkbenchActions = BoundActions<ReturnType<typeof createWorkbenchStore>>
 
 /** Cross-plugin workbench navigation face. */
 export interface IWorkbench {
+  /** Reveal the Details region without choosing a surface. */
+  show(): void
+  /**
+   * Register one surface's tab icon and launcher copy.
+   * @param id - stable surface id shared with its slot registration.
+   * @param presentation - shell-owned icon kind and locale-aware description.
+   * @returns disposer that retracts the presentation.
+   */
+  registerPresentation(id: WorkbenchSurfaceId, presentation: WorkbenchSurfacePresentation): () => void
   /**
    * Open and activate one registered surface, then reveal the Details region.
    * @param id - registered workbench surface id.
@@ -37,6 +46,21 @@ export class WorkbenchController implements IWorkbench {
    */
   attach(actions: WorkbenchActions): void {
     this.actions = actions
+  }
+
+  /** Reveal the Details region without choosing a surface. */
+  show(): void {
+    this.layout.openDetails()
+  }
+
+  /**
+   * Register one surface's tab icon and launcher copy.
+   * @param id - stable surface id shared with its slot registration.
+   * @param presentation - shell-owned icon kind and locale-aware description.
+   * @returns disposer that retracts the presentation.
+   */
+  registerPresentation(id: WorkbenchSurfaceId, presentation: WorkbenchSurfacePresentation): () => void {
+    return this.surfaces.registerPresentation(id, presentation)
   }
 
   /**

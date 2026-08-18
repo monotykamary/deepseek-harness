@@ -94,7 +94,7 @@
     - id: plugin-inventory
       name: '@monotykamary/dsh-host-plugin-inventory'
 
-    # Session-authorized file tree and bounded previews over each Agent's selected fs provider.
+    # Session-authorized file tree, bounded reads, and guarded edits over each Agent's selected fs provider.
     - id: workspace-files
       name: '@monotykamary/dsh-host-workspace-files'
 

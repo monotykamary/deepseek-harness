@@ -40,6 +40,7 @@ type FilesActions = {
   rejectDirectory: (draft: FilesState, key: string, requestId: number) => void
   beginPreview: (draft: FilesState, file: WorkspaceFileLocator, requestId: number) => void
   resolvePreview: (draft: FilesState, requestId: number, value: WorkspaceFilePreview) => void
+  commitPreview: (draft: FilesState, value: WorkspaceFilePreview) => void
   rejectPreview: (draft: FilesState, requestId: number) => void
   cancelPending: (draft: FilesState) => void
 }
@@ -105,6 +106,11 @@ export function createFilesStore(): EngineStoreHandle<FilesState, FilesActions> 
       },
       resolvePreview: (draft, requestId: number, value: WorkspaceFilePreview) => {
         if (draft.preview?.requestId !== requestId) return
+        draft.preview.phase = 'ready'
+        draft.preview.value = value
+      },
+      commitPreview: (draft, value: WorkspaceFilePreview) => {
+        if (draft.preview === null || locatorKey(draft.preview.file) !== locatorKey(value.file)) return
         draft.preview.phase = 'ready'
         draft.preview.value = value
       },

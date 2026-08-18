@@ -3,6 +3,11 @@
  * @module @monotykamary/dsh-host-workspace-files/types
  */
 
+import type { Branded } from '@monotykamary/dsh-brand'
+
+/** Opaque freshness token returned with one browser-visible workspace file. */
+export type WorkspaceFileVersion = Branded<'WorkspaceFileVersion'>
+
 /** Provider-neutral path inside one Session workspace. */
 export interface WorkspaceFileLocator {
   /** Exact child names traversed from the Session workspace root. */
@@ -45,6 +50,8 @@ export interface WorkspaceTextFilePreview {
   readonly content: string
   /** Exact UTF-8 byte length of `content`. */
   readonly byteLength: number
+  /** Provider freshness token required by the next replacement write. */
+  readonly version: WorkspaceFileVersion
 }
 
 /** Expected file kind or size that cannot enter the browser preview. */
@@ -64,3 +71,30 @@ export interface WorkspaceUnavailableFilePreview {
 
 /** Complete result of reading one workspace file for browser presentation. */
 export type WorkspaceFilePreview = WorkspaceTextFilePreview | WorkspaceUnavailableFilePreview
+
+/** Version-guarded complete-file replacement accepted by the provider. */
+export interface WorkspaceSavedFile {
+  readonly kind: 'saved'
+  /** File that was replaced. */
+  readonly file: WorkspaceFileLocator
+  /** Provider-normalized complete UTF-8 content after the write. */
+  readonly content: string
+  /** Exact UTF-8 byte length of `content`. */
+  readonly byteLength: number
+  /** Freshness token required by the next replacement write. */
+  readonly version: WorkspaceFileVersion
+}
+
+/** Expected replacement refusal that the editor can recover from. */
+export interface WorkspaceFileWriteRefusal {
+  readonly kind: 'conflict' | 'too-large' | 'not-file'
+  /** File whose replacement was refused. */
+  readonly file: WorkspaceFileLocator
+  /** Configured inclusive write byte cap. */
+  readonly maxBytes: number
+  /** Submitted UTF-8 byte length for `too-large`. */
+  readonly byteLength?: number
+}
+
+/** Complete result of one version-guarded browser file replacement. */
+export type WorkspaceFileWriteResult = WorkspaceSavedFile | WorkspaceFileWriteRefusal

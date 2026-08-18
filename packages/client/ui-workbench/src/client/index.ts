@@ -11,7 +11,9 @@ import { en, NS, zh, type WorkbenchKey } from './locales.ts'
 
 export type { IWorkbench } from './service.ts'
 export type { WorkbenchKey } from './locales.ts'
-export type { WorkbenchSurface, WorkbenchSurfaceId } from './contract.ts'
+export type {
+  WorkbenchSurface, WorkbenchSurfaceIcon, WorkbenchSurfaceId, WorkbenchSurfacePresentation,
+} from './contract.ts'
 
 declare module '@monotykamary/cordis' {
   interface Context {

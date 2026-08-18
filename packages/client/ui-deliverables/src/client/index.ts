@@ -58,6 +58,10 @@ export function apply(ctx: ClientContext): void {
       }),
     }, ProducedFiles),
   )
+  ctx.effect(() => ctx.workbench.registerPresentation(CHANGES_SURFACE_ID, {
+    icon: 'changes',
+    description: () => t('changes.description'),
+  }), 'ui-deliverables: Changes workbench presentation')
   ctx.slots.inject('workbench.surface', () => ctx.slots.register({
     name: 'workbench.surface',
     id: CHANGES_SURFACE_ID,

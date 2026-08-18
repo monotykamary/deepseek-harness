@@ -93,7 +93,7 @@ function snapshotWith(
 /** Test-owned AppFrame role: declares and renders the resident conversation area. */
 type AppRootProps = PropsRenderSlots<'conversation' | 'workbench.surface'>
 function AppRoot({ renderSlot }: AppRootProps) {
-  return <>{renderSlot('conversation', {})}</>
+  return <>{renderSlot('conversation', { detailsOpen: false })}</>
 }
 
 /**
@@ -116,7 +116,7 @@ async function bench(snapshot: ConversationSnapshot) {
     phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined,
   })
   const scoped = { send: vi.fn(async () => {}), cancel: vi.fn(async () => {}) }
-  const workbench = { open: vi.fn(), close: vi.fn() }
+  const workbench = { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) }
   // Provide-channel contributions land in this bundle the way the runtime
   // materializes them; the renderer host serves it through provideInfo.
   const provided: { hooks: Record<string, unknown>; props: Record<string, unknown> } = { hooks: {}, props: {} }

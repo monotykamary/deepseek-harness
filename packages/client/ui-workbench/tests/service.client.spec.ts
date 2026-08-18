@@ -20,15 +20,31 @@ describe('WorkbenchController', () => {
     const calls: string[] = []
     const { panels, openDetails, closeDetails } = layout()
     openDetails.mockImplementation(() => { calls.push('layout') })
-    const surfaces = { has: (surfaceId: WorkbenchSurfaceId) => surfaceId === id('inspect') }
+    const disposePresentation = vi.fn()
+    const registerPresentation = vi.fn(() => disposePresentation)
+    const surfaces = {
+      has: (surfaceId: WorkbenchSurfaceId) => surfaceId === id('inspect'),
+      registerPresentation,
+    }
     const controller = new WorkbenchController(panels, surfaces as never)
     controller.attach({
       openSurface: (surfaceId) => { calls.push(`surface:${String(surfaceId)}`) },
       closeSurface: vi.fn(), reconcile: vi.fn(),
     })
 
+    controller.show()
+    expect(openDetails).toHaveBeenCalledTimes(1)
+    const dispose = controller.registerPresentation(id('inspect'), {
+      icon: 'inspect', description: 'Inspect a tool call',
+    })
+    expect(registerPresentation).toHaveBeenCalledWith(id('inspect'), {
+      icon: 'inspect', description: 'Inspect a tool call',
+    })
+    dispose()
+    expect(disposePresentation).toHaveBeenCalledOnce()
+
     controller.open(id('inspect'))
-    expect(calls).toEqual(['surface:inspect', 'layout'])
+    expect(calls).toEqual(['layout', 'surface:inspect', 'layout'])
     controller.close()
     expect(closeDetails).toHaveBeenCalledTimes(1)
   })

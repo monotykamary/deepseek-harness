@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type {
-  WorkspaceDirectoryListing, WorkspaceFileLocator, WorkspaceFilePreview,
+  WorkspaceDirectoryListing, WorkspaceFileLocator, WorkspaceFilePreview, WorkspaceFileVersion,
 } from '@monotykamary/dsh-api-remotes/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { FilesPanel } from '../src/client/FilesPanel.tsx'
@@ -37,16 +37,22 @@ function text(file: WorkspaceFileLocator, content: string): WorkspaceFilePreview
   return {
     kind: 'text', file, name: file.segments.at(-1) ?? '', content,
     byteLength: new TextEncoder().encode(content).byteLength,
+    version: 'fixture-version' as WorkspaceFileVersion,
   }
 }
 
-function mount(list: FilesInjected['list'], read: FilesInjected['read']) {
+function mount(
+  list: FilesInjected['list'],
+  read: FilesInjected['read'],
+  write: FilesInjected['write'] = async () => { throw new Error('unexpected write') },
+) {
   const instance = createFilesStore().create('s')
   const props = {
     useStore: hookOf(instance),
     actions: instance.actions,
     list,
     read,
+    write,
     t: makeTranslate(en),
   } as FilesPanelProps
   const view = render(<FilesPanel {...props} />)
@@ -91,7 +97,7 @@ describe('FilesPanel', () => {
 
     fireEvent.click(screen.getByRole('treeitem', { name: 'index.ts' }))
     await waitFor(() => { expect(view.container.textContent).toContain('export const value = 1') })
-    expect(screen.getByText('typescript')).toBeTruthy()
+    expect(screen.getByRole('textbox', { name: 'Edit src/index.ts' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: en['preview.refresh'] }))
     await waitFor(() => {
       expect(read.mock.calls.filter(call => call[0].segments.join('/') === 'src/index.ts')).toHaveLength(2)

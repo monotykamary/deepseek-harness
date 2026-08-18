@@ -13,6 +13,7 @@ export type { TypertClientRemote as ClientRemote } from '@monotykamary/dsh-typer
 export type { PluginInventorySnapshot } from '@monotykamary/dsh-host-plugin-inventory/types'
 export type {
   WorkspaceDirectoryListing, WorkspaceFileEntry, WorkspaceFileKind, WorkspaceFileLocator, WorkspaceFilePreview,
+  WorkspaceFileVersion, WorkspaceFileWriteRefusal, WorkspaceFileWriteResult, WorkspaceSavedFile,
   WorkspaceTextFilePreview, WorkspaceUnavailableFilePreview,
 } from '@monotykamary/dsh-host-workspace-files/types'
 export type {} from '@monotykamary/dsh-commands/remote'

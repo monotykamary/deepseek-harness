@@ -42,6 +42,8 @@ export type {
 } from './SearchBlock.tsx'
 export { WebBlock } from './WebBlock.tsx'
 export type { WebBlockProps, WebSearchBlockProps, WebFetchBlockProps, WebSourceView } from './WebBlock.tsx'
+export { SourceEditor } from './SourceEditor.tsx'
+export type { SourceEditorProps } from './SourceEditor.tsx'
 export { CodeBlock } from './markdown/CodeBlock.tsx'
 export type { CodeBlockProps } from './markdown/CodeBlock.tsx'
 export { JsonBlock } from './markdown/JsonBlock.tsx'

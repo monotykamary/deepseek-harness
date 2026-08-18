@@ -144,15 +144,17 @@ describe('AppFrame', () => {
     expect(tracks(frame)).toEqual([280, 0])
   })
 
-  it('renders the session pair with empty owner shares (sessionId is framework-standard)', () => {
-    const { slotCalls, getByTestId } = mountFrame()
+  it('renders the session pair with live details state and host controls', () => {
+    const { instance, slotCalls, getByTestId } = mountFrame()
     expect(getByTestId('center-content')).toBeTruthy()
     expect(getByTestId('details-content')).toBeTruthy()
     const keys = slotCalls.map(c => c.key)
     expect(keys).toContain('conversation')
     expect(keys).toContain('details')
     expect(keys).not.toContain('conversation.empty')
-    expect(slotCalls.find(c => c.key === 'conversation')!.props).toEqual({})
+    expect(slotCalls.find(c => c.key === 'conversation')!.props).toEqual({ detailsOpen: false })
+    act(() => { instance.actions.openDetails() })
+    expect(slotCalls.filter(c => c.key === 'conversation').at(-1)?.props).toEqual({ detailsOpen: true })
     const detailsOwner = slotCalls.find(c => c.key === 'details')?.props as {
       mode?: unknown
       closePanel?: unknown

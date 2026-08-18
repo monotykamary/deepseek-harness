@@ -15,6 +15,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../util/brand"
+    },
+    {
       "path": "../../fs/fs"
     },
     {

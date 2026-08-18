@@ -25,6 +25,7 @@ import type {
   ConversationSessionInjected, DetailsSurfaceInjected,
 } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { createChatStore } from '../src/client/stores.ts'
+import { WorkbenchToggle } from '../src/client/skeleton/WorkbenchToggle.tsx'
 
 // The service reads its initial locale from the browser; these specs assert
 // the shipped Chinese copy, so they state the browser they assume.
@@ -57,7 +58,13 @@ async function bench() {
     summary: { title: 'R', displayTitle: 'R', cwd: '/proj' },
     session: sessionFake,
   })
-  const workbenchFake = { open: vi.fn(), close: vi.fn() }
+  const workbenchFake = {
+    open: vi.fn(), close: vi.fn(), show: vi.fn(),
+    registerPresentation: vi.fn((
+      _id: string,
+      _presentation: { icon: string; description: string | (() => string) },
+    ) => () => {}),
+  }
   runtime.provide('workbench', workbenchFake)
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
@@ -136,6 +143,21 @@ describe('conversation slot inject API', () => {
     // to the runtime watch path, not the inject factory.
     expect(b.sessionFake.open).not.toHaveBeenCalled()
     expect(injected.views.list().map(v => v.id)).toEqual(['chat'])
+    expect(b.workbenchFake.registerPresentation).toHaveBeenCalledOnce()
+    const [presentationId, presentation] = b.workbenchFake.registerPresentation.mock.calls[0]!
+    expect(presentationId).toBe('inspect')
+    expect(presentation.icon).toBe('inspect')
+    expect(presentation.description).toBeTypeOf('function')
+    const utility = b.slots.entries('conversation.session.header.utilities')[0]!
+    expect(utility.component).toBe(WorkbenchToggle)
+    expect(utility.options).toMatchObject({ id: 'workbench-toggle', order: 100 })
+    const utilityApi = (utility.inject as () => {
+      setWorkbenchOpen: (open: boolean) => void
+    })()
+    utilityApi.setWorkbenchOpen(true)
+    expect(b.workbenchFake.show).toHaveBeenCalledOnce()
+    utilityApi.setWorkbenchOpen(false)
+    expect(b.workbenchFake.close).toHaveBeenCalledOnce()
 
     const chatView = b.chatViewApi(ROOT)
     chatView.injected.loadOlder()

@@ -97,6 +97,8 @@ function mount(
     summaryOrigin?: 'subagent'
     /** A composer block another plugin raised for this session. */
     composerBlock?: { reason: string }
+    /** Whether the frame currently requests the right Details panel open. */
+    detailsOpen?: boolean
     /** Mutable view ledger used by registration-order regressions. */
     viewTabs?: ViewTab[]
   } = {},
@@ -137,9 +139,14 @@ function mount(
   }
   /** Owner share handed to the two composer tool-row seats, per render. */
   const seatOwners: { key: string; owner: unknown }[] = []
+  const headerOwners: { key: string; owner: unknown }[] = []
   let pickerOwner: unknown
   const renderSlot = ((key: string, owner: object, opts?: { only?: string }) => {
     slotCalls.push(key)
+    if (key === 'conversation.session.header'
+      || key === 'conversation.session.header.utilities') {
+      headerOwners.push({ key, owner })
+    }
     if (key === 'conversation.input.model' || key === 'conversation.input.plan') {
       seatOwners.push({ key, owner })
     }
@@ -160,6 +167,7 @@ function mount(
           renderSlot={renderSlot as never}
           views={views}
           open={open}
+          detailsOpen={(owner as { detailsOpen: boolean }).detailsOpen}
           t={t}
         />
       )
@@ -247,11 +255,12 @@ function mount(
     renderSlot,
     renderSlotChain,
     selectWorkspace: retargetWorkspace,
+    detailsOpen: options.detailsOpen ?? false,
     t,
   }
   const view = render(<ConversationRoot {...props} />)
   return {
-    view, chat, sink, retargetWorkspace, session, slotCalls, seatOwners, open,
+    view, chat, sink, retargetWorkspace, session, slotCalls, seatOwners, headerOwners, open,
     pickerOwner: () => pickerOwner,
     rerender: () => { view.rerender(<ConversationRoot {...props} />) },
   }
@@ -337,6 +346,9 @@ describe('ConversationRoot resident composer', () => {
     expect(seat?.contains(textarea)).toBe(true)
     expect(b.slotCalls).toContain('conversation.session.header.actions')
     expect(b.slotCalls).toContain('conversation.session.header.utilities')
+    expect(b.headerOwners).toContainEqual({
+      key: 'conversation.session.header.utilities', owner: { detailsOpen: false },
+    })
   })
 
   it('sticky composer seat wraps the whole overlay chain, not only the fallback stack', () => {

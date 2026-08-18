@@ -34,6 +34,7 @@ import { todoDockEntry } from './skeleton/TodoPanel.tsx'
 import { queueDockEntry } from './queue/QueueDock.tsx'
 import { ConversationRoot } from './skeleton/ConversationRoot.tsx'
 import { ConversationSession, ConversationSessionHeader } from './skeleton/ConversationSession.tsx'
+import { WorkbenchToggle } from './skeleton/WorkbenchToggle.tsx'
 import { DetailsPanel } from './skeleton/DetailsPanel.tsx'
 import { en, NS, zh, type ConversationKey } from './locales.ts'
 import { registerConversationNodes } from './conversation-nodes/register.ts'
@@ -270,6 +271,19 @@ export function apply(ctx: Context): void {
     }),
   }, ConversationSessionHeader)
 
+  slots.inject('conversation.session.header.utilities', () => slots.register({
+    name: 'conversation.session.header.utilities',
+    id: 'workbench-toggle',
+    order: 100,
+    locale: NS,
+    inject: () => ({
+      setWorkbenchOpen: (open: boolean) => {
+        if (open) ctx.workbench.show()
+        else ctx.workbench.close()
+      },
+    }),
+  }, WorkbenchToggle))
+
   // The default composer body: its own single slot inside the composer
   // chain's fallback. Public machine surface arrives via the
   // provide channel above; the keyboard command face and the stop/retry
@@ -437,6 +451,10 @@ export function apply(ctx: Context): void {
   // registration path into the input dock declared above.
   ctx.plugin(queueDockEntry)
 
+  ctx.effect(() => ctx.workbench.registerPresentation(INSPECT_SURFACE_ID, {
+    icon: 'inspect',
+    description: () => t('workbench.inspectDescription'),
+  }), 'ui-conversation: Inspect workbench presentation')
   ctx.slots.inject('workbench.surface', () => ctx.slots.register({
     name: 'workbench.surface',
     id: INSPECT_SURFACE_ID,

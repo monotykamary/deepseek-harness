@@ -28,7 +28,7 @@ async function bench() {
   await runtime.sessions.add({ id: ROOT, summary: { title: 'R', displayTitle: 'R' } }, { current: false })
   await runtime.sessions.add(
     { id: CHILD, summary: { title: 'C', displayTitle: 'C', parentId: ROOT } }, { current: false })
-  runtime.provide('workbench', { open: vi.fn(), close: vi.fn() })
+  runtime.provide('workbench', { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
   runtime.slots.installLocale(locale)

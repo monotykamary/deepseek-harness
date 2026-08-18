@@ -1,11 +1,69 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import {
-  IconCloseOutline16, IconPlusOutline16, Menu, Sheet, Tooltip,
+  IconCloseOutline16, IconCodeOutline16, IconFolderOpenOutline16, IconInspectOutline12,
+  IconListPenOutline16, IconPlusOutline16, Menu, Sheet, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MenuItem } from '@monotykamary/dsh-client-ui-primitives'
-import type { WorkbenchProps, WorkbenchSurface, WorkbenchSurfaceId } from './contract.ts'
+import type {
+  WorkbenchProps, WorkbenchSurface, WorkbenchSurfaceIcon, WorkbenchSurfaceId,
+} from './contract.ts'
 import css from './Workbench.module.css'
+
+function assertNever(value: never): never {
+  throw new Error(`unknown workbench surface icon: ${String(value)}`)
+}
+
+function SurfaceIcon({ icon }: { readonly icon: WorkbenchSurfaceIcon }) {
+  switch (icon) {
+    case 'inspect': return <IconInspectOutline12 size={12} />
+    case 'changes': return <IconListPenOutline16 size={12} />
+    case 'files': return <IconFolderOpenOutline16 size={12} />
+    case 'generic': return <IconCodeOutline16 size={12} />
+    default: return assertNever(icon)
+  }
+}
+
+interface EmptyLauncherProps {
+  readonly surfaces: readonly WorkbenchSurface[]
+  readonly onOpen: (surface: WorkbenchSurface) => void
+  readonly t: WorkbenchProps['t']
+}
+
+function EmptyLauncher({ surfaces, onOpen, t }: EmptyLauncherProps) {
+  return (
+    <div className={css.emptyLauncher} aria-label={t('empty.title')}>
+      <div className={css.emptyContent}>
+        <div className={css.emptyHeading}>
+          <h2>{t('empty.title')}</h2>
+          <p>{t('empty.description')}</p>
+        </div>
+        {surfaces.length === 0 ? (
+          <div className={css.emptyUnavailable}>{t('empty.unavailable')}</div>
+        ) : (
+          <div className={css.launcherGrid}>
+            {surfaces.map(surface => (
+              <button
+                key={surface.id}
+                type="button"
+                className={css.launcherCard}
+                data-workbench-launcher-card={surface.id}
+                aria-label={surface.label}
+                onClick={() => { onOpen(surface) }}
+              >
+                <span className={css.launcherTitle}>
+                  <SurfaceIcon icon={surface.icon} />
+                  <span>{surface.label}</span>
+                </span>
+                <span className={css.launcherDescription}>{surface.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 /**
  * Render the T3-adapted tabbed host for independently registered Details surfaces.
@@ -39,10 +97,6 @@ export function Workbench({
     actions.reconcile(availableIds)
   }, [actions, availableIds])
 
-  useEffect(() => {
-    if (openIds.length === 0) closePanel()
-  }, [closePanel, openIds.length])
-
   const activateAndFocus = (surface: WorkbenchSurface): void => {
     actions.openSurface(surface.id)
     requestAnimationFrame(() => { tabRefs.current.get(surface.id)?.focus() })
@@ -70,7 +124,25 @@ export function Workbench({
           {openSurfaces.map((surface, index) => {
             const selected = surface.id === active?.id
             return (
-              <div key={surface.id} className={css.tabCell} data-active={selected || undefined}>
+              <div
+                key={surface.id}
+                className={css.tabCell}
+                data-active={selected || undefined}
+                data-workbench-tab={surface.id}
+              >
+                <button
+                  type="button"
+                  className={css.tabClose}
+                  aria-label={t('closeSurface', { name: surface.label })}
+                  onClick={() => { actions.closeSurface(surface.id) }}
+                >
+                  <span className={css.tabIcon} data-workbench-tab-icon="">
+                    <SurfaceIcon icon={surface.icon} />
+                  </span>
+                  <span className={css.tabCloseGlyph} data-workbench-tab-close-glyph="">
+                    <IconCloseOutline16 size={12} />
+                  </span>
+                </button>
                 <button
                   ref={(node) => {
                     if (node === null) tabRefs.current.delete(surface.id)
@@ -88,21 +160,10 @@ export function Workbench({
                 >
                   {surface.label}
                 </button>
-                <button
-                  type="button"
-                  className={css.tabClose}
-                  aria-label={t('closeSurface', { name: surface.label })}
-                  onClick={() => {
-                    actions.closeSurface(surface.id)
-                    if (openSurfaces.length === 1) closePanel()
-                  }}
-                >
-                  <IconCloseOutline16 size={12} />
-                </button>
               </div>
             )
           })}
-          {addable.length > 0 && (
+          {openSurfaces.length > 0 && addable.length > 0 && (
             <Menu
               open={launcherOpen}
               items={launcherItems}
@@ -143,7 +204,7 @@ export function Workbench({
         aria-labelledby={active === undefined ? undefined : `workbench-tab-${encodeURIComponent(active.id)}`}
       >
         {active === undefined
-          ? <div className={css.empty}>{t('empty')}</div>
+          ? <EmptyLauncher surfaces={surfaces} onOpen={activateAndFocus} t={t} />
           : renderSlot('workbench.surface', {}, { only: active.id })}
       </div>
     </section>

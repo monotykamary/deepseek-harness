@@ -2,7 +2,7 @@
 
 import type { Context } from '@monotykamary/cordis'
 import type { Agent } from '@monotykamary/dsh-agent'
-import type { FileSystem, FsDirEntry, FsTarget } from '@monotykamary/dsh-fs'
+import type { FileSystem, FsDirEntry, FsTarget, FsVersion } from '@monotykamary/dsh-fs'
 import { FsError } from '@monotykamary/dsh-fs'
 import { Remote, TypertRemoteService } from '@monotykamary/dsh-typert-protocol'
 import z from '@monotykamary/schemastery'
@@ -13,6 +13,9 @@ import type {
   WorkspaceFileEntry,
   WorkspaceFileLocator,
   WorkspaceFilePreview,
+  WorkspaceFileVersion,
+  WorkspaceFileWriteRefusal,
+  WorkspaceFileWriteResult,
   WorkspaceUnavailableFilePreview,
 } from './types.ts'
 
@@ -20,6 +23,7 @@ export type * from './types.ts'
 
 const DEFAULT_MAX_DIRECTORY_ENTRIES = 2_000
 const DEFAULT_MAX_PREVIEW_BYTES = 1024 * 1024
+const DEFAULT_MAX_WRITE_BYTES = 1024 * 1024
 const DEFAULT_MAX_DEPTH = 64
 
 /** Deployment limits for browser workspace reads. */
@@ -28,6 +32,8 @@ export interface Config {
   maxDirectoryEntries?: number
   /** Inclusive UTF-8 byte cap for one complete file preview. Defaults to 1 MiB. */
   maxPreviewBytes?: number
+  /** Inclusive UTF-8 byte cap for one complete browser replacement. Defaults to 1 MiB. */
+  maxWriteBytes?: number
   /** Maximum locator segments traversed from the Session root. Defaults to 64. */
   maxDepth?: number
 }
@@ -40,9 +46,35 @@ function requirePositiveInteger(name: keyof ResolvedConfig, value: number): void
   }
 }
 
+function browserVersion(version: FsVersion): WorkspaceFileVersion {
+  return version as unknown as WorkspaceFileVersion
+}
+
+function providerVersion(version: WorkspaceFileVersion): FsVersion {
+  return version as unknown as FsVersion
+}
+
+function utf8Length(content: string): number {
+  return new TextEncoder().encode(content).byteLength
+}
+
 function locatorPath(locator: WorkspaceFileLocator): string {
   /* v8 ignore next -- every error using this label requires at least one segment. */
   return locator.segments.length === 0 ? '.' : locator.segments.join('/')
+}
+
+function writeRefusal(
+  file: WorkspaceFileLocator,
+  maxBytes: number,
+  kind: WorkspaceFileWriteRefusal['kind'],
+  byteLength?: number,
+): WorkspaceFileWriteRefusal {
+  return {
+    kind,
+    file: { segments: [...file.segments] },
+    maxBytes,
+    ...(byteLength === undefined ? {} : { byteLength }),
+  }
 }
 
 function unavailable(
@@ -71,6 +103,7 @@ export class WorkspaceFilesGateway extends TypertRemoteService {
   static Config: z<Config> = z.object({
     maxDirectoryEntries: z.number().default(DEFAULT_MAX_DIRECTORY_ENTRIES),
     maxPreviewBytes: z.number().default(DEFAULT_MAX_PREVIEW_BYTES),
+    maxWriteBytes: z.number().default(DEFAULT_MAX_WRITE_BYTES),
     maxDepth: z.number().default(DEFAULT_MAX_DEPTH),
   })
 
@@ -82,9 +115,15 @@ export class WorkspaceFilesGateway extends TypertRemoteService {
    */
   constructor(ctx: Context, config: Config) {
     super(ctx, 'workspaceFiles')
-    this.config = config as ResolvedConfig
+    this.config = {
+      maxDirectoryEntries: config.maxDirectoryEntries ?? DEFAULT_MAX_DIRECTORY_ENTRIES,
+      maxPreviewBytes: config.maxPreviewBytes ?? DEFAULT_MAX_PREVIEW_BYTES,
+      maxWriteBytes: config.maxWriteBytes ?? DEFAULT_MAX_WRITE_BYTES,
+      maxDepth: config.maxDepth ?? DEFAULT_MAX_DEPTH,
+    }
     requirePositiveInteger('maxDirectoryEntries', this.config.maxDirectoryEntries)
     requirePositiveInteger('maxPreviewBytes', this.config.maxPreviewBytes)
+    requirePositiveInteger('maxWriteBytes', this.config.maxWriteBytes)
     requirePositiveInteger('maxDepth', this.config.maxDepth)
   }
 
@@ -153,6 +192,7 @@ export class WorkspaceFilesGateway extends TypertRemoteService {
         name: file.segments.at(-1) ?? '',
         content: chunks.join(''),
         byteLength,
+        version: browserVersion(info.version),
       }
     } catch (error: unknown) {
       if (error instanceof FsError && error.code === 'FS_NOT_TEXT') {
@@ -160,6 +200,58 @@ export class WorkspaceFilesGateway extends TypertRemoteService {
       }
       if (error instanceof FsError && error.code === 'FS_NOT_REGULAR_FILE') {
         return unavailable(file, this.config.maxPreviewBytes, 'not-file')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Replace one browser-read text file only while its provider version remains current.
+   * @param agent - Agent selected by the Remote Session identity lookup.
+   * @param file - provider-neutral path from the Session workspace root.
+   * @param content - complete UTF-8 replacement text.
+   * @param expectedVersion - opaque version returned by the latest successful read or save.
+   * @param signal - aborts traversal or the write before atomic publication.
+   * @returns normalized saved content or an expected conflict, size, or file-kind refusal.
+   */
+  @Remote('write')
+  async write(
+    agent: Agent,
+    file: WorkspaceFileLocator,
+    content: string,
+    expectedVersion: WorkspaceFileVersion,
+    signal: AbortSignal,
+  ): Promise<WorkspaceFileWriteResult> {
+    const byteLength = utf8Length(content)
+    if (byteLength > this.config.maxWriteBytes) {
+      return writeRefusal(file, this.config.maxWriteBytes, 'too-large', byteLength)
+    }
+    const root = await this.workspaceRoot(agent, signal)
+    const target = await this.locate(root, file, signal)
+    const info = await root.fs.stat(target, signal)
+    if (info?.type !== 'file') {
+      return writeRefusal(file, this.config.maxWriteBytes, 'not-file')
+    }
+    try {
+      const outcome = await root.fs.writeText(
+        target,
+        content,
+        { kind: 'replaceIfVersion', version: providerVersion(expectedVersion) },
+        signal,
+      )
+      return {
+        kind: 'saved',
+        file: { segments: [...file.segments] },
+        content: outcome.after,
+        byteLength: utf8Length(outcome.after),
+        version: browserVersion(outcome.version),
+      }
+    } catch (error: unknown) {
+      if (error instanceof FsError && error.code === 'FS_STALE_VERSION') {
+        return writeRefusal(file, this.config.maxWriteBytes, 'conflict')
+      }
+      if (error instanceof FsError && error.code === 'FS_NOT_REGULAR_FILE') {
+        return writeRefusal(file, this.config.maxWriteBytes, 'not-file')
       }
       throw error
     }

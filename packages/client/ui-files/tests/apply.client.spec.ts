@@ -19,7 +19,10 @@ afterEach(cleanup)
 
 const listing = { directory: { segments: [] }, entries: [], truncated: false }
 const preview = {
-  kind: 'text' as const, file: { segments: ['a.ts'] }, name: 'a.ts', content: 'a', byteLength: 1,
+  kind: 'text' as const, file: { segments: ['a.ts'] }, name: 'a.ts', content: 'a', byteLength: 1, version: 'v1',
+}
+const saved = {
+  kind: 'saved' as const, file: { segments: ['a.ts'] }, content: 'b', byteLength: 1, version: 'v2',
 }
 type Result<T> =
   | { readonly ok: true; readonly value: T }
@@ -35,6 +38,11 @@ async function bench() {
   }
   class WorkbenchService extends Service {
     readonly open = vi.fn()
+    readonly show = vi.fn()
+    readonly registerPresentation = vi.fn((
+      _id: string,
+      _presentation: { icon: string; description: string | (() => string) },
+    ) => () => {})
     close(): void {}
     constructor(serviceCtx: Context) { super(serviceCtx, 'workbench') }
   }
@@ -42,8 +50,9 @@ async function bench() {
   const workbench = new WorkbenchService(ctx)
   const list = vi.fn<() => Promise<Result<typeof listing>>>().mockResolvedValue({ ok: true, value: listing })
   const read = vi.fn<() => Promise<Result<typeof preview>>>().mockResolvedValue({ ok: true, value: preview })
-  ctx.provide('remote.workspaceFiles', { list, read })
-  return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, workbench, list, read }
+  const write = vi.fn<() => Promise<Result<typeof saved>>>().mockResolvedValue({ ok: true, value: saved })
+  ctx.provide('remote.workspaceFiles', { list, read, write })
+  return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, workbench, list, read, write }
 }
 
 function declare(slots: SlotRegistry): () => void {
@@ -78,14 +87,21 @@ describe('ui-files browser plugin', () => {
     expect(resolveSlotLabel(surface.options.label)).toBe('文件')
     expect(action.component).toBe(FilesHeaderAction)
     expect(action.options).toMatchObject({ id: 'workspace-files', order: 30 })
+    expect(b.workbench.registerPresentation).toHaveBeenCalledOnce()
+    const [presentationId, presentation] = b.workbench.registerPresentation.mock.calls[0]!
+    expect(presentationId).toBe('files')
+    expect(presentation.icon).toBe('files')
+    expect(presentation.description).toBeTypeOf('function')
 
     const sid = 's' as SessionId
     const files = (surface.inject as unknown as (id: SessionId) => FilesInjected)(sid)
     const signal = new AbortController().signal
     await expect(files.list({ segments: [] }, signal)).resolves.toEqual(listing)
     await expect(files.read({ segments: ['a.ts'] }, signal)).resolves.toEqual(preview)
+    await expect(files.write({ segments: ['a.ts'] }, 'b', 'v1' as never, signal)).resolves.toEqual(saved)
     expect(b.list).toHaveBeenCalledWith(sid, { segments: [] }, signal)
     expect(b.read).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, signal)
+    expect(b.write).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, 'b', 'v1', signal)
 
     const header = (action.inject as unknown as () => FilesHeaderInjected)()
     header.openFiles()
@@ -106,8 +122,11 @@ describe('ui-files browser plugin', () => {
     const files = (entry.inject as unknown as (id: SessionId) => FilesInjected)('s' as SessionId)
     b.list.mockResolvedValueOnce({ ok: false, error: { code: 'denied', message: 'no access' } })
     b.read.mockResolvedValueOnce({ ok: false, error: { code: 'missing', message: 'gone' } })
+    b.write.mockResolvedValueOnce({ ok: false, error: { code: 'conflict', message: 'stale' } })
     await expect(files.list({ segments: [] })).rejects.toThrow('workspaceFiles.list failed: denied: no access')
     await expect(files.read({ segments: ['gone'] })).rejects.toThrow('workspaceFiles.read failed: missing: gone')
+    await expect(files.write({ segments: ['gone'] }, 'x', 'v1' as never))
+      .rejects.toThrow('workspaceFiles.write failed: conflict: stale')
 
     stop()
     expect(b.slots.entries('workbench.surface')).toHaveLength(0)

@@ -56,8 +56,8 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      *
      * Current-session-optional: the occupant owns both states without
      * changing its React identity, so it keeps its own state across a session
-     * switch. It receives no owner props; session facts arrive through the
-     * framework hooks of the `session-maybe` scope.
+     * switch. The frame supplies whether the right details panel is open;
+     * session facts arrive through the framework hooks of the `session-maybe` scope.
      */
     'conversation': { kind: 'single'; scope: 'session-maybe'; owner: ConvOwnerProps }
     /**
@@ -105,8 +105,11 @@ export interface SidebarOwnerProps {
   drawerClose?: () => void
 }
 
-/** Conversation owner share: business state and actions belong to the registrant. */
-export interface ConvOwnerProps {}
+/** Conversation owner share: live frame state needed by center-column controls. */
+export interface ConvOwnerProps {
+  /** True while the right details panel is requested open, including sheet hosting. */
+  detailsOpen: boolean
+}
 
 /** Details owner share: hosting mode and layout-owned close gesture. */
 export interface DetailsOwnerProps {

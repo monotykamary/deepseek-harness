@@ -18,6 +18,8 @@ interface FakeNode {
   readonly text?: string
   readonly size?: number
   readonly streamError?: FsError
+  readonly writeError?: FsError
+  readonly version?: ReturnType<typeof FsVersion>
   readonly abortOnStream?: AbortController
 }
 
@@ -28,6 +30,7 @@ function target(path: string): FsTarget {
 class FakeFileSystem extends FileSystem {
   readonly nodes = new Map<string, FakeNode>()
   streamCalls = 0
+  lastWrite: { target: FsTarget; content: string; expected?: FsWriteIntent } | undefined
 
   constructor(ctx: Context) {
     super(ctx)
@@ -69,7 +72,7 @@ class FakeFileSystem extends FileSystem {
     signal?.throwIfAborted()
     const node = this.nodes.get(String(value.targetKey))
     return node === undefined ? undefined : {
-      version: FsVersion(`v:${String(value.targetKey)}`), type: node.type,
+      version: node.version ?? FsVersion(`v:${String(value.targetKey)}`), type: node.type,
       ...(node.size === undefined ? {} : { size: node.size }),
     }
   }
@@ -114,8 +117,23 @@ class FakeFileSystem extends FileSystem {
   }
 
   override async writeText(
-    _target: FsTarget, _content: string, _expected?: FsWriteIntent,
-  ): Promise<FsWriteOutcome> { throw new Error('unused') }
+    value: FsTarget, content: string, expected?: FsWriteIntent, signal?: AbortSignal,
+  ): Promise<FsWriteOutcome> {
+    signal?.throwIfAborted()
+    this.lastWrite = { target: value, content, ...(expected === undefined ? {} : { expected }) }
+    const path = String(value.targetKey)
+    const node = this.nodes.get(path)
+    if (node === undefined) throw new FsError('missing', 'FS_NOT_FOUND')
+    if (node.writeError !== undefined) throw node.writeError
+    const currentVersion = node.version ?? FsVersion(`v:${path}`)
+    if (expected?.kind === 'replaceIfVersion' && expected.version !== currentVersion) {
+      throw new FsError('stale', 'FS_STALE_VERSION')
+    }
+    if (node.type !== 'file') throw new FsError('not file', 'FS_NOT_REGULAR_FILE')
+    const version = FsVersion(`written:${path}:${content}`)
+    this.nodes.set(path, { ...node, text: content, size: new TextEncoder().encode(content).byteLength, version })
+    return { operation: 'update', version, before: node.text ?? null, after: content }
+  }
 
   override async editText(
     _target: FsTarget, _edit: FsEditRequest, _expected?: { version: ReturnType<typeof FsVersion> },
@@ -137,6 +155,7 @@ function agent(ctx: Context, cwd: string | null = '/work'): Agent {
 function bench(config: Config = {
   maxDirectoryEntries: 10,
   maxPreviewBytes: 5,
+  maxWriteBytes: 5,
   maxDepth: 2,
 }): { ctx: Context; fs: FakeFileSystem; gateway: WorkspaceFilesGateway; agent: Agent } {
   const ctx = new Context()
@@ -159,6 +178,7 @@ describe('WorkspaceFilesGateway', () => {
     expect(remoteMethods(gateway)).toEqual([
       { method: 'list', invocation: { kind: 'direct' } },
       { method: 'read', invocation: { kind: 'direct' } },
+      { method: 'write', invocation: { kind: 'direct' } },
     ])
   })
 
@@ -204,13 +224,13 @@ describe('WorkspaceFilesGateway', () => {
   it('returns complete bounded text and expected unavailable states', async () => {
     const { ctx, gateway, agent: selected, fs } = bench()
     await expect(gateway.read(selected, INDEX, new AbortController().signal)).resolves.toEqual({
-      kind: 'text', file: INDEX, name: 'index.ts', content: 'abcde', byteLength: 5,
+      kind: 'text', file: INDEX, name: 'index.ts', content: 'abcde', byteLength: 5, version: 'v:/work/src/index.ts',
     })
     await expect(gateway.read(selected, ROOT, new AbortController().signal)).resolves.toMatchObject({
       kind: 'unavailable', reason: 'not-file', name: '',
     })
     await expect(gateway.read(agent(ctx, '/work/a.txt'), ROOT, new AbortController().signal)).resolves.toEqual({
-      kind: 'text', file: ROOT, name: '', content: 'hello', byteLength: 5,
+      kind: 'text', file: ROOT, name: '', content: 'hello', byteLength: 5, version: 'v:/work/a.txt',
     })
     await expect(gateway.read(selected, { segments: ['src', 'large.txt'] }, new AbortController().signal))
       .resolves.toEqual({
@@ -229,6 +249,46 @@ describe('WorkspaceFilesGateway', () => {
       .resolves.toMatchObject({ reason: 'not-file' })
     await expect(gateway.read(selected, SRC, new AbortController().signal))
       .resolves.toMatchObject({ reason: 'not-file', name: 'src' })
+  })
+
+  it('writes only the read version and returns recoverable replacement refusals', async () => {
+    const { gateway, agent: selected, fs } = bench()
+    const preview = await gateway.read(selected, INDEX, new AbortController().signal)
+    if (preview.kind !== 'text') throw new Error('expected text fixture')
+
+    const saved = await gateway.write(
+      selected, INDEX, 'next', preview.version, new AbortController().signal,
+    )
+    expect(saved).toEqual({
+      kind: 'saved',
+      file: INDEX,
+      content: 'next',
+      byteLength: 4,
+      version: 'written:/work/src/index.ts:next',
+    })
+    if (saved.kind !== 'saved') throw new Error('expected saved fixture')
+    expect(fs.lastWrite).toMatchObject({
+      target: target('/work/src/index.ts'),
+      content: 'next',
+      expected: { kind: 'replaceIfVersion', version: 'v:/work/src/index.ts' },
+    })
+    await expect(gateway.write(
+      selected, INDEX, 'again', preview.version, new AbortController().signal,
+    )).resolves.toMatchObject({ kind: 'conflict', maxBytes: 5 })
+    await expect(gateway.write(
+      selected, INDEX, '123456', preview.version, new AbortController().signal,
+    )).resolves.toEqual({ kind: 'too-large', file: INDEX, maxBytes: 5, byteLength: 6 })
+    await expect(gateway.write(
+      selected, ROOT, 'x', preview.version, new AbortController().signal,
+    )).resolves.toMatchObject({ kind: 'not-file', maxBytes: 5 })
+
+    const current = fs.nodes.get('/work/src/index.ts')!
+    fs.nodes.set('/work/src/index.ts', {
+      ...current, writeError: new FsError('provider failed', 'FS_IO_ERROR'),
+    })
+    await expect(gateway.write(
+      selected, INDEX, 'fail', saved.version, new AbortController().signal,
+    )).rejects.toMatchObject({ code: 'FS_IO_ERROR' })
   })
 
   it('propagates cancellation and unexpected provider failures', async () => {
@@ -250,6 +310,7 @@ describe('WorkspaceFilesGateway', () => {
     for (const [key, config] of [
       ['maxDirectoryEntries', { maxDirectoryEntries: 0, maxPreviewBytes: 5, maxDepth: 2 }],
       ['maxPreviewBytes', { maxDirectoryEntries: 2, maxPreviewBytes: Number.NaN, maxDepth: 2 }],
+      ['maxWriteBytes', { maxDirectoryEntries: 2, maxPreviewBytes: 5, maxWriteBytes: 0, maxDepth: 2 }],
       ['maxDepth', { maxDirectoryEntries: 2, maxPreviewBytes: 5, maxDepth: 1.5 }],
     ] as const) {
       const ctx = new Context()
