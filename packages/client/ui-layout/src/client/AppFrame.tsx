@@ -13,9 +13,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { PropsRenderSlots, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
-import { Sheet } from '@monotykamary/dsh-client-ui-primitives'
+import { IconPanelLeftOutline16, Sheet } from '@monotykamary/dsh-client-ui-primitives'
 import { computeColumns, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT, SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH } from './columns.ts'
-import { IconMenuOutline16 } from './icons.tsx'
 import type { createLayoutStore } from './stores.ts'
 import css from './AppFrame.module.css'
 
@@ -179,7 +178,7 @@ export function AppFrame({
         // The rail is gone in compact mode: a zero track, not the 56px rail.
         ? `0px minmax(0, 1fr) ${cols.details}px`
         : `${cols.sidebar}px minmax(0, 1fr) ${cols.details}px` }}
-      data-sidebar-collapsed={sidebarCollapsed || undefined}
+      data-sidebar-collapsed={!compact && sidebarCollapsed ? true : undefined}
       data-details-collapsed={cols.details === 0 || undefined}
       data-dragging={dragging || undefined}
       data-sidebar-drawer={compact || undefined}
@@ -206,11 +205,8 @@ export function AppFrame({
       </>
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}
-        {/* Compact drawer toggle lives in .overlayLayer: the frame's
-            sanctioned in-frame tier (z-tier above column content, beneath
-            body-end portals like the Sheet itself). The frame owns no locale
-            plugin: the a11y label and the drawer title are the frame's only
-            copy. */}
+        {/* Compact drawer toggle reuses the rail's panel glyph as a transparent
+            header action. It lives in the frame overlay beneath body-end portals. */}
         {compact && (
           <button
             type="button"
@@ -220,7 +216,7 @@ export function AppFrame({
             aria-expanded={drawerOpen}
             onClick={() => { setDrawerOpen(open => !open) }}
           >
-            <IconMenuOutline16 />
+            <IconPanelLeftOutline16 size={18} />
           </button>
         )}
       </div>
@@ -231,7 +227,7 @@ export function AppFrame({
       {compact && (
         <Sheet open={drawerOpen} onClose={() => { setDrawerOpen(false) }} title="Sidebar" side="left">
           <div className={css.drawerSidebar}>
-            {/* Same slot, mobil-expanded owner share: always open at the
+            {/* Same slot, mobile-expanded owner share: always open at the
                 fixed drawer width regardless of the persisted rail state. */}
             {renderSlot('sidebar', {
               collapsed: false, width: SIDEBAR_DRAWER_WIDTH,

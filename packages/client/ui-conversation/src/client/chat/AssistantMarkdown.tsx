@@ -100,7 +100,7 @@ export const AssistantMarkdown = memo(function AssistantMarkdown({
     }
   }
   return (
-    <div className={css.root} data-streaming={streaming || undefined}>
+    <div className={css.root} data-assistant-message="" data-streaming={streaming || undefined}>
       <div className={css.body}>
         {rendered}
         {interrupted && <span className={css.stopped}>{t('message.stopped')}</span>}

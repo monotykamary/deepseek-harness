@@ -731,7 +731,7 @@ ${vendored.map(row => `| \`${row.npmName}\` | \`${row.upstreamName}\` | [${row.u
 
 ## Adapted design sources
 
-The Web command palette and sidebar adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision \`${T3_CODE_REVISION}\`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
+The Web command palette, sidebar, and conversation adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision \`${T3_CODE_REVISION}\`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
 
 \`\`\`text
 ${T3_CODE_LICENSE}

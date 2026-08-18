@@ -240,6 +240,19 @@ body {
   --dsw-specific-bubble: var(--dsw-static-deepseek-50);
   --dsw-specific-input-major: var(--dsw-static-neutral-bluish-00);
   --dsw-specific-login-input: var(--dsw-static-neutral-bluish-50);
+  /* Conversation roles adapt T3 Code's canvas, neutral message hierarchy,
+     and translucent composer treatment; see THIRD_PARTY_NOTICES.md. */
+  --dsw-specific-conversation-canvas: rgb(252, 252, 252);
+  --dsw-specific-conversation-message: rgb(244, 244, 245);
+  --dsw-specific-conversation-prose: color-mix(in srgb, var(--dsw-alias-label-primary) 80%, transparent);
+  --dsw-specific-conversation-divider: rgb(228, 228, 231);
+  --dsw-specific-conversation-composer-surface: rgb(255, 255, 255);
+  --dsw-specific-conversation-composer-outline: rgba(0, 0, 0, 0.08);
+  --dsw-specific-conversation-composer-highlight: transparent;
+  --dsw-specific-conversation-composer-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.4);
+  --dsw-specific-conversation-glass-blur: 12px;
+  --dsw-specific-conversation-glass-opacity: 80%;
+  --dsw-specific-conversation-glass-saturation: 1.14;
   /* Command and sidebar roles adapt T3 Code's dialog translucency, 8px
      chrome rhythm, muted controls, and interaction-only row surfaces; see
      THIRD_PARTY_NOTICES.md. */
@@ -344,6 +357,19 @@ body[data-ds-dark-theme] {
   --dsw-specific-bubble: var(--dsw-static-neutral-bluish-850);
   --dsw-specific-input-major: var(--dsw-static-neutral-bluish-850);
   --dsw-specific-login-input: var(--dsw-static-neutral-bluish-900);
+  --dsw-specific-conversation-canvas: rgb(10, 10, 10);
+  --dsw-specific-conversation-message: rgb(20, 20, 20);
+  --dsw-specific-conversation-divider: rgb(25, 25, 25);
+  --dsw-specific-conversation-composer-surface: color-mix(
+    in srgb,
+    var(--dsw-specific-conversation-canvas) 96%,
+    var(--dsw-static-neutral-bluish-00)
+  );
+  --dsw-specific-conversation-composer-outline: rgba(255, 255, 255, 0.05);
+  --dsw-specific-conversation-composer-highlight: rgba(255, 255, 255, 0.03);
+  --dsw-specific-conversation-composer-shadow: inset 0 1px var(--dsw-specific-conversation-composer-highlight);
+  --dsw-specific-conversation-glass-blur: 16px;
+  --dsw-specific-conversation-glass-saturation: 1.08;
   --dsw-specific-command-palette: color-mix(in srgb, var(--dsw-alias-bg-base) 88%, transparent);
   --dsw-specific-command-palette-footer: rgba(255, 255, 255, 0.025);
   --dsw-specific-command-palette-key: rgba(255, 255, 255, 0.08);

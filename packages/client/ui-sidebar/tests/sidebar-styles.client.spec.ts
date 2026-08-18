@@ -82,6 +82,7 @@ describe('SidebarRoot.module.css', () => {
   it('gives shell rail controls the same base anchor for their shared translation', () => {
     expect(declarations('.collapsed .logoRow')?.get('justify-content')).toBe('flex-start')
     expect(declarations('.collapsed .newSession')?.get('align-self')).toBe('flex-start')
+    expect(declarations('.collapsed .newSession')?.get('justify-content')).toBe('center')
     expect(declarations('.collapsed .newSession')?.get('width')).toBe('36px')
   })
 })

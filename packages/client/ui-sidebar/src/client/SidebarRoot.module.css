@@ -19,7 +19,7 @@
   --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
-/* DSH rail geometry: 36px controls, 10px inline padding, 12px rhythm. */
+/* DSH rail geometry: centered 36px controls in the 56px track, with a 12px rhythm. */
 .root.collapsed {
   gap: 12px;
   padding: 18px 10px 6px;
@@ -187,6 +187,7 @@
 
 .collapsed .newSession {
   align-self: flex-start;
+  justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;

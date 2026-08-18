@@ -1,14 +1,13 @@
-/* Conversation column skeleton: header (breadcrumb row only for subagents not fork + tabs) over the view
-   area, composer InputBar at the bottom. Column width/squeeze is layout's;
-   this fills its cell. Figma: Header 39:27730 (83px two-row), tabs 13px with
-   a 2px active bar. */
+/* Conversation column skeleton: T3-adapted canvas and 52px title row over
+   DSH's view tabs, transcript, and resident composer. Column width and squeeze
+   remain layout-owned; T3 Code attribution: THIRD_PARTY_NOTICES.md. */
 
 .root {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-width: 0;
-  background: var(--dsw-alias-bg-base);
+  background: var(--dsw-specific-conversation-canvas);
 
   /* Shared width axis for the whole column: one content width W
      (--dsh-chat-content-width) for the transcript, the dock cards
@@ -23,13 +22,18 @@
   --dsh-composer-card-max-width: calc(var(--dsh-chat-content-width) + 32px);
   --dsh-composer-side-clearance: 16px;
   --dsh-composer-dock-inset: 8px;
+  --dsh-conversation-top-fade-height: 20px;
 }
 
 .header {
   position: relative;
   flex: none;
-  padding: 12px 28px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 20px 0;
   border-bottom: 1px solid transparent;
+  background: var(--dsw-specific-conversation-canvas);
 }
 
 .header::after {
@@ -40,7 +44,7 @@
   left: 0;
   z-index: 0;
   height: 1px;
-  background: var(--dsw-alias-border-l2);
+  background: var(--dsw-specific-conversation-divider);
   pointer-events: none;
 }
 
@@ -53,17 +57,13 @@
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 20px;
   min-height: 32px;
 }
 
-/* Compact drawer mode (AppFrame exposes [data-sidebar-drawer] on the frame
-   root when the sidebar flips to the portaled drawer): the floating "Open
-   sidebar" toggle (34px square at left: 12px) overlays the header's leading
-   edge. Compensate so the title/crumbs start past it: header pad 20 + 34 =
-   54px >= 12 + 34 + 8px clearance. Attribute-driven instead of a width media
-   query — the frame's JS owns the flip, and old WebKit parses @media
-   range-less fine but Level 4 range syntax (width < 600px) silently never. */
+/* Compact drawer mode: the transparent 32px panel control sits at left 12px
+   on the title row. Header pad 20px plus this 34px compensation starts the
+   title at 54px, leaving 10px after the control's right edge. */
 :global([data-sidebar-drawer]) .titleRow {
   padding-left: 34px;
 }
@@ -136,7 +136,6 @@
   flex: none;
   align-items: center;
   gap: 8px;
-  margin-left: 20px;
 }
 
 .headerUtilities:empty {
@@ -149,7 +148,6 @@
   z-index: 1;
   display: flex;
   gap: 36px;
-  margin-top: 4px;
   padding-left: 8px;
 }
 
@@ -273,8 +271,8 @@
      fade from their own base. */
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--dsw-alias-bg-base) 0%, transparent) 0px,
-    var(--dsw-alias-bg-base) 36px
+    color-mix(in srgb, var(--dsw-specific-conversation-canvas) 0%, transparent) 0px,
+    var(--dsw-specific-conversation-canvas) 36px
   );
 }
 

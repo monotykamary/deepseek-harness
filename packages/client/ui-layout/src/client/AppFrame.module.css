@@ -129,10 +129,8 @@
   }
 }
 
-/* Compact drawer affordance: top-left of the frame. It renders inside
-   .overlayLayer, the frame's sanctioned stacking tier — above column content,
-   beneath body-end portals (the Sheet covers it while open). The touch area
-   is 34px; safe-area insets nudge it out of the notch. */
+/* T3-style compact drawer affordance: the same panel glyph as the rail in a
+   transparent 32px header action. The overlay tier keeps it below Sheet portals. */
 .drawerToggle {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
@@ -140,12 +138,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 10px;
-  background: var(--dsw-alias-bg-layer-1);
+  border: none;
+  border-radius: 8px;
+  background: transparent;
   color: var(--dsw-alias-label-secondary);
   cursor: pointer;
 }

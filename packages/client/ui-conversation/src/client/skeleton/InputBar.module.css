@@ -55,6 +55,7 @@
 .card {
   box-sizing: border-box;
   position: relative; /* overlay anchor positioning context */
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   /* figma Input 75:8208: 12px between the text area and the button row; 10px
@@ -63,13 +64,20 @@
   width: 100%;
   max-width: var(--dsh-composer-card-max-width);
   padding-top: 10px;
-  /* Input stroke: black/0.10 light, white/0.06 dark (figma darkmode note says
-     the input border is one notch weaker than buttons) — exactly the
-     l2-darkmode-thin pair. Fill: the input surface token (elevated in dark). */
-  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
+  /* T3's composer glass: an 80% neutral surface over the live canvas, with
+     palette-owned blur, saturation, outline, highlight, and restrained shadow. */
+  border: 1px solid var(--dsw-specific-conversation-composer-outline);
   border-radius: 22px;
-  background: var(--dsw-specific-input-major);
-  box-shadow: var(--dsw-shadow-lv2);
+  background: color-mix(
+    in srgb,
+    var(--dsw-specific-conversation-composer-surface) var(--dsw-specific-conversation-glass-opacity),
+    transparent
+  );
+  -webkit-backdrop-filter: blur(var(--dsw-specific-conversation-glass-blur))
+    saturate(var(--dsw-specific-conversation-glass-saturation));
+  backdrop-filter: blur(var(--dsw-specific-conversation-glass-blur))
+    saturate(var(--dsw-specific-conversation-glass-saturation));
+  box-shadow: var(--dsw-specific-conversation-composer-shadow);
   font-size: 16px;
   line-height: 24px;
   /* Elevated surface in dark, same as the menus: the draft scrollport inside

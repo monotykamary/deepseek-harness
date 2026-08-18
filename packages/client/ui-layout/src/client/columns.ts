@@ -25,17 +25,17 @@ export const SIDEBAR_MIN = 264
 export const SIDEBAR_MAX = 420
 /** Sidebar width before any user drag. */
 export const SIDEBAR_DEFAULT = 280
-/** Closed-sidebar rail: a 24px icon column between 16px horizontal paddings. */
+/** Closed-sidebar rail: centered 36px controls inside a fixed 56px track. */
 export const SIDEBAR_COLLAPSED = 56
 /** Viewport width below which the sidebar auto-collapses to the rail (deepsuite
  * LG breakpoint); a manual toggle below it re-expands over the squeezed center
  * (stores.ts narrowExpanded). */
 export const SIDEBAR_AUTO_COLLAPSE = 1024
 
-/** Mobile portrait (AGENTS.md layout rules: rail gone below 600px): the
- * rail is replaced by a portaled drawer so the narrow 600–1024 rail-reopen
- * flow (chat-scroll-contract e2e) keeps working above this line. */
-export const SIDEBAR_DRAWER_VIEWPORT = 600
+/** Compact viewport below T3's max-md boundary: the rail becomes a
+ * portaled drawer, leaving the conversation the complete frame width. The
+ * 768–1023 tablet range retains the inline rail and its re-open action. */
+export const SIDEBAR_DRAWER_VIEWPORT = 768
 
 /** Width the sidebar slot renders at while hosted in the compact drawer. */
 export const SIDEBAR_DRAWER_WIDTH = 300

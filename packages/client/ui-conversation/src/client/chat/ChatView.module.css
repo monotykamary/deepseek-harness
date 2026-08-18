@@ -1,7 +1,6 @@
-/* Chat flow: one 16px rhythm everywhere through the column gap. Input
-   padding cap rides the skeleton. Under
-   `[data-conversation-scroll]` the column host owns overflow and this view
-   is ordinary flow (see ConversationRoot active-phase rules). */
+/* T3-adapted chat flow: a denser 12px parent-owned rhythm on DSH's existing
+   centered width axis. Under `[data-conversation-scroll]` the column host owns
+   overflow and this view remains ordinary flow. */
 
 .root {
   position: relative;
@@ -41,13 +40,22 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* Settled-flow identity boundary. It is neutral today and becomes the natural
    measurement/mount unit for a virtualizer without changing the column gap. */
 .flowItem {
   min-width: 0;
+}
+
+/* The final Assistant footer is a sibling node. Hovering or focusing the prose
+   reveals its inherited action opacity without merging their plugin seats. */
+@media (hover: hover) and (pointer: fine) {
+  .flowItem[data-chat-flow-kind='assistant-step']:is(:hover, :focus-within)
+    + .flowItem[data-chat-flow-kind='turn-tail'] {
+    --dsh-message-actions-opacity: 1;
+  }
 }
 
 /* A keyed renderer may intentionally decline its row after dispatch (the
@@ -198,6 +206,6 @@
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    rgb(0 0 0) 20px
+    rgb(0 0 0) var(--dsh-conversation-top-fade-height)
   );
 }

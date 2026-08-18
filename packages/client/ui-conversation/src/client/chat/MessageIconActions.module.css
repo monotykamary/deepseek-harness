@@ -6,12 +6,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  max-width: 100%;
   height: 28px;
 }
 
 /* Clock before icons (user figma 388:20051) / after (assistant 43:32997). */
 .timeStart {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   padding-right: 12px;
+  text-overflow: ellipsis;
   font-size: 14px;
   line-height: 24px;
   color: var(--dsw-alias-label-tertiary);
@@ -19,7 +25,11 @@
 }
 
 .timeEnd {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   padding-left: 12px;
+  text-overflow: ellipsis;
   font-size: 14px;
   line-height: 24px;
   color: var(--dsw-alias-label-tertiary);

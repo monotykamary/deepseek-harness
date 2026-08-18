@@ -27,7 +27,7 @@ The Cordis framework and its foundation libraries are source-vendored into this 
 
 ## Adapted design sources
 
-The Web command palette and sidebar adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
+The Web command palette, sidebar, and conversation adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
 
 ```text
 MIT License

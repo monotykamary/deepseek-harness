@@ -19,10 +19,6 @@
     "margins": 1,
     "zindexes": 1
   },
-  "packages/client/ui-conversation/src/client/chat/AssistantMarkdown.module.css": {
-    "margins": 2,
-    "zindexes": 0
-  },
   "packages/client/ui-conversation/src/client/chat/ChatView.module.css": {
     "margins": 3,
     "zindexes": 1
@@ -55,10 +51,6 @@
     "margins": 2,
     "zindexes": 0
   },
-  "packages/client/ui-conversation/src/client/chat/TurnTailNodeView.module.css": {
-    "margins": 1,
-    "zindexes": 0
-  },
   "packages/client/ui-conversation/src/client/queue/QueueDock.module.css": {
     "margins": 2,
     "zindexes": 0
@@ -68,7 +60,7 @@
     "zindexes": 1
   },
   "packages/client/ui-conversation/src/client/skeleton/ConversationRoot.module.css": {
-    "margins": 3,
+    "margins": 1,
     "zindexes": 5
   },
   "packages/client/ui-conversation/src/client/skeleton/DetailsPanel.module.css": {

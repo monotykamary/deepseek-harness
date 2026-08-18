@@ -15,7 +15,9 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { useSyncExternalStore } from 'react'
 import { AppFrame } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
 import type { AppFrameProps } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
-import { SIDEBAR_COLLAPSED } from '@monotykamary/dsh-client-ui-layout/src/client/columns.ts'
+import {
+  SIDEBAR_COLLAPSED, SIDEBAR_DRAWER_VIEWPORT,
+} from '@monotykamary/dsh-client-ui-layout/src/client/columns.ts'
 import { createLayoutStore } from '@monotykamary/dsh-client-ui-layout/src/client/stores.ts'
 import type {
   SessionId, SessionListState, WorkspaceListState,
@@ -329,10 +331,25 @@ describe('AppFrame — narrow-viewport auto-collapse', () => {
 })
 
 describe('AppFrame — compact drawer', () => {
+  it('keeps the tablet rail at the compact boundary and gives the full frame to the drawer below it', () => {
+    frameWidth = SIDEBAR_DRAWER_VIEWPORT
+    const { frame } = mountFrame()
+    expect(tracks(frame)).toEqual([SIDEBAR_COLLAPSED, 0])
+    expect(frame.hasAttribute('data-sidebar-collapsed')).toBe(true)
+    expect(frame.hasAttribute('data-sidebar-drawer')).toBe(false)
+
+    frameWidth = SIDEBAR_DRAWER_VIEWPORT - 1
+    act(() => { fireResize?.(); vi.advanceTimersByTime(20) })
+    expect(tracks(frame)).toEqual([0, 0])
+    expect(frame.hasAttribute('data-sidebar-collapsed')).toBe(false)
+    expect(frame.hasAttribute('data-sidebar-drawer')).toBe(true)
+  })
+
   it('offers the drawer toggle below the drawer viewport and hides the sidebar column', () => {
     frameWidth = 500
     const { frame, queryByTestId } = mountFrame()
     expect(tracks(frame)).toEqual([0, 0])
+    expect(frame.hasAttribute('data-sidebar-collapsed')).toBe(false)
     expect(frame.querySelector('[data-drawer-toggle]')).not.toBeNull()
     // The sidebar slot is not rendered outside the drawer in compact mode.
     expect(queryByTestId('sidebar-content')).toBeNull()
@@ -345,7 +362,7 @@ describe('AppFrame — compact drawer', () => {
     // The sheet portals to body: the slot content becomes findable globally.
     const dialog = screen.getByRole('dialog', { name: 'Sidebar' })
     expect(dialog.getAttribute('data-side')).toBe('left')
-    expect(within(dialog as HTMLElement).getByTestId('sidebar-content')).toBeTruthy()
+    expect(within(dialog).getByTestId('sidebar-content')).toBeTruthy()
     const lastSidebarCall = slotCalls.filter(c => c.key === 'sidebar').at(-1)!
     expect(lastSidebarCall.props).toMatchObject({ collapsed: false, width: 300 })
     const drawerClose = (lastSidebarCall.props as { drawerClose?: unknown }).drawerClose

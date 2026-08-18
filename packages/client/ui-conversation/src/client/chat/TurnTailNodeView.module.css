@@ -1,9 +1,20 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .actions {
-  margin-left: -6px;
+  transform: translateX(-6px);
+  transition: opacity 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .actions {
+    opacity: var(--dsh-message-actions-opacity, 0);
+  }
+
+  .root:is(:hover, :focus-within) .actions {
+    opacity: 1;
+  }
 }

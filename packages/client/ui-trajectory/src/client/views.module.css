@@ -9,6 +9,7 @@
   min-height: 0;
   width: 100%;
   box-sizing: border-box;
+  padding-top: var(--dsh-conversation-top-fade-height, 20px);
   color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-bg-layer-1);
 }

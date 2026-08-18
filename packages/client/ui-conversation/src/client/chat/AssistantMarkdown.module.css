@@ -1,20 +1,18 @@
-/* Assistant flow body: full-width narration (figma 16/28), block gap 16.
-   IconActions sit below the body with an explicit 16px top margin (figma
-   43:32997) — separate from the body's internal gap so the footer spacing
-   stays fixed when the body is a single block. */
+/* T3-adapted Assistant narration stays full width but uses a quieter 15/24
+   reading rhythm. Actions remain in the independent turn-tail node. */
 
 .root {
   display: flex;
   flex-direction: column;
-  font-size: 16px;
-  line-height: 28px;
-  color: var(--dsw-alias-label-primary);
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--dsw-specific-conversation-prose);
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* Interrupted-turn terminal marker: quiet inline tag, no animation. */
@@ -26,11 +24,4 @@
   color: var(--dsw-alias-label-tertiary);
   font-size: 11px;
   line-height: 18px;
-}
-
-/* Finalized footer offset (figma 43:32997); chrome lives in MessageIconActions. */
-.actions {
-  margin-top: 16px;
-  /* Optical align with 28px icon hit targets that pad 6px past the glyph. */
-  margin-left: -6px;
 }
