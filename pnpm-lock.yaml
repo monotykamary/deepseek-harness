@@ -873,6 +873,9 @@ importers:
       '@monotykamary/dsh-host-plugin-inventory':
         specifier: workspace:^
         version: link:../../host/plugin-inventory
+      '@monotykamary/dsh-host-workspace-files':
+        specifier: workspace:^
+        version: link:../../host/workspace-files
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -1312,6 +1315,9 @@ importers:
       '@monotykamary/dsh-client-ui-directory-picker-native':
         specifier: workspace:^
         version: link:../../client/ui-directory-picker-native
+      '@monotykamary/dsh-client-ui-files':
+        specifier: workspace:^
+        version: link:../../client/ui-files
       '@monotykamary/dsh-client-ui-goal':
         specifier: workspace:^
         version: link:../../client/ui-goal
@@ -1414,6 +1420,9 @@ importers:
       '@monotykamary/dsh-host-webserver':
         specifier: workspace:^
         version: link:../../host/webserver
+      '@monotykamary/dsh-host-workspace-files':
+        specifier: workspace:^
+        version: link:../../host/workspace-files
       '@monotykamary/dsh-message-feedback':
         specifier: workspace:^
         version: link:../../feedback/message-feedback
@@ -2056,6 +2065,45 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
+
+  packages/client/ui-files:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-api-remotes':
+        specifier: workspace:^
+        version: link:../../api/remotes
+      '@monotykamary/dsh-client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-conversation':
+        specifier: workspace:^
+        version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-client-ui-workbench':
+        specifier: workspace:^
+        version: link:../ui-workbench
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
 
   packages/client/ui-goal:
     devDependencies:
@@ -5051,6 +5099,31 @@ importers:
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+
+  packages/host/workspace-files:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-fs':
+        specifier: workspace:^
+        version: link:../../fs/fs
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
 
   packages/identity/anonymous-user-id:
     devDependencies:

@@ -20,7 +20,7 @@
 
 .bannerWrap {
   position: sticky;
-  top: 0;
+  top: var(--dsl-code-block-sticky-top, 0);
   z-index: 6;
   background-color: var(--dsw-alias-bg-base);
   border-top-left-radius: var(--dsl-code-block-border-radius);

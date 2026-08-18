@@ -13,6 +13,8 @@ const assistantCss = read('../src/client/chat/AssistantMarkdown.module.css')
 const tailCss = read('../src/client/chat/TurnTailNodeView.module.css')
 const actionsCss = read('../src/client/chat/MessageIconActions.module.css')
 const contextCss = read('../src/client/chat/ContextInjectionRow.module.css')
+const detailsCss = read('../src/client/skeleton/DetailsPanel.module.css')
+const codeBlockCss = read('../../ui-primitives/src/markdown/CodeBlock.module.css')
 
 /**
  * Declarations of one selector rule, keyed by property with whitespace collapsed.
@@ -42,6 +44,8 @@ const assistant = (selector: string): Map<string, string> | undefined => declara
 const tail = (selector: string): Map<string, string> | undefined => declarationsFrom(tailCss, selector)
 const actions = (selector: string): Map<string, string> | undefined => declarationsFrom(actionsCss, selector)
 const context = (selector: string): Map<string, string> | undefined => declarationsFrom(contextCss, selector)
+const details = (selector: string): Map<string, string> | undefined => declarationsFrom(detailsCss, selector)
+const codeBlock = (selector: string): Map<string, string> | undefined => declarationsFrom(codeBlockCss, selector)
 
 const paletteRoles = [
   '--dsw-specific-conversation-canvas',
@@ -125,6 +129,12 @@ describe('T3-adapted conversation styles', () => {
       expect(actions(selector)?.get('text-overflow')).toBe('ellipsis')
     }
     expect(context('.source')?.get('flex')).toBe('0 1 auto')
+  })
+
+  it('pins inspector code banners over the scrollport padding without exposing source above them', () => {
+    expect(codeBlock('.bannerWrap')?.get('top')).toBe('var(--dsl-code-block-sticky-top, 0)')
+    expect(details('.body')?.get('padding')).toBe('12px 16px')
+    expect(details('.body')?.get('--dsl-code-block-sticky-top')).toBe('-12px')
   })
 
   it('reveals message actions only through hover or keyboard focus on fine pointers', () => {

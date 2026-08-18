@@ -801,6 +801,24 @@ export interface Config {
 
 Source: [`packages/host/webserver/src/index.ts:45`](../packages/host/webserver/src/index.ts)
 
+<a id="monotykamarydsh-host-workspace-files"></a>
+
+## `@monotykamary/dsh-host-workspace-files`
+
+```ts config-catalog
+/** Deployment limits for browser workspace reads. */
+export interface Config {
+  /** Maximum direct children returned by one directory call. Defaults to 2,000. */
+  maxDirectoryEntries?: number
+  /** Inclusive UTF-8 byte cap for one complete file preview. Defaults to 1 MiB. */
+  maxPreviewBytes?: number
+  /** Maximum locator segments traversed from the Session root. Defaults to 64. */
+  maxDepth?: number
+}
+```
+
+Source: [`packages/host/workspace-files/src/index.ts:26`](../packages/host/workspace-files/src/index.ts)
+
 <a id="monotykamarydsh-invariants"></a>
 
 ## `@monotykamary/dsh-invariants`
@@ -3116,6 +3134,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@monotykamary/dsh-client-ui-deliverables` — requires `systemPrompt` ([`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts))
 - `@monotykamary/dsh-client-ui-directory-picker-browse` ([`packages/client/ui-directory-picker-browse/src/index.ts`](../packages/client/ui-directory-picker-browse/src/index.ts))
 - `@monotykamary/dsh-client-ui-directory-picker-native` ([`packages/client/ui-directory-picker-native/src/index.ts`](../packages/client/ui-directory-picker-native/src/index.ts))
+- `@monotykamary/dsh-client-ui-files` ([`packages/client/ui-files/src/index.ts`](../packages/client/ui-files/src/index.ts))
 - `@monotykamary/dsh-client-ui-goal` ([`packages/client/ui-goal/src/index.ts`](../packages/client/ui-goal/src/index.ts))
 - `@monotykamary/dsh-client-ui-input-trigger` ([`packages/client/ui-input-trigger/src/index.ts`](../packages/client/ui-input-trigger/src/index.ts))
 - `@monotykamary/dsh-client-ui-jobs` ([`packages/client/ui-jobs/src/index.ts`](../packages/client/ui-jobs/src/index.ts))

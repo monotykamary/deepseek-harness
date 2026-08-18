@@ -1,0 +1,61 @@
+/** Files UI locale namespace. */
+export const NS = 'files'
+
+/** Files dictionary key. */
+export type FilesKey = keyof typeof zh
+
+/** Simplified Chinese Files dictionary. */
+export const zh = {
+  'tab': '文件',
+  'open': '打开文件',
+  'tree.aria': '工作区文件',
+  'tree.filter': '筛选已加载的文件',
+  'tree.filterAria': '筛选已加载的工作区文件',
+  'tree.refresh': '刷新文件',
+  'tree.refreshing': '正在刷新文件',
+  'tree.loading': '正在加载文件…',
+  'tree.empty': '此文件夹为空',
+  'tree.emptyFilter': '已加载的文件中没有匹配项',
+  'tree.filterScope': '筛选范围仅包含已加载的文件夹',
+  'tree.truncated': '部分文件夹仅显示配置上限内的条目',
+  'tree.error': '无法加载工作区文件',
+  'tree.retry': '重试',
+  'preview.back': '返回文件列表',
+  'preview.refresh': '刷新文件预览',
+  'preview.loading': '正在加载预览…',
+  'preview.error': '无法加载文件预览',
+  'preview.retry': '重试',
+  'preview.tooLarge': '文件超过 {limit} 的预览上限',
+  'preview.notText': '无法预览二进制或非 UTF-8 文件',
+  'preview.notFile': '此路径不是常规文件',
+  'preview.copy': '复制',
+  'preview.copied': '复制成功',
+} as const
+
+/** English Files dictionary, checked against the Chinese key set. */
+export const en: Record<FilesKey, string> = {
+  'tab': 'Files',
+  'open': 'Open files',
+  'tree.aria': 'Workspace files',
+  'tree.filter': 'Filter loaded files',
+  'tree.filterAria': 'Filter loaded workspace files',
+  'tree.refresh': 'Refresh files',
+  'tree.refreshing': 'Refreshing files',
+  'tree.loading': 'Loading files…',
+  'tree.empty': 'This folder is empty',
+  'tree.emptyFilter': 'No loaded files match',
+  'tree.filterScope': 'Filtering covers loaded folders only',
+  'tree.truncated': 'Some folders show only the configured entry limit',
+  'tree.error': 'Unable to load workspace files',
+  'tree.retry': 'Retry',
+  'preview.back': 'Back to files',
+  'preview.refresh': 'Refresh file preview',
+  'preview.loading': 'Loading preview…',
+  'preview.error': 'Unable to load file preview',
+  'preview.retry': 'Retry',
+  'preview.tooLarge': 'File exceeds the {limit} preview limit',
+  'preview.notText': 'Binary or non-UTF-8 files cannot be previewed',
+  'preview.notFile': 'This path is not a regular file',
+  'preview.copy': 'Copy',
+  'preview.copied': 'Copied',
+}

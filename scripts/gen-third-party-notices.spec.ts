@@ -27,7 +27,7 @@ describe('THIRD_PARTY_NOTICES.md', () => {
   it('matches what the generator produces from the current manifests', () => {
     const generated = render()
     expect(generated).toContain('It depends on the third-party software listed below.')
-    expect(generated).toContain('The Web command palette, sidebar, conversation, and workbench adapt interaction patterns')
+    expect(generated).toContain('The Web command palette, sidebar, conversation, workbench, and Files explorer adapt interaction patterns')
     expect(generated).toContain('Copyright (c) 2026 T3 Tools Inc.')
     expect(generated).toContain('Permission is hereby granted, free of charge')
     expect(generated).toContain('THE SOFTWARE IS PROVIDED "AS IS"')

@@ -94,6 +94,10 @@
     - id: plugin-inventory
       name: '@monotykamary/dsh-host-plugin-inventory'
 
+    # Session-authorized file tree and bounded previews over each Agent's selected fs provider.
+    - id: workspace-files
+      name: '@monotykamary/dsh-host-workspace-files'
+
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
     - id: api-gateway
@@ -195,6 +199,9 @@
 
     - id: ui-workbench
       name: '@monotykamary/dsh-client-ui-workbench'
+
+    - id: ui-files
+      name: '@monotykamary/dsh-client-ui-files'
 
     - id: ui-command-palette
       name: '@monotykamary/dsh-client-ui-command-palette'

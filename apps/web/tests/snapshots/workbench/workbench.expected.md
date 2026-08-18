@@ -4,6 +4,7 @@
 - inline workbench width: 359px
 - tabs after Tool Inspect: Changes → Inspect
 - inspector title: write
+- inspector sticky gap after scroll: 0px
 - Changes summary: Changes 1 · Files 1
 - compact conversation width: 700px
 - compact workbench side: right

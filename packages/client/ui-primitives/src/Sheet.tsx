@@ -10,6 +10,7 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import css from './Sheet.module.css'
+import { useEscapeClose } from './useEscapeClose.ts'
 
 /** Dock edge for the sheet panel. */
 export type SheetSide = 'left' | 'right'
@@ -36,14 +37,7 @@ export interface SheetProps {
  * @returns null when closed; otherwise the overlay tree.
  */
 export function Sheet({ open, onClose, title, side = 'left', children, className }: SheetProps) {
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => { document.removeEventListener('keydown', onKeyDown) }
-  }, [open, onClose])
+  useEscapeClose(open, onClose)
 
   // The page must not scroll beneath the drawer.
   useEffect(() => {

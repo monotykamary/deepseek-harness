@@ -43,6 +43,7 @@ function renderGolden(values: {
   inlineWorkbench: number
   tabs: string[]
   inspectTitle: string
+  inspectorStickyGap: number
   changesSummary: string
   compactConversation: number
   compactSide: string | null
@@ -55,6 +56,7 @@ function renderGolden(values: {
     `- inline workbench width: ${String(values.inlineWorkbench)}px`,
     `- tabs after Tool Inspect: ${values.tabs.join(' → ')}`,
     `- inspector title: ${values.inspectTitle}`,
+    `- inspector sticky gap after scroll: ${String(values.inspectorStickyGap)}px`,
     `- Changes summary: ${values.changesSummary}`,
     `- compact conversation width: ${String(values.compactConversation)}px`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
@@ -105,6 +107,21 @@ describe('web e2e: UI workbench', () => {
     const tabs = await workbench.getByRole('tab').allTextContents()
     const inspectTitle = await workbench.locator('[class*="title"]').last().innerText()
     expect(await workbench.getByRole('tab', { name: 'Inspect' }).getAttribute('aria-selected')).toBe('true')
+    const inspectorSticky = await workbench.locator('.md-code-block').first().evaluate((block) => {
+      let scroller = block.parentElement
+      while (scroller !== null && !['auto', 'scroll'].includes(getComputedStyle(scroller).overflowY)) {
+        scroller = scroller.parentElement
+      }
+      if (scroller === null) throw new Error('inspector scrollport missing')
+      scroller.scrollTop = Math.min(300, scroller.scrollHeight - scroller.clientHeight)
+      const banner = block.firstElementChild
+      if (banner === null) throw new Error('CodeBlock banner missing')
+      return {
+        gap: Math.round(banner.getBoundingClientRect().top - scroller.getBoundingClientRect().top),
+        scrollTop: scroller.scrollTop,
+      }
+    })
+    expect(inspectorSticky.scrollTop).toBeGreaterThan(0)
 
     await workbench.getByRole('tab', { name: 'Changes', exact: true }).click()
     expect(await workbench.getByRole('tab', { name: 'Changes' }).getAttribute('aria-selected')).toBe('true')
@@ -121,7 +138,8 @@ describe('web e2e: UI workbench', () => {
     const closed = await conversationWidth(page) === 700
 
     await compareOrRefreshGolden(EXPECTED, renderGolden({
-      inlineConversation, inlineWorkbench, tabs, inspectTitle, changesSummary,
+      inlineConversation, inlineWorkbench, tabs, inspectTitle,
+      inspectorStickyGap: inspectorSticky.gap, changesSummary,
       compactConversation, compactSide, closed,
     }), MODE)
     await assertFixtureInventory(SNAPSHOT_DIR, ['seed.jsonl', 'workbench.expected.md'])

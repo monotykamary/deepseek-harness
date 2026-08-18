@@ -690,9 +690,6 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "tests/**/*.tsx"
-      ],
-      "ignoreDependencies": [
-        "@monotykamary/dsh-client-ui-theme"
       ]
     },
     "packages/client/ui-settings": {
@@ -723,7 +720,8 @@
         "@types/react",
         "@types/react-dom",
         "react",
-        "react-dom"
+        "react-dom",
+        "tailwindcss"
       ]
     },
     "apps/cli": {

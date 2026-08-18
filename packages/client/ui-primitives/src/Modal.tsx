@@ -3,12 +3,12 @@
 // cannot leave sticky page controls above the mask. This is still an in-page
 // WebUI dialog; it never creates or targets another browser/native window.
 
-import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { IconCloseOutline16 } from './icons/index.tsx'
 import css from './Modal.module.css'
+import { useEscapeClose } from './useEscapeClose.ts'
 
 /**
  * Render a centered modal over a blurred page mask.
@@ -41,14 +41,7 @@ export function Modal({
   contentClassName?: string
   headless?: boolean
 }) {
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => { document.removeEventListener('keydown', onKeyDown) }
-  }, [open, onClose])
+  useEscapeClose(open, onClose)
 
   if (!open) return null
 
