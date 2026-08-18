@@ -193,6 +193,9 @@
     - id: ui-layout
       name: '@monotykamary/dsh-client-ui-layout'
 
+    - id: ui-command-palette
+      name: '@monotykamary/dsh-client-ui-command-palette'
+
     - id: ui-sidebar
       name: '@monotykamary/dsh-client-ui-sidebar'
 

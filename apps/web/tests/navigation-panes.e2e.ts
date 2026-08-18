@@ -25,6 +25,7 @@ const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/navigation-panes', impor
 const SEED = join(SNAPSHOT_DIR, 'seed.jsonl')
 const TRAJECTORY_EXPECTED = join(SNAPSHOT_DIR, 'trajectory.expected.md')
 const SEARCH_EXPECTED = join(SNAPSHOT_DIR, 'search-results.expected.md')
+const PALETTE_EXPECTED = join(SNAPSHOT_DIR, 'command-palette.expected.md')
 const TERMINAL_EXPECTED = join(SNAPSHOT_DIR, 'terminal-card.expected.md')
 const MODE = webSnapshotMode()
 const SEED_ID = 'navigation-panes-web-e2e'
@@ -221,6 +222,34 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     await page.getByRole('button', { name: 'Clear search' }).click()
     await expect.poll(() => search.inputValue(), { timeout: 5_000 }).toBe('')
     await expect.poll(() => page.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
+  }, 90_000)
+
+  it.skipIf(MODE === 'record')('searches and opens a persisted Session through the global command palette', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-navigation-command-palette'))
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K')
+    const dialog = page.getByRole('dialog', { name: 'Command palette' })
+    await dialog.waitFor({ timeout: 10_000 })
+    expect(await page.locator('#root').evaluate(node => (node as HTMLElement).inert)).toBe(true)
+    const search = dialog.getByRole('combobox')
+    await search.fill('WATERFALL')
+    const sessions = dialog.getByRole('group', { name: 'Sessions' })
+    const result = sessions.getByRole('option')
+    await expect.poll(() => result.count(), { timeout: 30_000 }).toBe(1)
+    await expect.poll(() => result.getByText('WATERFALL', { exact: false }).count(), {
+      timeout: 10_000,
+    }).toBeGreaterThanOrEqual(1)
+
+    const snapshot = (await captureStableAria(page, '[data-command-palette]', scaffold.workspaceCwd))
+      .split(SEED_ID).join('{{seededId}}')
+    await compareOrRefreshGolden(PALETTE_EXPECTED, snapshot, MODE)
+
+    await result.click()
+    await dialog.waitFor({ state: 'hidden', timeout: 10_000 })
+    expect(await page.locator('#root').evaluate(node => (node as HTMLElement).inert)).toBe(false)
+    await page.getByText('FIRST_DONE', { exact: true }).waitFor({ timeout: 15_000 })
+    await expect.poll(() => page.getByRole('heading', { name: 'Navigation Summary' }).count(), {
+      timeout: 15_000,
+    }).toBe(1)
   }, 90_000)
 
   it.skipIf(MODE === 'record')('renders the trajectory ledger and opens its local record inspector', async () => {
@@ -506,8 +535,8 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
 
   it.skipIf(MODE === 'record')('keeps the recorded fixture inventory exact', async () => {
     await assertFixtureInventory(SNAPSHOT_DIR, [
-      'seed.jsonl', 'search-results.expected.md', 'trajectory.expected.md',
-      'terminal-card.expected.md',
+      'command-palette.expected.md', 'seed.jsonl', 'search-results.expected.md',
+      'trajectory.expected.md', 'terminal-card.expected.md',
     ])
   })
 })

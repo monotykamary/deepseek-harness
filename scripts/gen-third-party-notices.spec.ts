@@ -27,6 +27,10 @@ describe('THIRD_PARTY_NOTICES.md', () => {
   it('matches what the generator produces from the current manifests', () => {
     const generated = render()
     expect(generated).toContain('It depends on the third-party software listed below.')
+    expect(generated).toContain('Copyright (c) 2026 T3 Tools Inc.')
+    expect(generated).toContain('Permission is hereby granted, free of charge')
+    expect(generated).toContain('THE SOFTWARE IS PROVIDED "AS IS"')
+    expect(generated).toContain('a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2')
     expect(readFileSync(resolve(root, 'THIRD_PARTY_NOTICES.md'), 'utf8'), 'stale notices — run `pnpm run gen-third-party-notices`').toBe(generated)
   })
 })

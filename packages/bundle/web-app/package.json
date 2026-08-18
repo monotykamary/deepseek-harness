@@ -53,6 +53,7 @@
     "@monotykamary/dsh-client-modules": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-agent-preset": "workspace:^",
+    "@monotykamary/dsh-client-ui-command-palette": "workspace:^",
     "@monotykamary/dsh-client-ui-commands": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-cordis": "workspace:^",

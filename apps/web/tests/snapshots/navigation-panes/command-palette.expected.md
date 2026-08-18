@@ -1,0 +1,7 @@
+- dialog "Command palette":
+  - combobox "Search commands, workspaces, and sessions" [expanded]: WATERFALL
+  - listbox:
+    - group "Sessions":
+      - text: Sessions
+      - 'option "NavScenario: first run bash to ## Navigation Summary - alpha nav - beta nav ``` echo WATERFALL ```" [selected]'
+  - text: ↑ ↓ Navigate Enter Open Esc Close

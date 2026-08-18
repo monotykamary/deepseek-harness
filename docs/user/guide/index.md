@@ -14,6 +14,12 @@ The [model configuration guide](./providers.md) covers other providers and custo
 
 Click **Choose workspace**, add the project directory where you started `dsh`, and select it. The session composer remains unavailable until a workspace is selected.
 
+## Find or start a session
+
+Press `Cmd+K` on macOS or `Ctrl+K` elsewhere to open the command palette. Type a Session title, Workspace name or path, or text from a previous user or assistant message, then select the matching Session.
+
+Choose **New Session in...** to target a Workspace. Use the arrow keys to highlight it, press `Tab` to accept the choice without creating anything, then press `Enter` to create or reuse that Workspace's blank Session.
+
 ## Run a task
 
 Start a session and send:

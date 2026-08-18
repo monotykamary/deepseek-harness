@@ -193,6 +193,7 @@
       "@monotykamary/dsh-client-test-runtime": ["./packages/test-support/client-runtime/src"],
       "@monotykamary/dsh-client-test-runtime/invariant": ["./packages/test-support/client-runtime/src/invariant.ts"],
       "@monotykamary/dsh-client-ui-layout": ["./packages/client/ui-layout/src"],
+      "@monotykamary/dsh-client-ui-command-palette": ["./packages/client/ui-command-palette/src"],
       "@monotykamary/dsh-client-ui-sidebar": ["./packages/client/ui-sidebar/src"],
       "@monotykamary/dsh-client-ui-conversation": ["./packages/client/ui-conversation/src"],
       "@monotykamary/dsh-client-ui-tool": ["./packages/client/ui-tool/src"],

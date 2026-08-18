@@ -1291,6 +1291,9 @@ importers:
       '@monotykamary/dsh-client-ui-agent-preset':
         specifier: workspace:^
         version: link:../../client/ui-agent-preset
+      '@monotykamary/dsh-client-ui-command-palette':
+        specifier: workspace:^
+        version: link:../../client/ui-command-palette
       '@monotykamary/dsh-client-ui-commands':
         specifier: workspace:^
         version: link:../../client/ui-commands
@@ -1736,6 +1739,52 @@ importers:
       '@types/react-dom':
         specifier: ~18.3.0
         version: 18.3.7(@types/react@18.3.31)
+
+  packages/client/ui-command-palette:
+    dependencies:
+      clsx:
+        specifier: ^2.0.0
+        version: 2.1.1
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-layout':
+        specifier: workspace:^
+        version: link:../ui-layout
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-client-web-react':
+        specifier: workspace:^
+        version: link:../web-react
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ~18.3.0
+        version: 18.3.7(@types/react@18.3.31)
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
 
   packages/client/ui-commands:
     dependencies:

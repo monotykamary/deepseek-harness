@@ -240,6 +240,13 @@ body {
   --dsw-specific-bubble: var(--dsw-static-deepseek-50);
   --dsw-specific-input-major: var(--dsw-static-neutral-bluish-00);
   --dsw-specific-login-input: var(--dsw-static-neutral-bluish-50);
+  /* Command roles adapt T3 Code's translucent dialog, grouped-row, keycap,
+     and subdued footer hierarchy; see THIRD_PARTY_NOTICES.md. */
+  --dsw-specific-command-palette: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent);
+  --dsw-specific-command-palette-footer: rgba(38, 49, 72, 0.025);
+  --dsw-specific-command-palette-key: rgba(38, 49, 72, 0.08);
+  --dsw-specific-command-palette-mask: color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent);
+  --dsw-specific-command-palette-row: var(--dsw-alias-interactive-bg-hover);
   --dsw-specific-menu: var(--dsw-alias-bg-layer-3);
   --dsw-specific-selector: var(--dsw-static-neutral-bluish-60);
   --dsw-specific-sidebar-fill: var(--dsw-static-neutral-bluish-50);
@@ -332,6 +339,11 @@ body[data-ds-dark-theme] {
   --dsw-specific-bubble: var(--dsw-static-neutral-bluish-850);
   --dsw-specific-input-major: var(--dsw-static-neutral-bluish-850);
   --dsw-specific-login-input: var(--dsw-static-neutral-bluish-900);
+  --dsw-specific-command-palette: color-mix(in srgb, var(--dsw-alias-bg-base) 88%, transparent);
+  --dsw-specific-command-palette-footer: rgba(255, 255, 255, 0.025);
+  --dsw-specific-command-palette-key: rgba(255, 255, 255, 0.08);
+  --dsw-specific-command-palette-mask: color-mix(in srgb, var(--dsw-alias-bg-base) 64%, transparent);
+  --dsw-specific-command-palette-row: var(--dsw-alias-interactive-bg-hover);
   --dsw-specific-menu: var(--dsw-alias-bg-layer-3);
   --dsw-specific-selector: var(--dsw-static-neutral-bluish-800);
   --dsw-specific-sidebar-fill: var(--dsw-static-neutral-bluish-900);

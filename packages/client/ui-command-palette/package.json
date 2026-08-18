@@ -1,0 +1,81 @@
+{
+  "name": "@monotykamary/dsh-client-ui-command-palette",
+  "description": "Global Web command palette for session search and workspace-targeted session creation",
+  "version": "0.1.0-rc.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/client/ui-command-palette"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@monotykamary/dsh-client-locale",
+        "@monotykamary/dsh-client-runtime",
+        "@monotykamary/dsh-client-ui-layout"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@monotykamary/dsh-client-locale": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@monotykamary/dsh-client-locale": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-test-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-layout": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-web-react": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "@monotykamary/cordis": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

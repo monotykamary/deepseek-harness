@@ -148,6 +148,24 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
 
+  it('Tab-completes a Workspace before confirming New Session creation', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-command-palette'))
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K')
+    const dialog = page.getByRole('dialog', { name: 'Command palette' })
+    await dialog.waitFor({ timeout: 10_000 })
+    await dialog.getByRole('option', { name: /^New Session in\.\.\./u }).click()
+    const input = dialog.getByRole('combobox')
+    await input.fill('beta-ws')
+    await input.press('Tab')
+    await expect.poll(() => dialog.getByText('beta-ws selected', { exact: true }).count(), {
+      timeout: 5_000,
+    }).toBe(1)
+    expect(await dialog.isVisible()).toBe(true)
+    await input.press('Enter')
+    await dialog.waitFor({ state: 'hidden', timeout: 10_000 })
+    expect(tripwire.pageErrors).toEqual([])
+  }, 30_000)
+
   it('renames a workspace over the wire with a duplicate-name pre-check', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-rename'))
     const alphaRow = page.locator('[role="treeitem"]').filter({ hasText: 'alpha-ws' }).first()
