@@ -96,6 +96,13 @@ export interface SidebarOwnerProps {
   collapsed: boolean
   /** Rendered column width in px (SIDEBAR_COLLAPSED when collapsed). */
   width: number
+  /**
+   * Present only when the frame hosts the column in the mobile drawer (AppFrame,
+   * SIDEBAR_DRAWER_VIEWPORT): the slot's own collapse control then means
+   * "dismiss the drawer" because rail/narrow store fields do not reach the
+   * forced zero track. Absent in column mode, where collapse is rail flip.
+   */
+  drawerClose?: () => void
 }
 
 /** Conversation owner share: business state and actions belong to the registrant. */

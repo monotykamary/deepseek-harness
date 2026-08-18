@@ -347,7 +347,13 @@ describe('AppFrame — compact drawer', () => {
     expect(dialog.getAttribute('data-side')).toBe('left')
     expect(within(dialog as HTMLElement).getByTestId('sidebar-content')).toBeTruthy()
     const lastSidebarCall = slotCalls.filter(c => c.key === 'sidebar').at(-1)!
-    expect(lastSidebarCall.props).toEqual({ collapsed: false, width: 300 })
+    expect(lastSidebarCall.props).toMatchObject({ collapsed: false, width: 300 })
+    const drawerClose = (lastSidebarCall.props as { drawerClose?: unknown }).drawerClose
+    expect(typeof drawerClose).toBe('function')
+    // drawerClose is the drawer's dismissal path (SidebarRoot's collapse control
+    // routes here on mobile; the rail/narrow store fields never reach compact mode).
+    act(() => { (drawerClose as () => void)() })
+    expect(screen.queryByRole('dialog', { name: 'Sidebar' })).toBeNull()
   })
 
   it('Escape closes the drawer and the toggle reflects open state', () => {

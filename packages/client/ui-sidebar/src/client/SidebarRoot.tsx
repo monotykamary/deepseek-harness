@@ -44,6 +44,7 @@ const SCROLLBAR_LINGER_MS = 2000
 export function SidebarRoot({
   collapsed,
   width,
+  drawerClose,
   startSession,
   toggleSidebar,
   t,
@@ -147,7 +148,13 @@ export function SidebarRoot({
             type="button"
             className={clsx(css.iconButton, css.toggle)}
             aria-label={collapsed ? t('toggle.open') : t('toggle.collapse')}
-            onClick={() => { toggleSidebar() }}
+            onClick={() => {
+              // Drawer host (compact frame): collapse must dismiss the drawer — the
+              // drawer column ignores rail/narrow store fields, so flipping them
+              // dead-ends. Column host: rail flip as usual.
+              if (drawerClose !== undefined) drawerClose()
+              else toggleSidebar()
+            }}
           >
             {!wide && <FishLogo className={css.railFish} size={24} />}
             {/* Rail icons render at 18 (figma rail spec); expanded keeps the glyph-native sizes. */}

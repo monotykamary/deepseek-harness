@@ -129,9 +129,10 @@
   }
 }
 
-/* Compact drawer affordance: top-left of the frame, above the conversation
-   porch by document order (no z-index — the layering rule). The touch area
-   34px; safe-area insets nudge it out of the notch. */
+/* Compact drawer affordance: top-left of the frame. It renders inside
+   .overlayLayer, the frame's sanctioned stacking tier — above column content,
+   beneath body-end portals (the Sheet covers it while open). The touch area
+   is 34px; safe-area insets nudge it out of the notch. */
 .drawerToggle {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 10px);

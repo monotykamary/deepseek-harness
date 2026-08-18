@@ -21,7 +21,11 @@ afterEach(() => {
 // props share; stub them as never-called functions.
 const neverHook = (() => { throw new Error('shell must not read global hooks') }) as never
 
-function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
+function mountShell({
+  collapsed = false,
+  width = 300,
+  drawerClose,
+}: { collapsed?: boolean; width?: number; drawerClose?: () => void } = {}) {
   const startSession = vi.fn()
   const toggleSidebar = vi.fn()
   let regionOwner: SidebarSectionOwnerProps | undefined
@@ -31,6 +35,8 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
   const root = () => (
     <SidebarRoot
       collapsed={current.collapsed} width={current.width}
+      // exactOptionalPropertyTypes: only spread the owner key when a test supplies it.
+      {...(drawerClose !== undefined ? { drawerClose } : {})}
       useSessions={neverHook} useWorkspaces={neverHook}
       startSession={startSession} toggleSidebar={toggleSidebar} t={t}
       renderSlot={((
@@ -83,6 +89,15 @@ describe('SidebarRoot shell', () => {
     expect(b.startSession).toHaveBeenCalledTimes(2)
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(b.toggleSidebar).toHaveBeenCalledOnce()
+  })
+
+  it('routes the collapse control to drawerClose when hosted in the mobile drawer', () => {
+    const drawerClose = vi.fn()
+    const b = mountShell({ drawerClose })
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+    // The drawer column ignores rail/narrow store flips — never reach for them.
+    expect(drawerClose).toHaveBeenCalledOnce()
+    expect(b.toggleSidebar).not.toHaveBeenCalled()
   })
 
   it('hands the region its wide flag and clamps expandSidebar to the collapsed state', () => {

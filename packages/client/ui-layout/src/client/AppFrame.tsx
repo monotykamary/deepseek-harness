@@ -182,6 +182,7 @@ export function AppFrame({
       data-sidebar-collapsed={sidebarCollapsed || undefined}
       data-details-collapsed={cols.details === 0 || undefined}
       data-dragging={dragging || undefined}
+      data-sidebar-drawer={compact || undefined}
     >
       <div className={css.sidebarCol}>
         {/* Render-site slot call with live concession output: a closed
@@ -205,17 +206,12 @@ export function AppFrame({
       </>
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}
-      </div>
-      {/* The collapsed rail is fixed-width: no resize handle while closed;
-          compact mode owns no drag surfaces at all. */}
-      {!compact && !sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
-      {!compact && cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
-      {compact && (
-        <>
-          {/* Fixed toggle after the columns in DOM order, so it paints above
-              page content with no stacking-value race (AGENTS.md UI layering
-              rule). The frame owns no locale plugin: the a11y label and the
-              drawer title are the frame's only copy. */}
+        {/* Compact drawer toggle lives in .overlayLayer: the frame's
+            sanctioned in-frame tier (z-tier above column content, beneath
+            body-end portals like the Sheet itself). The frame owns no locale
+            plugin: the a11y label and the drawer title are the frame's only
+            copy. */}
+        {compact && (
           <button
             type="button"
             className={css.drawerToggle}
@@ -226,14 +222,23 @@ export function AppFrame({
           >
             <IconMenuOutline16 />
           </button>
-          <Sheet open={drawerOpen} onClose={() => { setDrawerOpen(false) }} title="Sidebar" side="left">
-            <div className={css.drawerSidebar}>
-              {/* Same slot, mobil-expanded owner share: always open at the
-                  fixed drawer width regardless of the persisted rail state. */}
-              {renderSlot('sidebar', { collapsed: false, width: SIDEBAR_DRAWER_WIDTH })}
-            </div>
-          </Sheet>
-        </>
+        )}
+      </div>
+      {/* The collapsed rail is fixed-width: no resize handle while closed;
+          compact mode owns no drag surfaces at all. */}
+      {!compact && !sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
+      {!compact && cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
+      {compact && (
+        <Sheet open={drawerOpen} onClose={() => { setDrawerOpen(false) }} title="Sidebar" side="left">
+          <div className={css.drawerSidebar}>
+            {/* Same slot, mobil-expanded owner share: always open at the
+                fixed drawer width regardless of the persisted rail state. */}
+            {renderSlot('sidebar', {
+              collapsed: false, width: SIDEBAR_DRAWER_WIDTH,
+              drawerClose: () => { setDrawerOpen(false) },
+            })}
+          </div>
+        </Sheet>
       )}
     </div>
   )
