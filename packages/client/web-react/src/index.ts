@@ -21,3 +21,4 @@ export { createSlotRenderer } from './scoped-slots.tsx'
 export { SessionProvider, SlotAssemblyError, type SessionProviderProps } from './session-provider.tsx'
 
 export { useInvoke } from './use-invoke.ts'
+export { useMediaQuery } from './use-media-query.ts'

@@ -66,5 +66,8 @@
     "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
-  ]
+  ],
+  "dependencies": {
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^"
+  }
 }

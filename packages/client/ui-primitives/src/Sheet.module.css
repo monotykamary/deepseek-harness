@@ -1,0 +1,66 @@
+/* Portaled edge dock for compact viewports (AGENTS.md layering rule): the
+   root joins the single overlay tier, and within it paint order is document
+   order — the panel follows the mask in markup, and the portal renders at
+   the end of body after page content. */
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dsw-layer-overlay);
+}
+
+.mask {
+  position: absolute;
+  inset: 0;
+  background: var(--dsw-alias-bg-mask-1);
+  backdrop-filter: var(--dsw-mask-blur);
+  animation: sheet-fade 160ms var(--ds-ease-in-out, ease-out);
+}
+
+.panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  box-shadow: var(--dsw-shadow-lv3);
+  animation: sheet-slide-in 160ms var(--ds-ease-in-out, ease-out);
+  /* The display safe area stays outside the slot's own spacing. */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.panel[data-side='left'] {
+  inset: 0 auto 0 0;
+  width: min(300px, 82vw);
+}
+
+.panel[data-side='right'] {
+  inset: 0 0 0 auto;
+  width: min(320px, 88vw);
+  border-right: none;
+  border-left: 1px solid var(--dsw-alias-border-l2);
+  animation-name: sheet-slide-in-right;
+}
+
+@keyframes sheet-slide-in {
+  from { transform: translateX(-16px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes sheet-slide-in-right {
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .mask {
+    animation: none;
+  }
+}

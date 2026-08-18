@@ -31,6 +31,14 @@ export const SIDEBAR_COLLAPSED = 56
  * LG breakpoint); a manual toggle below it re-expands over the squeezed center
  * (stores.ts narrowExpanded). */
 export const SIDEBAR_AUTO_COLLAPSE = 1024
+
+/** Mobile portrait (AGENTS.md layout rules: rail gone below 600px): the
+ * rail is replaced by a portaled drawer so the narrow 600–1024 rail-reopen
+ * flow (chat-scroll-contract e2e) keeps working above this line. */
+export const SIDEBAR_DRAWER_VIEWPORT = 600
+
+/** Width the sidebar slot renders at while hosted in the compact drawer. */
+export const SIDEBAR_DRAWER_WIDTH = 300
 /** Details drag clamp floor. */
 export const DETAILS_MIN = 300
 /** Details drag clamp ceiling. */

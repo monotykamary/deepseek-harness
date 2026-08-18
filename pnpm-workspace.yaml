@@ -46,6 +46,10 @@ allowBuilds:
   # them only because they ship lifecycle scripts, but those are no-ops we don't
   # need, so we deny them — install still succeeds.
   '@google/genai': false
+  # @tailwindcss/vite (apps/web): oxide's postinstall is only a network download
+  # fallback for the platform binding; prebuilt bindings ride the optional
+  # @tailwindcss/oxide-<platform> deps already in the lockfile, so deny the script.
+  '@tailwindcss/oxide': false
   protobufjs: false
   node-addon-require-builtin: false
   # JSONL durability calls MoveFileExW with write-through publication on Windows.

@@ -190,3 +190,19 @@
 .toBottom:hover {
   background: var(--dsw-alias-button-floating-hover);
 }
+
+/* Soft alpha fade at the scroller's top and bottom breathing gaps (t3 chat
+   pattern): content dissolves into the gap instead of clipping on a hard
+   edge. Color-free mask, so it composes with every theme and the dark
+   surface; the composer seat is overlaid OUTSIDE this scroller
+   (ConversationRoot), so it never fades. Reduced-motion still applies the
+   fade — it is static chrome, not animation. */
+:global([data-conversation-scroll]) {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0) 20px,
+    rgb(0 0 0 / 0.99) calc(100% - 24px),
+    transparent 100%
+  );
+}

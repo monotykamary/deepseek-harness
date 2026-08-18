@@ -110,6 +110,8 @@
     "gen-cordis-inspect-catalog": "tsx scripts/gen-cordis-inspect-catalog.ts",
     "verify-client-catalog": "tsx scripts/gen-client-catalog.ts --check",
     "verify-export-jsdoc": "tsx scripts/verify-export-jsdoc.ts",
+    "verify-ui-layout": "tsx scripts/verify-ui-layout.ts",
+    "verify-ui-layout:baseline": "tsx scripts/verify-ui-layout.ts --write-baseline",
     "gen-tool-catalog": "tsx scripts/gen-tool-catalog.ts",
     "verify-tool-catalog": "tsx scripts/gen-tool-catalog.ts --check",
     "gen-config-catalog": "tsx scripts/gen-config-catalog.ts",

@@ -3,6 +3,7 @@
  * loader holding, module-table seeding, AppRoot gate, plugin assembly — lives
  * in @monotykamary/dsh-client-web; this file only finds the mount point.
  */
+import './tailwind.css'
 import { AppWebEntry } from '@monotykamary/dsh-client-web'
 
 const el = document.getElementById('root')

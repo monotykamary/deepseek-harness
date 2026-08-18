@@ -70,6 +70,17 @@
   background: var(--dsw-alias-button-tool-bar-hover);
 }
 
+/* Touch: fingers miss 28/36px targets (t3 44px policy, WCAG 2.5.5). Visual
+   footprint stays at the mouse density; only coarse-pointer devices grow the
+   hit area. */
+@media (pointer: coarse) {
+  .md,
+  .sm {
+    min-height: 44px;
+    padding: 0 16px;
+  }
+}
+
 .icon {
   display: inline-flex;
   width: 16px;

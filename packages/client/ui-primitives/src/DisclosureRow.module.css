@@ -20,6 +20,19 @@
   cursor: pointer;
 }
 
+/* Touch: the dense 24px row gains a 44px hit area on coarse pointers
+   (t3 accordion-row policy); the whole row is the toggle target already. */
+@media (pointer: coarse) {
+  .row {
+    min-height: 44px;
+  }
+
+  .leading {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 .leading {
   position: relative;
   flex: none;

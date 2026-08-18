@@ -2,6 +2,10 @@
    font-weight: 500 in this UI — non-variable webfonts snap intermediate
    weights unpredictably across platforms. */
 body {
+  /* Portaled overlay tier (modal/sheet roots): the single z-index tier of
+     the UI. Portals render after the page tree, equal tiers settle by
+     document order — nothing races numbers above or below it. */
+  --dsw-layer-overlay: 1000;
   --dsw-static-amber-100: rgb(254, 245, 231);
   --dsw-static-amber-400: rgb(247, 173, 49);
   --dsw-static-amber-500: rgb(245, 158, 11);

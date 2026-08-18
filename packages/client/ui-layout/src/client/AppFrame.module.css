@@ -117,3 +117,48 @@
 .overlayLayer > * {
   pointer-events: auto;
 }
+
+/* Reduced motion: column resizes snap instead of sliding; the drawer Sheet
+   honors the same contract in ui-primitives. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebarCol,
+  .conversationCol,
+  .detailsCol,
+  .drawerToggle {
+    transition: none;
+  }
+}
+
+/* Compact drawer affordance: top-left of the frame, above the conversation
+   porch by document order (no z-index — the layering rule). The touch area
+   34px; safe-area insets nudge it out of the notch. */
+.drawerToggle {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.drawerToggle:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Sidebar slot host inside the Sheet: fixed render width expanded, height
+   pinned to the panel; the slot's own column scrolls beneath the shared
+   structure — nothing reflows as the frame flips modes. */
+.drawerSidebar {
+  width: 300px;
+  height: 100%;
+  overflow: hidden;
+}

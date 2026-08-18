@@ -11,7 +11,7 @@
  * resizes are driven through the ResizeObserver stub.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { useSyncExternalStore } from 'react'
 import { AppFrame } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
 import type { AppFrameProps } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
@@ -325,6 +325,51 @@ describe('AppFrame — narrow-viewport auto-collapse', () => {
     frameWidth = 1920
     act(() => { fireResize?.(); vi.advanceTimersByTime(20) })
     expect(tracks(frame)).toEqual([400, 0])
+  })
+})
+
+describe('AppFrame — compact drawer', () => {
+  it('offers the drawer toggle below the drawer viewport and hides the sidebar column', () => {
+    frameWidth = 500
+    const { frame, queryByTestId } = mountFrame()
+    expect(tracks(frame)).toEqual([0, 0])
+    expect(frame.querySelector('[data-drawer-toggle]')).not.toBeNull()
+    // The sidebar slot is not rendered outside the drawer in compact mode.
+    expect(queryByTestId('sidebar-content')).toBeNull()
+  })
+
+  it('the drawer re-renders the sidebar slot expanded at the fixed drawer width', () => {
+    frameWidth = 500
+    const { slotCalls } = mountFrame()
+    fireEvent.click(screen.getByRole('button', { name: 'Open sidebar' }))
+    // The sheet portals to body: the slot content becomes findable globally.
+    const dialog = screen.getByRole('dialog', { name: 'Sidebar' })
+    expect(dialog.getAttribute('data-side')).toBe('left')
+    expect(within(dialog as HTMLElement).getByTestId('sidebar-content')).toBeTruthy()
+    const lastSidebarCall = slotCalls.filter(c => c.key === 'sidebar').at(-1)!
+    expect(lastSidebarCall.props).toEqual({ collapsed: false, width: 300 })
+  })
+
+  it('Escape closes the drawer and the toggle reflects open state', () => {
+    frameWidth = 500
+    mountFrame()
+    const toggle = screen.getByRole('button', { name: 'Open sidebar' })
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Sidebar' })).toBeNull()
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('growing past the drawer viewport snaps the drawer shut and restores the rail', () => {
+    frameWidth = 500
+    const { frame } = mountFrame()
+    fireEvent.click(screen.getByRole('button', { name: 'Open sidebar' }))
+    frameWidth = 900
+    act(() => { fireResize?.(); vi.advanceTimersByTime(20) })
+    expect(screen.queryByRole('dialog', { name: 'Sidebar' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Open sidebar' })).toBeNull()
+    expect(tracks(frame)).toEqual([SIDEBAR_COLLAPSED, 0])
   })
 })
 

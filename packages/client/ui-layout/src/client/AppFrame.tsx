@@ -13,7 +13,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { PropsRenderSlots, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
-import { computeColumns, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT } from './columns.ts'
+import { Sheet } from '@monotykamary/dsh-client-ui-primitives'
+import { computeColumns, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT, SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH } from './columns.ts'
+import { IconMenuOutline16 } from './icons.tsx'
 import type { createLayoutStore } from './stores.ts'
 import css from './AppFrame.module.css'
 
@@ -143,6 +145,14 @@ export function AppFrame({
   const colsRef = useRef(cols)
   colsRef.current = cols
 
+  // Compact viewports retire the rail: the sidebar slot re-renders expanded
+  // inside a portaled drawer instead of compressing the three tracks. The
+  // empty column stays mounted so every occupant keeps its tree position
+  // across mode flips; the drawer snaps shut when the frame grows again.
+  const compact = viewport < SIDEBAR_DRAWER_VIEWPORT
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  useEffect(() => { if (!compact) setDrawerOpen(false) }, [compact])
+
   // The drag base is the rendered width captured at drag start (grabbing a
   // concession-clamped panel must not jump back to the stored preference);
   // it stays frozen for the whole gesture so dx deltas do not compound.
@@ -165,7 +175,10 @@ export function AppFrame({
     <div
       ref={frameRef}
       className={css.frame}
-      style={{ gridTemplateColumns: `${cols.sidebar}px minmax(0, 1fr) ${cols.details}px` }}
+      style={{ gridTemplateColumns: compact
+        // The rail is gone in compact mode: a zero track, not the 56px rail.
+        ? `0px minmax(0, 1fr) ${cols.details}px`
+        : `${cols.sidebar}px minmax(0, 1fr) ${cols.details}px` }}
       data-sidebar-collapsed={sidebarCollapsed || undefined}
       data-details-collapsed={cols.details === 0 || undefined}
       data-dragging={dragging || undefined}
@@ -176,7 +189,7 @@ export function AppFrame({
             component sees its rendered state as owner params decided here
             (collapsed follows the resolved rail, so a derived auto-collapse
             renders the rail UI too). */}
-        {renderSlot('sidebar', {
+        {compact ? null : renderSlot('sidebar', {
           collapsed: sidebarCollapsed,
           width: cols.sidebar,
         })}
@@ -193,9 +206,35 @@ export function AppFrame({
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}
       </div>
-      {/* The collapsed rail is fixed-width: no resize handle while closed. */}
-      {!sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
-      {cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
+      {/* The collapsed rail is fixed-width: no resize handle while closed;
+          compact mode owns no drag surfaces at all. */}
+      {!compact && !sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
+      {!compact && cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
+      {compact && (
+        <>
+          {/* Fixed toggle after the columns in DOM order, so it paints above
+              page content with no stacking-value race (AGENTS.md UI layering
+              rule). The frame owns no locale plugin: the a11y label and the
+              drawer title are the frame's only copy. */}
+          <button
+            type="button"
+            className={css.drawerToggle}
+            data-drawer-toggle=""
+            aria-label="Open sidebar"
+            aria-expanded={drawerOpen}
+            onClick={() => { setDrawerOpen(open => !open) }}
+          >
+            <IconMenuOutline16 />
+          </button>
+          <Sheet open={drawerOpen} onClose={() => { setDrawerOpen(false) }} title="Sidebar" side="left">
+            <div className={css.drawerSidebar}>
+              {/* Same slot, mobil-expanded owner share: always open at the
+                  fixed drawer width regardless of the persisted rail state. */}
+              {renderSlot('sidebar', { collapsed: false, width: SIDEBAR_DRAWER_WIDTH })}
+            </div>
+          </Sheet>
+        </>
+      )}
     </div>
   )
 }

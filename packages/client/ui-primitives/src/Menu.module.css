@@ -160,6 +160,18 @@
   cursor: not-allowed;
 }
 
+/* Touch: menu cells meet the 44px tap floor on coarse pointers; the dense
+   and compact list forms stay pointer-dense forms. */
+@media (pointer: coarse) {
+  .item {
+    min-height: 44px;
+  }
+
+  .denseList .item {
+    min-height: 44px;
+  }
+}
+
 .itemIcon {
   display: inline-flex;
   flex: none;

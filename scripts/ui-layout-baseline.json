@@ -1,0 +1,306 @@
+{
+  "packages/client/ui-agent-preset/src/client/AgentPresetSection.module.css": {
+    "margins": 10,
+    "zindexes": 0
+  },
+  "packages/client/ui-attachment/src/AttachmentRail.module.css": {
+    "margins": 0,
+    "zindexes": 2
+  },
+  "packages/client/ui-attachment/src/DropOverlay.module.css": {
+    "margins": 3,
+    "zindexes": 1
+  },
+  "packages/client/ui-attachment/src/ImageLightbox.module.css": {
+    "margins": 0,
+    "zindexes": 2
+  },
+  "packages/client/ui-commands/src/client/PopupSelectView.module.css": {
+    "margins": 1,
+    "zindexes": 1
+  },
+  "packages/client/ui-conversation/src/client/chat/AssistantMarkdown.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/ChatView.module.css": {
+    "margins": 3,
+    "zindexes": 1
+  },
+  "packages/client/ui-conversation/src/client/chat/ContextBody.module.css": {
+    "margins": 10,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/ContextInjectionRow.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/GenericCommandCard.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/MessageIconActions.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/MessageItem.module.css": {
+    "margins": 7,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/ReasoningRow.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/StatsLine.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/chat/TurnTailNodeView.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/queue/QueueDock.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/skeleton/ContextMeter.module.css": {
+    "margins": 5,
+    "zindexes": 1
+  },
+  "packages/client/ui-conversation/src/client/skeleton/ConversationRoot.module.css": {
+    "margins": 3,
+    "zindexes": 5
+  },
+  "packages/client/ui-conversation/src/client/skeleton/DetailsPanel.module.css": {
+    "margins": 3,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css": {
+    "margins": 3,
+    "zindexes": 2
+  },
+  "packages/client/ui-conversation/src/client/skeleton/InputBar.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-conversation/src/client/skeleton/TodoPanel.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-deliverables/src/client/ProducedFiles.module.css": {
+    "margins": 3,
+    "zindexes": 0
+  },
+  "packages/client/ui-directory-picker-browse/src/client/DirectoryBrowser.module.css": {
+    "margins": 5,
+    "zindexes": 0
+  },
+  "packages/client/ui-goal/src/client/GoalBar.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-input-trigger/src/client/MenuView.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-jobs/src/client/JobListAction.module.css": {
+    "margins": 2,
+    "zindexes": 1
+  },
+  "packages/client/ui-layout/src/client/AppFrame.module.css": {
+    "margins": 1,
+    "zindexes": 2
+  },
+  "packages/client/ui-model-selection/src/client/ModelSelect.module.css": {
+    "margins": 2,
+    "zindexes": 2
+  },
+  "packages/client/ui-primitives/src/ConnectionBanner.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/DiffBlock.module.css": {
+    "margins": 2,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/DisclosureRow.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/HoverCard.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/JsonTree.module.css": {
+    "margins": 8,
+    "zindexes": 4
+  },
+  "packages/client/ui-primitives/src/Menu.module.css": {
+    "margins": 3,
+    "zindexes": 3
+  },
+  "packages/client/ui-primitives/src/Modal.module.css": {
+    "margins": 3,
+    "zindexes": 2
+  },
+  "packages/client/ui-primitives/src/OnboardingSurface.module.css": {
+    "margins": 0,
+    "zindexes": 2
+  },
+  "packages/client/ui-primitives/src/ReadBlock.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/RiskConfirmation.module.css": {
+    "margins": 4,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/SearchBlock.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/TerminalBlock.module.css": {
+    "margins": 5,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/Toast.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/Tooltip.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/WebBlock.module.css": {
+    "margins": 9,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/markdown/CodeBlock.module.css": {
+    "margins": 4,
+    "zindexes": 1
+  },
+  "packages/client/ui-primitives/src/markdown/JsonBlock.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-primitives/src/markdown/MarkdownText.module.css": {
+    "margins": 24,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-general/src/client/SettingsRoot.module.css": {
+    "margins": 3,
+    "zindexes": 2
+  },
+  "packages/client/ui-settings-models/src/client/DeepSeekOnboardingDialog.module.css": {
+    "margins": 3,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-models/src/client/ModelsSection.module.css": {
+    "margins": 11,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-models/src/client/OnboardingModal.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-models/src/client/WelcomeNotice.module.css": {
+    "margins": 4,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.module.css": {
+    "margins": 4,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-plugins/src/client/PluginCard.module.css": {
+    "margins": 3,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-plugins/src/client/PluginsSettingsSection.module.css": {
+    "margins": 5,
+    "zindexes": 0
+  },
+  "packages/client/ui-settings-plugins/src/client/fields.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-sidebar/src/client/SidebarRoot.module.css": {
+    "margins": 8,
+    "zindexes": 0
+  },
+  "packages/client/ui-skill/src/client/SkillRow.module.css": {
+    "margins": 7,
+    "zindexes": 0
+  },
+  "packages/client/ui-subagent/src/client/SubagentCatalogAction.module.css": {
+    "margins": 5,
+    "zindexes": 1
+  },
+  "packages/client/ui-subagent/src/client/SubagentReadOnlyComposer.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-tool/src/client/tool/ToolCallTree.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-tool/src/client/tool/ToolDetails.module.css": {
+    "margins": 5,
+    "zindexes": 0
+  },
+  "packages/client/ui-tool/src/client/tool/components/ToolRow.module.css": {
+    "margins": 8,
+    "zindexes": 0
+  },
+  "packages/client/ui-tool/src/client/tool/toolviews/bash-sample.module.css": {
+    "margins": 7,
+    "zindexes": 0
+  },
+  "packages/client/ui-trajectory/src/client/TrajectoryTable.module.css": {
+    "margins": 48,
+    "zindexes": 9
+  },
+  "packages/client/ui-trajectory/src/client/TrajectoryTimeline.module.css": {
+    "margins": 0,
+    "zindexes": 9
+  },
+  "packages/client/ui-trajectory/src/client/TrajectoryToolbar.module.css": {
+    "margins": 1,
+    "zindexes": 1
+  },
+  "packages/client/ui-trajectory/src/client/TrajectoryTurn.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-trajectory/src/client/TrajectoryTurnHeader.module.css": {
+    "margins": 2,
+    "zindexes": 1
+  },
+  "packages/client/ui-trajectory/src/client/views.module.css": {
+    "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-user-questions/src/client/QuestionComposer.module.css": {
+    "margins": 8,
+    "zindexes": 0
+  },
+  "packages/client/ui-workflow-run/src/client/WorkflowRunPanel.module.css": {
+    "margins": 2,
+    "zindexes": 0
+  },
+  "packages/client/ui-workspace/src/client/WorkspaceBrowser.module.css": {
+    "margins": 20,
+    "zindexes": 1
+  },
+  "packages/client/ui-workspace/src/client/WorkspacePicker.module.css": {
+    "margins": 1,
+    "zindexes": 0
+  },
+  "packages/client/ui-workspace/src/client/rows/Rows.module.css": {
+    "margins": 4,
+    "zindexes": 1
+  },
+  "packages/client/web/src/base.css": {
+    "margins": 1,
+    "zindexes": 0
+  }
+}

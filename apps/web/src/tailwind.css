@@ -1,0 +1,26 @@
+/* Tailwind v4 integration: theme + utilities only — NO preflight. The dsw
+ * hand-authored token CSS owns base styles (see packages/client/ui-theme's
+ * design-platform.css), so Tailwind's border/margin/heading resets must not
+ * load: `theme.css` supplies the @theme token layer and `utilities.css` the
+ * utility class generator. Utilities land in cascade layers, so component CSS
+ * Modules still win ties — additive utility use stays safe.
+ *
+ * Coverage: @source directives force the scanner across every first-party
+ * client package source (repo layout). The shell bundle is baked at apps/web
+ * build time, so classes used by runtime plugin bundles (served from
+ * /plugins/<id>/client.js) are generated here as long as their source is
+ * scanned — runtime plugins never re-run Tailwind themselves.
+ */
+@import 'tailwindcss/theme.css' source(none);
+@import 'tailwindcss/utilities.css';
+
+@source './**/*';
+@source '../../../packages/client/**/src/**/*';
+
+/* Token bridge: Tailwind theme colors can reference the dsw alias layer so
+ * utility classes (bg-*, text-*, ring-*) resolve to the same themed values
+ * the hand-authored modules use. Demonstrated with one alias below; extend
+ * alongside adoption. */
+@theme inline {
+  --color-chat-surface: var(--dsw-alias-bg-base);
+}
