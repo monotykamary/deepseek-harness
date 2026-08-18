@@ -2,7 +2,7 @@
  * Sidebar slot contract: the registrant-side props composition for the
  * layout-owned `sidebar` slot, plus the holes this shell declares. The shell
  * owns column geometry (fold state machine, brand row, New Session);
- * everything between the section header and the list bottom is the
+ * persistent Search, scope controls, and Session cards are the
  * `sidebar.workspaces` registrant's (ui-workspace), and the foot is the
  * `sidebar.settings` registrant's (ui-settings), followed by optional footer
  * actions in `sidebar.footer.action`.
@@ -16,8 +16,8 @@ import type { WorkspaceId } from '@monotykamary/dsh-client-runtime/client'
 declare module '@monotykamary/dsh-client-ui-slots' {
   interface SlotMap {
     /**
-     * The workspace/session browsing region: section header, search, the
-     * grouped/flat session list, and every workspace dialog. Declared by this
+     * The Workspace/Session browsing region: persistent Search and scope
+     * controls, grouped/flat Session cards, and every Workspace dialog. Declared by this
      * package's 'sidebar' entry (declaring is claiming); ui-workspace
      * registers the browser.
      */

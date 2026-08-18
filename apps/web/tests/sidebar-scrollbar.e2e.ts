@@ -141,7 +141,7 @@ function measureList(page: Page): Promise<ListMetrics> {
   return page.evaluate(() => {
     const list = document.querySelector<HTMLElement>('[role="tree"][aria-label="Sessions"]')
     if (list === null) throw new Error('sidebar session list not in the DOM')
-    const time = list.querySelector<HTMLElement>('[class*="time"]')
+    const time = list.querySelector<HTMLElement>('[data-sidebar-session-time]')
     if (time === null) throw new Error('no row relative-time element in the sidebar list')
     const row = list.querySelector<HTMLElement>('[role="treeitem"]')
     if (row === null) throw new Error('no row in the sidebar list')
@@ -356,13 +356,13 @@ async function pointAt(page: Page, where: 'list' | 'away'): Promise<void> {
  * @param page - the page under test.
  */
 async function expandSeededSessions(page: Page): Promise<void> {
-  const bucket = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..')
+  const bucket = page.locator('[role="treeitem"][aria-expanded]').filter({ hasText: 'Ungrouped' }).first()
   await bucket.waitFor({ timeout: 15_000 })
   const rows = page.locator('[role="tree"][aria-label="Sessions"] [role="treeitem"]')
   const deadline = Date.now() + 30_000
   for (;;) {
     if (await bucket.getAttribute('aria-expanded') !== 'true') {
-      await page.getByText('Ungrouped', { exact: true }).click()
+      await bucket.click()
     }
     const showMore = page.getByRole('button', { name: /Show \d+ more sessions/ })
     if (await bucket.getAttribute('aria-expanded') === 'true'
@@ -422,7 +422,7 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
     // itself is not pinned — it tracks `scrollbar-width` and the platform.
     expect(metrics.band).toBeGreaterThan(0)
     expect(metrics.scrollbarEdgeOffset).toBe(2)
-    expect(metrics.rowEdgeInset).toBe(12)
+    expect(metrics.rowEdgeInset).toBe(10)
     // The reported symptom, stated directly: no part of the row's relative time
     // lies under the bar. Without either declaration it measures 7 — the `h`
     // of `1h` is the covered part. Unlike the client-edge comparison below it
@@ -472,12 +472,12 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
 
   it('keeps the row background inset when overflow disappears', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-scrollbar-stable-inset'))
-    expect(await measureRowInset(page)).toEqual({ overflows: true, rowEdgeInset: 12 })
-    const bucket = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..')
+    expect(await measureRowInset(page)).toEqual({ overflows: true, rowEdgeInset: 10 })
+    const bucket = page.locator('[role="treeitem"][aria-expanded]').filter({ hasText: 'Ungrouped' }).first()
     await bucket.click()
     try {
       await expect.poll(async () => (await measureRowInset(page)).overflows, { timeout: 10_000 }).toBe(false)
-      expect(await measureRowInset(page)).toEqual({ overflows: false, rowEdgeInset: 12 })
+      expect(await measureRowInset(page)).toEqual({ overflows: false, rowEdgeInset: 10 })
     } finally {
       await expandSeededSessions(page)
     }

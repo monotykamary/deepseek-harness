@@ -96,21 +96,22 @@ describe('WorkspaceBrowser.module.css list', () => {
     }
   })
 
-  it('keeps the compact fade, overflow control, search field, and row heights', () => {
+  it('keeps the compact fade and T3 Search, scope, and card geometry', () => {
     expect(declarations('.fade')?.get('height')).toBe('24px')
     expect(declarations('.sessionOverflowButton')?.get('height')).toBe('28px')
-    expect(declarations('.searchExpanded')?.get('height')).toBe('30px')
-    expect(rowDeclarations('.projectRow')?.get('height')).toBe('34px')
-    expect(rowDeclarations('.sessionRow')?.get('height')).toBe('32px')
-    expect(rowDeclarations('.flatSessionRowWithoutStatus .title')?.get('margin-left')).toBe('0')
-    expect(rowDeclarations('.searchResultRow')?.get('min-height')).toBe('48px')
+    expect(declarations('.searchRow')?.get('height')).toBe('32px')
+    expect(declarations('.scopeRow')?.get('height')).toBe('32px')
+    expect(rowDeclarations('.projectRow')?.get('height')).toBe('32px')
+    expect(rowDeclarations('.sessionRow')?.get('min-height')).toBe('78px')
+    expect(rowDeclarations('.searchResultRow')?.get('min-height')).toBe('56px')
     expect(rowDeclarations('.sessionRow.selected')?.get('background'))
-      .toBe('var(--dsw-alias-interactive-bg-hover)')
+      .toBe('var(--dsw-specific-sidebar-row-active)')
   })
 
   it('pins both rail controls to the shared left anchor during the column slide', () => {
-    expect(declarations('.rail .sectionHeader')?.get('justify-content')).toBe('flex-start')
+    expect(declarations('.railControls')?.get('align-items')).toBe('flex-start')
+    expect(declarations('.railControls')?.get('gap')).toBe('12px')
     expect(declarations('.rail .iconButton')?.get('width')).toBe('36px')
-    expect(declarations('.rail .search')?.get('width')).toBe('36px')
+    expect(declarations('.rail .iconButton')?.get('height')).toBe('36px')
   })
 })

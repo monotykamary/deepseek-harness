@@ -18,6 +18,10 @@ export const UNGROUPED_LABEL = 'Ungrouped'
 /** One top-level session row in a group or the flat list. */
 export interface SessionNode {
   id: SessionId
+  /** Workspace display label shown in the card header. */
+  workspace: string
+  /** Agent preset shown as the card's stable execution-context label. */
+  agentPreset?: string
   /** Stored display title; the renderer substitutes the localized New Session label for blank rows. */
   title: string
   /** The provisional blank session (renderer shows the localized New Session title). */
@@ -214,9 +218,12 @@ function groupByWorkspace(
 function sessionNode(
   s: SessionSummary,
   descendants: ReadonlyMap<SessionId, SubagentDescendantSummary>,
+  workspace: string,
 ): SessionNode {
   return {
     id: s.id,
+    workspace,
+    ...(s.agentPreset === undefined ? {} : { agentPreset: s.agentPreset }),
     title: sessionTitle(s),
     blank: s.blank,
     running: s.running,
@@ -266,7 +273,7 @@ export function deriveGroups(
       sessionCount: g.sessions.length,
       expanded,
       containsCurrent: g.key === currentGroup,
-      sessions: expanded ? g.sessions.map(session => sessionNode(session, descendants)) : [],
+      sessions: expanded ? g.sessions.map(session => sessionNode(session, descendants, g.label)) : [],
     })
   }
   return groups
@@ -294,7 +301,7 @@ export function deriveFlat(
     rows.push(s)
   }
   rows.sort(byRecency)
-  return rows.map(session => sessionNode(session, descendants))
+  return rows.map(session => sessionNode(session, descendants, workspaceLabel(session.cwd)))
 }
 
 /** Relative-time bucket of a session row's trailing label. */

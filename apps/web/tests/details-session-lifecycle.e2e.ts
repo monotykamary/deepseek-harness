@@ -131,12 +131,12 @@ describe.skipIf(MODE === 'record')('web e2e: details panel follows the current S
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)
     expect(await page.getByText('Details', { exact: true }).isVisible()).toBe(false)
 
-    const ungrouped = page.getByText('Ungrouped', { exact: true })
-    const ungroupedRow = ungrouped.locator('..').locator('..')
+    const ungroupedRow = page.locator('[role="treeitem"][aria-expanded]')
+      .filter({ hasText: 'Ungrouped' }).first()
     const ungroupedSection = ungroupedRow.locator('..')
     await expect.poll(async () => {
       if (await ungroupedRow.getAttribute('aria-expanded') !== 'true') {
-        await ungrouped.click()
+        await ungroupedRow.click()
         await page.waitForTimeout(50)
       }
       return await ungroupedRow.getAttribute('aria-expanded')

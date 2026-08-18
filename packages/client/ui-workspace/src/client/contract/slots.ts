@@ -2,8 +2,8 @@
  * ui-workspace contracts. Two registrations share this package:
  *
  * - WorkspaceBrowser fills the sidebar shell's `sidebar.workspaces` hole —
- *   the whole browsing region (section header, search, grouped/flat session
- *   list, workspace dialogs). It registers this package's viewing store and
+ *   persistent Search and scope rows, grouped/flat Session cards, and
+ *   Workspace dialogs. It registers this package's viewing store and
  *   consumes the shell's two-fact owner share (wide / expandSidebar).
  * - WorkspacePicker fills the conversation empty-state hole (menu + error
  *   dialog shared with the browser).

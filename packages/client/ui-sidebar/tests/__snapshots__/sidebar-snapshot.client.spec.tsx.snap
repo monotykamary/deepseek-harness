@@ -6,33 +6,37 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
   style="display: contents;"
 >
   <div
-    class="root collapsed railIn quietBars"
-    style=""
+    class="root fading quietBars"
+    style="width: 300px;"
   >
     <div
       class="logoRow"
     >
+      <div
+        aria-hidden="true"
+        class="brand wide"
+      >
+        <svg
+          aria-hidden="true"
+          data-content="951274b9"
+          fill="none"
+          height="24"
+          viewBox="0 0 182 24"
+          width="182"
+        />
+      </div>
       <button
         aria-label="Open sidebar"
         class="iconButton toggle"
         type="button"
       >
         <svg
-          aria-hidden="true"
-          class="railFish"
-          data-content="965fe321"
-          fill="none"
-          height="17.6580310880829"
-          viewBox="0 0 23.16 17.04"
-          width="24"
-        />
-        <svg
           class="panelIcon"
           data-content="35f95b0c"
           fill="none"
-          height="18"
+          height="16"
           viewBox="0 0 16 16"
-          width="18"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
       </button>
@@ -45,11 +49,16 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
       <svg
         data-content="c0ce4dcc"
         fill="none"
-        height="18"
+        height="14"
         viewBox="0 0 16 16"
-        width="18"
+        width="14"
         xmlns="http://www.w3.org/2000/svg"
       />
+      <span
+        class="newSessionLabel wide"
+      >
+        New Session
+      </span>
     </button>
     <div
       class="regionArea"
@@ -83,7 +92,7 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
 </div>
 `;
 
-exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsule, empty holes) 1`] = `
+exports[`sidebar shell snapshots > renders the expanded column (identity, action row, empty holes) 1`] = `
 <div
   data-slot="sidebar"
   style="display: contents;"
@@ -95,10 +104,9 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
     <div
       class="logoRow"
     >
-      <button
-        aria-label="New session"
+      <div
+        aria-hidden="true"
         class="brand wide"
-        type="button"
       >
         <svg
           aria-hidden="true"
@@ -108,7 +116,7 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
           viewBox="0 0 182 24"
           width="182"
         />
-      </button>
+      </div>
       <button
         aria-label="Collapse sidebar"
         class="iconButton toggle"
@@ -188,10 +196,9 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
     <div
       class="logoRow"
     >
-      <button
-        aria-label="新建会话"
+      <div
+        aria-hidden="true"
         class="brand wide"
-        type="button"
       >
         <svg
           aria-hidden="true"
@@ -201,7 +208,7 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
           viewBox="0 0 182 24"
           width="182"
         />
-      </button>
+      </div>
       <button
         aria-label="收起侧边栏"
         class="iconButton toggle"

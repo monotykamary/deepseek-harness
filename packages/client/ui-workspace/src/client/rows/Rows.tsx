@@ -1,14 +1,15 @@
 /**
- * Workspace browser tree row components (figma Cell set 14:3080): pure presentational —
- * all data and callbacks arrive via props. Hover swaps (folder->chevron,
- * time->ellipsis, action buttons) are CSS-only. Row ... menus are visual-only
- * except workspace Rename/Delete and session Rename/Fork/Archive; the session
- * and workspace hover cards are suppressed while a menu is open.
+ * Pure Workspace and Session row components. Session cards adapt T3 Code
+ * revision a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2: project context, title,
+ * execution metadata, and status/actions occupy stable seats on an
+ * interaction-only rounded surface. Workspace and Session menus retain dsh's
+ * rename, fork, archive, and delete behavior; hover details close while a menu
+ * or drag owns the row. See THIRD_PARTY_NOTICES.md.
  */
 import { useState } from 'react'
 import clsx from 'clsx'
 import {
-  HoverCard, IconArchiveOutline20, IconBranchOutline16, IconEditOutline16,
+  HoverCard, IconAgentPresetOutline16, IconArchiveOutline20, IconBranchOutline16, IconEditOutline16,
   IconEllipsisOutline16, IconFolderClose16, IconFolderOpen16, IconPlusOutline16,
   IconTrashOutline16, IconTriangleRightFill14, Menu, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
@@ -336,8 +337,8 @@ export function SearchResultItem({ result, currentId, onOpen, t }: {
 }
 
 /**
- * One top-level 34px session row: status dot (pending user interaction outranks
- * own or descendant activity), title, relative time, and the row actions menu.
+ * One top-level Session card: Workspace context, primary status or time,
+ * title, agent preset, relative time, and the row actions menu.
  * @param props.node - derived session node.
  * @param props.currentId - selected session id (row highlight).
  * @param props.now - epoch ms for relative-time formatting.
@@ -346,11 +347,10 @@ export function SearchResultItem({ result, currentId, onOpen, t }: {
  * @param props.onFork - fork a session at its last completed turn.
  * @param props.onArchive - archive a session by id.
  * @param props.drag - optional draggable-row wiring.
- * @param props.flat - omit the empty status slot in the hierarchy-free flat list.
  * @param props.t - the browser root's locale seat.
- * @returns the session row.
+ * @returns the Session card.
  */
-export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, drag, flat = false, t }: {
+export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, drag, t }: {
   node: SessionNode
   currentId: string | undefined
   now: number
@@ -363,8 +363,6 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
   onArchive: (id: SessionNode['id']) => void
   /** Present only on draggable rows (workspace-group sessions outside search). */
   drag?: RowDragProps | undefined
-  /** The row is rendered without a parent Workspace header. */
-  flat?: boolean | undefined
   t: RowTranslate
 }) {
   const row = node
@@ -383,12 +381,13 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
     // 20-native glyph in the menu's 16px icon slot (Menu.module.css .itemIcon).
     { id: 'archive', label: t('menu.archiveSession'), icon: <IconArchiveOutline20 size={16} /> },
   ]
-  // Figma session cell: pad 8, status slot 16, then a 4px title gap.
+  // T3-adapted Session cards keep project context, live status, title, and
+  // execution metadata in stable rows; actions replace only the trailing
+  // status seat on hover, so card text never shifts.
   const ownRow = (
     <div
       className={clsx(
         css.sessionRow, selected && css.selected, menuOpen && css.menuOpen,
-        flat && !showStatus && css.flatSessionRowWithoutStatus,
         drag?.marker === 'before' && css.dropBefore, drag?.marker === 'after' && css.dropAfter,
       )}
       role="treeitem"
@@ -419,47 +418,66 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
           drag.drop(rowHalf(e))
         }}
     >
-      {/* Pending interaction and own or descendant activity outrank the
-          finished-but-unviewed reminder, which returns after activity stops
-          and is cleared by opening the session. */}
-      {(!flat || showStatus) && (
-        <span className={css.slot}>
-          {showStatus && <SessionStatusDots statuses={statuses} />}
+      <div className={css.sessionTop}>
+        <span className={css.workspaceMeta}>
+          <IconFolderClose16 className={css.workspaceIcon} />
+          <span className={css.workspaceTitle}>{node.workspace}</span>
         </span>
-      )}
+        <span className={css.sessionTrailing}>
+          {showStatus
+            ? (
+              <span className={css.cardStatus} data-status-state={primaryStatus.state}>
+                <StateDot state={primaryStatus.state} />
+                <span>{primaryStatus.label}</span>
+                {statuses.slice(1).map(status => (
+                  <span className={css.visuallyHidden} key={status.label}>{status.label}</span>
+                ))}
+              </span>
+            )
+            : !row.blank && <span className={css.cardTime} data-sidebar-session-time>{timeLabel(row.updatedAt, now, t)}</span>}
+          {!row.blank && (
+            <span className={css.rowActions}>
+              <Menu
+                open={menuOpen}
+                onClose={() => { setMenuOpen(false) }}
+                items={sessionMenuItems}
+                onSelect={(id) => {
+                  setMenuOpen(false)
+                  if (id === 'rename') onRename(node.id, row.title)
+                  if (id === 'fork') onFork(node.id)
+                  if (id === 'archive') onArchive(node.id)
+                }}
+                portal
+                closeOnPointerLeave
+                anchor={(
+                  <button
+                    type="button"
+                    className={css.iconButton}
+                    aria-label={t('actions.session.aria', { name: title })}
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+                  >
+                    <IconEllipsisOutline16 />
+                  </button>
+                )}
+              />
+            </span>
+          )}
+        </span>
+      </div>
       <span className={css.title}>{title}</span>
-      {/* A blank New Session row is a provisional placeholder: nothing has
-          happened in it yet, so a "now" timestamp and the row verbs
-          (rename/fork/archive) would all act on content that does not
-          exist — both trailing cells stay off until the first prompt. */}
-      {!row.blank && <span className={css.time}>{timeLabel(row.updatedAt, now, t)}</span>}
-      {!row.blank && (
-        <span className={css.rowActions}>
-          <Menu
-            open={menuOpen}
-            onClose={() => { setMenuOpen(false) }}
-            items={sessionMenuItems}
-            onSelect={(id) => {
-              setMenuOpen(false)
-              if (id === 'rename') onRename(node.id, row.title)
-              if (id === 'fork') onFork(node.id)
-              if (id === 'archive') onArchive(node.id)
-            }}
-            portal
-            closeOnPointerLeave
-            anchor={(
-              <button
-                type="button"
-                className={css.iconButton}
-                aria-label={t('actions.session.aria', { name: title })}
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
-              >
-                <IconEllipsisOutline16 />
-              </button>
-            )}
-          />
-        </span>
-      )}
+      <div className={css.cardFoot}>
+        {node.agentPreset === undefined
+          ? <span />
+          : (
+            <span className={css.preset}>
+              <IconAgentPresetOutline16 size={14} />
+              <span>{node.agentPreset}</span>
+            </span>
+          )}
+        {!row.blank && showStatus && (
+          <span className={css.cardTime} data-sidebar-session-time>{timeLabel(row.updatedAt, now, t)}</span>
+        )}
+      </div>
     </div>
   )
   return (

@@ -1,31 +1,27 @@
-/* Sidebar column (figma 133:7629): vertical stack, padding 12/6, sidebar
-   fill + 1px right border painted by the layout column. Collapse is a
-   slide + crossfade, not a morph: the content holds its frozen expanded
-   layout (inline width set by the component) and fades in place (.fading)
-   while the sliding column (AppFrame grid tracks) clips it; the rail layout
-   (.collapsed) only applies after the fade settles, so nothing reflows
-   mid-slide. */
+/* T3-adapted sidebar chrome: 8px content inset, 32px rounded controls,
+   quiet interaction surfaces, and a 48px identity row. The DSH column keeps
+   its slide + crossfade: expanded content holds its width and fades in place
+   while AppFrame clips it, then the 56px rail layout enters after settle.
+   T3 Code attribution: THIRD_PARTY_NOTICES.md. */
 
 .root {
-  --dsh-sidebar-inline-padding: 12px;
+  --dsh-sidebar-inline-padding: 8px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
   height: 100%;
-  padding: 6px var(--dsh-sidebar-inline-padding);
+  padding: 4px var(--dsh-sidebar-inline-padding) 8px;
   box-sizing: border-box;
   background: var(--dsw-specific-sidebar-fill);
   color: var(--dsw-alias-label-primary);
   font-size: 14px;
-  /* The sidebar is elevated above the conversation surface, so a revealed
-     scrollbar uses the l2 pair. .quietBars hides it without changing layout. */
   --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
   --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
-/* Rail geometry (figma rail spec): 36x36 control boxes centered in the 56px
-   rail (10px side padding), 12px vertical rhythm, 18px from the rail top to
-   the whale's box (24px to the 24-wide whale glyph itself). */
+/* DSH rail geometry: 36px controls, 10px inline padding, 12px rhythm. */
 .root.collapsed {
+  gap: 12px;
   padding: 18px 10px 6px;
 }
 
@@ -84,18 +80,16 @@
   from { opacity: 0; }
 }
 
-/* Logo row (figma pad (4,8,4,8)): expanded keeps the panel toggle at the
-   right edge; the rail gives every control the same base left anchor before
-   the shared entry translation is applied. */
+/* The identity row keeps its toggle at the trailing edge; rail controls share
+   one left anchor before the entry translation. */
 .logoRow {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  height: 60px;
-  padding: 8px 0 8px 4px;
-  margin-bottom: 8px;
+  height: 48px;
+  padding: 8px 0;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -103,14 +97,11 @@
 .collapsed .logoRow {
   height: 36px;
   padding: 0;
-  margin-bottom: 12px;
   justify-content: flex-start;
 }
 
-/* Brand group (figma I133:7632): the full wordmark rides the text ink
-   (figma flows: the main-screen instance is black; blue is brand
-   emphasis only). A button only in behavior (New Session shortcut): the
-   pointer cursor is the sole affordance — no hover chrome on the mark. */
+/* Brand identity shares the T3 chrome row but is not an action; New Session
+   has one dedicated row below it. */
 .brand {
   flex: 1;
   min-width: 0;
@@ -121,7 +112,6 @@
   border: none;
   background: transparent;
   color: inherit;
-  cursor: pointer;
 }
 
 .iconButton {
@@ -129,18 +119,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 50%;
+  border-radius: 8px;
   padding: 0;
   background: transparent;
   cursor: pointer;
-  color: var(--dsw-alias-label-secondary);
+  color: var(--dsw-specific-sidebar-icon);
 }
 
 .iconButton:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-specific-sidebar-row-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 .collapsed .iconButton {
@@ -148,9 +139,8 @@
   height: 36px;
 }
 
-/* Rail logo swap: collapsed, the toggle rests as the whale mark (brand ink,
-   no hover circle) and hovering reveals the panel icon — the expand
-   affordance (figma sidebar-hover flow). Expanded it is a plain panel icon. */
+/* In the DSH rail, the whale rests in the toggle seat and hover reveals the
+   panel icon. Expanded state always shows the panel icon. */
 .collapsed .toggle .panelIcon {
   display: none;
 }
@@ -163,37 +153,36 @@
   display: none;
 }
 
-/* Rail icons ride the primary ink (figma rail spec); expanded keeps the
-   secondary icon-button ink. */
+/* Rail icons use primary ink; expanded controls use the muted icon role. */
 .collapsed .iconButton {
   color: var(--dsw-alias-label-primary);
 }
 
-/* New Session: 38px bar, 12px radius (figma 133:7634 geometry, squared-off
-   corners); collapsed it renders as the rail's plain icon control. */
+/* T3 menu-button geometry: 32px high, 8px radius, 10px content inset.
+   Collapsed state keeps the same action in a 36px rail control. */
 .newSession {
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 38px;
-  padding: 8px 16px;
-  margin: 0 2px 8px;
+  justify-content: flex-start;
+  gap: 8px;
+  height: 32px;
+  padding: 6px 10px;
   box-sizing: border-box;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 12px;
-  background: var(--dsw-alias-button-elevated-fill);
-  color: var(--dsw-alias-label-primary);
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
   font-size: 14px;
   font-weight: 500;
-  line-height: 22px;
+  line-height: 20px;
   cursor: pointer;
   overflow: hidden;
 }
 
 .newSession:hover {
-  background: var(--dsw-alias-button-floating-hover);
+  background: var(--dsw-specific-sidebar-row-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 .collapsed .newSession {
@@ -201,14 +190,13 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  margin: 0 0 12px;
   gap: 0;
   border-color: transparent;
   background: transparent;
 }
 
 .collapsed .newSession:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-specific-sidebar-row-hover);
 }
 
 .newSessionLabel {

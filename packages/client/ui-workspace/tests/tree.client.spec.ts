@@ -40,12 +40,21 @@ describe('deriveGroups', () => {
     expect(groups[0]!.sessions.map(session => session.id)).toEqual([sid('older'), sid('newer')])
   })
 
-  it('projects pending-interaction state into grouped and flat rows', () => {
-    const awaiting = { ...summary('awaiting', 10), pendingInteraction: 'plan-review' as const, running: true }
+  it('projects card context and pending-interaction state into grouped and flat rows', () => {
+    const awaiting = {
+      ...summary('awaiting', 10, '/projects/fallback'),
+      agentPreset: 'code', pendingInteraction: 'plan-review' as const, running: true,
+    }
     const sessions = list(awaiting)
-    const grouped = deriveGroups(sessions, [workspace('project', ['awaiting'])], noArchive, view(['project']))
-    expect(grouped[0]!.sessions[0]).toMatchObject({ pendingInteraction: 'plan-review', running: true })
-    expect(deriveFlat(sessions, noArchive)[0]).toMatchObject({ pendingInteraction: 'plan-review', running: true })
+    const grouped = deriveGroups(
+      sessions, [workspace('project', ['awaiting'], 'Project Label')], noArchive, view(['project']),
+    )
+    expect(grouped[0]!.sessions[0]).toMatchObject({
+      workspace: 'Project Label', agentPreset: 'code', pendingInteraction: 'plan-review', running: true,
+    })
+    expect(deriveFlat(sessions, noArchive)[0]).toMatchObject({
+      workspace: 'fallback', agentPreset: 'code', pendingInteraction: 'plan-review', running: true,
+    })
   })
 
   it('puts only real unaccounted Sessions in the trailing Ungrouped group', () => {

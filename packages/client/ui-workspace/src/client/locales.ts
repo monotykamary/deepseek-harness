@@ -1,6 +1,6 @@
 /**
- * `workspace` namespace dictionaries: the browsing region (section header,
- * search, tree rows, dialogs) and the pick/add flow. Runtime failure
+ * `workspace` namespace dictionaries: persistent Search and scope rows,
+ * Session cards, dialogs, and the pick/add flow. Runtime failure
  * messages (wire error strings) pass through untranslated by policy.
  */
 
@@ -10,6 +10,8 @@ export const zh = {
   'session.new': '新会话',
   'section.workspaces': '工作区',
   'section.sessions': '会话',
+  'section.allWorkspaces': '所有工作区',
+  'section.allSessions': '所有会话',
   'viewOptions.label': '视图选项',
   'groupBy.label': '分组方式',
   'groupBy.workspace': '按工作区',
@@ -23,7 +25,7 @@ export const zh = {
   'empty.noMatches': '无匹配结果',
   'workspace.add': '添加工作区',
   'search.sessions.aria': '搜索会话',
-  'search.placeholder': '搜索会话…',
+  'search.placeholder': '搜索',
   'search.clear': '清除搜索',
   'search.results.aria': '搜索结果',
   'search.pending': '正在搜索会话历史…',
@@ -79,6 +81,8 @@ export const en = {
   'session.new': 'New Session',
   'section.workspaces': 'Workspaces',
   'section.sessions': 'Sessions',
+  'section.allWorkspaces': 'All Workspaces',
+  'section.allSessions': 'All Sessions',
   'viewOptions.label': 'View options',
   'groupBy.label': 'Group by',
   'groupBy.workspace': 'WorkSpace',
@@ -92,7 +96,7 @@ export const en = {
   'empty.noMatches': 'No matches',
   'workspace.add': 'Add workspace',
   'search.sessions.aria': 'Search sessions',
-  'search.placeholder': 'Search sessions...',
+  'search.placeholder': 'Search',
   'search.clear': 'Clear search',
   'search.results.aria': 'Search results',
   'search.pending': 'Searching session history…',

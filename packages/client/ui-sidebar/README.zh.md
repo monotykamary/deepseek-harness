@@ -2,7 +2,9 @@
 
 [English](README.md) | 中文
 
-侧边栏外壳插件：负责字标、New Session 操作、布局持有的折叠控件、可感知滚动的区域 seat，以及固定在底部的 Settings seat。[ui-workspace](../ui-workspace/README.md) 持有渲染到 `sidebar.workspaces` 的 Workspace 与 Session 浏览器；本包既不派生其中的行，也不持有其视图偏好。折叠到布局拥有的 56px 轨道仍属于本地呈现行为。约定：[slot 系统标准](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md)。
+侧边栏外壳插件：负责仅用于身份展示的字标行、唯一的 New Session 操作、布局持有的折叠控件、可感知滚动的浏览器 seat，以及固定在底部的 Settings seat。[ui-workspace](../ui-workspace/README.md) 持有渲染到 `sidebar.workspaces` 的 Workspace 与 Session 浏览器；本包既不派生其中的卡片，也不持有视图偏好。折叠到布局持有的 56px 轨道仍属于本地呈现行为。约定：[slot 系统标准](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md)。
+
+展开态 chrome 改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`：8px 内容节奏、48px 身份行、32px 圆角控件、安静的 hover 表面，以及唯一一行菜单式 New Session 操作。DSH 字标、可调整宽度的栏、56px 轨道、组合 slot 与折叠状态机仍由本产品持有；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整的 T3 MIT 文本。
 
 New Session 会启动运行时的页面局部前端 Session Intent。运行时优先使用作用域操作明确指定的 Workspace，否则使用当前 Session 所属 Workspace，再否则使用最近活跃 Workspace；一个 Workspace 都没有时则清空选择，进入空白 New Session 页面。Workspace 专属控件与共享选择器由 ui-workspace 持有。
 
@@ -14,7 +16,7 @@ New Session 会启动运行时的页面局部前端 Session Intent。运行时�
 
 页脚承载 `sidebar.settings`：侧边栏只渲染固定在底部的布局 slot，并共享其栏状态（`wide`）；ui-settings 在此注册触发行和设置面板。
 
-`/client` 导出表层只包含插件主体（`apply`／`inject`）及约定类型；SidebarRoot、行组件和树派生仍由 slot 注册封装在包内。
+`/client` 导出表层只包含插件主体（`apply`／`inject`）及约定类型。`SidebarRoot` 由 slot 注册封装在包内；ui-workspace 同样不导出其卡片组件与树派生。
 
 ## 模型体验
 

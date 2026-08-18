@@ -1,22 +1,28 @@
-- button "New session"
 - button "Collapse sidebar":
   - img
 - button "New session":
   - img
   - text: New Session
-- text: Workspaces
-- button "Search sessions":
-  - img
-- textbox "Search sessions..."
+- searchbox "Search sessions"
+- img
+- text: All Workspaces
 - button "View options":
   - img
 - button "Add workspace":
   - img
 - tree "Sessions":
-  - treeitem "workspace" [expanded]:
+  - treeitem "workspace Workspace actions for workspace New session in workspace" [expanded]:
     - img
     - text: workspace
-  - treeitem "New Session" [selected]
+    - button "Workspace actions for workspace":
+      - img
+    - button "New session in workspace":
+      - img
+  - treeitem "workspace New Session standard" [selected]:
+    - img
+    - text: workspace New Session
+    - img
+    - text: standard
 - button "Settings":
   - img
   - text: Settings

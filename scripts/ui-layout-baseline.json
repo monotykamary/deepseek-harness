@@ -220,7 +220,7 @@
     "zindexes": 0
   },
   "packages/client/ui-sidebar/src/client/SidebarRoot.module.css": {
-    "margins": 8,
+    "margins": 4,
     "zindexes": 0
   },
   "packages/client/ui-skill/src/client/SkillRow.module.css": {
@@ -284,7 +284,7 @@
     "zindexes": 0
   },
   "packages/client/ui-workspace/src/client/WorkspaceBrowser.module.css": {
-    "margins": 20,
+    "margins": 10,
     "zindexes": 1
   },
   "packages/client/ui-workspace/src/client/WorkspacePicker.module.css": {
@@ -292,7 +292,7 @@
     "zindexes": 0
   },
   "packages/client/ui-workspace/src/client/rows/Rows.module.css": {
-    "margins": 4,
+    "margins": 0,
     "zindexes": 1
   },
   "packages/client/web/src/base.css": {

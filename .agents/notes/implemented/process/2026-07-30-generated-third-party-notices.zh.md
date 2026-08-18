@@ -18,7 +18,7 @@ Status: implemented
 
 有一处触发缺口是接受而非绕过的：lefthook 只检视磁盘上存在的文件，因此**删除** manifest 不会触发任何任务，移除一个包会落到测试 lane 的断言上。重构暂存文件列表以纳入删除的做法不成立——无论怎么给列表，lefthook 都会拿工作树过滤一遍。这个场景正由断言兜底。
 
-文件默认只披露**直接**依赖。完整的 npm 闭包连同锁定版本已记录在 `pnpm-lock.yaml`（`pnpm licenses list` 可渲染），Python 闭包记录在 `python/sdk/uv.lock`；再用散文誊一遍只会得到一份更差的副本。固定署名记录覆盖依赖 manifest 无法标识的改编来源；T3 Code 记录钉住 Web 命令面板采用的已评审修订版、版权与完整 MIT 许可文本。唯一明确披露的传递依赖，是 `@anthropic-ai/claude-agent-sdk` 通过 `optionalDependencies` 声明的官方 Claude 平台载荷集合，因为这些包承载随产品分发的 Claude Code 可执行文件，而非普通的库实现细节。
+文件默认只披露**直接**依赖。完整的 npm 闭包连同锁定版本已记录在 `pnpm-lock.yaml`（`pnpm licenses list` 可渲染），Python 闭包记录在 `python/sdk/uv.lock`；再用散文誊一遍只会得到一份更差的副本。固定署名记录覆盖依赖 manifest 无法标识的改编来源；T3 Code 记录钉住 Web 命令面板与侧边栏采用的已评审修订版、版权与完整 MIT 许可文本。唯一明确披露的传递依赖，是 `@anthropic-ai/claude-agent-sdk` 通过 `optionalDependencies` 声明的官方 Claude 平台载荷集合，因为这些包承载随产品分发的 Claude Code 可执行文件，而非普通的库实现细节。
 
 **分层依据是声明方所在区域，而非 manifest 字段名。** 只要 `DEV_ONLY_AREAS` 之外的任一 manifest——即根 manifest、`packages/test-support/`、`packages/test-support/client-runtime/`、`website/`、`examples/`、`native/` 之外——在 `dependencies` 或 `optionalDependencies` 里点名某个包，它就是运行时依赖。单看字段名在两个方向上都会出错：测试支撑包把 `vitest` 写在 `dependencies` 里却并不交付它；而根目录的源码运行脚本通过 `tsx` 执行，根本没有任何 manifest 把它声明为运行时依赖，只能由生成器显式标记。
 

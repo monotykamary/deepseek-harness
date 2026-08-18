@@ -1,19 +1,18 @@
 /**
- * Sidebar shell: column geometry only. Collapse is a slide plus crossfade:
- * content freezes at its expanded width (inline style) and fades out in place
- * while the sliding column (AppFrame grid tracks) clips it — nothing reflows
- * mid-slide. At settle the wide-only content unmounts and the four upper
- * controls enter the 56px rail from the same horizontal offset (one icon each,
- * same top-down order) on one fade that ends with the slide. The bottom-pinned
- * settings control only fades. The workspace/session browsing region between
- * the New Session button and the foot is the `sidebar.workspaces` registrant's,
- * and the foot holds `sidebar.settings` plus `sidebar.footer.action`; the shell
- * hands them the wide flag (plus an expand request callback for the browser).
+ * Sidebar shell: T3-adapted chrome around dsh-owned composition seats. Collapse
+ * remains a slide plus crossfade: content freezes at its expanded width (inline
+ * style) and fades in place while the AppFrame grid track clips it. At settle,
+ * wide content unmounts and the upper controls enter the 56px rail on one fade
+ * ending with the slide. The bottom-pinned footer only fades.
  *
- * The column also owns whether the scroll regions nested in it draw a
- * scrollbar at all: the shell tracks the pointer and rebinds ui-theme's
- * scrollbar indirection away while it is elsewhere, so a list the user is not
- * pointing at carries no bar.
+ * The brand is identity rather than a duplicate action. New Session is the
+ * first menu row, followed by the `sidebar.workspaces` browser; the foot holds
+ * `sidebar.settings` plus `sidebar.footer.action`. The shell passes only the
+ * wide flag and the browser's expand request.
+ *
+ * The column also owns whether nested scroll regions draw a scrollbar: the
+ * shell tracks the pointer and rebinds ui-theme's scrollbar indirection while
+ * the pointer is elsewhere.
  */
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
@@ -129,20 +128,12 @@ export function SidebarRoot({
       onPointerLeave={() => { armLinger() }}
     >
       <div className={css.logoRow}>
-        {/* Expanded, the wordmark doubles as a New Session shortcut; the
-            collapsed rail's logo is the expand toggle below instead. */}
         {wide && (
-          <button
-            type="button"
-            className={clsx(css.brand, css.wide)}
-            aria-label={t('session.new.label')}
-            onClick={() => { startSession() }}
-          >
+          <div className={clsx(css.brand, css.wide)} aria-hidden="true">
             <BrandWordmark />
-          </button>
+          </div>
         )}
-        {/* Rail resting state is the whale mark; hovering swaps in the panel
-            icon (the expand affordance, figma sidebar-hover flow). */}
+        {/* The rail rests on the whale mark; hover reveals the expand icon. */}
         <Tooltip label={collapsed ? t('toggle.open') : t('toggle.collapse')} delayMs={500}>
           <button
             type="button"
@@ -157,13 +148,14 @@ export function SidebarRoot({
             }}
           >
             {!wide && <FishLogo className={css.railFish} size={24} />}
-            {/* Rail icons render at 18 (figma rail spec); expanded keeps the glyph-native sizes. */}
+            {/* Rail controls use 18px glyphs; expanded controls keep native sizes. */}
             <IconPanelLeftOutline16 className={css.panelIcon} size={wide ? 16 : 18} />
           </button>
         </Tooltip>
       </div>
 
-      {/* Expanded, the button carries its own label — tooltip only on the rail. */}
+      {/* T3-adapted primary action: a quiet navigation row rather than an
+          elevated capsule. The rail retains the same action as an icon. */}
       <Tooltip label={t('session.new.label')} delayMs={500} disabled={wide}>
         <button
           type="button"
@@ -176,8 +168,8 @@ export function SidebarRoot({
         </button>
       </Tooltip>
 
-      {/* The browsing region fills the column between the controls and the
-          foot in both states; its rail icon column rides the same slot. */}
+      {/* The browser owns persistent search, Workspace scope, and rows; its
+          rail controls ride the same slot during collapse. */}
       <div className={css.regionArea}>
         {renderSlot('sidebar.workspaces', {
           wide,

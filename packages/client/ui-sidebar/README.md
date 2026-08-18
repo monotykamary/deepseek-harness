@@ -2,7 +2,9 @@
 
 English | [中文](README.zh.md)
 
-Sidebar shell plugin: the wordmark, New Session action, layout-owned collapse control, scroll-aware region seat, and bottom-pinned Settings seat. [ui-workspace](../ui-workspace/README.md) owns the Workspace and Session browser rendered into `sidebar.workspaces`; this package neither derives its rows nor owns its view preferences. Collapse into the layout-owned 56px rail remains presentation-local. Contract: the [slot system standard](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md).
+Sidebar shell plugin: the identity-only wordmark row, one New Session action, layout-owned collapse control, scroll-aware browser seat, and bottom-pinned Settings seat. [ui-workspace](../ui-workspace/README.md) owns the Workspace and Session browser rendered into `sidebar.workspaces`; this package neither derives its cards nor owns view preferences. Collapse into the layout-owned 56px rail remains presentation-local. Contract: the [slot system standard](../../../.agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md).
+
+The expanded chrome adapts T3 Code revision `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`: an 8px content rhythm, 48px identity row, 32px rounded controls, quiet hover surfaces, and a single menu-style New Session row. The DSH wordmark, resizable column, 56px rail, composed slots, and collapse state machine remain product-owned; [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) retains the complete T3 MIT text.
 
 New Session starts the runtime's page-local frontend Session Intent. The runtime targets the explicit Workspace used by a scoped action, otherwise the current Session's Workspace, otherwise the most recently active Workspace; when none exists it clears into the blank New Session page. Workspace-specific controls and the shared picker belong to ui-workspace.
 
@@ -14,7 +16,7 @@ Scrollbars in the column are a pointer affordance: the shell rebinds ui-theme's 
 
 The foot is the `sidebar.settings` seat: the sidebar renders only the bottom-pinned layout slot and shares its column state (`wide`); ui-settings registers the trigger row and settings panel there.
 
-The `/client` exports are the plugin body (`apply`/`inject`) plus the contract types only; SidebarRoot, the row components, and the tree derivation remain package-internal behind the slot registration.
+The `/client` exports are the plugin body (`apply`/`inject`) plus contract types only. `SidebarRoot` remains package-internal behind slot registration; ui-workspace similarly keeps its card components and tree derivation private.
 
 ## Model Experience
 

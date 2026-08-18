@@ -16,6 +16,8 @@ Click **Choose workspace**, add the project directory where you started `dsh`, a
 
 ## Find or start a session
 
+The expanded sidebar keeps **Search** visible above **All Workspaces**. Search filters Session titles, Workspace names and paths, and persisted message text; Session cards show Workspace, live status, title, agent preset, and relative time. Use **View options** beside All Workspaces to switch grouping or ordering.
+
 Press `Cmd+K` on macOS or `Ctrl+K` elsewhere to open the command palette. Type a Session title, Workspace name or path, or text from a previous user or assistant message, then select the matching Session.
 
 Choose **New Session in...** to target a Workspace. Use the arrow keys to highlight it, press `Tab` to accept the choice without creating anything, then press `Enter` to create or reuse that Workspace's blank Session.

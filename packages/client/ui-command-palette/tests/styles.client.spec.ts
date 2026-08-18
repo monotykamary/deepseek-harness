@@ -20,7 +20,7 @@ describe('command-palette styles', () => {
       expect(themeCss.match(new RegExp(`${role}:`, 'g'))).toHaveLength(2)
       expect(componentCss).toContain(`var(${role})`)
     }
-    expect(themeCss).toContain("Command roles adapt T3 Code's")
+    expect(themeCss).toContain("Command and sidebar roles adapt T3 Code's")
     expect(component).toContain('a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2')
   })
 

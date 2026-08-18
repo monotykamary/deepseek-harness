@@ -1,7 +1,28 @@
 - tree "Sessions":
-  - treeitem "Ungrouped" [expanded]:
+  - treeitem "Ungrouped New session in Ungrouped" [expanded]:
     - img
     - text: Ungrouped
-  - treeitem "Use the read tool twice (2) now" [selected]
-  - treeitem "Use the read tool twice (1) now"
-  - treeitem "Use the read tool twice 1min"
+    - button "New session in Ungrouped":
+      - img
+  - treeitem "Ungrouped now Session actions for Use the read tool twice (2) Use the read tool twice (2) standard" [selected]:
+    - img
+    - text: Ungrouped now
+    - button "Session actions for Use the read tool twice (2)":
+      - img
+    - text: Use the read tool twice (2)
+    - img
+    - text: standard
+  - treeitem "Ungrouped now Session actions for Use the read tool twice (1) Use the read tool twice (1) standard":
+    - img
+    - text: Ungrouped now
+    - button "Session actions for Use the read tool twice (1)":
+      - img
+    - text: Use the read tool twice (1)
+    - img
+    - text: standard
+  - treeitem "Ungrouped 1min Session actions for Use the read tool twice Use the read tool twice":
+    - img
+    - text: Ungrouped 1min
+    - button "Session actions for Use the read tool twice":
+      - img
+    - text: Use the read tool twice

@@ -1,1 +1,8 @@
-- treeitem "Waiting for answer Use the ask_user_question tool to now" [selected]
+- treeitem "workspace Waiting for answer Session actions for Use the ask_user_question tool to Use the ask_user_question tool to standard now" [selected]:
+  - img
+  - text: workspace Waiting for answer
+  - button "Session actions for Use the ask_user_question tool to":
+    - img
+  - text: Use the ask_user_question tool to
+  - img
+  - text: standard now

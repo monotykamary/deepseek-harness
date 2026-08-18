@@ -1,18 +1,15 @@
 /**
- * The workspace/session browsing region filling the sidebar shell's
- * `sidebar.workspaces` hole: section header (title + view options + add
- * workspace), search, the grouped tree or flat list, and the workspace
- * dialogs. Wide state renders the full browser; rail state renders the two
- * region icons (search / add workspace) as 36px controls on the shell's shared
- * rail entry path, each requesting expansion through the owner share. Adding
- * is the header button's one action, so it raises the directory flow with no
- * menu in between; the flow and its error dialog live in WorkspacePicker
- * (same package — direct composition, no slot between them).
+ * The Workspace/Session browser filling `sidebar.workspaces`: a T3-adapted
+ * persistent search row, an All Workspaces scope row with view/add actions,
+ * grouped or flat Session cards, and Workspace dialogs. Wide state renders the
+ * complete browser; rail state retains search and add as 36px controls on the
+ * shell's shared entry path. Adding raises the directory flow directly; the
+ * flow and its error dialog remain in WorkspacePicker.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconCloseFill14, IconPersonalizationOutline16,
+  Button, IconCloseFill14, IconFolderClose16, IconPersonalizationOutline16,
   IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
@@ -173,8 +170,7 @@ function ViewOptionsMenu({ groupBy, orderBy, onGroupPick, onOrderPick, t }: {
       }}
       align="end"
       dense
-      // Portal: the section header clips overflow, so an in-place list would
-      // be cut off at the header's bounds.
+      // Portal keeps the view menu above the scrolling Session card list.
       portal
       anchor={(
         <Tooltip label={t('viewOptions.label')} side="bottom" delayMs={500}>
@@ -632,7 +628,6 @@ function FlatList({
               onRename={onSessionRename}
               onFork={forkSession}
               onArchive={onSessionArchive}
-              flat
               drag={{
                 start: () => {
                   dropCommitted.current = false
@@ -783,7 +778,6 @@ export function WorkspaceBrowser({
   // The query outlives the tree and the input (both wide-only) so collapsing
   // does not silently drop an in-progress filter.
   const [query, setQuery] = useState('')
-  const [searchExpanded, setSearchExpanded] = useState(false)
   const normalizedQuery = sanitizeSearchQuery(query).trim()
   const [remoteSearch, setRemoteSearch] = useState<RemoteSearchState>({
     query: '',
@@ -791,10 +785,8 @@ export function WorkspaceBrowser({
     items: [],
     hasMore: false,
   })
-  const searchRoot = useRef<HTMLDivElement | null>(null)
   const searchInput = useRef<HTMLInputElement | null>(null)
-  // Section-header ＋ opens the picker menu (same popover in wide and rail
-  // states; the menu anchors on this button).
+  // The add control anchors one picker flow in either wide or rail state.
   const [wsPickerOpen, setWsPickerOpen] = useState(false)
   const wsPlusRef = useRef<HTMLButtonElement>(null)
   const composingRef = useRef(false)
@@ -811,23 +803,6 @@ export function WorkspaceBrowser({
       return () => { window.clearTimeout(timer) }
     }
   }, [wide, searchOnExpand])
-
-  useEffect(() => {
-    if (!wide || !searchExpanded || searchOnExpand) return
-    searchInput.current?.focus({ preventScroll: true })
-  }, [wide, searchExpanded, searchOnExpand])
-
-  useEffect(() => {
-    if (!wide || !searchExpanded) return
-    const onClick = (event: MouseEvent): void => {
-      if (!(event.target instanceof Node) || searchRoot.current?.contains(event.target) === true) return
-      searchInput.current?.blur()
-      if (normalizedQuery !== '') return
-      setSearchExpanded(false)
-    }
-    document.addEventListener('click', onClick)
-    return () => { document.removeEventListener('click', onClick) }
-  }, [normalizedQuery, wide, searchExpanded])
 
   useEffect(() => {
     if (normalizedQuery === '') {
@@ -974,134 +949,118 @@ export function WorkspaceBrowser({
 
   return (
     <div className={clsx(css.root, !wide && css.rail)}>
-      <div className={css.sectionHeader}>
-        {wide && (
-          <span className={clsx(css.sectionLabel, css.wide, searchExpanded && css.sectionLabelHidden)}>
-            {groupBy === 'flat' ? t('section.sessions') : t('section.workspaces')}
-          </span>
-        )}
-        {wide && (
-          <div className={clsx(css.searchSlot, searchExpanded && css.searchSlotExpanded)}>
-            <div
-              ref={searchRoot}
-              className={clsx(css.search, searchExpanded && css.searchExpanded)}
-              onClick={() => {
-                setWsPickerOpen(false)
-                setSearchExpanded(true)
-                searchInput.current?.focus()
-              }}
-            >
-              <Tooltip label={t('search')} side="bottom" delayMs={500} disabled={searchExpanded}>
-                <button
-                  type="button"
-                  className={css.searchButton}
-                  aria-label={t('search.sessions.aria')}
-                  aria-expanded={searchExpanded}
-                  onClick={() => {
-                    setWsPickerOpen(false)
-                    setSearchExpanded(true)
-                  }}
-                >
-                  <IconSearchOutline16 size={searchExpanded ? 11 : 14} />
-                </button>
-              </Tooltip>
+      {wide
+        ? (
+          <div className={css.fixedControls}>
+            <div className={css.searchRow}>
+              <span className={css.searchGlyph} aria-hidden="true">
+                <IconSearchOutline16 size={16} />
+              </span>
               <input
                 ref={searchInput}
                 className={css.searchInput}
-                type="text"
+                type="search"
+                aria-label={t('search.sessions.aria')}
                 placeholder={t('search.placeholder')}
                 maxLength={SEARCH_QUERY_MAX_CODE_UNITS}
                 value={query}
-                tabIndex={searchExpanded ? 0 : -1}
+                onFocus={() => { setWsPickerOpen(false) }}
                 onChange={(e) => { setQuery(sanitizeSearchQuery(e.target.value)) }}
                 onKeyDown={(e) => {
-                  if (e.key !== 'Escape') return
-                  setQuery('')
-                  setSearchExpanded(false)
+                  if (e.key === 'Escape') setQuery('')
                 }}
               />
-              {searchExpanded && (
+              {query !== '' && (
                 <button
                   type="button"
                   className={css.clearButton}
                   aria-label={t('search.clear')}
-                  onClick={(e) => {
-                    e.stopPropagation()
+                  onClick={() => {
                     setQuery('')
-                    setSearchExpanded(false)
+                    searchInput.current?.focus()
                   }}
                 >
                   <IconCloseFill14 />
                 </button>
               )}
             </div>
+            <div className={css.scopeRow}>
+              <span className={css.scopeLabel}>
+                <IconFolderClose16 size={16} />
+                <span>{groupBy === 'flat' ? t('section.allSessions') : t('section.allWorkspaces')}</span>
+              </span>
+              <div className={css.headerActions}>
+                <ViewOptionsMenu
+                  groupBy={groupBy}
+                  orderBy={orderBy}
+                  onGroupPick={(mode) => { actions.setGroupBy(mode) }}
+                  onOrderPick={(mode) => { actions.setOrderBy(mode) }}
+                  t={t}
+                />
+                {directoryFlowAvailable && (
+                  <Tooltip label={t('workspace.add')} side="right" delayMs={500}>
+                    <button
+                      ref={wsPlusRef}
+                      type="button"
+                      className={css.iconButton}
+                      aria-label={t('workspace.add')}
+                      onClick={() => { setWsPickerOpen(v => !v) }}
+                    >
+                      <IconProjectAddOutline16 size={16} />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-        <div className={clsx(css.headerActions, wide && searchExpanded && css.headerActionsHidden)}>
-          {wide && (
-            <ViewOptionsMenu
-              groupBy={groupBy}
-              orderBy={orderBy}
-              onGroupPick={(mode) => { actions.setGroupBy(mode) }}
-              onOrderPick={(mode) => { actions.setOrderBy(mode) }}
-              t={t}
-            />
-          )}
-          {/* Adding is the button's one action, so a composition with no
-              picking affordance has nothing to offer here: the region hides the
-              button rather than leaving a dead one in the header. */}
-          {directoryFlowAvailable && (
-            <Tooltip label={t('workspace.add')} side="bottom" delayMs={500}>
+        )
+        : (
+          <div className={css.railControls}>
+            <Tooltip label={t('search')} side="right">
               <button
-                ref={wsPlusRef}
                 type="button"
                 className={css.iconButton}
-                aria-label={t('workspace.add')}
+                aria-label={t('search.sessions.aria')}
                 onClick={() => {
-                  setWsPickerOpen(v => !v)
+                  setSearchOnExpand(true)
+                  expandSidebar()
                 }}
               >
-                <IconProjectAddOutline16 size={wide ? 16 : 18} />
+                <IconSearchOutline16 size={18} />
               </button>
             </Tooltip>
-          )}
-        </div>
-        {/* Add flow + its error dialog (same package — direct composition). */}
-        <WorkspacePickFlow
-          t={t}
-          open={wsPickerOpen}
-          anchorRef={wsPlusRef}
-          useWorkspaces={useWorkspaces}
-          createWorkspace={createWorkspace}
-          useDirectoryFlow={useDirectoryFlow}
-          renderDirectoryFlow={owner => renderSlot('sidebar.workspaces.directoryFlow', owner)}
-          addOnly
-          side="right"
-          onPick={(workspaceId) => {
-            setWsPickerOpen(false)
-            startSession(workspaceId)
-          }}
-          onClose={() => { setWsPickerOpen(false) }}
-        />
-      </div>
+            {directoryFlowAvailable && (
+              <Tooltip label={t('workspace.add')} side="right" delayMs={500}>
+                <button
+                  ref={wsPlusRef}
+                  type="button"
+                  className={css.iconButton}
+                  aria-label={t('workspace.add')}
+                  onClick={() => { setWsPickerOpen(v => !v) }}
+                >
+                  <IconProjectAddOutline16 size={18} />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
-      {/* The collapsed rail keeps search as its own 36px control. */}
-      {!wide && <div className={css.search}>
-        <Tooltip label={t('search')}>
-          <button
-            type="button"
-            className={css.searchButton}
-            aria-label={t('search.sessions.aria')}
-            onClick={() => {
-              setSearchExpanded(true)
-              setSearchOnExpand(true)
-              expandSidebar()
-            }}
-          >
-            <IconSearchOutline16 size={18} />
-          </button>
-        </Tooltip>
-      </div>}
+      <WorkspacePickFlow
+        t={t}
+        open={wsPickerOpen}
+        anchorRef={wsPlusRef}
+        useWorkspaces={useWorkspaces}
+        createWorkspace={createWorkspace}
+        useDirectoryFlow={useDirectoryFlow}
+        renderDirectoryFlow={owner => renderSlot('sidebar.workspaces.directoryFlow', owner)}
+        addOnly
+        side="right"
+        onPick={(workspaceId) => {
+          setWsPickerOpen(false)
+          startSession(workspaceId)
+        }}
+        onClose={() => { setWsPickerOpen(false) }}
+      />
 
       {/* Always-mounted seat keeps the region's flex slot while the list
           itself is wide-only. */}

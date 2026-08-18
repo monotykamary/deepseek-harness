@@ -1,27 +1,28 @@
-/* Tree rows: project 34px, session 32px, radius 8, indent step 22px
-   (16px slot + 6px gap). Hover swaps
-   are pure CSS: project folder -> chevron + action buttons; session time ->
-   ellipsis button. */
+/* Session cards adapt T3 Code's sidebar hierarchy: 8px rounded interaction
+   surfaces, project context above the title, and status/actions sharing one
+   trailing seat. See THIRD_PARTY_NOTICES.md. */
 
 .projectRow,
 .sessionRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  border: none;
   border-radius: 8px;
-  padding: 0 8px;
+  background: transparent;
   cursor: pointer;
   user-select: none;
   color: var(--dsw-alias-label-primary);
 }
 
 .projectRow:hover,
-.sessionRow:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+.projectRow:focus-within,
+.sessionRow:hover,
+.sessionRow:focus-within {
+  background: var(--dsw-specific-sidebar-row-hover);
 }
 
 .sessionRow.selected {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-specific-sidebar-row-active);
 }
 
 .searchResultRow {
@@ -29,38 +30,40 @@
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  min-height: 48px;
+  min-height: 56px;
   box-sizing: border-box;
   border: none;
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: 7px 10px;
   background: transparent;
   cursor: pointer;
   text-align: left;
   color: var(--dsw-alias-label-primary);
 }
 
-.searchResultRow:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+.searchResultRow:hover,
+.searchResultRow:focus-visible {
+  background: var(--dsw-specific-sidebar-row-hover);
 }
 
 .searchResultRow.selected {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-specific-sidebar-row-active);
 }
 
 .searchResultHeading {
   display: flex;
   align-items: center;
+  gap: 4px;
   min-width: 0;
 }
 
 .searchResultTitle {
   min-width: 0;
-  margin-left: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
+  font-weight: 500;
   line-height: 20px;
 }
 
@@ -69,7 +72,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
-  margin-left: 20px;
+  padding-left: 20px;
 }
 
 .searchResultWorkspace,
@@ -93,36 +96,107 @@
   color: var(--dsw-alias-label-secondary);
 }
 
-/* Compact one-line Workspace row after removing the session-count subtitle. */
 .projectRow {
-  height: 34px;
+  display: flex;
   align-items: center;
-  box-sizing: border-box;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
 }
 
 .projectRow .rowActions {
-  height: 20px;
+  height: 24px;
 }
 
-/* Session cell (figma): pad 8, a 16px status slot, then a 4px title gap. */
 .sessionRow {
-  height: 32px;
-  gap: 0;
-  /* Mount fade: session rows appear by unfolding a group (or the tree
-     mounting). Stable row keys keep already-visible rows from replaying it. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 78px;
+  padding: 8px 10px;
   animation: row-in 150ms var(--ds-ease-in-out);
-}
-
-.sessionRow .title {
-  margin: 0 6px 0 4px;
-}
-
-.flatSessionRowWithoutStatus .title {
-  margin-left: 0;
 }
 
 @keyframes row-in {
   from { opacity: 0; }
+}
+
+.sessionTop,
+.cardFoot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 18px;
+}
+
+.workspaceMeta,
+.preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.workspaceMeta {
+  flex: 1;
+}
+
+.workspaceIcon,
+.preset > svg {
+  flex: none;
+  color: var(--dsw-specific-sidebar-icon);
+}
+
+.workspaceTitle,
+.preset > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionTrailing {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 28px;
+}
+
+.cardStatus,
+.cardTime {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 120ms var(--ds-ease-in-out);
+}
+
+.cardStatus[data-status-state='ongoing'] {
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.cardStatus[data-status-state='warning'] {
+  color: var(--dsw-alias-state-warn-label);
+}
+
+.cardStatus[data-status-state='done'] {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.cardFoot {
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .slot {
@@ -148,13 +222,12 @@
   color: var(--dsw-alias-state-business-primary);
 }
 
-
-/* Project leading slot: folder by default, expand arrow on row hover. */
 .projectRow .chevron { display: none; }
-.projectRow:hover .chevron { display: inline-flex; }
-.projectRow:hover .folder { display: none; }
+.projectRow:hover .chevron,
+.projectRow:focus-within .chevron { display: inline-flex; }
+.projectRow:hover .folder,
+.projectRow:focus-within .folder { display: none; }
 
-/* Expand arrow (filled triangle): points right closed, rotates to point down open. */
 .arrow {
   transition: transform 150ms var(--ds-ease-in-out);
 }
@@ -167,8 +240,7 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
 }
 
 .title {
@@ -180,69 +252,63 @@
   line-height: 20px;
 }
 
+.sessionRow > .title {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 500;
+}
+
 .renameInput {
   min-width: 0;
-  font-size: 14px;
-  line-height: 20px;
-  padding: 0 2px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 4px;
-  background: var(--dsw-alias-button-elevated-fill);
-  color: inherit;
-  outline: none;
-}
-
-.sessionRow .title {
   flex: 1;
+  height: 24px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 0 6px;
+  outline: none;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
 }
 
-.meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  line-height: 20px;
-  color: var(--dsw-alias-label-tertiary);
-}
-
-.time {
-  flex: none;
-  font-size: 12px;
-  line-height: 20px;
-  color: var(--dsw-alias-label-tertiary);
-}
-
-.dot {
-  flex: none;
-}
-
-/* Trailing action buttons surface on hover only (figma 27:4668 / 27:4656):
-   bare 16px glyphs, gap 12, tertiary grey. */
 .rowActions {
   flex: none;
-  display: none;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms var(--ds-ease-in-out);
+}
+
+.sessionTrailing > .rowActions {
+  position: absolute;
+  right: 0;
 }
 
 .projectRow:hover .rowActions,
-.sessionRow:hover .rowActions,
+.projectRow:focus-within .rowActions,
 .projectRow.menuOpen .rowActions,
+.sessionRow:hover .rowActions,
+.sessionRow:focus-within .rowActions,
 .sessionRow.menuOpen .rowActions {
-  display: inline-flex;
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.sessionRow:hover .time,
-.sessionRow.menuOpen .time {
-  display: none;
+.sessionRow:hover .cardStatus,
+.sessionRow:focus-within .cardStatus,
+.sessionRow.menuOpen .cardStatus,
+.sessionRow:hover .sessionTrailing > .cardTime,
+.sessionRow:focus-within .sessionTrailing > .cardTime,
+.sessionRow.menuOpen .sessionTrailing > .cardTime {
+  opacity: 0;
 }
 
-/* An open row menu pins the hover affordances (figma: the row keeps its
-   hover fill while its dropdown is up). */
 .projectRow.menuOpen,
 .sessionRow.menuOpen {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-specific-sidebar-row-hover);
 }
+
 
 /* Session drag insert marker: a leading chevron and 2px rule between rows,
    absolutely positioned so it neither resembles a row border nor changes layout. */
@@ -327,17 +393,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 0;
   background: transparent;
   cursor: pointer;
-  color: var(--dsw-alias-label-tertiary);
+  color: var(--dsw-specific-sidebar-icon);
 }
 
-.iconButton:hover {
+.iconButton:hover,
+.iconButton:focus-visible {
+  background: var(--dsw-specific-sidebar-control-fill);
   color: var(--dsw-alias-label-primary);
 }
 

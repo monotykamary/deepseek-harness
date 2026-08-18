@@ -69,10 +69,7 @@ describe.skipIf(MODE === 'record' || !HAS_PWSH)('web e2e: pwsh calls use the bas
     // Open the seeded session through content search: the sidebar groups
     // sessions by workspace and its row order is world-dependent, while the
     // search index covers the seeded log deterministically. Search is a
-    // collapsed header action; expand it so the input is actionable.
-    const searchButton = page.getByRole('button', { name: 'Search sessions' })
-    if (await searchButton.getAttribute('aria-expanded') !== 'true') await searchButton.click()
-    const search = page.getByPlaceholder('Search sessions', { exact: false })
+    const search = page.getByRole('searchbox', { name: 'Search sessions' })
     await search.fill('Run a PowerShell command')
     const result = page.getByRole('tree', { name: 'Search results' }).getByRole('treeitem')
     await expect.poll(() => result.count(), { timeout: 15_000 }).toBe(1)
