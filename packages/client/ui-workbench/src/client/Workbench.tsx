@@ -130,7 +130,7 @@ export function Workbench({
             const label = surface.repeatable ? `${surface.label} ${String(panel.ordinal)}` : surface.label
             return (
               <div
-                key={surface.id}
+                key={panel.id}
                 className={css.tabCell}
                 data-active={selected || undefined}
                 data-workbench-tab={panel.id}
@@ -204,16 +204,33 @@ export function Workbench({
           </button>
         </Tooltip>
       </div>}
-      <div
-        key={active?.panel.id ?? 'launcher'}
-        className={css.body}
-        role="tabpanel"
-        id={active === undefined ? undefined : `workbench-panel-${encodeURIComponent(active.panel.id)}`}
-        aria-labelledby={active === undefined ? undefined : `workbench-tab-${encodeURIComponent(active.panel.id)}`}
-      >
-        {active === undefined
-          ? <EmptyLauncher surfaces={surfaces} onOpen={activateSurface} t={t} />
-          : renderSlot('workbench.surface', { workbenchPanelOrdinal: active.panel.ordinal }, { only: active.surface.id })}
+      <div className={css.bodyStack}>
+        {openPanels.map(({ panel: openPanel, surface }) => {
+          const selected = openPanel.id === active?.panel.id
+          return (
+            <div
+              key={openPanel.id}
+              className={css.body}
+              data-active={selected || undefined}
+              role="tabpanel"
+              id={`workbench-panel-${encodeURIComponent(openPanel.id)}`}
+              aria-labelledby={`workbench-tab-${encodeURIComponent(openPanel.id)}`}
+              aria-hidden={!selected}
+              ref={(element) => {
+                if (element === null) return
+                if (selected) element.removeAttribute('inert')
+                else element.setAttribute('inert', '')
+              }}
+            >
+              {renderSlot('workbench.surface', { workbenchPanelOrdinal: openPanel.ordinal }, { only: surface.id })}
+            </div>
+          )
+        })}
+        {active === undefined && (
+          <div className={css.body} data-active="" role="tabpanel">
+            <EmptyLauncher surfaces={surfaces} onOpen={activateSurface} t={t} />
+          </div>
+        )}
       </div>
     </section>
   )

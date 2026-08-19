@@ -3,14 +3,23 @@
 - bottom panel height: 280px
 - conversation height with bottom panel: 619px
 - bottom panes: 1
+- floating actions default: collapsed
+- floating actions animate on hover: true
+- bottom grouped fullscreen action: visible
+- bottom grouped actions clipped: false
 - settings: Theme → Harness → Font → Geist Mono → Font size → Line height → Ligatures → Color emoji → Cursor blink
 - reopened bottom panes: 1
 - preserved shell variable: "alive"
 - second browser shares PTY state: "alive"
 - right terminal write: "right"
+- right empty-state flash: false
+- right panels retained across switches: true
 - right Workbench panels: Terminal 1 → Terminal 2
 - right active-group panes: 3
 - right actions clipped: false
+- grouped fullscreen action: visible
+- group tree indented: true
+- group heading pill: true
 - right PTY gutters consistent: true
 - compact workbench side: right
 - compact bottom panel height: 280px

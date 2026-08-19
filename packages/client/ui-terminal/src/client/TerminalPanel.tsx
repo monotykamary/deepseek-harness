@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  IconCloseOutline16, IconCodeOutline16, IconPlusOutline16, IconRefreshOutline16,
-  IconSettingsOutline16, IconTrashOutline16, Modal, Tooltip,
+  IconChevronLeftOutline14, IconCloseOutline16, IconCodeOutline16,
+  IconPlusOutline16, IconRefreshOutline16, IconSettingsOutline16, IconTrashOutline16, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   BrowserTerminalHandshake, BrowserTerminalPlacement, BrowserTerminalSnapshot,
@@ -210,7 +210,10 @@ export function TerminalPanel({
   const [activeItemKey, setActiveItemKey] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [actionsExpanded, setActionsExpanded] = useState(false)
+  const floatingActionsRef = useRef<HTMLDivElement | null>(null)
   const [listError, setListError] = useState<string | null>(null)
+  const [listPending, setListPending] = useState(true)
   const ensureWorkbenchPanelsRef = useRef(ensureWorkbenchPanels)
   ensureWorkbenchPanelsRef.current = ensureWorkbenchPanels
   const nextId = useRef(0)
@@ -255,14 +258,26 @@ export function TerminalPanel({
 
   const refresh = useCallback((): void => {
     setListError(null)
+    setListPending(true)
     void listBrowserTerminals(socketFactory, sessionId, placement)
       .then(createInitialGroups)
       .catch((failure: unknown) => {
         setListError(failure instanceof Error ? failure.message : String(failure))
       })
+      .finally(() => { setListPending(false) })
   }, [createInitialGroups, placement, sessionId, socketFactory])
 
   useEffect(() => { refresh() }, [refresh])
+
+  useEffect(() => {
+    if (!actionsExpanded) return
+    const collapseOutside = (event: PointerEvent): void => {
+      if (event.target instanceof Node && floatingActionsRef.current?.contains(event.target) === true) return
+      setActionsExpanded(false)
+    }
+    document.addEventListener('pointerdown', collapseOutside)
+    return () => { document.removeEventListener('pointerdown', collapseOutside) }
+  }, [actionsExpanded])
 
   const activeGroup = groups.find(group => group.id === activeGroupId) ?? groups[0]
   const activeItem = activeGroup?.items.find(item => item.key === activeItemKey) ?? activeGroup?.items[0]
@@ -379,7 +394,7 @@ export function TerminalPanel({
       </Modal>
       <div className={css.terminalBody} style={{ backgroundColor: terminalTheme(preferences.theme).background }}>
         <div className={css.paneArea}>
-          {activeGroup === undefined ? (
+          {activeGroup === undefined ? (listPending ? null : (
             <div className={css.emptyState}>
               <span>{listError ?? t('empty')}</span>
               <button type="button" className={css.retry} onClick={listError === null ? addGroup : refresh}>
@@ -387,7 +402,7 @@ export function TerminalPanel({
                 <span>{listError === null ? t('new') : t('retry')}</span>
               </button>
             </div>
-          ) : (
+          )) : (
             <div className={css.paneGrid} data-direction={activeGroup.splitDirection} style={{ '--terminal-pane-count': activeGroup.items.length } as React.CSSProperties}>
               {activeGroup.items.map(item => (
                 <TerminalPane
@@ -408,21 +423,50 @@ export function TerminalPanel({
             </div>
           )}
         </div>
-        {!showSidebar && (
-          <div className={css.floatingActions}>
-            {(
-              <Tooltip label={fullscreen ? t('restore') : t('fullscreen')} side="bottom">
-                <button type="button" className={css.actionButton} aria-label={fullscreen ? t('restore') : t('fullscreen')} onClick={() => { setFullscreen(value => !value) }}>
-                  <ExpandIcon expanded={fullscreen} />
-                </button>
-              </Tooltip>
-            )}
-            {actionButtons}
+        {!listPending && !showSidebar && (
+          <div
+            ref={floatingActionsRef}
+            className={css.floatingActions}
+            data-terminal-floating-actions=""
+            data-expanded={actionsExpanded || undefined}
+            onMouseEnter={() => { setActionsExpanded(true) }}
+            onMouseLeave={() => { setActionsExpanded(false) }}
+          >
+            <Tooltip label={actionsExpanded ? t('actions.collapse') : t('actions.expand')} side="bottom">
+              <button
+                type="button"
+                className={css.actionToggle}
+                aria-label={actionsExpanded ? t('actions.collapse') : t('actions.expand')}
+                aria-expanded={actionsExpanded}
+                onClick={() => { setActionsExpanded(value => !value) }}
+              >
+                <IconChevronLeftOutline14 className={css.actionChevron} />
+              </button>
+            </Tooltip>
+            <div
+              className={css.actionReveal}
+              data-terminal-action-reveal=""
+              aria-hidden={!actionsExpanded}
+              ref={(element) => {
+                if (element === null) return
+                if (actionsExpanded) element.removeAttribute('inert')
+                else element.setAttribute('inert', '')
+              }}
+            >
+              <div className={css.actionRevealInner}>
+                <Tooltip label={fullscreen ? t('restore') : t('fullscreen')} side="bottom">
+                  <button type="button" className={css.actionButton} aria-label={fullscreen ? t('restore') : t('fullscreen')} onClick={() => { setFullscreen(value => !value) }}>
+                    <ExpandIcon expanded={fullscreen} />
+                  </button>
+                </Tooltip>
+                {actionButtons}
+              </div>
+            </div>
           </div>
         )}
         {showSidebar && (
           <aside className={css.terminalSidebar} aria-label={t('groups')}>
-            <div className={css.sidebarActions}>
+            <div className={css.sidebarActions} data-terminal-sidebar-actions="">
               {(
                 <Tooltip label={fullscreen ? t('restore') : t('fullscreen')} side="bottom">
                   <button type="button" className={css.actionButton} aria-label={fullscreen ? t('restore') : t('fullscreen')} onClick={() => { setFullscreen(value => !value) }}>
@@ -435,17 +479,15 @@ export function TerminalPanel({
             <div className={css.groupTree}>
               {sidebarGroups.map((group, groupIndex) => (
                 <div key={group.id} className={css.groupBlock}>
-                  {(placement === 'bottom' || groups.length > 1) && (
-                    <button type="button" className={css.groupLabel} data-active={group.id === activeGroup?.id || undefined} onClick={() => { activateGroup(group) }}>
-                      {t('group', { number: groupIndex + 1 })}
-                    </button>
-                  )}
+                  <button type="button" className={css.groupLabel} data-terminal-group-label="" data-active={group.id === activeGroup?.id || undefined} onClick={() => { activateGroup(group) }}>
+                    {t('group', { number: groupIndex + 1 })}
+                  </button>
                   <div className={css.groupItems}>
                     {group.items.map((item) => {
                       const snapshot = snapshots[item.key]
                       const label = snapshot?.label ?? t('connectingShort')
                       return (
-                        <div key={item.key} className={css.groupItemRow} data-active={item.key === activeItem?.key || undefined}>
+                        <div key={item.key} className={css.groupItemRow} data-terminal-group-row="" data-active={item.key === activeItem?.key || undefined}>
                           <button type="button" className={css.groupItem} onClick={() => { setActiveGroupId(group.id); setActiveItemKey(item.key) }}>
                             <span className={css.branch}>└</span>
                             <IconCodeOutline16 size={13} />

@@ -137,12 +137,27 @@ describe('Workbench', () => {
     expect(mounted.renderSlot).toHaveBeenLastCalledWith(
       'workbench.surface', { workbenchPanelOrdinal: 2 }, { only: terminal.id },
     )
-    const secondBody = mounted.view.container.querySelector('[role="tabpanel"]')
+    const bodies = [...mounted.view.container.querySelectorAll('[role="tabpanel"]')]
+    expect(bodies).toHaveLength(2)
+    const firstBody = bodies[0] as HTMLElement
+    const secondBody = bodies[1] as HTMLElement
+    expect(firstBody.getAttribute('aria-hidden')).toBe('true')
+    expect(firstBody.hasAttribute('inert')).toBe(true)
+    expect(secondBody.getAttribute('aria-hidden')).toBe('false')
+
     fireEvent.click(screen.getByRole('tab', { name: 'Terminal 1' }))
     expect(screen.getByRole('tab', { name: 'Terminal 1' }).getAttribute('aria-selected')).toBe('true')
-    expect(mounted.view.container.querySelector('[role="tabpanel"]')).not.toBe(secondBody)
+    expect(firstBody.isConnected).toBe(true)
+    expect(secondBody.isConnected).toBe(true)
+    expect(firstBody.getAttribute('aria-hidden')).toBe('false')
+    expect(firstBody.hasAttribute('inert')).toBe(false)
+    expect(secondBody.getAttribute('aria-hidden')).toBe('true')
+    expect(secondBody.hasAttribute('inert')).toBe(true)
+
     fireEvent.click(screen.getByRole('button', { name: '关闭Terminal 1' }))
     expect(screen.queryByRole('tab', { name: 'Terminal 1' })).toBeNull()
+    expect(firstBody.isConnected).toBe(false)
+    expect(secondBody.isConnected).toBe(true)
   })
 
   it('lets a sole immersive surface own the top panel chrome', () => {

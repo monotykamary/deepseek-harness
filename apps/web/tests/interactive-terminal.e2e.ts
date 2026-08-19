@@ -54,6 +54,13 @@ async function ensureTerminalPane(panel: ReturnType<Page['locator']>): Promise<v
   await expect.poll(() => pane.getAttribute('data-terminal-phase'), { timeout: 30_000 }).toBe('ready')
 }
 
+async function revealTerminalActions(panel: ReturnType<Page['locator']>): Promise<void> {
+  const toggle = panel.getByRole('button', { name: 'Show terminal actions', exact: true })
+  if (!await toggle.isVisible()) return
+  await toggle.hover()
+  await panel.getByRole('button', { name: 'Hide terminal actions', exact: true }).waitFor()
+}
+
 async function sendCommand(page: Page, panel: ReturnType<Page['locator']>, command: string): Promise<void> {
   const active = panel.locator('[data-terminal-pane][data-active]')
   const input = (await active.count()) > 0
@@ -69,15 +76,24 @@ function renderGolden(values: {
   readonly bottomHeight: number
   readonly conversationHeight: number
   readonly bottomPanes: number
+  readonly floatingActionsCollapsed: boolean
+  readonly floatingActionsAnimated: boolean
+  readonly bottomGroupedFullscreenVisible: boolean
+  readonly bottomActionsClipped: boolean
   readonly reopenedPanes: number
   readonly rightTabs: readonly string[]
   readonly rightPanes: number
   readonly rightActionsClipped: boolean
+  readonly groupedFullscreenVisible: boolean
+  readonly groupTreeIndented: boolean
+  readonly groupHeadingPill: boolean
   readonly rightGuttersConsistent: boolean
   readonly settings: readonly string[]
   readonly bottomProof: string
   readonly peerProof: string
   readonly rightProof: string
+  readonly rightEmptyStateFlash: boolean
+  readonly rightPanelsRetained: boolean
   readonly compactSide: string | null
   readonly compactBottomHeight: number
 }): string {
@@ -87,14 +103,23 @@ function renderGolden(values: {
     `- bottom panel height: ${String(values.bottomHeight)}px`,
     `- conversation height with bottom panel: ${String(values.conversationHeight)}px`,
     `- bottom panes: ${String(values.bottomPanes)}`,
+    `- floating actions default: ${values.floatingActionsCollapsed ? 'collapsed' : 'expanded'}`,
+    `- floating actions animate on hover: ${String(values.floatingActionsAnimated)}`,
+    `- bottom grouped fullscreen action: ${values.bottomGroupedFullscreenVisible ? 'visible' : 'missing'}`,
+    `- bottom grouped actions clipped: ${String(values.bottomActionsClipped)}`,
     `- settings: ${values.settings.join(' → ')}`,
     `- reopened bottom panes: ${String(values.reopenedPanes)}`,
     `- preserved shell variable: ${JSON.stringify(values.bottomProof)}`,
     `- second browser shares PTY state: ${JSON.stringify(values.peerProof)}`,
     `- right terminal write: ${JSON.stringify(values.rightProof)}`,
+    `- right empty-state flash: ${String(values.rightEmptyStateFlash)}`,
+    `- right panels retained across switches: ${String(values.rightPanelsRetained)}`,
     `- right Workbench panels: ${values.rightTabs.join(' → ')}`,
     `- right active-group panes: ${String(values.rightPanes)}`,
     `- right actions clipped: ${String(values.rightActionsClipped)}`,
+    `- grouped fullscreen action: ${values.groupedFullscreenVisible ? 'visible' : 'missing'}`,
+    `- group tree indented: ${String(values.groupTreeIndented)}`,
+    `- group heading pill: ${String(values.groupHeadingPill)}`,
     `- right PTY gutters consistent: ${String(values.rightGuttersConsistent)}`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
     `- compact bottom panel height: ${String(values.compactBottomHeight)}px`,
@@ -148,7 +173,19 @@ describe('web e2e: interactive terminals', () => {
     await expect.poll(async () => Math.round((await bottom.boundingBox())?.height ?? 0), { timeout: 10_000 })
       .toBeGreaterThan(200)
     const bottomPanes = await bottom.locator('[data-terminal-pane]').count()
+    const floatingActionsCollapsed = await bottom.getByRole('button', { name: 'Show terminal actions', exact: true }).isVisible()
+      && await bottom.getByRole('button', { name: 'Split terminal horizontally', exact: true }).count() === 0
+    const floatingOverlay = bottom.locator('[data-terminal-floating-actions]')
+    const collapsedActionWidth = (await floatingOverlay.boundingBox())?.width ?? 0
+    await bottom.getByRole('button', { name: 'Show terminal actions', exact: true }).hover()
+    await bottom.getByRole('button', { name: 'Split terminal horizontally', exact: true }).waitFor()
+    await expect.poll(async () => (await floatingOverlay.boundingBox())?.width ?? 0).toBeGreaterThan(collapsedActionWidth + 100)
+    const floatingActionsAnimated = await bottom.locator('[data-terminal-action-reveal]').evaluate(element => (
+      getComputedStyle(element).transitionProperty.includes('max-width')
+    ))
+    await page.mouse.move(0, 0)
 
+    await revealTerminalActions(bottom)
     await bottom.getByRole('button', { name: 'Terminal settings', exact: true }).click()
     const settingsDialog = page.getByRole('dialog', { name: 'Terminal settings', exact: true })
     await settingsDialog.waitFor({ timeout: 10_000 })
@@ -160,7 +197,23 @@ describe('web e2e: interactive terminals', () => {
     await settingsDialog.getByLabel('Ligatures').uncheck()
     await settingsDialog.getByRole('button', { name: 'Close terminal settings', exact: true }).click()
 
+    await revealTerminalActions(bottom)
+    await bottom.getByRole('button', { name: 'Split terminal horizontally', exact: true }).click()
+    await expect.poll(() => bottom.locator('[data-terminal-pane]').count(), { timeout: 30_000 }).toBe(2)
+    const bottomSidebar = bottom.getByRole('complementary', { name: 'Terminal groups' })
+    const bottomGroupedFullscreenVisible = await bottomSidebar.getByRole('button', { name: 'Expand terminal to fullscreen', exact: true }).isVisible()
+    const bottomActionsClipped = await bottomSidebar.evaluate((element) => {
+      const bounds = element.getBoundingClientRect()
+      return [...element.querySelectorAll('[data-terminal-sidebar-actions] button')].some((button) => {
+        const rect = button.getBoundingClientRect()
+        return rect.left < bounds.left || rect.right > bounds.right
+      })
+    })
+    await bottomSidebar.getByRole('button', { name: 'Kill terminal', exact: true }).click()
+    await expect.poll(() => bottom.locator('[data-terminal-pane]').count(), { timeout: 30_000 }).toBe(1)
+
     await sendCommand(page, bottom, 'export DSH_PANEL_KEEP=alive')
+    await revealTerminalActions(bottom)
     await bottom.getByRole('button', { name: 'Close bottom terminal', exact: true }).click()
     await expect.poll(() => frame.getAttribute('data-bottom-collapsed'), { timeout: 10_000 }).toBe('true')
     await page.getByRole('button', { name: 'Toggle bottom panel', exact: true }).click()
@@ -187,27 +240,43 @@ describe('web e2e: interactive terminals', () => {
     expect(peerTripwire.warnings).toEqual([])
     await peer.close()
 
+    await page.evaluate(() => {
+      document.body.dataset.terminalEmptyStateFlash = 'false'
+      const observer = new MutationObserver(() => {
+        if (document.body.innerText.includes('No terminal is available.')) {
+          document.body.dataset.terminalEmptyStateFlash = 'true'
+        }
+      })
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+    })
     await page.getByRole('button', { name: 'Open right panel', exact: true }).click()
     const workbench = page.locator('[data-workbench]')
     await workbench.getByRole('button', { name: 'Terminal', exact: true }).click()
-    const right = page.locator('[data-terminal-panel="right"]')
+    const right = workbench.locator('[role="tabpanel"][data-active] [data-terminal-panel="right"]')
     await ensureTerminalPane(right)
     await workbench.getByRole('tab', { name: 'Terminal 1', exact: true }).waitFor({ timeout: 30_000 })
+    await revealTerminalActions(right)
     await right.getByRole('button', { name: 'New terminal', exact: true }).click()
     await workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).waitFor({ timeout: 30_000 })
     await workbench.getByRole('button', { name: 'Close Terminal 2', exact: true }).click()
     await expect.poll(() => workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).count()).toBe(0)
     await page.waitForTimeout(500)
     await expect.poll(() => workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).count()).toBe(0)
+    await revealTerminalActions(right)
     await right.getByRole('button', { name: 'New terminal', exact: true }).click()
     await workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).waitFor({ timeout: 30_000 })
-    const terminal2Body = await workbench.locator('[role="tabpanel"]').elementHandle()
+    const terminal2Body = await workbench.locator('[role="tabpanel"][data-active]').elementHandle()
     if (terminal2Body === null) throw new Error('Terminal 2 Workbench body unavailable')
-    await workbench.getByRole('tab', { name: 'Terminal 1', exact: true }).click()
-    await expect.poll(() => terminal2Body.evaluate(element => element.isConnected)).toBe(false)
-    await expect.poll(() => right.locator('[data-phase="connecting"]').count()).toBe(0)
-    await workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).click()
     await ensureTerminalPane(right)
+    await workbench.getByRole('tab', { name: 'Terminal 1', exact: true }).click()
+    const terminal1ReadyOnSwitch = await right.locator('[data-terminal-pane][data-terminal-phase="ready"]').count() > 0
+    const terminal2RetainedWhileHidden = await terminal2Body.evaluate(element => (
+      element.isConnected && element.getAttribute('aria-hidden') === 'true' && element.hasAttribute('inert')
+    ))
+    await workbench.getByRole('tab', { name: 'Terminal 2', exact: true }).click()
+    const terminal2ReadyOnSwitch = await right.locator('[data-terminal-pane][data-terminal-phase="ready"]').count() > 0
+    const rightPanelsRetained = terminal1ReadyOnSwitch && terminal2RetainedWhileHidden && terminal2ReadyOnSwitch
+    await revealTerminalActions(right)
     await right.getByRole('button', { name: 'Split terminal vertically', exact: true }).click()
     await expect.poll(() => right.locator('[data-terminal-pane]').count(), { timeout: 30_000 }).toBe(2)
     await right.getByRole('button', { name: 'Split terminal horizontally', exact: true }).click()
@@ -215,6 +284,19 @@ describe('web e2e: interactive terminals', () => {
     const rightTabs = await workbench.getByRole('tab').allTextContents()
     const rightPanes = await right.locator('[data-terminal-pane]').count()
     const sidebar = right.getByRole('complementary', { name: 'Terminal groups' })
+    const groupedFullscreenVisible = await sidebar.getByRole('button', { name: 'Expand terminal to fullscreen', exact: true }).isVisible()
+    const groupTreeStyle = await sidebar.evaluate((element) => {
+      const label = element.querySelector('[data-terminal-group-label]')
+      const row = element.querySelector('[data-terminal-group-row]')
+      if (!(label instanceof HTMLElement) || !(row instanceof HTMLElement)) {
+        return { indented: false, pill: false }
+      }
+      const background = getComputedStyle(label).backgroundColor
+      return {
+        indented: row.getBoundingClientRect().left > label.getBoundingClientRect().left,
+        pill: background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent',
+      }
+    })
     const rightActionsClipped = await sidebar.evaluate((element) => {
       const bounds = element.getBoundingClientRect()
       return [...element.querySelectorAll('button[aria-label]')].some((button) => {
@@ -226,6 +308,7 @@ describe('web e2e: interactive terminals', () => {
     await expect.poll(() => groupedClose.evaluate(element => getComputedStyle(element).opacity)).toBe('0')
     await groupedClose.locator('..').hover()
     await expect.poll(() => groupedClose.evaluate(element => getComputedStyle(element).opacity)).toBe('1')
+    const rightEmptyStateFlash = await page.evaluate(() => document.body.dataset.terminalEmptyStateFlash === 'true')
     const rightGuttersConsistent = await right.locator('[data-terminal-pane][data-active]').evaluate((pane) => {
       const terminal = pane.querySelector('.xterm')
       if (!(terminal instanceof HTMLElement)) throw new Error('active terminal xterm unavailable')
@@ -259,15 +342,24 @@ describe('web e2e: interactive terminals', () => {
       bottomHeight: Math.round(bottomBox.height),
       conversationHeight: Math.round(conversationBox.height),
       bottomPanes,
+      floatingActionsCollapsed,
+      floatingActionsAnimated,
+      bottomGroupedFullscreenVisible,
+      bottomActionsClipped,
       reopenedPanes,
       rightTabs,
       rightPanes,
       rightActionsClipped,
+      groupedFullscreenVisible,
+      groupTreeIndented: groupTreeStyle.indented,
+      groupHeadingPill: groupTreeStyle.pill,
       rightGuttersConsistent,
       settings,
       bottomProof: await readFile(bottomProofPath, 'utf8'),
       peerProof: await readFile(peerProofPath, 'utf8'),
       rightProof: await readFile(rightProofPath, 'utf8'),
+      rightEmptyStateFlash,
+      rightPanelsRetained,
       compactSide: await dialog.getAttribute('data-side'),
       compactBottomHeight,
     }), MODE)

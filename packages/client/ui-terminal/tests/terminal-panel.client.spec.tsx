@@ -97,6 +97,11 @@ function mount(
   }
 }
 
+function expandActions(): void {
+  const toggle = screen.queryByRole('button', { name: 'Show terminal actions' })
+  if (toggle !== null) fireEvent.click(toggle)
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.callbackHistory.length = 0
@@ -166,14 +171,58 @@ describe('terminal wrappers and controls', () => {
     const closePanel = vi.fn()
     const bottomProps = { ...injected, closePanel } as unknown as Parameters<typeof BottomTerminal>[0]
     render(<BottomTerminal {...bottomProps} />)
-    expect(await screen.findByRole('button', { name: 'Close bottom terminal' })).toBeTruthy()
+    await screen.findByTestId('viewport')
+    expandActions()
+    expect(screen.getByRole('button', { name: 'Close bottom terminal' })).toBeTruthy()
   })
 })
 
 describe('TerminalPanel', () => {
+  it('discloses floating actions by hover or click and collapses on leave or outside input', async () => {
+    const mounted = mount({}, false)
+    await screen.findByTestId('viewport')
+    const show = screen.getByRole('button', { name: 'Show terminal actions' })
+    expect(screen.queryByRole('button', { name: 'Split terminal horizontally' })).toBeNull()
+    expect(document.querySelectorAll('[data-terminal-action-reveal] button')).toHaveLength(6)
+    const overlay = show.closest('[data-terminal-floating-actions]') as HTMLElement
+    const reveal = overlay.querySelector('[data-terminal-action-reveal]') as HTMLElement
+    expect(reveal.hasAttribute('inert')).toBe(true)
+
+    fireEvent.mouseEnter(overlay)
+    expect(reveal.hasAttribute('inert')).toBe(false)
+    expect(screen.getByRole('button', { name: 'Hide terminal actions' })).toBeTruthy()
+    fireEvent.mouseLeave(overlay)
+    expect(screen.getByRole('button', { name: 'Show terminal actions' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show terminal actions' }))
+    fireEvent.pointerDown(overlay)
+    expect(screen.getByRole('button', { name: 'Hide terminal actions' })).toBeTruthy()
+    fireEvent.pointerDown(document.body)
+    expect(screen.getByRole('button', { name: 'Show terminal actions' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show terminal actions' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hide terminal actions' }))
+    expect(screen.getByRole('button', { name: 'Show terminal actions' })).toBeTruthy()
+    mounted.unmount()
+  })
+
+  it('suppresses the empty state while a right-panel terminal list is pending', async () => {
+    const pending = Promise.withResolvers<readonly typeof running[]>()
+    mocks.list.mockReturnValueOnce(pending.promise)
+    const mounted = mount({ placement: 'right', workbenchPanelOrdinal: 2 }, false)
+    await waitFor(() => { expect(mocks.list).toHaveBeenCalledOnce() })
+    expect(screen.queryByText('No terminal is available.')).toBeNull()
+    expect(mounted.container.querySelector('[data-terminal-floating-actions]')).toBeNull()
+
+    pending.resolve([running])
+    await screen.findByTestId('viewport')
+    expect(screen.queryByText('No terminal is available.')).toBeNull()
+  })
+
   it('attaches a bottom terminal, forwards IO, splits both ways, and restores fullscreen', async () => {
     const mounted = mount({ layoutHeight: 280 })
     await screen.findByTestId('viewport')
+    expandActions()
     fireEvent.mouseDown(mounted.container.querySelector('[data-terminal-pane]')!)
     const root = mounted.container.querySelector('[data-terminal-panel]')
     fireEvent.click(screen.getByRole('button', { name: 'Expand terminal to fullscreen' }))
@@ -211,6 +260,7 @@ describe('TerminalPanel', () => {
   it('adds bottom New Terminal to the active group and can remove a not-yet-connected pane', async () => {
     mount()
     await screen.findByTestId('viewport')
+    expandActions()
     fireEvent.click(screen.getByRole('button', { name: 'New terminal' }))
     await waitFor(() => { expect(screen.getAllByTestId('viewport')).toHaveLength(2) })
 
@@ -254,6 +304,7 @@ describe('TerminalPanel', () => {
   it('creates right terminals as Workbench panels while splits stay inside one panel', async () => {
     const mounted = mount({ placement: 'right' }, false)
     await screen.findByTestId('viewport')
+    expandActions()
     expect(mounted.ensureWorkbenchPanels).toHaveBeenCalledWith(1)
     expect(screen.queryByRole('tab')).toBeNull()
 
@@ -276,11 +327,13 @@ describe('TerminalPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Expand terminal to fullscreen' }))
     fireEvent.click(screen.getByRole('button', { name: 'Restore terminal size' }))
     expect(mounted.container.querySelector('[aria-label="Terminal groups"]')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Group {number}' })).toBeTruthy()
   })
 
   it('opens settings and publishes every preference kind', async () => {
     const mounted = mount()
     await screen.findByTestId('viewport')
+    expandActions()
     fireEvent.click(screen.getByRole('button', { name: 'Terminal settings' }))
     expect(screen.getByRole('dialog', { name: 'Terminal settings' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Theme: Harness' }))
@@ -391,6 +444,7 @@ describe('TerminalPanel', () => {
 
     const third = mount()
     await screen.findByTestId('viewport')
+    expandActions()
     mocks.callbacks?.disconnected(undefined)
     expect(await screen.findByText(en.disconnected)).toBeTruthy()
     mocks.killDetached.mockRejectedValueOnce('kill down')
@@ -401,6 +455,7 @@ describe('TerminalPanel', () => {
     mocks.killDetached.mockRejectedValueOnce(new Error('kill error'))
     const fourth = mount()
     await screen.findByTestId('viewport')
+    expandActions()
     fireEvent.click(screen.getByRole('button', { name: 'Kill terminal' }))
     expect(await screen.findByText('kill error')).toBeTruthy()
     fourth.unmount()
@@ -432,6 +487,7 @@ describe('TerminalPanel', () => {
   it('creates a replacement group after the last pane exits', async () => {
     const mounted = mount()
     await screen.findByTestId('viewport')
+    expandActions()
     mocks.callbacks?.killed('terminal-1')
     await screen.findByText(en.empty)
     fireEvent.click(screen.getAllByRole('button', { name: 'New terminal' }).at(-1)!)
@@ -449,6 +505,7 @@ describe('TerminalPanel', () => {
   it('kills the selected terminal and moves focus to the remaining pane', async () => {
     mount()
     await screen.findByTestId('viewport')
+    expandActions()
     fireEvent.click(screen.getByRole('button', { name: 'Split terminal horizontally' }))
     await waitFor(() => { expect(screen.getAllByTestId('viewport')).toHaveLength(2) })
     fireEvent.click(screen.getByRole('button', { name: 'Kill terminal' }))
