@@ -211,6 +211,10 @@ export function TerminalPanel({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [actionsExpanded, setActionsExpanded] = useState(false)
+  // Hover owns disclosure: the pointer entering reveals the toolbar, so the
+  // first chevron click must not close what the pointer just opened. The
+  // click only toggles a keyboard- or touch-opened toolbar (no hover).
+  const hoverOwnedRef = useRef(false)
   const floatingActionsRef = useRef<HTMLDivElement | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const [listPending, setListPending] = useState(true)
@@ -429,8 +433,8 @@ export function TerminalPanel({
             className={css.floatingActions}
             data-terminal-floating-actions=""
             data-expanded={actionsExpanded || undefined}
-            onMouseEnter={() => { setActionsExpanded(true) }}
-            onMouseLeave={() => { setActionsExpanded(false) }}
+            onMouseEnter={() => { hoverOwnedRef.current = true; setActionsExpanded(true) }}
+            onMouseLeave={() => { hoverOwnedRef.current = false; setActionsExpanded(false) }}
           >
             <Tooltip label={actionsExpanded ? t('actions.collapse') : t('actions.expand')} side="bottom">
               <button
@@ -438,7 +442,10 @@ export function TerminalPanel({
                 className={css.actionToggle}
                 aria-label={actionsExpanded ? t('actions.collapse') : t('actions.expand')}
                 aria-expanded={actionsExpanded}
-                onClick={() => { setActionsExpanded(value => !value) }}
+                onClick={() => {
+                  if (hoverOwnedRef.current) return
+                  setActionsExpanded(value => !value)
+                }}
               >
                 <IconChevronLeftOutline14 className={css.actionChevron} />
               </button>

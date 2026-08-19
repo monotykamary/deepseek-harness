@@ -206,6 +206,25 @@ describe('TerminalPanel', () => {
     mounted.unmount()
   })
 
+  it('keeps a hover-disclosed toolbar when the chevron is clicked and collapses on leave', async () => {
+    const mounted = mount({}, false)
+    await screen.findByTestId('viewport')
+    const overlay = screen.getByRole('button', { name: 'Show terminal actions' }).closest('[data-terminal-floating-actions]') as HTMLElement
+    // Hover discloses the toolbar; the chevron click must not close what the
+    // pointer just opened (the first click otherwise collapses it).
+    fireEvent.mouseEnter(overlay)
+    expect(screen.getByRole('button', { name: 'Hide terminal actions' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Hide terminal actions' }))
+    expect(screen.getByRole('button', { name: 'Hide terminal actions' })).toBeTruthy()
+    fireEvent.mouseLeave(overlay)
+    expect(screen.getByRole('button', { name: 'Show terminal actions' })).toBeTruthy()
+    // Outside input still collapses a hover-disclosed toolbar.
+    fireEvent.mouseEnter(overlay)
+    fireEvent.pointerDown(document.body)
+    expect(screen.getByRole('button', { name: 'Show terminal actions' })).toBeTruthy()
+    mounted.unmount()
+  })
+
   it('suppresses the empty state while a right-panel terminal list is pending', async () => {
     const pending = Promise.withResolvers<readonly typeof running[]>()
     mocks.list.mockReturnValueOnce(pending.promise)
