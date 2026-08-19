@@ -22,6 +22,38 @@
   box-shadow: var(--dsw-shadow-lv3);
 }
 
+/* Mount fade-in; the close keeps the card mounted through the matching
+ * fade-out (component FADE_MS), so the portal never pops out of view. */
+.card {
+  animation: hovercard-in 150ms var(--ds-ease-in-out);
+}
+
+.card.closing {
+  /* forwards: hold the final opacity until the component unmounts. */
+  animation: hovercard-out 150ms var(--ds-ease-in-out) forwards;
+}
+
+@keyframes hovercard-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes hovercard-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateX(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+  /* Reduced motion still dismisses at once: the close class hides the
+     card while the component's fade window elapses before unmounting. */
+  .card.closing {
+    opacity: 0;
+  }
+}
+
 .copyable {
   cursor: pointer;
 }

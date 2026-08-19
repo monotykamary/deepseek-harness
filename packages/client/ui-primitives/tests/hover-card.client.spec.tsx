@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HoverCard } from '@monotykamary/dsh-client-ui-primitives'
+import { FADE_MS } from '../src/HoverCard.tsx'
 import { POINTER_GRACE_MS } from '../src/pointer-grace.ts'
 
 afterEach(cleanup)
@@ -83,6 +84,8 @@ describe('HoverCard', () => {
     act(() => { vi.advanceTimersByTime(POINTER_GRACE_MS - 1) })
     expect(screen.getByText('card body')).toBeTruthy()
     act(() => { vi.advanceTimersByTime(1) })
+    // The card stays mounted through the fade-out before unmounting.
+    act(() => { vi.advanceTimersByTime(FADE_MS) })
     expect(screen.queryByText('card body')).toBeNull()
     fireEvent.pointerEnter(wrapper)
     act(() => { vi.advanceTimersByTime(500) })
@@ -121,6 +124,9 @@ describe('HoverCard', () => {
     act(() => { vi.advanceTimersByTime(500) })
     expect(screen.getByText('card body')).toBeTruthy()
     fireEvent.pointerDown(screen.getByText('row'))
+    // The card fades out before unmounting: still mounted for the window.
+    expect(screen.getByText('card body')).toBeTruthy()
+    act(() => { vi.advanceTimersByTime(FADE_MS) })
     expect(screen.queryByText('card body')).toBeNull()
     // The pending timer is also cleared: no reopen after the dwell.
     act(() => { vi.advanceTimersByTime(1000) })
@@ -371,6 +377,9 @@ describe('HoverCard', () => {
     act(() => { vi.advanceTimersByTime(500) })
     expect(screen.getByText('card body')).toBeTruthy()
     view.rerender(<HoverCard anchor={<span>row</span>} content={<div>card body</div>} disabled />)
+    // The card fades out before unmounting.
+    expect(screen.getByText('card body')).toBeTruthy()
+    act(() => { vi.advanceTimersByTime(FADE_MS) })
     expect(screen.queryByText('card body')).toBeNull()
   })
 
@@ -416,6 +425,29 @@ describe('HoverCard', () => {
     expect(card.style.top).toBe('90px')
     fireEvent.pointerLeave(wrapper)
     act(() => { vi.advanceTimersByTime(POINTER_GRACE_MS) })
+    act(() => { vi.advanceTimersByTime(FADE_MS) })
+    expect(screen.queryByText('card body')).toBeNull()
+  })
+
+  it('keeps a closing card mounted through the fade and restores it on re-entry', () => {
+    const { wrapper } = mount()
+    fireEvent.pointerEnter(wrapper)
+    act(() => { vi.advanceTimersByTime(500) })
+    expect(screen.getByText('card body')).toBeTruthy()
+    fireEvent.pointerLeave(wrapper)
+    act(() => { vi.advanceTimersByTime(POINTER_GRACE_MS) })
+    // Close starts the fade: the card stays mounted for the fade window.
+    expect(screen.getByText('card body')).toBeTruthy()
+    act(() => { vi.advanceTimersByTime(FADE_MS - 1) })
+    expect(screen.getByText('card body')).toBeTruthy()
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(screen.queryByText('card body')).toBeNull()
+    // Re-entry during the fade cancels the unmount and keeps the card.
+    fireEvent.pointerEnter(wrapper)
+    act(() => { vi.advanceTimersByTime(500) })
+    expect(screen.getByText('card body')).toBeTruthy()
+    fireEvent.pointerLeave(wrapper)
+    act(() => { vi.advanceTimersByTime(POINTER_GRACE_MS + FADE_MS) })
     expect(screen.queryByText('card body')).toBeNull()
   })
 

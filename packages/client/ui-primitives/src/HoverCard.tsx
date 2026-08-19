@@ -7,6 +7,10 @@
 // The portaled card is a React child of the wrapper, so React's enter/leave
 // traversal already treats it as inside — one pair of wrapper handlers covers
 // anchor and card alike.
+//
+// The card fades in on mount and fades out before unmounting: closing keeps
+// it mounted through the fade (the .closing class), then drops `open` so the
+// placement effect clears `pos` and the portal unmounts.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -14,6 +18,9 @@ import { createPortal } from 'react-dom'
 import { writeClipboard } from './clipboard.ts'
 import { usePointerGrace } from './pointer-grace.ts'
 import css from './HoverCard.module.css'
+
+/** Card fade window; matches the CSS in/out animations in HoverCard.module.css. */
+export const FADE_MS = 150
 
 /**
  * Render an anchor with a hover-triggered preview card.
@@ -49,8 +56,13 @@ export function HoverCard({
   const copyingRef = useRef(false)
   const mountedRef = useRef(true)
   const [open, setOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
   const [copied, setCopied] = useState(false)
+  // Mirror of `open` for the stable close callback (read at grace fire time).
+  const openRef = useRef(open)
+  useEffect(() => { openRef.current = open }, [open])
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearCopied = useCallback(() => {
     if (copyTimerRef.current !== null) {
@@ -61,11 +73,26 @@ export function HoverCard({
     setCopied(false)
   }, [])
 
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
   const close = useCallback(() => {
     copyEpochRef.current += 1
     clearCopied()
-    setOpen(false)
-  }, [clearCopied])
+    // A closed card needs no fade; only an open one stays mounted for it.
+    if (!openRef.current) { setClosing(false); return }
+    setClosing(true)
+    clearCloseTimer()
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null
+      setClosing(false)
+      setOpen(false)
+    }, FADE_MS)
+  }, [clearCopied, clearCloseTimer])
 
   const { arm: armClose, cancel: cancelClose } = usePointerGrace(close)
 
@@ -90,12 +117,13 @@ export function HoverCard({
       mountedRef.current = false
       copyEpochRef.current += 1
       clearTimer()
+      clearCloseTimer()
       if (copyTimerRef.current !== null) {
         clearTimeout(copyTimerRef.current)
         copyTimerRef.current = null
       }
     }
-  }, [])
+  }, [clearCloseTimer])
 
   // Fixed-position from the anchor rect before paint; track the anchor while
   // open (capture-phase scroll catches nested panes), as in Menu portal mode.
@@ -149,7 +177,7 @@ export function HoverCard({
   const card = open && pos !== null && (
     <div
       ref={cardRef}
-      className={`${css.card}${copyable ? ` ${css.copyable}` : ''}${copied ? ` ${css.feedback}` : ''}`}
+      className={`${css.card}${copyable ? ` ${css.copyable}` : ''}${copied ? ` ${css.feedback}` : ''}${closing ? ` ${css.closing}` : ''}`}
       style={{ ...pos, minHeight: copied && copyHeightRef.current !== null ? copyHeightRef.current : undefined }}
       role={copyable ? 'button' : undefined}
       tabIndex={copyable ? 0 : undefined}
@@ -184,10 +212,16 @@ export function HoverCard({
       onPointerEnter={() => {
         if (disabled) return
         // Coming back inside during the grace (the gap, or the card itself)
-        // keeps the current card rather than restarting the dwell.
+        // keeps the current card rather than restarting the dwell. A return
+        // during the fade-out restores the card in place instead.
         cancelClose()
-        if (open) return
+        if (open) {
+          if (closing) { setClosing(false); clearCloseTimer() }
+          return
+        }
         clearTimer()
+        clearCloseTimer()
+        setClosing(false)
         timerRef.current = setTimeout(() => { setOpen(true) }, openDelayMs)
       }}
       onPointerLeave={() => {
