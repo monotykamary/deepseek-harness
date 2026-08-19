@@ -78,6 +78,8 @@
     "@monotykamary/dsh-workflow-worker-thread": "workspace:^",
     "@monotykamary/dsh-agent-instructions": "workspace:^",
     "commander": "^15.0.0",
+    "dsh-fabric": "^0.1.0",
+    "dsh-fovea": "^0.2.0",
     "@monotykamary/cordis": "workspace:^",
     "js-yaml": "^4.2.0",
     "node-addon-require-builtin": "^0.1.4"

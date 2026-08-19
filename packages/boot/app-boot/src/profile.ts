@@ -110,14 +110,23 @@ export function resolveProfileDir(name: string, home: string = resolveDshHome())
   return join(home, PROFILES_DIR, name)
 }
 
-/** The shipped profile templates auto-initialized on first use, by name. */
+/**
+ * The shipped profile templates auto-initialized on first use, by name.
+ *
+ * Every template layers the custom-flavor bundles on top of the upstream
+ * composition: `dsh-fabric` (deterministic compaction, QuickJS code runtime,
+ * mesh, and live topology) and `dsh-fovea` (foveated repository
+ * intelligence). Both are installation dependencies of the `dsh` app, so
+ * they resolve from the installation anchor like every in-box bundle.
+ */
 export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
-  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
-  headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-headless'],
+  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'],
+  headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'],
 }
 
 /** Installation-owned bundle tuples normalized to the shipped template. */
 const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly string[]> = {
+  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
   headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless'],
 }
 

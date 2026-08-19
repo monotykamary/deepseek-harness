@@ -7,6 +7,8 @@ settings:
 overrides:
   '@monotykamary/cosmokit': link:vendor/cosmokit
   '@monotykamary/schemastery': link:vendor/schemastery
+  dsh-fabric: link:../dsh-fabric
+  dsh-fovea: link:../dsh-fovea
 
 patchedDependencies:
   '@xterm/addon-image@0.10.0-beta.287': 0f9b102a6ad3a1baec614261cff1e699a949b3cf7faddc45fc0222c7892b6b5a
@@ -305,6 +307,12 @@ importers:
       commander:
         specifier: ^15.0.0
         version: 15.0.0
+      dsh-fabric:
+        specifier: link:../../../dsh-fabric
+        version: link:../../../dsh-fabric
+      dsh-fovea:
+        specifier: link:../../../dsh-fovea
+        version: link:../../../dsh-fovea
       js-yaml:
         specifier: ^4.2.0
         version: 4.2.0

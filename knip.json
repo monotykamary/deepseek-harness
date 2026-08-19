@@ -735,7 +735,9 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@monotykamary/.+"
+        "@monotykamary/.+",
+        "dsh-fabric",
+        "dsh-fovea"
       ]
     },
     "packages/client/modules": {

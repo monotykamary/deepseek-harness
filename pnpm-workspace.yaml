@@ -27,6 +27,13 @@ linkWorkspacePackages: true
 overrides:
   '@monotykamary/cosmokit': 'link:vendor/cosmokit'
   '@monotykamary/schemastery': 'link:vendor/schemastery'
+  # The custom-flavor bundles ship as installation dependencies of the dsh
+  # app; these overrides pin the local dev install to the sibling checkouts
+  # (dsh-fabric and dsh-fovea each resolve their own @monotykamary/*
+  # dependencies from their own installs, exactly as their link: manifests
+  # did before the publishable-range conversion).
+  'dsh-fabric': 'link:../dsh-fabric'
+  'dsh-fovea': 'link:../dsh-fovea'
 
 peerDependencyRules:
   allowedVersions:
