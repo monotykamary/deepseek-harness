@@ -2,6 +2,8 @@
 
 Status: implemented
 
+English | [中文](2026-08-20-custom-flavor-default-bundles-and-publication.zh.md)
+
 ## Problem
 
 This fork is a custom flavor of upstream DeepSeek Harness: the shipped profile composition stayed exactly upstream's (`dsh-base` + `dsh-web-app` / `dsh-headless`), so `dsh-fabric` and `dsh-fovea` — the capabilities this flavor exists for — reached a user only through a manual `dsh plugin --profile web add <path>` or the sibling repos' `install:local` scripts. Nothing had been published since `0.1.0-rc.5` although the repository carried `0.1.0-rc.7`, and neither `dsh-fabric`, `dsh-fovea`, nor any `@dsh-fabric/*` package existed on npm. The sibling manifests were unpublishable as written: every `@monotykamary/*` dependency used the `link:` protocol pointing into this checkout, which `pnpm pack` leaves verbatim and npm consumers resolve relative to their own tree.
@@ -12,9 +14,9 @@ This fork is a custom flavor of upstream DeepSeek Harness: the shipped profile c
 
 `PROFILE_TEMPLATES.web` is `['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea']` and `PROFILE_TEMPLATES.headless` is `['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea']`. Both bundles are dependencies of the `dsh` app, so they resolve from the installation anchor like every in-box bundle, and `healProfilesModuleFallback` symlinks them (and their `dsh-fabric-*` and `@monotykamary/*` closures) into `$DSH_HOME/profiles/node_modules`. `INSTALLATION_OWNED_PROFILE_TUPLES` gained the exact pre-change web tuple, so an existing auto-initialized web profile migrates to the new composition on its next boot while any user-modified list stays untouched.
 
-### Local development pins the sibling checkouts
+### Local development resolves the published bundles by default
 
-The workspace `overrides` map `dsh-fabric` and `dsh-fovea` to `link:../dsh-fabric` and `link:../dsh-fovea`. pnpm does not install the dependencies of `link:`-resolved packages, which is exactly right here: each sibling checkout carries its own complete install (its own overrides pin `@monotykamary/*` back to this checkout), and Node's symlink-following resolution reaches those packages from the linked real locations.
+The harness workspace resolves `dsh-fabric` and `dsh-fovea` from npm; the sibling `link:` override pair originally documented here is superseded by [npm-default custom-flavor resolution](2026-08-20-npm-default-custom-flavor-dev-install.md), which keeps live-linking as an uncommitted opt-in. pnpm not installing the dependencies of `link:`-resolved packages remains the right property for that opt-in path: each sibling checkout carries its own complete install (its own overrides pin `@monotykamary/*` back to this checkout), and Node's symlink-following resolution reaches those packages from the linked real locations.
 
 ### The fabric packages publish unscoped
 
@@ -44,4 +46,4 @@ A prepublish transform (link: → range, publish, restore) keeps the checked-in 
 
 ## Consequences
 
-Installing the published `@monotykamary/dsh` now pulls `dsh-fabric` and `dsh-fovea` and every auto-initialized profile composes them; upstream-sync merges must keep the template lists and the app dependencies in mind, and any future fabric/fovea release requires a coordinated publish of the harness family first. A harness checkout without the sibling directories fails `pnpm install` (the overrides require the link targets), which is the price of a live-link dev loop. The sibling repos' own `install:local` scripts pin `@monotykamary/dsh@0.1.0-rc.7`, which exists only after the harness publish.
+Installing the published `@monotykamary/dsh` now pulls `dsh-fabric` and `dsh-fovea` and every auto-initialized profile composes them; upstream-sync merges must keep the template lists and the app dependencies in mind, and any future fabric/fovea release requires a coordinated publish of the harness family first. A harness checkout installs and composes profiles without the sibling directories, resolving both bundles from npm; pinning them requires the opt-in overrides in [npm-default custom-flavor resolution](2026-08-20-npm-default-custom-flavor-dev-install.md). The pinned variant's claimed hard failure never existed — pnpm 11 silently skips missing `link:` override targets — so a checkout without the siblings installed cleanly but booted with both bundles missing. The sibling repos' own `install:local` scripts pin `@monotykamary/dsh@0.1.0-rc.7`, which exists only after the harness publish.

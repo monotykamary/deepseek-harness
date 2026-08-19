@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-20-npm-default-custom-flavor-dev-install.md
+2026-08-20-npm-default-custom-flavor-dev-install.md: 22ed220aa7328d9938425bd7beb3c42f0c339202
+2026-08-20-npm-default-custom-flavor-dev-install.zh.md: 8c60accc0f53fe11759fbea5029a91c7d407b054
