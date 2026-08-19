@@ -115,6 +115,34 @@
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
+.itemWithAction {
+  padding-right: 42px;
+}
+
+.itemAction {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.itemAction:hover,
+.itemAction:focus-visible {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
 .denseList .item {
   min-height: 34px;
   padding-block: 5px;

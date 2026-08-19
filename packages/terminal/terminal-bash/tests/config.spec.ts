@@ -5,7 +5,7 @@ import { validateConfig } from '@monotykamary/dsh-terminal-bash/src/config.ts'
 function config(overrides: Partial<Config> = {}): Config {
   return {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 40, cols: 160,
-    scrollbackLines: 100, scrollbackMaxBytes: 1024, maxReadBytes: 512,
+    scrollbackLines: 100, scrollbackMaxBytes: 1024, interactiveReplayMaxBytes: 768, maxReadBytes: 512,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 100, handoffGraceMs: 50, timeoutMs: 1000,
     disposeGraceMs: 100,
     ...overrides,
@@ -20,6 +20,7 @@ describe('terminal-bash config', () => {
   it('rejects empty names, invalid numbers, and a read cap above retention', () => {
     expect(() => { validateConfig(config({ backendType: '' })) }).toThrow('backendType')
     expect(() => { validateConfig(config({ shellPath: '' })) }).toThrow('shellPath')
+    expect(() => { validateConfig(config({ interactiveShellPath: '' })) }).toThrow('interactiveShellPath')
     expect(() => { validateConfig(config({ rows: 0 })) }).toThrow('rows')
     expect(() => { validateConfig(config({ rows: 1.5 })) }).toThrow('rows')
     expect(() => { validateConfig(config({ maxReadBytes: 2048 })) }).toThrow('must not exceed')

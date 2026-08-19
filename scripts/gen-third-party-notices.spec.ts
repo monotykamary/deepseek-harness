@@ -27,8 +27,12 @@ describe('THIRD_PARTY_NOTICES.md', () => {
   it('matches what the generator produces from the current manifests', () => {
     const generated = render()
     expect(generated).toContain('It depends on the third-party software listed below.')
-    expect(generated).toContain('The Web command palette, sidebar, conversation, workbench, and Files explorer adapt interaction patterns')
+    expect(generated).toContain('The Web command palette, sidebar, conversation, workbench, Files explorer, and interactive terminal panels adapt interaction patterns')
     expect(generated).toContain('Copyright (c) 2026 T3 Tools Inc.')
+    expect(generated).toContain('## Bundled terminal fonts')
+    expect(generated).toContain('Copyright 2024 The Geist Project Authors')
+    expect(generated).toContain('SIL OPEN FONT LICENSE Version 1.1')
+    expect(generated).toContain('UBUNTU FONT LICENCE Version 1.0')
     expect(generated).toContain('Permission is hereby granted, free of charge')
     expect(generated).toContain('THE SOFTWARE IS PROVIDED "AS IS"')
     expect(generated).toContain('a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2')
@@ -277,11 +281,14 @@ describe('isPermissive', () => {
 })
 
 describe('official Claude distribution authorization', () => {
-  it('authorizes only the direct SDK identity without relabeling its license', () => {
+  it('authorizes only reviewed runtime identities without relabeling their licenses', () => {
     expect(isOwnerAuthorizedRuntime(CLAUDE_AGENT_SDK_PACKAGE)).toBe(true)
     expect(isOwnerAuthorizedRuntime(`${CLAUDE_AGENT_SDK_PACKAGE}-linux-x64`))
       .toBe(false)
+    expect(isOwnerAuthorizedRuntime('@fontsource/geist-mono')).toBe(true)
+    expect(isOwnerAuthorizedRuntime('@fontsource/unreviewed')).toBe(false)
     expect(isOwnerAuthorizedRuntime('@anthropic-ai/unrelated')).toBe(false)
+    expect(isPermissive('OFL-1.1')).toBe(false)
     expect(isPermissive('SEE LICENSE IN README.md')).toBe(false)
   })
 

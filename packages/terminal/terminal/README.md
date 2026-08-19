@@ -12,7 +12,7 @@ Owner-scoped persistent PTY seam. `TerminalSessionService` registers as `ctx.ter
 - A rollback-close or backend-reported startup cleanup failure rejects the disposing lifecycle instead of claiming quiescence. Caller-triggered cancellation still receives its exact reason; lifecycle-triggered rollback failure also rejects the pending spawn.
 - A backend cleanup failure that follows caller cancellation remains owner activity until owner or service disposal consumes and reports it, so lifecycle policy cannot mistake failed cleanup for quiescence.
 - `hasOwnerActivity(owner)` spans unpublished setup through final close, so lifecycle policy can fence the exact owner without a publication race.
-- A successful spawn publishes one `TerminalSessionId`. The optional `name` is owner-local display metadata, never authority.
+- A successful spawn publishes one `TerminalSessionId`. The optional `name` is owner-local display metadata, never authority. The optional `interactive` intent distinguishes a direct human PTY from a model-framed session without changing ownership.
 - One session accepts at most one live send operation. Reads and signals may observe it; another send fails until the operation settles.
 - `TerminalSendResult.waitReason` and `sessionStatus` are independent. `session_exit` describes the top-level PTY process, not an arbitrary foreground command.
 - `kill()` and disposal resolve only after the backend's captured process tree is quiescent. A cleanup failure rejects instead of claiming success and clears the matching backend and registry fences so a later close can retry without disturbing a newer attempt.

@@ -323,6 +323,7 @@ export interface RelativeTime {
  * @param archivedSessionIds - registry-global archive set (members never match).
  * @param content - ranked Host content-search page.
  * @param limit - protocol-owned maximum merged row count.
+ * @param workspaceScope - optional Workspace whose membership limits both local and content matches.
  * @returns bounded deduplicated flat rows and a refine-query hint bit.
  */
 export function deriveSearchResults(
@@ -332,10 +333,16 @@ export function deriveSearchResults(
   archivedSessionIds: readonly SessionId[],
   content: { items: readonly SessionSearchResultItem[]; hasMore: boolean },
   limit: number,
+  workspaceScope?: WorkspaceId,
 ): SearchResultSet {
   const q = query.trim().toLowerCase()
   if (q === '') return { items: [], hasMore: false }
   const archived = new Set(archivedSessionIds)
+  const scopedSessionIds = workspaceScope === undefined
+    ? null
+    : new Set(workspaces.find(workspace => workspace.workspaceId === workspaceScope)?.sessionIds ?? [])
+  const inScope = (sessionId: SessionId): boolean =>
+    scopedSessionIds === null || scopedSessionIds.has(sessionId)
   const descendants = indexSubagentDescendants(list.byId)
 
   const workspaceBySession = new Map<SessionId, string>()
@@ -356,7 +363,12 @@ export function deriveSearchResults(
     const summary = list.byId[id]
     // Blank placeholders never match a query (their canonical title displays
     // localized, so matching it would tie search to one language).
-    if (summary === undefined || summary.blank || !sessionVisible(summary, list.current, archived)) continue
+    if (
+      summary === undefined
+      || summary.blank
+      || !inScope(summary.id)
+      || !sessionVisible(summary, list.current, archived)
+    ) continue
     if (
       sessionTitle(summary).toLowerCase().includes(q)
       || labelOf(summary).toLowerCase().includes(q)
@@ -376,7 +388,12 @@ export function deriveSearchResults(
   for (const summary of local) include(summary)
   for (const item of content.items) {
     const summary = list.byId[item.sessionId]
-    if (summary !== undefined && !summary.blank && sessionVisible(summary, list.current, archived)) include(summary)
+    if (
+      summary !== undefined
+      && !summary.blank
+      && inScope(summary.id)
+      && sessionVisible(summary, list.current, archived)
+    ) include(summary)
   }
 
   return {

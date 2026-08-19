@@ -41,6 +41,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`
 
+const LOCALTERM_REVISION = '8de7394eb06cf562985d8f82d5a8145863cb8ecd'
+const LOCALTERM_LICENSE = `MIT License
+
+Copyright (c) 2026 Aiden Bai
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`
+
 /** Dependency-declaration kinds a consumer resolves at runtime. */
 const RUNTIME_KINDS = ['dependencies', 'optionalDependencies'] as const
 /** All manifest sections that name an external package this file must disclose. */
@@ -75,14 +98,29 @@ export const CLAUDE_AGENT_SDK_PACKAGE = '@anthropic-ai/claude-agent-sdk'
 const CLAUDE_PLATFORM_PACKAGE_PREFIX = `${CLAUDE_AGENT_SDK_PACKAGE}-`
 const CLAUDE_PLATFORM_DECLARED_LICENSE = 'SEE LICENSE IN LICENSE.md'
 
+/** Fontsource identities whose unmodified binaries are embedded in the Web terminal bundle. */
+const BUNDLED_FONT_LICENSES = new Map<string, string>([
+  ['@fontsource/anonymous-pro', 'OFL-1.1'],
+  ['@fontsource/dm-mono', 'OFL-1.1'],
+  ['@fontsource/fira-code', 'OFL-1.1'],
+  ['@fontsource/geist-mono', 'OFL-1.1'],
+  ['@fontsource/ibm-plex-mono', 'OFL-1.1'],
+  ['@fontsource/inconsolata', 'OFL-1.1'],
+  ['@fontsource/jetbrains-mono', 'OFL-1.1'],
+  ['@fontsource/roboto-mono', 'OFL-1.1'],
+  ['@fontsource/source-code-pro', 'OFL-1.1'],
+  ['@fontsource/space-mono', 'OFL-1.1'],
+  ['@fontsource/ubuntu-mono', 'UFL-1.0'],
+])
+
 /**
  * Whether a non-permissive runtime declaration has an identity-scoped owner
  * authorization. This does not reclassify its terms as permissive.
  * @param name - exact npm package identity.
- * @returns true only for the official Claude Agent SDK package.
+ * @returns true only for the official Claude SDK or reviewed bundled fonts.
  */
 export function isOwnerAuthorizedRuntime(name: string): boolean {
-  return name === CLAUDE_AGENT_SDK_PACKAGE
+  return name === CLAUDE_AGENT_SDK_PACKAGE || BUNDLED_FONT_LICENSES.has(name)
 }
 
 /**
@@ -660,6 +698,27 @@ function renderNpmTable(deps: ExternalDep[]): string {
   return lines.join('\n')
 }
 
+function renderBundledFontLicenses(deps: readonly ExternalDep[]): string {
+  const fonts = deps.filter(dep => BUNDLED_FONT_LICENSES.has(dep.name))
+  if (fonts.length === 0) return ''
+  const entries = fonts.map((font) => {
+    const expectedLicense = BUNDLED_FONT_LICENSES.get(font.name)
+    if (font.license !== expectedLicense) {
+      throw new Error(`gen-third-party-notices: bundled font ${font.name} changed license from ${String(expectedLicense)} to ${font.license}; review its terms before regenerating.`)
+    }
+    const licensePath = resolve(root, 'packages/client/ui-terminal/node_modules', font.name, 'LICENSE')
+    const license = readFileSync(licensePath, 'utf8').trimEnd()
+    return `### \`${font.name}\`\n\n\`\`\`text\n${license}\n\`\`\``
+  })
+  return `
+## Bundled terminal fonts
+
+The Web terminal embeds unmodified font binaries from the following Fontsource packages. The project owner authorizes their distribution under each package's declared font license; this identity-scoped authorization does not classify OFL-1.1 or UFL-1.0 as permissive. The corresponding copyright notice and complete license text follow for every embedded family.
+
+${entries.join('\n\n')}
+`
+}
+
 function renderClaudeDistribution(
   distribution: ClaudeDistribution | undefined,
 ): string {
@@ -731,10 +790,16 @@ ${vendored.map(row => `| \`${row.npmName}\` | \`${row.upstreamName}\` | [${row.u
 
 ## Adapted design sources
 
-The Web command palette, sidebar, conversation, workbench, and Files explorer adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision \`${T3_CODE_REVISION}\`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
+The Web command palette, sidebar, conversation, workbench, Files explorer, and interactive terminal panels adapt interaction patterns and design tokens from [T3 Code](https://github.com/pingdotgg/t3code) revision \`${T3_CODE_REVISION}\`. The attribution is retained even where the resulting DeepSeek Harness implementation is not a substantial copy.
 
 \`\`\`text
 ${T3_CODE_LICENSE}
+\`\`\`
+
+The xterm output scheduler, scroll anchoring, ligature detection, Unicode width corrections, renderer settings, and addon patches adapt [localterm](https://github.com/monotykamary/localterm) revision \`${LOCALTERM_REVISION}\`.
+
+\`\`\`text
+${LOCALTERM_LICENSE}
 \`\`\`
 
 ## Runtime npm dependencies
@@ -747,6 +812,7 @@ pnpm applies local patches to the following packages at install time, so shipped
 
 ${patchedLines.join('\n')}
 ${renderClaudeDistribution(claudeDistribution)}
+${renderBundledFontLicenses(runtimeDeps)}
 
 ## Development-only npm dependencies
 

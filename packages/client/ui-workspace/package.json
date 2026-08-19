@@ -46,18 +46,20 @@
   },
   "license": "MIT",
   "dependencies": {
-    "clsx": "^2.0.0"
+    "clsx": "^2.0.0",
+    "lucide-react": "^1.31.0"
   },
   "peerDependencies": {
+    "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
+    "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-test-runtime": "workspace:^",
@@ -67,7 +69,6 @@
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
-    "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0"
   },
   "files": [

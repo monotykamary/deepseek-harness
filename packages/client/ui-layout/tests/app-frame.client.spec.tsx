@@ -48,6 +48,7 @@ class ResizeObserverStub {
 }
 
 let frameWidth = 1920
+let frameHeight = 1080
 
 /** Test-local selector hook over a framework-neutral store instance. */
 function hookOf<T>(inst: { subscribe: (fn: () => void) => () => void; getSnapshot: () => T }) {
@@ -62,6 +63,7 @@ function mountFrame() {
     slotCalls.push({ key, props: owner })
     if (key === 'sidebar') return <div data-testid="sidebar-content" />
     if (key === 'conversation') return <div data-testid="center-content" />
+    if (key === 'bottom-panel') return <div data-testid="bottom-content" />
     if (key === 'details') return <div data-testid="details-content" />
     if (key === 'conversation.empty') return <div data-testid="empty-content" />
     return <div data-testid="other-content" />
@@ -112,8 +114,18 @@ function drag(handle: Element, fromX: number, toX: number): void {
   act(() => { handle.dispatchEvent(up) })
 }
 
+function dragVertical(handle: Element, fromY: number, toY: number): void {
+  const down = new PointerEvent('pointerdown', { pointerId: 2, clientY: fromY, bubbles: true })
+  const move = new PointerEvent('pointermove', { pointerId: 2, clientY: toY, bubbles: true })
+  const up = new PointerEvent('pointerup', { pointerId: 2, clientY: toY, bubbles: true })
+  act(() => { handle.dispatchEvent(down) })
+  act(() => { handle.dispatchEvent(move); vi.advanceTimersByTime(20) })
+  act(() => { handle.dispatchEvent(up) })
+}
+
 beforeEach(() => {
   frameWidth = 1920
+  frameHeight = 1080
   selectedSession.current = 's-test' as SessionId
   selectedSessionBlank.current = false
   baselinesReady.current = true
@@ -123,7 +135,10 @@ beforeEach(() => {
   vi.stubGlobal('cancelAnimationFrame', (h: number) => { clearTimeout(h) })
   window.innerWidth = frameWidth
   Element.prototype.getBoundingClientRect = function () {
-    return { width: frameWidth, height: 1080, top: 0, left: 0, right: frameWidth, bottom: 1080, x: 0, y: 0, toJSON: () => ({}) }
+    return {
+      width: frameWidth, height: frameHeight, top: 0, left: 0,
+      right: frameWidth, bottom: frameHeight, x: 0, y: 0, toJSON: () => ({}),
+    }
   }
   // jsdom lacks pointer capture: emulate per-element so hasPointerCapture gates pass.
   const captured = new WeakSet<Element>()
@@ -212,6 +227,38 @@ describe('AppFrame', () => {
     expect(tracks(frame)).toEqual([280, 0])
   })
 
+  it('keeps the bottom occupant mounted at zero height and closes through its owner share', () => {
+    const { frame, instance, slotCalls, getByTestId } = mountFrame()
+    expect(getByTestId('bottom-content')).toBeTruthy()
+    expect(frame.hasAttribute('data-bottom-collapsed')).toBe(true)
+    expect(slotCalls.find(call => call.key === 'bottom-panel')?.props).toMatchObject({ height: 0 })
+
+    act(() => { instance.actions.openBottom() })
+    expect(frame.hasAttribute('data-bottom-collapsed')).toBe(false)
+    const owner = slotCalls.filter(call => call.key === 'bottom-panel').at(-1)?.props as {
+      height: number
+      closePanel: () => void
+    }
+    expect(owner.height).toBe(280)
+    act(() => { owner.closePanel() })
+    expect(instance.getSnapshot().bottom).toBe(0)
+  })
+
+  it('resizes the bottom panel upward and concedes room on a short frame', () => {
+    const { frame, instance } = mountFrame()
+    act(() => { instance.actions.openBottom() })
+    const handle = frame.querySelector('[class*="bottomHandle"]')
+    if (handle === null) throw new Error('missing bottom-panel handle')
+    dragVertical(handle, 800, 740)
+    expect(instance.getSnapshot().bottom).toBe(340)
+
+    frameHeight = 400
+    act(() => { fireResize?.(); vi.advanceTimersByTime(20) })
+    const panel = frame.querySelector('[class*="bottomPanelHost"]') as HTMLElement | null
+    expect(panel?.style.height).toBe('160px')
+    expect(instance.getSnapshot().bottom).toBe(340)
+  })
+
   it('keeps details closed when the first Session materializes', () => {
     selectedSession.current = undefined
     const { frame, instance, rerenderFrame } = mountFrame()
@@ -253,9 +300,15 @@ describe('AppFrame', () => {
     expect(instance.getSnapshot().details).toBe(320)
   })
 
-  it('details column stays mounted at zero width', () => {
-    const { frame, getByTestId } = mountFrame()
+  it('keeps a stable mounted details width while the outer track closes', () => {
+    const { frame, instance, getByTestId } = mountFrame()
+    const content = frame.querySelector<HTMLElement>('[data-details-content]')
+    expect(content?.style.width).toBe('360px')
+    act(() => { instance.actions.openDetails() })
+    expect(tracks(frame)).toEqual([280, 360])
+    act(() => { instance.actions.closeDetails() })
     expect(tracks(frame)).toEqual([280, 0])
+    expect(content?.style.width).toBe('360px')
     expect(getByTestId('details-content')).toBeTruthy()
     expect(frame.hasAttribute('data-details-collapsed')).toBe(true)
   })

@@ -208,6 +208,8 @@ export interface SubprocessTerminalSpawnSpec {
   cwd: string
   /** Explicit environment layered after the provider's ambient scrub. */
   env?: Record<string, string> | undefined
+  /** Terminal database name advertised by the PTY provider and child environment. */
+  terminalType: string
   /** Initial terminal row count. */
   rows: number
   /** Initial terminal column count. */
@@ -244,6 +246,12 @@ export interface SubprocessTerminalHandle {
    * @param data - text to deliver without implicit newline conversion.
    */
   write(data: string): Promise<void>
+  /**
+   * Resize the terminal viewport.
+   * @param cols - positive terminal column count.
+   * @param rows - positive terminal row count.
+   */
+  resize(cols: number, rows: number): Promise<void>
   /**
    * Inspect the current foreground process group.
    * @returns its id and input-wait fact, or undefined when no foreground group can be resolved.

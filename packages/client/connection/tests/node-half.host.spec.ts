@@ -75,6 +75,7 @@ function fakeResponse(): { response: ServerResponse; state: { status?: number; b
 }
 
 async function mounted(config?: { trustedHosts?: string[] }): Promise<{
+  ctx: Context
   routes: WebRoute[]
   upgrades: WebUpgradeRoute[]
   dispose: () => Promise<void>
@@ -86,7 +87,7 @@ async function mounted(config?: { trustedHosts?: string[] }): Promise<{
   ctx.provide('apiProxy', {} as unknown as ApiProxy)
   const fiber = ctx.plugin({ inject: [...inject], apply }, config)
   await fiber.await()
-  return { routes, upgrades, dispose: () => fiber.dispose() }
+  return { ctx, routes, upgrades, dispose: () => fiber.dispose() }
 }
 
 describe('connection node half', () => {
@@ -123,6 +124,28 @@ describe('connection node half', () => {
     await dispose()
     expect(routes).toHaveLength(0)
     expect(upgrades).toHaveLength(0)
+  })
+
+  it('registers admitted custom WebSocket upgrades in the caller lifecycle', async () => {
+    const { ctx, upgrades, dispose } = await mounted()
+    const admissions: Array<{ owner: string | null; operator: boolean }> = []
+    const unregister = ctx.connection.upgrade('/api/terminal', (_request, _socket, _head, admission) => {
+      admissions.push(admission)
+    }, { authority: 'trusted-host' })
+    expect(upgrades.map(route => route.path)).toEqual([
+      MUX_EVENTS_PATH, HOST_EVENTS_PATH, '/api/terminal',
+    ])
+    await upgrades[2]!.handler(
+      fakeRequest({ host: '127.0.0.1:3080' }, '/api/terminal'),
+      new PassThrough(),
+      Buffer.alloc(0),
+    )
+    expect(admissions).toEqual([{ owner: null, operator: false }])
+    await unregister()
+    expect(upgrades.map(route => route.path)).toEqual([MUX_EVENTS_PATH, HOST_EVENTS_PATH])
+    expect(() => ctx.connection.upgrade('/api/terminal?bad=1', () => {}, { authority: 'trusted-host' }))
+      .toThrow('invalid WebSocket path')
+    await dispose()
   })
 
   it('requires WebSocket upgrade for network GETs to either event path', async () => {

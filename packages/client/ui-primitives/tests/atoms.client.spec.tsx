@@ -138,6 +138,29 @@ describe('Menu', () => {
     expect(screen.getByRole('separator')).toBeDefined()
   })
 
+  it('runs a trailing row action without selecting the row', () => {
+    const onSelect = vi.fn()
+    const onAction = vi.fn()
+    render(
+      <Menu
+        open
+        anchor={<span>trigger</span>}
+        items={[{
+          id: 'alpha',
+          label: 'Alpha',
+          action: { label: 'Alpha settings', icon: <svg data-testid="settings-icon" /> },
+        }]}
+        onSelect={onSelect}
+        onAction={onAction}
+        onClose={() => {}}
+      />)
+    const action = screen.getByRole('menuitem', { name: 'Alpha settings' })
+    fireEvent.click(action)
+    expect(onAction).toHaveBeenCalledWith('alpha', action)
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(screen.getByTestId('settings-icon')).toBeTruthy()
+  })
+
   it('renders a non-interactive heading label and a danger row', () => {
     const onSelect = vi.fn()
     render(

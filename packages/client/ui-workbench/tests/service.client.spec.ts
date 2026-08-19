@@ -9,7 +9,10 @@ function layout(): { panels: ILayout; openDetails: ReturnType<typeof vi.fn>; clo
   const openDetails = vi.fn()
   const closeDetails = vi.fn()
   return {
-    panels: { toggleSidebar: vi.fn(), openDetails, closeDetails },
+    panels: {
+      toggleSidebar: vi.fn(), openDetails, closeDetails,
+      openBottom: vi.fn(), closeBottom: vi.fn(), toggleBottom: vi.fn(),
+    },
     openDetails,
     closeDetails,
   }

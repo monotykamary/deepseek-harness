@@ -412,7 +412,7 @@ export interface ConnectionConfig {
 }
 ```
 
-来源：[`packages/client/connection/src/index.ts:50`](../packages/client/connection/src/index.ts)
+来源：[`packages/client/connection/src/index.ts:57`](../packages/client/connection/src/index.ts)
 
 <a id="monotykamarydsh-client-hmr"></a>
 
@@ -2294,6 +2294,10 @@ export interface Config {
   shellPath?: string
   /** Shell arguments (default: `--noprofile --norc -i`). */
   shellArgs?: string[]
+  /** Human-facing shell executable (default: detected login shell). */
+  interactiveShellPath?: string
+  /** Human-facing shell arguments (default: none). */
+  interactiveShellArgs?: string[]
   /** Terminal rows. */
   rows?: number
   /** Terminal columns. */
@@ -2302,6 +2306,8 @@ export interface Config {
   scrollbackLines?: number
   /** Maximum retained UTF-8 bytes. */
   scrollbackMaxBytes?: number
+  /** Maximum raw PTY bytes replayed to a newly attached interactive browser. */
+  interactiveReplayMaxBytes?: number
   /** Maximum bytes returned by one read or settled viewport. */
   maxReadBytes?: number
   /** Readiness polling interval. */
@@ -2323,6 +2329,36 @@ export interface Config {
 ```
 
 来源：[`packages/terminal/terminal-bash/src/config.ts:6`](../packages/terminal/terminal-bash/src/config.ts)
+
+<a id="monotykamarydsh-terminal-web"></a>
+
+## `@monotykamary/dsh-terminal-web`
+
+需要：`agents` · `connection` · `terminals`
+
+```ts config-catalog
+/** Browser terminal transport configuration. */
+export interface Config {
+  /** Terminal backend type selected for browser-created sessions. */
+  backendType?: string
+  /** Maximum UTF-8 bytes in one browser input frame. */
+  maxInputBytes?: number
+  /** Maximum terminal output bytes combined into one WebSocket frame. */
+  outputBatchBytes?: number
+  /** Maximum delay before a partial output batch is sent. */
+  outputBatchWindowMs?: number
+  /** Maximum queued WebSocket bytes before a slow attachment is disconnected. */
+  maxBufferedBytes?: number
+  /** Maximum wait for the first text handshake frame. */
+  handshakeTimeoutMs?: number
+  /** Maximum accepted terminal columns. */
+  maxCols?: number
+  /** Maximum accepted terminal rows. */
+  maxRows?: number
+}
+```
+
+来源：[`packages/terminal/terminal-web/src/index.ts:41`](../packages/terminal/terminal-web/src/index.ts)
 
 <a id="monotykamarydsh-time-context"></a>
 
@@ -3155,6 +3191,7 @@ export interface Config {
 - `@monotykamary/dsh-client-ui-sidebar`（[`packages/client/ui-sidebar/src/index.ts`](../packages/client/ui-sidebar/src/index.ts)）
 - `@monotykamary/dsh-client-ui-skill`（[`packages/client/ui-skill/src/index.ts`](../packages/client/ui-skill/src/index.ts)）
 - `@monotykamary/dsh-client-ui-subagent`（[`packages/client/ui-subagent/src/index.ts`](../packages/client/ui-subagent/src/index.ts)）
+- `@monotykamary/dsh-client-ui-terminal`（[`packages/client/ui-terminal/src/index.ts`](../packages/client/ui-terminal/src/index.ts)）
 - `@monotykamary/dsh-client-ui-theme`（[`packages/client/ui-theme/src/index.ts`](../packages/client/ui-theme/src/index.ts)）
 - `@monotykamary/dsh-client-ui-tool`（[`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts)）
 - `@monotykamary/dsh-client-ui-trajectory`（[`packages/client/ui-trajectory/src/index.ts`](../packages/client/ui-trajectory/src/index.ts)）

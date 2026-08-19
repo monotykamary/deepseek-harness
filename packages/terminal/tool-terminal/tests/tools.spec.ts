@@ -1,3 +1,4 @@
+import { PassThrough } from 'node:stream'
 import { describe, expect, it } from 'vitest'
 import { Context } from '@monotykamary/cordis'
 import { CallId } from '@monotykamary/dsh-llm'
@@ -41,6 +42,18 @@ class StubSession implements TerminalBackendSession {
   viewport = 'command output'
   delta = 'live output'
   deltaTruncated = false
+
+  attach() {
+    const output = new PassThrough()
+    return {
+      output,
+      replayTruncated: false,
+      write: async () => {},
+      resize: async () => {},
+      status: () => this.status(),
+      close: () => { output.destroy() },
+    }
+  }
 
   startSend(_request: TerminalSendRequest): TerminalSendOperation {
     let settle!: () => void

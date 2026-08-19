@@ -14,24 +14,47 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ReactNode } from 'react'
 import type { PropsRenderSlots, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
 import { IconPanelLeftOutline16, Sheet } from '@monotykamary/dsh-client-ui-primitives'
-import { computeColumns, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT, SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH } from './columns.ts'
+import {
+  computeColumns, DETAILS_DEFAULT, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT,
+  SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH,
+} from './columns.ts'
+import { resolveBottomHeight } from './rows.ts'
 import type { createLayoutStore } from './stores.ts'
 import css from './AppFrame.module.css'
 
 /** Full composed props: runtime share + child-slot render share + store share. */
 export type AppFrameProps =
   & PropsRuntime<'root'>
-  & PropsRenderSlots<'sidebar' | 'conversation' | 'details' | 'shell.overlay'>
+  & PropsRenderSlots<'sidebar' | 'conversation' | 'bottom-panel' | 'details' | 'shell.overlay'>
   & PropsStore<ReturnType<typeof createLayoutStore>>
 
-/** Center column grid item (session-body building block). */
-function CenterColumn(props: { children?: ReactNode }) {
-  return <div className={css.centerCol}>{props.children}</div>
+/** Center column grid item with a resident zero-height bottom-panel host. */
+function CenterColumn(props: {
+  readonly children?: ReactNode
+  readonly bottom?: ReactNode
+  readonly handle?: ReactNode
+  readonly bottomHeight: number
+}) {
+  return (
+    <div className={css.centerCol}>
+      <div className={css.conversationHost}>{props.children}</div>
+      <div className={css.bottomPanelHost} style={{ height: props.bottomHeight }}>
+        {props.bottom}
+      </div>
+      {props.handle}
+    </div>
+  )
 }
 
-/** Details column grid item; width 0 keeps the subtree mounted (never unmount on close). */
-function DetailsColumn(props: { children?: ReactNode }) {
-  return <div className={css.detailsCol}>{props.children}</div>
+/** Details grid item whose fixed-width child slides under its clip instead of squeezing. */
+function DetailsColumn(props: { children?: ReactNode; contentWidth: number }) {
+  return (
+    <div className={css.detailsCol}>
+      <div className={css.detailsContent} style={{ width: props.contentWidth }} data-details-content="">
+        {props.children}
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -84,6 +107,57 @@ function DragHandle(props: { side: 'sidebar' | 'details'; left: number; onStart:
   )
 }
 
+/** Horizontal drag handle owned by the center column's bottom-panel split. */
+function BottomDragHandle(props: {
+  readonly bottom: number
+  readonly onStart: () => void
+  readonly onDrag: (dy: number) => void
+  readonly onEnd: () => void
+}) {
+  const [dragging, setDragging] = useState(false)
+  const origin = useRef(0)
+  const latest = useRef(0)
+  const frame = useRef<number | null>(null)
+  const callbacks = useRef({ onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd })
+  callbacks.current = { onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd }
+
+  const onPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    origin.current = event.clientY
+    latest.current = event.clientY
+    callbacks.current.onStart()
+    setDragging(true)
+  }, [])
+  const onPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
+    latest.current = event.clientY
+    frame.current ??= requestAnimationFrame(() => {
+      frame.current = null
+      callbacks.current.onDrag(latest.current - origin.current)
+    })
+  }, [])
+  const onPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null }
+    callbacks.current.onDrag(latest.current - origin.current)
+    setDragging(false)
+    callbacks.current.onEnd()
+  }, [])
+
+  return (
+    <div
+      className={css.bottomHandle}
+      style={{ bottom: props.bottom - 4 }}
+      data-dragging={dragging || undefined}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+    />
+  )
+}
+
 /** The three-column frame (see module doc). */
 export function AppFrame({
   useStore,
@@ -96,8 +170,10 @@ export function AppFrame({
     const current = s.current
     return current !== undefined && s.byId[current]?.blank === false ? current : undefined
   })
+  const currentSession = useSessions(s => s.current)
   const frameRef = useRef<HTMLDivElement | null>(null)
-  const [viewport, setViewport] = useState(() => window.innerWidth)
+  const [frameSize, setFrameSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  const viewport = frameSize.width
 
   const lastSession = useRef(detailsSession)
   useLayoutEffect(() => {
@@ -117,8 +193,10 @@ export function AppFrame({
     const observer = new ResizeObserver(() => {
       raf ??= requestAnimationFrame(() => {
         raf = null
-        const width = el.getBoundingClientRect().width
-        if (width > 0) setViewport(width)
+        const rectangle = el.getBoundingClientRect()
+        if (rectangle.width > 0 && rectangle.height > 0) {
+          setFrameSize({ width: rectangle.width, height: rectangle.height })
+        }
       })
     })
     observer.observe(el)
@@ -141,9 +219,12 @@ export function AppFrame({
     ? 0
     : panels.sidebar === 0 ? SIDEBAR_DEFAULT : panels.sidebar
   const cols = computeColumns(viewport, sidebarPreference, detailsSession === undefined ? 0 : panels.details)
+  const detailsContentWidth = useRef(DETAILS_DEFAULT)
+  if (cols.details > 0) detailsContentWidth.current = cols.details
   // A requested Details panel that the concession chain cannot fit moves into
   // its occupant-owned right Sheet instead of becoming unreachable at zero width.
   const detailsAsSheet = detailsSession !== undefined && panels.details > 0 && cols.details === 0
+  const bottomHeight = currentSession === undefined ? 0 : resolveBottomHeight(frameSize.height, panels.bottom)
   const closeDetails = useCallback(() => { actions.closeDetails() }, [actions])
   const colsRef = useRef(cols)
   colsRef.current = cols
@@ -161,17 +242,22 @@ export function AppFrame({
   // it stays frozen for the whole gesture so dx deltas do not compound.
   const sidebarBase = useRef(0)
   const detailsBase = useRef(0)
+  const bottomBase = useRef(0)
   // Track-level transitions pause for the whole gesture: eased tracks would
   // detach the column edge from the pointer (AppFrame.module.css).
   const [dragging, setDragging] = useState(false)
   const onDragEnd = useCallback(() => { setDragging(false) }, [])
   const onSidebarStart = useCallback(() => { sidebarBase.current = colsRef.current.sidebar; setDragging(true) }, [])
   const onDetailsStart = useCallback(() => { detailsBase.current = colsRef.current.details; setDragging(true) }, [])
+  const onBottomStart = useCallback(() => { bottomBase.current = bottomHeight; setDragging(true) }, [bottomHeight])
   const onSidebarDrag = useCallback((dx: number) => {
     actions.setSidebar(sidebarBase.current + dx)
   }, [actions])
   const onDetailsDrag = useCallback((dx: number) => {
     actions.setDetails(detailsBase.current - dx)
+  }, [actions])
+  const onBottomDrag = useCallback((dy: number) => {
+    actions.setBottom(bottomBase.current - dy)
   }, [actions])
 
   return (
@@ -185,6 +271,7 @@ export function AppFrame({
       data-sidebar-collapsed={!compact && sidebarCollapsed ? true : undefined}
       data-details-collapsed={cols.details === 0 || undefined}
       data-details-sheet={detailsAsSheet || undefined}
+      data-bottom-collapsed={bottomHeight === 0 || undefined}
       data-dragging={dragging || undefined}
       data-sidebar-drawer={compact || undefined}
     >
@@ -205,10 +292,26 @@ export function AppFrame({
             the shell's own pending rendering. The conversation
             is session-maybe; the strict details entry naturally renders
             empty while no session is current. */}
-        <CenterColumn>{renderSlot('conversation', {
-          detailsOpen: detailsSession !== undefined && panels.details > 0,
-        })}</CenterColumn>
-        <DetailsColumn>{renderSlot('details', {
+        <CenterColumn
+          bottomHeight={bottomHeight}
+          bottom={renderSlot('bottom-panel', {
+            height: bottomHeight,
+            closePanel: actions.closeBottom,
+          })}
+          handle={bottomHeight > 0 ? (
+            <BottomDragHandle
+              bottom={bottomHeight}
+              onStart={onBottomStart}
+              onDrag={onBottomDrag}
+              onEnd={onDragEnd}
+            />
+          ) : null}
+        >
+          {renderSlot('conversation', {
+            detailsOpen: detailsSession !== undefined && panels.details > 0,
+          })}
+        </CenterColumn>
+        <DetailsColumn contentWidth={detailsContentWidth.current}>{renderSlot('details', {
           mode: detailsAsSheet ? 'sheet' : 'column',
           closePanel: closeDetails,
         })}</DetailsColumn>

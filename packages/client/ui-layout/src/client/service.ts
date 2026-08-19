@@ -27,6 +27,12 @@ export interface ILayout {
   openDetails(): void
   /** Close the details panel. */
   closeDetails(): void
+  /** Open the bottom panel at its default height when closed. */
+  openBottom(): void
+  /** Close the bottom panel. */
+  closeBottom(): void
+  /** Toggle the bottom panel without changing an open drag height. */
+  toggleBottom(): void
 }
 
 /** Cross-plugin panel-action face (ctx.layout). */
@@ -57,6 +63,21 @@ export class LayoutController implements ILayout {
   /** Close the details panel. */
   closeDetails(): void {
     this.#require().closeDetails()
+  }
+
+  /** Open the bottom panel at its default height when closed. */
+  openBottom(): void {
+    this.#require().openBottom()
+  }
+
+  /** Close the bottom panel. */
+  closeBottom(): void {
+    this.#require().closeBottom()
+  }
+
+  /** Toggle the bottom panel without changing an open drag height. */
+  toggleBottom(): void {
+    this.#require().toggleBottom()
   }
 
   #require(): PanelActions {

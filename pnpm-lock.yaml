@@ -9,6 +9,8 @@ overrides:
   '@monotykamary/schemastery': link:vendor/schemastery
 
 patchedDependencies:
+  '@xterm/addon-image@0.10.0-beta.287': 0f9b102a6ad3a1baec614261cff1e699a949b3cf7faddc45fc0222c7892b6b5a
+  '@xterm/addon-webgl@0.20.0-beta.290': 597773982362aa1bb69ef38eb49ed3b4b6fc9a740881bde3dcbd9c95c65e98de
   node-pty@1.2.0-beta.15: b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0
 
 importers:
@@ -1145,6 +1147,12 @@ importers:
       '@monotykamary/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../core/system-prompt
+      '@monotykamary/dsh-terminal':
+        specifier: workspace:^
+        version: link:../../terminal/terminal
+      '@monotykamary/dsh-terminal-bash':
+        specifier: workspace:^
+        version: link:../../terminal/terminal-bash
       '@monotykamary/dsh-token-meter':
         specifier: workspace:^
         version: link:../../llm/token-meter
@@ -1366,6 +1374,9 @@ importers:
       '@monotykamary/dsh-client-ui-subagent':
         specifier: workspace:^
         version: link:../../client/ui-subagent
+      '@monotykamary/dsh-client-ui-terminal':
+        specifier: workspace:^
+        version: link:../../client/ui-terminal
       '@monotykamary/dsh-client-ui-theme':
         specifier: workspace:^
         version: link:../../client/ui-theme
@@ -1444,6 +1455,9 @@ importers:
       '@monotykamary/dsh-storage-json':
         specifier: workspace:^
         version: link:../../storage/storage-json
+      '@monotykamary/dsh-terminal-web':
+        specifier: workspace:^
+        version: link:../../terminal/terminal-web
       '@monotykamary/dsh-web-frontend':
         specifier: workspace:^
         version: link:../../../apps/web
@@ -2888,6 +2902,103 @@ importers:
         specifier: ~18.3.1
         version: 18.3.31
 
+  packages/client/ui-terminal:
+    dependencies:
+      '@fontsource/anonymous-pro':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/dm-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/fira-code':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/geist-mono':
+        specifier: 5.2.7
+        version: 5.2.7
+      '@fontsource/ibm-plex-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/inconsolata':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/jetbrains-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/roboto-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/source-code-pro':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/space-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/ubuntu-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@xterm/addon-fit':
+        specifier: 0.12.0-beta.287
+        version: 0.12.0-beta.287(@xterm/xterm@6.1.0-beta.291)
+      '@xterm/addon-image':
+        specifier: 0.10.0-beta.287
+        version: 0.10.0-beta.287(patch_hash=0f9b102a6ad3a1baec614261cff1e699a949b3cf7faddc45fc0222c7892b6b5a)(@xterm/xterm@6.1.0-beta.291)
+      '@xterm/addon-unicode-graphemes':
+        specifier: 0.5.0-beta.287
+        version: 0.5.0-beta.287(@xterm/xterm@6.1.0-beta.291)
+      '@xterm/addon-web-links':
+        specifier: 0.13.0-beta.287
+        version: 0.13.0-beta.287(@xterm/xterm@6.1.0-beta.291)
+      '@xterm/addon-webgl':
+        specifier: 0.20.0-beta.290
+        version: 0.20.0-beta.290(patch_hash=597773982362aa1bb69ef38eb49ed3b4b6fc9a740881bde3dcbd9c95c65e98de)(@xterm/xterm@6.1.0-beta.291)
+      '@xterm/xterm':
+        specifier: 6.1.0-beta.291
+        version: 6.1.0-beta.291
+      lucide-react:
+        specifier: ^1.31.0
+        version: 1.31.0(react@18.3.1)
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-conversation':
+        specifier: workspace:^
+        version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-layout':
+        specifier: workspace:^
+        version: link:../ui-layout
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-client-ui-workbench':
+        specifier: workspace:^
+        version: link:../ui-workbench
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-terminal-web':
+        specifier: workspace:^
+        version: link:../../terminal/terminal-web
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+
   packages/client/ui-theme:
     dependencies:
       '@monotykamary/dsh-client-connection':
@@ -3183,6 +3294,9 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
+      lucide-react:
+        specifier: ^1.31.0
+        version: 1.31.0(react@18.3.1)
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -7781,6 +7895,37 @@ importers:
         specifier: workspace:^
         version: link:../terminal
 
+  packages/terminal/terminal-web:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      ws:
+        specifier: ^8.21.0
+        version: 8.21.0
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-client-connection':
+        specifier: workspace:^
+        version: link:../../client/connection
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-terminal':
+        specifier: workspace:^
+        version: link:../terminal
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
+
   packages/terminal/tool-terminal:
     dependencies:
       '@monotykamary/schemastery':
@@ -9984,6 +10129,39 @@ packages:
       '@noble/hashes':
         optional: true
 
+  '@fontsource/anonymous-pro@5.3.0':
+    resolution: {integrity: sha512-zoJ/iLJYCkMsjwEgqM6rQr2KmRk+v9+G90NOPxBm1RCN2rjX5kk0t0MoUkzYMT+51jWuIfPGCD/YcZXlNFqMKA==}
+
+  '@fontsource/dm-mono@5.3.0':
+    resolution: {integrity: sha512-OINjI8C1S/wpchhQxl7njZdMn4+hnDCpQ4YtvvOpKNARo+0J8O1x1IcrChxNjHOhfVv1by8C/FQoy3hXK+C1Ug==}
+
+  '@fontsource/fira-code@5.3.0':
+    resolution: {integrity: sha512-EJL968RJRkakubAj/coU8pSUaeTE5UNoRjtzAr6kGiSZ3jWuN8/AKWHwym/PFUaQL1q7IL/H+EXs4358YhrTBQ==}
+
+  '@fontsource/geist-mono@5.2.7':
+    resolution: {integrity: sha512-xVPVFISJg/K0VVd+aQN0Y7X/sw9hUcJPyDWFJ5GpyU3bHELhoRsJkPSRSHXW32mOi0xZCUQDOaPj1sqIFJ1FGg==}
+
+  '@fontsource/ibm-plex-mono@5.3.0':
+    resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
+  '@fontsource/inconsolata@5.3.0':
+    resolution: {integrity: sha512-12UZvQzR9rcgFv1Wb2vy9NvMqleh4fVZ9W5Ww/S3CamaRLeUfCkfXersbiqcyCkH82etGTTRyHd5cJYDJ2W27w==}
+
+  '@fontsource/jetbrains-mono@5.3.0':
+    resolution: {integrity: sha512-fqDfB5I9f1p1TV486aUgB9t8zP84P0O1FtQR5Ol9vjwPy+S+EIGlVYm1cvj2W5shcZMTg2nZFdVMoH5wFu8a1A==}
+
+  '@fontsource/roboto-mono@5.3.0':
+    resolution: {integrity: sha512-yhwplHMHW9dCk+1pZuERfcJe+K3rosGVZEoK0XktkxRSqQ9qsipSwwiuW2/8Qmtp9lzu3Ixa/ie4BMH3i8CkZQ==}
+
+  '@fontsource/source-code-pro@5.3.0':
+    resolution: {integrity: sha512-JxaCODU69HDS3mVra9u96nyBF911La6IvtGLgpQD+PZLxJ1i9IxooNfLR6Y37kx06IFjVGkvoUmg3WPwh/8gBg==}
+
+  '@fontsource/space-mono@5.3.0':
+    resolution: {integrity: sha512-FrpBMOVWn3PRdRHlrZWC55X3kZG/2BTH7SM5ZyS/bky3iKya2BturI5lk+t0RoDQL2JyHzURsVq/EisCsxpI5A==}
+
+  '@fontsource/ubuntu-mono@5.3.0':
+    resolution: {integrity: sha512-hLwLkeAV9YvLSOWExn0heOXy+EB4wKnt648qS5FaqsiCZDS8X9kR/ueIBzzX/vNSXjFkhLRSTKqlOfFvHdD4Bw==}
+
   '@google/genai@1.52.0':
     resolution: {integrity: sha512-gwSvbpiN/17O9TbsqSsE/OzZcpv5Fo4RQjdngGgogtuB9RsyJ8ZHhX5KjHj1bp5N9snN2eK8LDGXSaWW2hof8Q==}
     engines: {node: '>=20.0.0'}
@@ -11921,6 +12099,34 @@ packages:
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
 
+  '@xterm/addon-fit@0.12.0-beta.287':
+    resolution: {integrity: sha512-2MDj+J4x67bjOS/SuBPxSYEWH38NbX6ENV18RbKVOhfRYCX3yERnuHBOrgH9hYdY8rCtsLQmuVgF6cmvCJiV2w==}
+    peerDependencies:
+      '@xterm/xterm': ^6.1.0-beta.287
+
+  '@xterm/addon-image@0.10.0-beta.287':
+    resolution: {integrity: sha512-PBKaEDNCsvNnbTxJpCGfwbVNoASr0UHtiCKk9aFRUbmZsY8qNYGBr58/dJw4/1gkqjMItWtbsT2bQZgxwfh03A==}
+    peerDependencies:
+      '@xterm/xterm': ^6.1.0-beta.287
+
+  '@xterm/addon-unicode-graphemes@0.5.0-beta.287':
+    resolution: {integrity: sha512-ndolAd2g4bwEhACGRw40YjbAnVnApCRUrcaX+iVwby3Ma34dtYhzIIWeSqGcDVy1pKC7rCnyuX1jqgJEQdmGqg==}
+    peerDependencies:
+      '@xterm/xterm': ^6.1.0-beta.287
+
+  '@xterm/addon-web-links@0.13.0-beta.287':
+    resolution: {integrity: sha512-1+5+zWtIGBOygy4yB9is0V9PwEZSz2NsRzQyNqGb+7hnTW2PXqvUCjq6GLvyUflHQw8VQ7jXtUuFE+ETVzcx+A==}
+    peerDependencies:
+      '@xterm/xterm': ^6.1.0-beta.287
+
+  '@xterm/addon-webgl@0.20.0-beta.290':
+    resolution: {integrity: sha512-vHQCXsBp3rDermQSBCtN75U26DmoWI6SbCQ0oRjkuJR4r1B6SIyJBXuWPhHAXkCs86+iaStuafAdQDNO73cGWA==}
+    peerDependencies:
+      '@xterm/xterm': ^6.1.0-beta.291
+
+  '@xterm/xterm@6.1.0-beta.291':
+    resolution: {integrity: sha512-Q6IjxogKIu7fBkXHcn4vQhfHvtwhIv/NN8LR0knCAxPA06/jXuHwreqX9Y/4zvzj7m8u6OBndOJDCUAxLmRfQQ==}
+
   '@yarnpkg/cli-dist@4.17.1':
     resolution: {integrity: sha512-2tiSQuJNl/L3QwTdrq6lKWDpkcnp9MGvCT/rIldHcbu3SWfnLdmehvt3eulX1hT7FFt1Gjfq3CesF+kvhFip6g==}
     engines: {node: '>=18.12.0'}
@@ -13321,6 +13527,11 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide-react@1.31.0:
+    resolution: {integrity: sha512-G8u2eEtoHUnUa9f8lbvqDhCiORMnYLdUEo06EEG9MQvHQrInKcX3Pa2TH39MM5qyzRcWETxB0+aOwAPI1g1kEg==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -15664,6 +15875,28 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
+  '@fontsource/anonymous-pro@5.3.0': {}
+
+  '@fontsource/dm-mono@5.3.0': {}
+
+  '@fontsource/fira-code@5.3.0': {}
+
+  '@fontsource/geist-mono@5.2.7': {}
+
+  '@fontsource/ibm-plex-mono@5.3.0': {}
+
+  '@fontsource/inconsolata@5.3.0': {}
+
+  '@fontsource/jetbrains-mono@5.3.0': {}
+
+  '@fontsource/roboto-mono@5.3.0': {}
+
+  '@fontsource/source-code-pro@5.3.0': {}
+
+  '@fontsource/space-mono@5.3.0': {}
+
+  '@fontsource/ubuntu-mono@5.3.0': {}
+
   '@google/genai@1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))':
     dependencies:
       google-auth-library: 10.7.0
@@ -17352,6 +17585,28 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@xterm/addon-fit@0.12.0-beta.287(@xterm/xterm@6.1.0-beta.291)':
+    dependencies:
+      '@xterm/xterm': 6.1.0-beta.291
+
+  '@xterm/addon-image@0.10.0-beta.287(patch_hash=0f9b102a6ad3a1baec614261cff1e699a949b3cf7faddc45fc0222c7892b6b5a)(@xterm/xterm@6.1.0-beta.291)':
+    dependencies:
+      '@xterm/xterm': 6.1.0-beta.291
+
+  '@xterm/addon-unicode-graphemes@0.5.0-beta.287(@xterm/xterm@6.1.0-beta.291)':
+    dependencies:
+      '@xterm/xterm': 6.1.0-beta.291
+
+  '@xterm/addon-web-links@0.13.0-beta.287(@xterm/xterm@6.1.0-beta.291)':
+    dependencies:
+      '@xterm/xterm': 6.1.0-beta.291
+
+  '@xterm/addon-webgl@0.20.0-beta.290(patch_hash=597773982362aa1bb69ef38eb49ed3b4b6fc9a740881bde3dcbd9c95c65e98de)(@xterm/xterm@6.1.0-beta.291)':
+    dependencies:
+      '@xterm/xterm': 6.1.0-beta.291
+
+  '@xterm/xterm@6.1.0-beta.291': {}
+
   '@yarnpkg/cli-dist@4.17.1': {}
 
   accepts@2.0.0:
@@ -18821,6 +19076,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-react@1.31.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   lz-string@1.5.0: {}
 

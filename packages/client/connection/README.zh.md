@@ -12,6 +12,12 @@ node 半侧在桥接或 upgrade 前守卫 `/api` 下的每个入口（`src/api-r
 
 `/api/events.mux` 与 `/api/events.host` 各接受一条 WebSocket upgrade，并只向浏览器发送对应的 `ServerRequest` 文本消息；客户端不会在这些 socket 上发送业务数据。任一 socket 结束都会使当前 connection generation 失败并重建两条流，连接就绪仍要求两条 socket 均已打开且 `host.describe` HTTP 调用成功。Host teardown 会终止两条 socket、中止各自的 source，并等待 source 清理完成后再返回。普通网络 GET 这些路径会返回 426，不保留 SSE（Server-Sent Events）回退；`toFetchHandler` 的 SSE 编解码只服务进程内同构载体。
 
+## 受信任的自定义 WebSocket upgrade
+
+Host Consumer 可调用 `ctx.connection.upgrade(path, handler, { authority })`，在共享 Web server 上注册一个精确的绝对 pathname。Connection 会应用与 `/api` 相同的 Host／Origin 栅栏，执行可选 Web 身份准入，并将获准的 owner／operator 信息连同原始 request、socket 与 head 字节交给 Consumer。回调执行后，Consumer 负责协议协商与已接受 socket。注册跟随调用方 fiber，并返回异步显式 disposer，因此自定义全双工协议可与两条内置下行共存，而无需共享其消息 codec。
+
+浏览器安全的 RPC 类型保留在 client compiler face；原始 Node request／socket 类型，以及把 `upgrade` 合并进 `HostConnectionHandle` 的声明，位于 Host face。
+
 ## 模型体验
 
 无。协议消费层只在浏览器与主机之间搬运已经组合好的消息；这里没有任何内容进入模型请求。

@@ -468,7 +468,7 @@ describe('E2BSubprocessHandle', () => {
     for (const graceMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(() => service.spawn(spec({ graceMs }))).toThrow('graceMs must be a positive finite number')
       void expect(service.spawnTerminal({
-        argv: ['bash'], cwd: '/w', rows: 24, cols: 80, graceMs,
+        argv: ['bash'], cwd: '/w', terminalType: 'xterm-256color', rows: 24, cols: 80, graceMs,
       })).rejects.toThrow('graceMs must be a positive finite number')
     }
   })

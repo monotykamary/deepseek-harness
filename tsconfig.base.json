@@ -219,6 +219,7 @@
       "@monotykamary/dsh-client-ui-plan": ["./packages/client/ui-plan/src"],
       "@monotykamary/dsh-client-ui-user-questions": ["./packages/client/ui-user-questions/src"],
       "@monotykamary/dsh-client-ui-trajectory": ["./packages/client/ui-trajectory/src"],
+      "@monotykamary/dsh-client-ui-terminal": ["./packages/client/ui-terminal/src"],
       "@monotykamary/dsh-client-ui-workspace": ["./packages/client/ui-workspace/src"],
       "@monotykamary/dsh-client-ui-theme": ["./packages/client/ui-theme/src"],
       "@monotykamary/dsh-client-ui-settings": ["./packages/client/ui-settings/src"],
@@ -232,6 +233,7 @@
       "@monotykamary/dsh-sdk-client": ["./packages/sdk/client/src"],
       "@monotykamary/dsh-sdk-protocol": ["./packages/sdk/protocol/src"],
       "@monotykamary/dsh-sdk-jsonrpc-server": ["./packages/sdk/server/src"],
+      "@monotykamary/dsh-terminal-web/protocol": ["./packages/terminal/terminal-web/src/protocol.ts"],
       "@monotykamary/dsh-*": [
         "./packages/core/*/src",
         "./packages/prompt/*/src",

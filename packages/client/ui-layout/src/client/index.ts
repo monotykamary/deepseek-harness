@@ -1,7 +1,7 @@
 /**
  * Layout plugin, browser half: one register() call contributes AppFrame into
  * the runtime's built-in 'root' slot and, in the same breath, declares the
- * four child slots (declaration = exclusive render authority), seats the
+ * five child slots (declaration = exclusive render authority), seats the
  * layout store (panel geometry), and wires the panel-action service face.
  * ctx.layout is the cross-plugin panel-action contract; navigation state lives
  * with the runtime sessions service. A second effect seats the theme
@@ -33,7 +33,7 @@ declare module '@monotykamary/cordis' {
 declare module '@monotykamary/dsh-client-ui-slots' {
   interface SlotMap {
     // The 'root' entry itself is the runtime's built-in slot (declared
-    // there); these four are the frame's children, declared by the same
+    // there); these five are the frame's children, declared by the same
     // register() call that contributes AppFrame. Session owners never pass
     // sessionId: the framework injects it as a standard prop.
     /**
@@ -60,6 +60,12 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * session facts arrive through the framework hooks of the `session-maybe` scope.
      */
     'conversation': { kind: 'single'; scope: 'session-maybe'; owner: ConvOwnerProps }
+    /**
+     * The resizable region below the conversation. Its single session-scoped
+     * occupant stays mounted at zero height while closed, so a persistent
+     * process attachment can continue without retaining vertical space.
+     */
+    'bottom-panel': { kind: 'single'; scope: 'session'; owner: BottomPanelOwnerProps }
     /**
      * The right details region, shown when the layout opens it. OCCUPIED by
      * ui-workbench, which declares its additive surface list; registering here
@@ -111,6 +117,14 @@ export interface ConvOwnerProps {
   detailsOpen: boolean
 }
 
+/** Bottom-panel owner share: rendered height and layout-owned close gesture. */
+export interface BottomPanelOwnerProps {
+  /** Current conceded height in px; zero means mounted but closed. */
+  height: number
+  /** Close the bottom-panel preference. */
+  closePanel: () => void
+}
+
 /** Details owner share: hosting mode and layout-owned close gesture. */
 export interface DetailsOwnerProps {
   /** Inline grid column when it fits; right Sheet when concession resolves zero width. */
@@ -124,7 +138,7 @@ export const inject = ['slots', 'theme']
 
 /**
  * Client plugin body: provide ctx.layout, then one register() call — AppFrame
- * into 'root' with the four child-slot declarations, the layout store seat,
+ * into 'root' with the five child-slot declarations, the layout store seat,
  * and the inject hook that hands the store's bound actions to the service.
  * @param ctx - client root context.
  */
@@ -137,6 +151,7 @@ export function apply(ctx: ClientContext): void {
       children: {
         'sidebar': { kind: 'single', scope: 'root' },
         'conversation': { kind: 'single', scope: 'session-maybe' },
+        'bottom-panel': { kind: 'single', scope: 'session' },
         'details': { kind: 'single', scope: 'session' },
         'shell.overlay': { kind: 'list', scope: 'root' },
       },

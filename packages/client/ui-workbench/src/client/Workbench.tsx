@@ -19,6 +19,7 @@ function SurfaceIcon({ icon }: { readonly icon: WorkbenchSurfaceIcon }) {
     case 'inspect': return <IconInspectOutline12 size={12} />
     case 'changes': return <IconListPenOutline16 size={12} />
     case 'files': return <IconFolderOpenOutline16 size={12} />
+    case 'terminal': return <IconCodeOutline16 size={12} />
     case 'generic': return <IconCodeOutline16 size={12} />
     default: return assertNever(icon)
   }

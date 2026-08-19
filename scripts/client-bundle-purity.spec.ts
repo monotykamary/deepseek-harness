@@ -49,7 +49,7 @@ function purityResolveId(): ResolveId {
 function cssModulePlugin(): CssModulePlugin {
   const configs = clientConfigs()
   const plugins = (configs[0] as { plugins: CssModulePlugin[] }).plugins
-  const plugin = plugins.find(candidate => candidate.name === 'dsh-css-modules-inline')
+  const plugin = plugins.find(candidate => candidate.name === 'dsh-css-inline')
   if (plugin?.resolveId === undefined || plugin.load === undefined) {
     throw new Error('CSS Modules plugin missing from client config')
   }

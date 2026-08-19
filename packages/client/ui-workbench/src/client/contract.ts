@@ -10,7 +10,7 @@ import type { NS } from './locales.ts'
 export type WorkbenchSurfaceId = Branded<'WorkbenchSurfaceId'>
 
 /** Icon vocabulary rendered by the workbench shell for registered surfaces. */
-export type WorkbenchSurfaceIcon = 'inspect' | 'changes' | 'files' | 'generic'
+export type WorkbenchSurfaceIcon = 'inspect' | 'changes' | 'files' | 'terminal' | 'generic'
 
 /** Plugin-owned presentation registered beside one workbench surface. */
 export interface WorkbenchSurfacePresentation {

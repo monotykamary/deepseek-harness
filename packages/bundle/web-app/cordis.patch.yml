@@ -179,6 +179,10 @@
         # its literals, for example: ['app.internal', ...ctx.webRuntime.trustedHosts].
         trustedHosts: !!js ctx.webRuntime.trustedHosts
 
+    # Full-duplex browser attachment to each selected Agent's persistent terminals.
+    - id: terminal-web
+      name: '@monotykamary/dsh-terminal-web'
+
     - id: api-remotes
       name: '@monotykamary/dsh-api-remotes'
 
@@ -202,6 +206,9 @@
 
     - id: ui-files
       name: '@monotykamary/dsh-client-ui-files'
+
+    - id: ui-terminal
+      name: '@monotykamary/dsh-client-ui-terminal'
 
     - id: ui-command-palette
       name: '@monotykamary/dsh-client-ui-command-palette'

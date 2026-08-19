@@ -85,6 +85,7 @@ class FakeTerminalSandbox {
   readonly commands: string[] = []
   readonly commandOptions: CommandOptions[] = []
   readonly inputs: Array<{ pid: number; data: Buffer }> = []
+  readonly resizes: Array<{ pid: number; cols: number; rows: number }> = []
   readonly removed: string[] = []
   readonly directories: string[] = []
   readonly writes = new Map<string, string>()
@@ -222,6 +223,10 @@ class FakeTerminalSandbox {
           }
         }
       },
+      resize: async (pid: number, size: { cols: number; rows: number }, options?: { signal?: AbortSignal }): Promise<void> => {
+        options?.signal?.throwIfAborted()
+        this.resizes.push({ pid, ...size })
+      },
     },
   } as unknown as Sandbox
 }
@@ -243,6 +248,7 @@ function spec(overrides: Partial<SubprocessTerminalSpawnSpec> = {}): SubprocessT
     graceMs: 5,
     env: { TERM: 'dumb', DSH_SESSION_ID: 'owner', TOKEN_EXPLICIT: 'kept' },
     ...overrides,
+    terminalType: overrides.terminalType ?? 'dumb',
   }
 }
 
@@ -310,6 +316,8 @@ describe('E2B terminal allocation', () => {
 
     await terminal.write('echo ok\r')
     expect(fake.inputs.at(-1)?.data.toString()).toBe('echo ok\r')
+    await terminal.resize(132, 43)
+    expect(fake.resizes).toEqual([{ pid: 123, cols: 132, rows: 43 }])
     await expect(terminal.inspectForeground()).resolves.toEqual({ processGroupId: 456, inputWaiting: false })
     await expect(terminal.signalForeground('SIGINT')).resolves.toBe(456)
     expect(fake.commands).toContain('kill -INT -- -456')

@@ -242,7 +242,52 @@ interface SubprocessOutcome {
 
 `spawnTerminal(spec)` is the non-pipe process primitive. The provider allocates the controlling terminal and owns UTF-8 text transport, foreground-process-group inspection and signalling, and one awaited TERM-to-KILL operation that reaches quiescence for every session member the provider can still observe; providers document substrate-specific observability limits. The PTY backend remains responsible for prompt detection, readiness inference, scrollback, sandbox policy, and persistent-session ownership; ordinary `spawn()` cannot reconstruct controlling-terminal semantics.
 
-The terminal spec fully specifies argv, cwd, environment overrides, dimensions, cleanup grace, and optional allocation cancellation. Its handle exposes `pid`, ordered output, `done`, `write`, `inspectForeground`, `signalForeground`, and awaited `terminate`; the exact public shapes are generated into the [`ctx.subprocess` service catalog](#ctxsubprocess--subprocessruntime-abstract-seam).
+The terminal spec fully specifies argv, cwd, environment overrides, dimensions, cleanup grace, and optional allocation cancellation. Its handle exposes `pid`, ordered output, `done`, `write`, provider-neutral `resize(cols, rows)`, `inspectForeground`, `signalForeground`, and awaited `terminate`; the exact public shapes are generated into the [`ctx.subprocess` service catalog](#ctxsubprocess--subprocessruntime-abstract-seam).
+
+```ts type-equiv
+/**
+ * One live terminal process and its owned OS session. Terminal allocation,
+ * foreground-group inspection/signalling, and session-tree cleanup are one
+ * deep subprocess primitive because none can be reconstructed from ordinary
+ * piped stdio without substrate-specific process control.
+ */
+interface SubprocessTerminalHandle {
+  /** Top-level terminal process id. */
+  readonly pid: number
+  /** UTF-8 terminal output bytes in delivery order; ends after queued output when the terminal exits. */
+  readonly output: Readable
+  /** Resolves when the top-level process exits; rejects only for a live transport failure. */
+  readonly done: Promise<SubprocessOutcome>
+  /**
+   * Write text to the terminal input.
+   * @param data - text to deliver without implicit newline conversion.
+   */
+  write(data: string): Promise<void>
+  /**
+   * Resize the terminal viewport.
+   * @param cols - positive terminal column count.
+   * @param rows - positive terminal row count.
+   */
+  resize(cols: number, rows: number): Promise<void>
+  /**
+   * Inspect the current foreground process group.
+   * @returns its id and input-wait fact, or undefined when no foreground group can be resolved.
+   */
+  inspectForeground(): Promise<SubprocessTerminalForeground | undefined>
+  /**
+   * Deliver a signal to the current foreground process group.
+   * @param signal - permitted terminal signal.
+   * @returns the exact group id that received it.
+   */
+  signalForeground(signal: SubprocessTerminalSignal): Promise<number>
+  /**
+   * Idempotently terminate every terminal-session member the provider can still observe and await quiescence.
+   * After settlement, no write, inspection, or signal call remains in flight.
+   * Providers document substrate-specific observability limits.
+   */
+  terminate(): Promise<void>
+}
+```
 
 ## Service behavior
 

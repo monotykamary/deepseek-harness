@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { once } from 'node:events'
 import { PassThrough } from 'node:stream'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocalPtySession } from '@monotykamary/dsh-terminal-bash/src/session.ts'
 import type { ResolvedConfig } from '@monotykamary/dsh-terminal-bash/src/config.ts'
 import type { TerminalSendOperation, TerminalSessionStatus, TerminalSignal } from '@monotykamary/dsh-terminal'
@@ -45,6 +46,7 @@ class FakeTerminal implements SubprocessTerminalHandle {
   pid = 123
   readonly output = new PassThrough()
   readonly writes: string[] = []
+  readonly resizes: Array<{ cols: number; rows: number }> = []
   readonly kills: string[] = []
   readonly outcome = Promise.withResolvers<SubprocessOutcome>()
   readonly done = this.outcome.promise
@@ -84,6 +86,10 @@ class FakeTerminal implements SubprocessTerminalHandle {
   async write(data: string): Promise<void> {
     if (this.throwWrite) throw new Error('write failed')
     this.writes.push(data)
+  }
+
+  async resize(cols: number, rows: number): Promise<void> {
+    this.resizes.push({ cols, rows })
   }
 
   async inspectForeground() {
@@ -131,7 +137,7 @@ function makeSession(
 function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
   return {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 24, cols: 80,
-    scrollbackLines: 10, scrollbackMaxBytes: 128, maxReadBytes: 64,
+    scrollbackLines: 10, scrollbackMaxBytes: 128, interactiveReplayMaxBytes: 64, maxReadBytes: 64,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 50, handoffGraceMs: 10, timeoutMs: 100,
     disposeGraceMs: 20,
     ...overrides,
@@ -147,7 +153,69 @@ async function initialize(session: LocalPtySession, terminal: FakeTerminal): Pro
   await pending
 }
 
+async function nextOutput(stream: NodeJS.ReadableStream): Promise<Buffer> {
+  const events = await once(stream, 'data') as unknown[]
+  const value = events[0]
+  if (!(value instanceof Uint8Array)) throw new Error('terminal output event carried no bytes')
+  return Buffer.from(value)
+}
+
 describe('LocalPtySession readiness and output', () => {
+  it('initializes human sessions without a controlled prompt and permits only raw attachments', async () => {
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config(), 'interactive')
+
+    await expect(session.initialize()).resolves.toBeUndefined()
+    expect(session.motd).toBe('')
+    expect(() => session.startSend({ text: 'pwd', submit: true }))
+      .toThrow(expect.objectContaining({ code: 'INTERACTIVE_ONLY' }))
+    const attachment = session.attach()
+    await attachment.write('pwd\r')
+    expect(terminal.writes).toEqual(['pwd\r'])
+    attachment.close()
+    await session.close('test complete')
+  })
+
+  it('replays bounded raw bytes and gives one attachment exact input and resize ownership', async () => {
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config({ interactiveReplayMaxBytes: 4 }))
+    terminal.emitData('abcdef')
+
+    const attachment = session.attach()
+    expect(attachment.replayTruncated).toBe(true)
+    expect((await nextOutput(attachment.output)).toString()).toBe('cdef')
+    await attachment.write('printf hi')
+    await attachment.resize(132, 43)
+    expect(terminal.writes).toEqual(['printf hi'])
+    expect(terminal.resizes).toEqual([{ cols: 132, rows: 43 }])
+    expect(() => session.attach()).toThrow(expect.objectContaining({ code: 'INTERACTIVE_ACTIVE' }))
+    expect(() => session.startSend({ text: 'blocked', submit: true }))
+      .toThrow(expect.objectContaining({ code: 'INTERACTIVE_ACTIVE' }))
+
+    const live = once(attachment.output, 'data')
+    terminal.emitData('!')
+    const liveEvents = await live as unknown[]
+    const liveBytes = liveEvents[0]
+    if (!(liveBytes instanceof Uint8Array)) throw new Error('live terminal event carried no bytes')
+    expect(Buffer.from(liveBytes).toString()).toBe('!')
+    attachment.close()
+    const successor = session.attach()
+    successor.close()
+  })
+
+  it('ends an interactive attachment after the terminal output drains', async () => {
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config())
+    const attachment = session.attach()
+    const ended = once(attachment.output, 'end')
+    attachment.output.resume()
+    terminal.emitExit(7)
+    await ended
+    await vi.waitFor(() => {
+      expect(attachment.status()).toEqual({ kind: 'exited', exitCode: 7, signal: null })
+    })
+  })
+
   it('lets queued terminal output run before the first post-write readiness poll', async () => {
     vi.useFakeTimers()
     const terminal = new FakeTerminal()

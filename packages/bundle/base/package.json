@@ -87,6 +87,8 @@
     "@monotykamary/dsh-subagent-fork-in-process": "workspace:^",
     "@monotykamary/dsh-subagent-spawn-in-process": "workspace:^",
     "@monotykamary/dsh-subprocess-local": "workspace:^",
+    "@monotykamary/dsh-terminal": "workspace:^",
+    "@monotykamary/dsh-terminal-bash": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/dsh-jobs-local": "workspace:^",
     "@monotykamary/dsh-tool-call-timeout-policy": "workspace:^",

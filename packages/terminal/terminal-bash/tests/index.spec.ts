@@ -38,7 +38,7 @@ class RecordingSandbox extends SandboxProvider {
 function config(): ResolvedConfig {
   return {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 24, cols: 80,
-    scrollbackLines: 10, scrollbackMaxBytes: 100, maxReadBytes: 50,
+    scrollbackLines: 10, scrollbackMaxBytes: 100, interactiveReplayMaxBytes: 80, maxReadBytes: 50,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 50, handoffGraceMs: 10, timeoutMs: 100,
     disposeGraceMs: 10,
   }
@@ -65,6 +65,7 @@ function terminalHandle(): SubprocessTerminalHandle {
     output,
     done: Promise.resolve({ exitCode: 0, signal: null }),
     write: async () => {},
+    resize: async () => {},
     inspectForeground: async () => ({ processGroupId: 123, inputWaiting: true }),
     signalForeground: async () => 123,
     terminate: async () => { output.end() },
@@ -202,6 +203,7 @@ describe('BashTerminalBackend startup rollback', () => {
 
     expect(spawned).toMatchObject({
       argv: ['/sandbox', '--', '/bin/bash', '-i'],
+      terminalType: 'dumb',
       cols: 80,
       rows: 24,
       cwd: '/work',
@@ -216,6 +218,51 @@ describe('BashTerminalBackend startup rollback', () => {
     expect(initialized).toHaveBeenCalledWith(undefined)
     expect((ctx.sandbox as RecordingSandbox).calls).toEqual([{
       argv: ['/bin/bash', '-i'],
+      policy: { mode: 'workspace-write', sessionId: 'agent', workspaceRoot: '/workspace' },
+    }])
+  })
+
+  it('launches human PTYs with the configured native shell and no controlled prompt', async () => {
+    const ctx = new Context()
+    await ctx.plugin(RecordingSandbox)
+    await ctx.plugin(SandboxPolicyService, { mode: 'workspace-write', workspaceRoot: '/workspace' })
+    let spawned: SubprocessTerminalSpawnSpec | undefined
+    let createdMode: 'controlled' | 'interactive' | undefined
+    const initialized = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    const session = { initialize: initialized } as unknown as LocalPtySession
+    const backend = new BashTerminalBackend(
+      ctx,
+      { ...config(), interactiveShellPath: '/bin/zsh', interactiveShellArgs: ['-l'] },
+      async (spawnSpec) => {
+        spawned = spawnSpec
+        return terminalHandle()
+      },
+      (_terminal, _config, mode) => {
+        createdMode = mode
+        return session
+      },
+    )
+
+    expect(await backend.spawn({
+      ...spec(agent(ctx)), cwd: '/work', interactive: true, rows: 40, cols: 120,
+    })).toBe(session)
+    expect(spawned).toMatchObject({
+      argv: ['/sandbox', '--', '/bin/zsh', '-l'],
+      cwd: '/work',
+      terminalType: 'xterm-256color',
+      rows: 40,
+      cols: 120,
+      env: {
+        TERM: 'xterm-256color', COLORTERM: 'truecolor',
+        DSH_SHELL: '1', DSH_SESSION_ID: 'agent', DSH_PTY_SESSION_ID: 'pty-1',
+      },
+    })
+    expect(spawned?.env).not.toHaveProperty('PS1')
+    expect(spawned?.env).not.toHaveProperty('PROMPT_COMMAND')
+    expect(createdMode).toBe('interactive')
+    expect(initialized).toHaveBeenCalledWith(undefined)
+    expect((ctx.sandbox as RecordingSandbox).calls).toEqual([{
+      argv: ['/bin/zsh', '-l'],
       policy: { mode: 'workspace-write', sessionId: 'agent', workspaceRoot: '/workspace' },
     }])
   })
@@ -321,6 +368,7 @@ describe('BashTerminalBackend startup rollback', () => {
       output,
       done: outcome.promise,
       write: async () => {},
+      resize: async () => {},
       inspectForeground: async () => ({ processGroupId: 123, inputWaiting: true }),
       signalForeground: async () => 123,
       async terminate() {

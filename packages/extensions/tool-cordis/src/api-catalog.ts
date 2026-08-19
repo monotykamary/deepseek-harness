@@ -1778,6 +1778,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'live operation handle for foreground await or task registration.',
       },
       {
+        signature: 'attach(owner: Agent, id: TerminalSessionId): TerminalInteractiveAttachment',
+        description: 'Open one exclusive raw attachment to an owned session.',
+        parameters: [{ name: 'owner', description: 'exact session owner.' }, { name: 'id', description: 'target PTY identity.' }],
+        returns: 'Raw replay/live output plus direct input and resize operations.',
+      },
+      {
         signature: 'read(owner: Agent, id: TerminalSessionId, request: TerminalReadRequest = {}): TerminalReadResult',
         description: 'Read one bounded scrollback page from an owned session.',
         parameters: [{ name: 'owner', description: 'exact session owner.' }, { name: 'id', description: 'target PTY identity.' }, { name: 'request', description: 'optional newest-relative offset and line count.' }],
@@ -4217,7 +4223,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubprocessTerminalHandle',
-    declaration: 'export interface SubprocessTerminalHandle {\n    readonly pid: number;\n    readonly output: Readable;\n    readonly done: Promise<SubprocessOutcome>;\n    write(data: string): Promise<void>;\n    inspectForeground(): Promise<SubprocessTerminalForeground | undefined>;\n    signalForeground(signal: SubprocessTerminalSignal): Promise<number>;\n    terminate(): Promise<void>;\n}',
+    declaration: 'export interface SubprocessTerminalHandle {\n    readonly pid: number;\n    readonly output: Readable;\n    readonly done: Promise<SubprocessOutcome>;\n    write(data: string): Promise<void>;\n    resize(cols: number, rows: number): Promise<void>;\n    inspectForeground(): Promise<SubprocessTerminalForeground | undefined>;\n    signalForeground(signal: SubprocessTerminalSignal): Promise<number>;\n    terminate(): Promise<void>;\n}',
   },
   {
     name: 'SubprocessTerminalSignal',
@@ -4225,7 +4231,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubprocessTerminalSpawnSpec',
-    declaration: 'export interface SubprocessTerminalSpawnSpec {\n    argv: readonly string[];\n    cwd: string;\n    env?: Record<string, string> | undefined;\n    rows: number;\n    cols: number;\n    graceMs: number;\n    signal?: AbortSignal | undefined;\n}',
+    declaration: 'export interface SubprocessTerminalSpawnSpec {\n    argv: readonly string[];\n    cwd: string;\n    env?: Record<string, string> | undefined;\n    terminalType: string;\n    rows: number;\n    cols: number;\n    graceMs: number;\n    signal?: AbortSignal | undefined;\n}',
   },
   {
     name: 'SurfaceEvent',
@@ -4257,7 +4263,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TerminalBackendSession',
-    declaration: 'export interface TerminalBackendSession {\n    readonly motd: string;\n    readonly pid?: number;\n    startSend(request: TerminalSendRequest): TerminalSendOperation;\n    read(request: TerminalReadRequest): TerminalReadResult;\n    signal(signal: TerminalSignal): Promise<TerminalSignalResult>;\n    status(): TerminalSessionStatus;\n    close(reason: string): Promise<void>;\n}',
+    declaration: 'export interface TerminalBackendSession {\n    readonly motd: string;\n    readonly pid?: number;\n    startSend(request: TerminalSendRequest): TerminalSendOperation;\n    attach(): TerminalInteractiveAttachment;\n    read(request: TerminalReadRequest): TerminalReadResult;\n    signal(signal: TerminalSignal): Promise<TerminalSignalResult>;\n    status(): TerminalSessionStatus;\n    close(reason: string): Promise<void>;\n}',
   },
   {
     name: 'TerminalBackendSpawnSpec',
@@ -4266,6 +4272,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TerminalCallView',
     declaration: 'export interface TerminalCallView {\n    card: \'terminal\';\n    title: string;\n    description?: string;\n    cwd?: string;\n}',
+  },
+  {
+    name: 'TerminalInteractiveAttachment',
+    declaration: 'export interface TerminalInteractiveAttachment {\n    readonly output: Readable;\n    readonly replayTruncated: boolean;\n    write(data: string): Promise<void>;\n    resize(cols: number, rows: number): Promise<void>;\n    status(): TerminalSessionStatus;\n    close(): void;\n}',
   },
   {
     name: 'TerminalReadRequest',
@@ -4321,7 +4331,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TerminalSpawnRequest',
-    declaration: 'export interface TerminalSpawnRequest {\n    type: string;\n    name?: string;\n    cwd?: string;\n}',
+    declaration: 'export interface TerminalSpawnRequest {\n    type: string;\n    name?: string;\n    cwd?: string;\n    interactive?: boolean;\n    rows?: number;\n    cols?: number;\n}',
   },
   {
     name: 'TerminalSpawnResult',

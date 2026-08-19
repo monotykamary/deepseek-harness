@@ -12,6 +12,12 @@ The node half guards every entry under `/api` before bridging or upgrading (`src
 
 `/api/events.mux` and `/api/events.host` each accept a WebSocket upgrade and send only the corresponding `ServerRequest` text messages to the browser; the client sends no application data over these sockets. If either socket ends, the current connection generation fails and rebuilds both streams; readiness still requires both sockets to be open and the `host.describe` HTTP call to succeed. Host teardown terminates both sockets, aborts their sources, and waits for source cleanup before returning. Ordinary network GETs to these paths return 426 with no SSE fallback; `toFetchHandler`'s SSE codec serves only the isomorphic in-process carrier.
 
+## Trusted custom WebSocket upgrades
+
+Host Consumers call `ctx.connection.upgrade(path, handler, { authority })` to register one exact absolute pathname on the shared Web server. Connection applies the same Host/Origin fence as `/api`, runs optional Web identity admission, and passes the admitted owner/operator facts with the raw request, socket, and head bytes. The Consumer owns protocol negotiation and the accepted socket after that callback. Registrations follow the caller fiber and return an asynchronous explicit disposer, so custom full-duplex protocols coexist with the two built-in downlinks without sharing their message codec.
+
+The browser-safe RPC types remain on the client compiler face; raw Node request/socket types and the declaration merge that adds `upgrade` to `HostConnectionHandle` live on the Host face.
+
 ## Model Experience
 
 None, as the wire consumer layer moves already-composed messages between browser and host; nothing here reaches a model request.

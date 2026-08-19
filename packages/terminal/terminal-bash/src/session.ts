@@ -1,6 +1,7 @@
 /** Persistent PTY session over the subprocess seam's terminal primitive. */
 
 import { Buffer } from 'node:buffer'
+import { PassThrough } from 'node:stream'
 import type {
   SubprocessOutcome,
   SubprocessTerminalForeground,
@@ -9,6 +10,7 @@ import type {
 import { TerminalError } from '@monotykamary/dsh-terminal'
 import type {
   TerminalBackendSession,
+  TerminalInteractiveAttachment,
   TerminalReadRequest,
   TerminalReadResult,
   TerminalSendOperation,
@@ -71,6 +73,38 @@ class BoundedTextBuffer {
 
   snapshot(): { text: string; truncated: boolean } {
     return { text: this.value, truncated: this.dropped }
+  }
+}
+
+class BoundedByteBuffer {
+  private readonly chunks: Buffer[] = []
+  private byteLength = 0
+  private dropped = false
+
+  constructor(private readonly maxBytes: number) {}
+
+  append(value: Uint8Array): void {
+    if (value.byteLength === 0) return
+    const chunk = Buffer.from(value)
+    this.chunks.push(chunk)
+    this.byteLength += chunk.byteLength
+    while (this.byteLength > this.maxBytes) {
+      const first = this.chunks[0]
+      if (first === undefined) break
+      const overflow = this.byteLength - this.maxBytes
+      this.dropped = true
+      if (overflow >= first.byteLength) {
+        this.chunks.shift()
+        this.byteLength -= first.byteLength
+      } else {
+        this.chunks[0] = first.subarray(overflow)
+        this.byteLength -= overflow
+      }
+    }
+  }
+
+  snapshot(): { bytes: Buffer; truncated: boolean } {
+    return { bytes: Buffer.concat(this.chunks, this.byteLength), truncated: this.dropped }
   }
 }
 
@@ -159,6 +193,8 @@ export class LocalPtySession implements TerminalBackendSession {
   private readonly decoder = new TextDecoder()
   private readonly sanitizer: TerminalSanitizer
   private readonly scrollback: BoundedTextBuffer
+  private readonly rawReplay: BoundedByteBuffer
+  private interactive: { handle: TerminalInteractiveAttachment; output: PassThrough } | undefined
   private readonly outputEnded = Promise.withResolvers<void>()
   private readonly completion: Promise<void>
   private statusValue: TerminalSessionStatus = { kind: 'running' }
@@ -188,10 +224,12 @@ export class LocalPtySession implements TerminalBackendSession {
   constructor(
     private readonly terminal: SubprocessTerminalHandle,
     private readonly config: ResolvedConfig,
+    private readonly mode: 'controlled' | 'interactive' = 'controlled',
   ) {
     this.pid = terminal.pid
     this.sanitizer = new TerminalSanitizer(config.maxReadBytes)
     this.scrollback = new BoundedTextBuffer(config.scrollbackMaxBytes, config.scrollbackLines)
+    this.rawReplay = new BoundedByteBuffer(config.interactiveReplayMaxBytes)
     terminal.output.on('data', this.onTerminalData)
     terminal.output.once('end', this.onTerminalEnd)
     terminal.output.once('error', this.onTerminalError)
@@ -207,6 +245,10 @@ export class LocalPtySession implements TerminalBackendSession {
    * @returns Resolves after startup readiness; rejects on exit or readiness timeout.
    */
   async initialize(signal?: AbortSignal): Promise<void> {
+    if (this.mode === 'interactive') {
+      signal?.throwIfAborted()
+      return
+    }
     this.initializing = true
     try {
       const operation = this.startSend({ text: '', submit: false, ...signal !== undefined ? { signal } : {} })
@@ -223,8 +265,12 @@ export class LocalPtySession implements TerminalBackendSession {
   }
 
   startSend(request: TerminalSendRequest): TerminalSendOperation {
+    if (this.mode === 'interactive') {
+      throw new TerminalError('human-facing PTY sessions accept only interactive attachments', 'INTERACTIVE_ONLY')
+    }
     if (this.closing) throw new Error('PTY session is closing')
     if (this.statusValue.kind === 'exited') throw new Error('PTY session has exited')
+    if (this.interactive !== undefined) throw new TerminalError('PTY session has an interactive attachment', 'INTERACTIVE_ACTIVE')
     if (this.active !== undefined) {
       const draining = this.activeWrite !== undefined
         ? ' or draining provider write'
@@ -255,6 +301,34 @@ export class LocalPtySession implements TerminalBackendSession {
     }, this.config.timeoutMs)
     void this.beginSend(operation, request)
     return operation
+  }
+
+  attach(): TerminalInteractiveAttachment {
+    if (this.closing) throw new Error('PTY session is closing')
+    if (this.statusValue.kind === 'exited') throw new Error('PTY session has exited')
+    if (this.active !== undefined) throw new TerminalError('PTY session already has an active send', 'SEND_ACTIVE')
+    if (this.interactive !== undefined) {
+      throw new TerminalError('PTY session already has an interactive attachment', 'INTERACTIVE_ACTIVE')
+    }
+    const replay = this.rawReplay.snapshot()
+    const output = new PassThrough()
+    if (replay.bytes.byteLength > 0) output.write(replay.bytes)
+    let closed = false
+    const handle: TerminalInteractiveAttachment = {
+      output,
+      replayTruncated: replay.truncated,
+      write: data => this.terminal.write(data),
+      resize: (cols, rows) => this.terminal.resize(cols, rows),
+      status: () => this.statusValue,
+      close: () => {
+        if (closed) return
+        closed = true
+        if (this.interactive?.handle === handle) this.interactive = undefined
+        output.destroy()
+      },
+    }
+    this.interactive = { handle, output }
+    return handle
   }
 
   private async beginSend(operation: LocalSendOperation, request: TerminalSendRequest): Promise<void> {
@@ -351,6 +425,7 @@ export class LocalPtySession implements TerminalBackendSession {
 
   close(reason: string): Promise<void> {
     this.closing = true
+    this.interactive?.handle.close()
     if (this.closePromise !== undefined) return this.closePromise
     const closing = this.closeOnce(reason).catch((error: unknown) => {
       this.closePromise = undefined
@@ -362,13 +437,16 @@ export class LocalPtySession implements TerminalBackendSession {
   }
 
   private readonly onTerminalData = (chunk: Buffer | Uint8Array | string): void => {
-    const bytes = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : chunk
+    const bytes = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk)
+    this.rawReplay.append(bytes)
+    this.interactive?.output.write(bytes)
     this.onData(this.decoder.decode(bytes, { stream: true }))
   }
 
   private readonly onTerminalEnd = (): void => {
     this.onData(this.decoder.decode())
     this.appendOutput(this.sanitizer.flush())
+    this.interactive?.output.end()
     this.outputEnded.resolve()
   }
 

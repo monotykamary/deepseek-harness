@@ -1,3 +1,4 @@
+import { PassThrough } from 'node:stream'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Context } from '@monotykamary/cordis'
 import { Session, SessionId } from '@monotykamary/dsh-session'
@@ -7,6 +8,7 @@ import TerminalSessionService, { TerminalBackendCleanupError, TerminalError, Ter
 import type {
   TerminalBackend,
   TerminalBackendSession,
+  TerminalBackendSpawnSpec,
   TerminalReadRequest,
   TerminalSendOperation,
   TerminalSendRequest,
@@ -56,6 +58,21 @@ class StubSession implements TerminalBackendSession {
   rejectSend = false
   rejectClose = false
   closeGate: PromiseWithResolvers<undefined> | undefined
+  readonly interactiveWrites: string[] = []
+  readonly interactiveResizes: { cols: number; rows: number }[] = []
+  attachmentsClosed = 0
+
+  attach() {
+    const output = new PassThrough()
+    return {
+      output,
+      replayTruncated: false,
+      write: async (input: string) => { this.interactiveWrites.push(input) },
+      resize: async (cols: number, rows: number) => { this.interactiveResizes.push({ cols, rows }) },
+      status: () => this.status(),
+      close: () => { this.attachmentsClosed += 1; output.destroy() },
+    }
+  }
 
   startSend(_request: TerminalSendRequest): TerminalSendOperation {
     if (this.rejectSend) {
@@ -106,15 +123,17 @@ class StubSession implements TerminalBackendSession {
 
 function backend(type = 'stub') {
   const sessions: StubSession[] = []
+  const specs: TerminalBackendSpawnSpec[] = []
   const provider: TerminalBackend = {
     type,
-    async spawn() {
+    async spawn(spec) {
+      specs.push(spec)
       const session = new StubSession()
       sessions.push(session)
       return session
     },
   }
-  return { provider, sessions }
+  return { provider, sessions, specs }
 }
 
 async function harness() {
@@ -162,11 +181,23 @@ describe('TerminalSessionService ownership and lifecycle', () => {
     ctx.agents.register(owner)
     ctx.agents.register(foreign)
 
-    const created = await ctx.terminals.spawn(owner, { type: 'stub', name: 'main', cwd: '/tmp' })
+    const created = await ctx.terminals.spawn(owner, {
+      type: 'stub', name: 'main', cwd: '/tmp', interactive: true,
+    })
+    expect(b.specs[0]).toMatchObject({ name: 'main', cwd: '/tmp', interactive: true })
     expect(created).toMatchObject({ sessionId: 'pty-1', name: 'main', type: 'stub', pid: 123, motd: 'stub ready', status: { kind: 'running' } })
     expect(ctx.terminals.hasOwnerActivity(owner)).toBe(true)
     expect(ctx.terminals.list(owner)).toHaveLength(1)
     expect(ctx.terminals.list(foreign)).toEqual([])
+    const attachment = ctx.terminals.attach(owner, created.sessionId)
+    await attachment.write('interactive input')
+    await attachment.resize(100, 30)
+    expect(attachment.status()).toEqual({ kind: 'running' })
+    expect(b.sessions[0]?.interactiveWrites).toEqual(['interactive input'])
+    expect(b.sessions[0]?.interactiveResizes).toEqual([{ cols: 100, rows: 30 }])
+    attachment.close()
+    expect(b.sessions[0]?.attachmentsClosed).toBe(1)
+    expect(() => ctx.terminals.attach(foreign, created.sessionId)).toThrow('belongs to another agent')
     expect(() => ctx.terminals.read(foreign, created.sessionId)).toThrow('belongs to another agent')
     expect(() => ctx.terminals.signal(foreign, created.sessionId, 'SIGINT')).toThrow('belongs to another agent')
     await expect(Promise.resolve().then(() => ctx.terminals.kill(foreign, created.sessionId))).rejects.toThrow('belongs to another agent')

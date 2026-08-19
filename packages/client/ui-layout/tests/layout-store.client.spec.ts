@@ -11,6 +11,9 @@ import {
   DETAILS_DEFAULT, DETAILS_MAX, DETAILS_MIN,
   SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN,
 } from '@monotykamary/dsh-client-ui-layout/src/client/columns.ts'
+import {
+  BOTTOM_DEFAULT, BOTTOM_MAX, BOTTOM_MIN,
+} from '@monotykamary/dsh-client-ui-layout/src/client/rows.ts'
 
 const PERSIST_KEY = 'dsh.layout.panels'
 
@@ -19,7 +22,10 @@ beforeEach(() => { localStorage.clear() })
 describe('createLayoutStore', () => {
   it('initializes the sidebar at its default width, details closed, wide viewport assumed', () => {
     const { store } = createLayoutStore().create()
-    expect(store.getSnapshot()).toEqual({ sidebar: SIDEBAR_DEFAULT, details: 0, narrow: false, narrowExpanded: false })
+    expect(store.getSnapshot()).toEqual({
+      sidebar: SIDEBAR_DEFAULT, details: 0, bottom: 0,
+      bottomRestore: BOTTOM_DEFAULT, narrow: false, narrowExpanded: false,
+    })
   })
 
   it('each create() is an independent instance (factory is not a singleton)', () => {
@@ -55,7 +61,10 @@ describe('createLayoutStore', () => {
     actions.setSidebar(400)
     actions.setNarrow(true)
     actions.toggleSidebar()
-    expect(store.getSnapshot()).toEqual({ sidebar: 400, details: 0, narrow: true, narrowExpanded: true })
+    expect(store.getSnapshot()).toEqual({
+      sidebar: 400, details: 0, bottom: 0,
+      bottomRestore: BOTTOM_DEFAULT, narrow: true, narrowExpanded: true,
+    })
     actions.toggleSidebar()
     expect(store.getSnapshot().narrowExpanded).toBe(false)
     expect(store.getSnapshot().sidebar).toBe(400)
@@ -85,6 +94,26 @@ describe('createLayoutStore', () => {
     expect(store.getSnapshot().details).toBe(0)
   })
 
+  it('clamps, opens, preserves, toggles, and closes the bottom panel height', () => {
+    const { store, actions } = createLayoutStore().create()
+    actions.openBottom()
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_DEFAULT)
+    actions.setBottom(1)
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_MIN)
+    actions.setBottom(9999)
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_MAX)
+    actions.openBottom()
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_MAX)
+    actions.toggleBottom()
+    expect(store.getSnapshot().bottom).toBe(0)
+    actions.toggleBottom()
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_MAX)
+    actions.closeBottom()
+    expect(store.getSnapshot().bottom).toBe(0)
+    actions.openBottom()
+    expect(store.getSnapshot().bottom).toBe(BOTTOM_MAX)
+  })
+
   it('does not persist panel geometry', () => {
     const first = createLayoutStore().create()
     first.actions.setSidebar(400)
@@ -96,6 +125,8 @@ describe('createLayoutStore', () => {
     expect(second.store.getSnapshot()).toEqual({
       sidebar: SIDEBAR_DEFAULT,
       details: 0,
+      bottom: 0,
+      bottomRestore: BOTTOM_DEFAULT,
       narrow: false,
       narrowExpanded: false,
     })

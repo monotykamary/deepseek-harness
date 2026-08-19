@@ -165,7 +165,7 @@ describe('LocalSubprocessRuntime', () => {
     const ctx = new Context()
     const fiber = await ctx.plugin(LocalSubprocessRuntime)
     const base: SubprocessTerminalSpawnSpec = {
-      argv: ['bash'], cwd: process.cwd(), rows: 24, cols: 80, graceMs: 10,
+      argv: ['bash'], cwd: process.cwd(), terminalType: 'dumb', rows: 24, cols: 80, graceMs: 10,
     }
     await expect(ctx.subprocess.spawnTerminal({ ...base, argv: [] })).rejects.toThrow('must contain a program')
     await expect(ctx.subprocess.spawnTerminal({ ...base, argv: [''] })).rejects.toThrow('must contain a program')
@@ -182,6 +182,7 @@ describe('LocalSubprocessRuntime', () => {
       output: new PassThrough(),
       done: Promise.resolve({ exitCode: 0, signal: null }),
       write: async () => {},
+      resize: async () => {},
       inspectForeground: async () => undefined,
       signalForeground: async () => 1,
       terminate,
@@ -206,6 +207,7 @@ describe('LocalSubprocessRuntime', () => {
       output: new PassThrough(),
       done: Promise.resolve({ exitCode: 0, signal: null }),
       write: async () => {},
+      resize: async () => {},
       inspectForeground: async () => undefined,
       signalForeground: async () => 1,
       terminate: vi.fn(async () => { throw firstFailure }),
@@ -253,6 +255,7 @@ describe('LocalSubprocessRuntime', () => {
       output: new PassThrough(),
       done: Promise.resolve({ exitCode: 0, signal: null }),
       write: async () => {},
+      resize: async () => {},
       inspectForeground: async () => undefined,
       signalForeground: async () => 1,
       terminate: vi.fn(async () => { throw failure }),
@@ -290,6 +293,7 @@ describe('LocalSubprocessRuntime', () => {
   })
 
   it('releases a terminal after top-level exit reaches quiescence', async () => {
+    const spawnPty = vi.fn()
     let exitListener: ((event: { exitCode: number; signal?: number }) => void) | undefined
     const inspector = {
       foregroundPgid: () => undefined,
@@ -310,8 +314,9 @@ describe('LocalSubprocessRuntime', () => {
       write: () => {},
       kill: () => {},
     }
+    spawnPty.mockReturnValue(terminal)
     vi.resetModules()
-    vi.doMock('node-pty', () => ({ spawn: () => terminal }))
+    vi.doMock('node-pty', () => ({ spawn: spawnPty }))
     vi.doMock('../src/process-inspector.ts', async importOriginal => ({
       ...await importOriginal<typeof import('../src/process-inspector.ts')>(),
       createProcessInspector: () => inspector,
@@ -322,8 +327,9 @@ describe('LocalSubprocessRuntime', () => {
       const fiber = await ctx.plugin(IsolatedLocalSubprocessRuntime)
       const service = ctx.subprocess as InstanceType<typeof IsolatedLocalSubprocessRuntime>
       const handle = await ctx.subprocess.spawnTerminal({
-        argv: ['shell'], cwd: process.cwd(), rows: 24, cols: 80, graceMs: 1,
+        argv: ['shell'], cwd: process.cwd(), terminalType: 'xterm-256color', rows: 24, cols: 80, graceMs: 1,
       })
+      expect(spawnPty).toHaveBeenCalledWith('shell', [], expect.objectContaining({ name: 'xterm-256color' }))
       expect((service as unknown as { terminals: Set<SubprocessTerminalHandle> }).terminals.size).toBe(1)
       exitListener?.({ exitCode: 0 })
       await handle.done
@@ -368,7 +374,7 @@ describe('LocalSubprocessRuntime', () => {
         signalProcess: () => {},
       }
       const handle = await ctx.subprocess.spawnTerminal({
-        argv: ['shell'], cwd: process.cwd(), rows: 24, cols: 80, graceMs: 1,
+        argv: ['shell'], cwd: process.cwd(), terminalType: 'dumb', rows: 24, cols: 80, graceMs: 1,
       })
       exitListener?.({ exitCode: 0 })
       await handle.done

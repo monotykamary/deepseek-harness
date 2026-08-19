@@ -6,8 +6,9 @@
  * shell's shared entry path. Adding raises the directory flow directly; the
  * flow and its error dialog remain in WorkspacePicker.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { ChevronDown } from 'lucide-react'
 import {
   Button, IconCloseFill14, IconFolderClose16, IconPersonalizationOutline16,
   IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
@@ -140,51 +141,111 @@ function nextSessionOrderAccount({
   return { order, updatedAt, changed: orderChanged || timestampsChanged }
 }
 
-/** Grouping and ordering menu; own open state so it resets with the wide chrome. */
-function ViewOptionsMenu({ groupBy, orderBy, onGroupPick, onOrderPick, t }: {
-  groupBy: 'workspace' | 'flat'
-  orderBy: SessionOrderBy
-  onGroupPick: (mode: 'workspace' | 'flat') => void
-  onOrderPick: (mode: SessionOrderBy) => void
+const ALL_WORKSPACES_SCOPE_ID = 'all-workspaces'
+
+function workspaceScopeItemId(workspaceId: WorkspaceId): string {
+  return `workspace:${workspaceId}`
+}
+
+/** T3-adapted full-width Workspace filter with independent per-row actions. */
+function WorkspaceScopeMenu({
+  workspaces, selected, onSelect, onRename, onDelete, t,
+}: {
+  workspaces: readonly WorkspaceView[]
+  selected: WorkspaceId | null
+  onSelect: (workspaceId: WorkspaceId | null) => void
+  onRename: (workspace: WorkspaceView) => void
+  onDelete: (workspace: WorkspaceView) => void
   t: WorkspaceBrowserProps['t']
 }) {
   const [open, setOpen] = useState(false)
+  const [actionWorkspace, setActionWorkspace] = useState<WorkspaceView | null>(null)
+  const [actionAnchor, setActionAnchor] = useState<DOMRect | null>(null)
+  const selectedWorkspace = workspaces.find(workspace => workspace.workspaceId === selected)
+  const getActionAnchor = useCallback(() => actionAnchor, [actionAnchor])
+  const closeActions = () => {
+    setActionWorkspace(null)
+    setActionAnchor(null)
+  }
   return (
-    <Menu
-      open={open}
-      onClose={() => { setOpen(false) }}
-      items={[
-        { type: 'label' as const, id: 'group-by', text: t('groupBy.label') },
-        { id: 'workspace', label: t('groupBy.workspace') },
-        { id: 'flat', label: t('groupBy.flat') },
-        { type: 'separator' as const, id: 'order-by-separator' },
-        { type: 'label' as const, id: 'order-by', text: t('orderBy.label') },
-        { id: 'manual', label: t('orderBy.manual') },
-        { id: 'updated', label: t('orderBy.updated') },
-      ]}
-      selectedIds={[groupBy, orderBy]}
-      onSelect={(id) => {
-        if (id === 'workspace' || id === 'flat') onGroupPick(id)
-        else if (id === 'manual' || id === 'updated') onOrderPick(id)
-        setOpen(false)
-      }}
-      align="end"
-      dense
-      // Portal keeps the view menu above the scrolling Session card list.
-      portal
-      anchor={(
-        <Tooltip label={t('viewOptions.label')} side="bottom" delayMs={500}>
+    <>
+      <Menu
+        open={open}
+        onClose={() => { setOpen(false) }}
+        items={[
+          {
+            id: ALL_WORKSPACES_SCOPE_ID,
+            label: t('section.allWorkspaces'),
+            icon: <IconFolderClose16 size={16} />,
+          },
+          ...workspaces.map(workspace => ({
+            id: workspaceScopeItemId(workspace.workspaceId),
+            label: workspace.title,
+            icon: <IconFolderClose16 size={16} />,
+            action: {
+              label: t('actions.workspace.aria', { name: workspace.title }),
+              icon: <IconPersonalizationOutline16 size={16} />,
+            },
+          })),
+        ]}
+        selectedId={selectedWorkspace === undefined
+          ? ALL_WORKSPACES_SCOPE_ID
+          : workspaceScopeItemId(selectedWorkspace.workspaceId)}
+        onSelect={(id) => {
+          const workspace = workspaces.find(candidate => workspaceScopeItemId(candidate.workspaceId) === id)
+          onSelect(workspace?.workspaceId ?? null)
+          setOpen(false)
+        }}
+        onAction={(id, target) => {
+          const workspace = workspaces.find(candidate => workspaceScopeItemId(candidate.workspaceId) === id)
+          /* v8 ignore next -- action-bearing rows are produced only by the Workspace map above. */
+          if (workspace === undefined) return
+          setOpen(false)
+          setActionAnchor(target.getBoundingClientRect())
+          setActionWorkspace(workspace)
+        }}
+        dense
+        portal
+        className={css.scopeMenu ?? ''}
+        anchor={(
           <button
             type="button"
-            className={clsx(css.iconButton, css.wide)}
-            aria-label={t('viewOptions.label')}
-            onClick={() => { setOpen(v => !v) }}
+            className={css.scopeTrigger}
+            aria-label={t('workspace.filter.aria')}
+            aria-expanded={open}
+            onClick={() => {
+              closeActions()
+              setOpen(value => !value)
+            }}
           >
-            <IconPersonalizationOutline16 />
+            <IconFolderClose16 size={16} />
+            <span>{selectedWorkspace?.title ?? t('section.allWorkspaces')}</span>
+            <ChevronDown className={css.scopeChevron} size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
-        </Tooltip>
-      )}
-    />
+        )}
+      />
+      <Menu
+        open={actionWorkspace !== null}
+        onClose={closeActions}
+        getAnchorRect={getActionAnchor}
+        items={[
+          { id: 'rename', label: t('rename') },
+          { id: 'delete', label: t('delete.workspace'), danger: true },
+        ]}
+        onSelect={(id) => {
+          const workspace = actionWorkspace
+          closeActions()
+          /* v8 ignore next -- the menu disappears before it can dispatch without a Workspace. */
+          if (workspace === null) return
+          if (id === 'rename') onRename(workspace)
+          else if (id === 'delete') onDelete(workspace)
+        }}
+        side="right"
+        dense
+        portal
+        anchor={null}
+      />
+    </>
   )
 }
 
@@ -540,7 +601,7 @@ function SessionTree({
 
 /** The flat "In one list" body: every session is one draggable top-level row. */
 function FlatList({
-  useSessions, open, forkSession, onSessionRename, onSessionArchive, archivedSessionIds,
+  useSessions, open, forkSession, onSessionRename, onSessionArchive, archivedSessionIds, workspace,
   orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
 }: Pick<
   SessionTreeProps,
@@ -556,18 +617,25 @@ function FlatList({
   | 'syncSessionOrderAccount'
   | 'setSessionOrder'
   | 't'
->) {
+> & { workspace?: WorkspaceView | undefined }) {
   const list = useSessions(s => s)
+  const workspaceSessionIds = useMemo(
+    () => workspace === undefined ? null : new Set(workspace.sessionIds),
+    [workspace],
+  )
+  const accountKey = workspace?.workspaceId as string | undefined ?? FLAT_SESSION_ORDER_KEY
   const baseRows = useMemo(
-    () => deriveFlat(list, archivedSessionIds),
-    [list, archivedSessionIds],
+    () => deriveFlat(list, archivedSessionIds).filter(
+      row => workspaceSessionIds === null || workspaceSessionIds.has(row.id),
+    ),
+    [list, archivedSessionIds, workspaceSessionIds],
   )
   const sessionIds = useMemo(() => baseRows.map(row => row.id), [baseRows])
   const previousOrderBy = useRef(orderBy)
   useEffect(() => {
     if (list.phase !== 'ready') return
-    const previousOrder = sessionOrderByAccount[FLAT_SESSION_ORDER_KEY]
-    const previousUpdatedAt = sessionUpdatedAtByAccount[FLAT_SESSION_ORDER_KEY] ?? {}
+    const previousOrder = sessionOrderByAccount[accountKey]
+    const previousUpdatedAt = sessionUpdatedAtByAccount[accountKey] ?? {}
     const switchedToUpdated = previousOrderBy.current !== 'updated' && orderBy === 'updated'
     previousOrderBy.current = orderBy
     const next = nextSessionOrderAccount({
@@ -579,17 +647,17 @@ function FlatList({
       sortByRecency: orderBy === 'updated' && (previousOrder === undefined || switchedToUpdated),
     })
     if (next.changed) {
-      syncSessionOrderAccount(FLAT_SESSION_ORDER_KEY, next.order.map(id => id as string), next.updatedAt)
+      syncSessionOrderAccount(accountKey, next.order.map(id => id as string), next.updatedAt)
     }
-  }, [list, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, sessionIds, syncSessionOrderAccount])
+  }, [accountKey, list, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, sessionIds, syncSessionOrderAccount])
   const rows = useMemo(() => {
     const byId = new Map(baseRows.map(row => [row.id, row]))
-    return reconciledSessionOrder(sessionIds, sessionOrderByAccount[FLAT_SESSION_ORDER_KEY])
+    return reconciledSessionOrder(sessionIds, sessionOrderByAccount[accountKey])
       .flatMap((id) => {
         const row = byId.get(id)
         return row === undefined ? [] : [row]
       })
-  }, [baseRows, sessionOrderByAccount, sessionIds])
+  }, [accountKey, baseRows, sessionOrderByAccount, sessionIds])
   const [drag, setDrag] = useState<DragState | null>(null)
   const dropCommitted = useRef(false)
   useNativeDragAcceptance(drag !== null)
@@ -607,7 +675,7 @@ function FlatList({
     const nextOrder = rows.map(row => row.id).filter(id => id !== activeDrag.sessionId)
     const insertAt = anchor === undefined ? nextOrder.length : nextOrder.indexOf(anchor)
     nextOrder.splice(insertAt === -1 ? nextOrder.length : insertAt, 0, activeDrag.sessionId)
-    setSessionOrder(FLAT_SESSION_ORDER_KEY, nextOrder.map(id => id as string))
+    setSessionOrder(accountKey, nextOrder.map(id => id as string))
   }
   const now = Date.now()
   return (
@@ -631,7 +699,7 @@ function FlatList({
               drag={{
                 start: () => {
                   dropCommitted.current = false
-                  setDrag({ accountKey: FLAT_SESSION_ORDER_KEY, sessionId: node.id, over: null })
+                  setDrag({ accountKey, sessionId: node.id, over: null })
                 },
                 active,
                 marker: active && drag.over?.id === node.id ? drag.over.half : null,
@@ -673,9 +741,11 @@ function SearchResults({
   query,
   remote,
   resultLimit,
+  workspace,
   t,
 }: Pick<SessionTreeProps, 'useSessions' | 'open' | 't'> & {
   workspaces: readonly WorkspaceView[]
+  workspace?: WorkspaceView | undefined
   archivedSessionIds: readonly SessionNode['id'][]
   query: string
   remote: RemoteSearchState
@@ -686,8 +756,10 @@ function SearchResults({
     ? remote
     : { query, status: 'loading' as const, items: [], hasMore: false }
   const results = useMemo(
-    () => deriveSearchResults(list, workspaces, query, archivedSessionIds, currentRemote, resultLimit),
-    [list, workspaces, query, archivedSessionIds, currentRemote, resultLimit],
+    () => deriveSearchResults(
+      list, workspaces, query, archivedSessionIds, currentRemote, resultLimit, workspace?.workspaceId,
+    ),
+    [list, workspaces, query, archivedSessionIds, currentRemote, resultLimit, workspace?.workspaceId],
   )
   const pending = currentRemote.status === 'loading'
   const failed = currentRemote.status === 'error'
@@ -762,11 +834,13 @@ export function WorkspaceBrowser({
   // Live occupancy of this surface's directory-flow hole (the same source the
   // flow reads): a composition without a picking affordance can add nothing.
   const directoryFlowAvailable = useDirectoryFlow(occupied => occupied)
+  const workspaceScope = useStore(s => s.workspaceScope)
   const groupBy = useStore(s => s.groupBy)
   const orderBy = useStore(s => s.orderBy)
   const groupExpansion = useStore(s => s.groupExpansion)
   const sessionOrderByAccount = useStore(s => s.sessionOrderByAccount)
   const sessionUpdatedAtByAccount = useStore(s => s.sessionUpdatedAtByAccount)
+  const scopedWorkspace = workspaces.find(workspace => workspace.workspaceId === workspaceScope)
   useEffect(() => {
     if (workspacePhase !== 'ready') return
     actions.retainAccountKeys([
@@ -985,18 +1059,22 @@ export function WorkspaceBrowser({
               )}
             </div>
             <div className={css.scopeRow}>
-              <span className={css.scopeLabel}>
-                <IconFolderClose16 size={16} />
-                <span>{groupBy === 'flat' ? t('section.allSessions') : t('section.allWorkspaces')}</span>
-              </span>
+              <WorkspaceScopeMenu
+                workspaces={workspaces}
+                selected={workspaceScope}
+                onSelect={actions.setWorkspaceScope}
+                onRename={(workspace) => {
+                  setRenameTarget({ workspaceId: workspace.workspaceId, currentTitle: workspace.title })
+                  setRenameDraft(workspace.title)
+                  setRenameError(null)
+                }}
+                onDelete={(workspace) => {
+                  setDeleteTarget({ workspaceId: workspace.workspaceId, title: workspace.title })
+                  setDeleteError(null)
+                }}
+                t={t}
+              />
               <div className={css.headerActions}>
-                <ViewOptionsMenu
-                  groupBy={groupBy}
-                  orderBy={orderBy}
-                  onGroupPick={(mode) => { actions.setGroupBy(mode) }}
-                  onOrderPick={(mode) => { actions.setOrderBy(mode) }}
-                  t={t}
-                />
                 {directoryFlowAvailable && (
                   <Tooltip label={t('workspace.add')} side="right" delayMs={500}>
                     <button
@@ -1075,6 +1153,7 @@ export function WorkspaceBrowser({
               query={normalizedQuery}
               remote={remoteSearch}
               resultLimit={searchResultLimit}
+              workspace={scopedWorkspace}
               t={t}
             />
           )
@@ -1084,6 +1163,7 @@ export function WorkspaceBrowser({
                 useSessions={useSessions} open={open} forkSession={forkSession}
                 onSessionRename={onSessionRename} onSessionArchive={onSessionArchive}
                 archivedSessionIds={archivedSessionIds}
+                workspace={scopedWorkspace}
                 orderBy={orderBy}
                 sessionOrderByAccount={sessionOrderByAccount}
                 sessionUpdatedAtByAccount={sessionUpdatedAtByAccount}
@@ -1098,7 +1178,7 @@ export function WorkspaceBrowser({
                 onSessionRename={onSessionRename}
                 onSessionArchive={onSessionArchive}
                 forkSession={forkSession}
-                workspaces={workspaces}
+                workspaces={scopedWorkspace === undefined ? workspaces : [scopedWorkspace]}
                 groupExpansion={groupExpansion}
                 setGroupExpanded={actions.setGroupExpanded}
                 sessionOrderByAccount={sessionOrderByAccount}

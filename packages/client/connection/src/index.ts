@@ -25,6 +25,7 @@ export type {
   HostConnectionHandle,
   HostConnectionRpc,
 } from './rpc.ts'
+export type { ConnectionUpgradeAdmission, ConnectionUpgradeHandler } from './upgrade.ts'
 export { HostConnectionService } from './rpc-host.ts'
 
 export { API_PATH, HOST_EVENTS_PATH, MUX_EVENTS_PATH } from './api-path.ts'

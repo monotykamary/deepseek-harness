@@ -1,0 +1,60 @@
+{
+  "name": "@monotykamary/dsh-terminal-web",
+  "description": "Trusted full-duplex WebSocket consumer for Agent-owned persistent terminals",
+  "version": "0.1.0-rc.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/terminal/terminal-web"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./protocol": {
+      "types": "./lib/types/protocol.d.ts",
+      "default": "./lib/types/protocol.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "dependencies": {
+    "@monotykamary/schemastery": "workspace:^",
+    "ws": "^8.21.0"
+  },
+  "peerDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-client-connection": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-terminal": "workspace:^"
+  },
+  "devDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-client-connection": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-terminal": "workspace:^",
+    "@types/ws": "^8.18.1"
+  }
+}

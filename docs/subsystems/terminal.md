@@ -45,6 +45,8 @@ interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
+  /** Open one raw terminal attachment. */
+  attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult
   /** Signal the verified foreground process group. */
@@ -55,6 +57,30 @@ interface TerminalBackendSession {
   close(reason: string): Promise<void>
 }
 ```
+
+## Raw interactive attachments
+
+A human-facing Consumer can attach to an owned published session without entering the model-facing send/readiness protocol. The attachment starts with bounded raw replay, follows live PTY bytes in order, writes exact input, forwards viewport resize, reports top-level status, and detaches without killing the process. Multiple attachments share the backend’s PTY ordering; they do not create independent input transactions.
+
+```ts type-equiv
+/** Raw terminal attachment used by human-facing interactive consumers. */
+interface TerminalInteractiveAttachment {
+  /** Retained raw PTY bytes followed by live output in delivery order. */
+  readonly output: Readable
+  /** Whether the retained raw prefix dropped older bytes. */
+  readonly replayTruncated: boolean
+  /** Write exact terminal input without implicit newline conversion. */
+  write(data: string): Promise<void>
+  /** Resize the underlying PTY viewport. */
+  resize(cols: number, rows: number): Promise<void>
+  /** Observe the current top-level process status. */
+  status(): TerminalSessionStatus
+  /** Idempotently release this attachment without closing the PTY session. */
+  close(): void
+}
+```
+
+The shipped Host mounts one `ctx.terminals` registry and shell backend for every Agent. [`dsh-terminal-web`](../../packages/terminal/terminal-web/README.md) adds identity-admitted WebSocket framing, and [`dsh-client-ui-terminal`](../../packages/client/ui-terminal/README.md) consumes it in independent bottom and right placements.
 
 ## Send and retained output
 
@@ -144,6 +170,14 @@ hasOwnerActivity(owner: Agent): boolean
 startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation
 
 /**
+ * Open one exclusive raw attachment to an owned session.
+ * @param owner - exact session owner.
+ * @param id - target PTY identity.
+ * @returns Raw replay/live output plus direct input and resize operations.
+ */
+attach(owner: Agent, id: TerminalSessionId): TerminalInteractiveAttachment
+
+/**
  * Read one bounded scrollback page from an owned session.
  * @param owner - exact session owner.
  * @param id - target PTY identity.
@@ -180,5 +214,5 @@ list(owner: Agent): TerminalSessionSnapshot[]
 
 Types: [Agent](core.md)
 
-Source: [`packages/terminal/terminal/src/index.ts:105`](../../packages/terminal/terminal/src/index.ts)
+Source: [`packages/terminal/terminal/src/index.ts:110`](../../packages/terminal/terminal/src/index.ts)
 <!-- END GENERATED cordis-surface -->

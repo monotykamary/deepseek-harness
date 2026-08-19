@@ -4,6 +4,7 @@
  * @module @monotykamary/dsh-terminal-bash
  */
 
+import { userInfo } from 'node:os'
 import { Context } from '@monotykamary/cordis'
 import type { Agent } from '@monotykamary/dsh-agent'
 import type { Session, SessionEvent } from '@monotykamary/dsh-session'
@@ -55,6 +56,15 @@ function ensureSandboxModeFence(ctx: Context, owner: Agent): void {
 function childEnvironment(spec: TerminalBackendSpawnSpec): Record<string, string> {
   // The subprocess provider supplies its own scrubbed ambient base; these are
   // deliberate terminal-specific overrides layered after it.
+  if (spec.interactive === true) {
+    return {
+      TERM: 'xterm-256color',
+      COLORTERM: 'truecolor',
+      DSH_SHELL: '1',
+      DSH_SESSION_ID: spec.owner.id,
+      DSH_PTY_SESSION_ID: spec.sessionId,
+    }
+  }
   return {
     TERM: 'dumb',
     PAGER: 'cat',
@@ -71,8 +81,26 @@ function childEnvironment(spec: TerminalBackendSpawnSpec): Record<string, string
   }
 }
 
-function spawnArgv(ctx: Context, config: ResolvedConfig, policy: SandboxExecutionPolicy): string[] {
-  const argv = [config.shellPath, ...config.shellArgs]
+function resolveInteractiveShell(config: ResolvedConfig): string {
+  if (config.interactiveShellPath !== undefined) return config.interactiveShellPath
+  try {
+    const shell = userInfo().shell
+    if (shell !== null && shell.length > 0) return shell
+  } catch (_userDatabaseUnavailable) {
+    // The configured model shell remains the deterministic fallback when the host has no user database entry.
+  }
+  return process.env.SHELL ?? config.shellPath
+}
+
+function spawnArgv(
+  ctx: Context,
+  config: ResolvedConfig,
+  policy: SandboxExecutionPolicy,
+  interactive: boolean,
+): string[] {
+  const argv = interactive
+    ? [resolveInteractiveShell(config), ...(config.interactiveShellArgs ?? [])]
+    : [config.shellPath, ...config.shellArgs]
   if (policy.mode === 'danger-full-access') return argv
   const sandbox = ctx.get('sandbox')
   if (sandbox === undefined) {
@@ -114,7 +142,8 @@ export class BashTerminalBackend implements TerminalBackend {
     private readonly createSession: (
       terminal: SubprocessTerminalHandle,
       config: ResolvedConfig,
-    ) => LocalPtySession = (terminal, config) => new LocalPtySession(terminal, config),
+      mode: 'controlled' | 'interactive',
+    ) => LocalPtySession = (terminal, config, mode) => new LocalPtySession(terminal, config, mode),
   ) {
     this.type = config.backendType
   }
@@ -123,18 +152,20 @@ export class BashTerminalBackend implements TerminalBackend {
     spec.signal?.throwIfAborted()
     ensureSandboxModeFence(this.ctx, spec.owner)
     const policy = this.ctx.sandboxPolicy.resolve({ session: spec.owner.session })
-    const argv = spawnArgv(this.ctx, this.config, policy)
+    const mode = spec.interactive === true ? 'interactive' : 'controlled'
+    const argv = spawnArgv(this.ctx, this.config, policy, spec.interactive === true)
     if (argv[0] === undefined) throw new Error('terminal-bash: sandbox returned empty argv')
     const terminal = await this.spawnTerminal({
       argv,
       cwd: spec.cwd ?? policy.workspaceRoot,
       env: childEnvironment(spec),
-      rows: this.config.rows,
-      cols: this.config.cols,
+      terminalType: mode === 'interactive' ? 'xterm-256color' : 'dumb',
+      rows: spec.rows ?? this.config.rows,
+      cols: spec.cols ?? this.config.cols,
       graceMs: this.config.disposeGraceMs,
       signal: spec.signal,
     })
-    const session = this.createSession(terminal, this.config)
+    const session = this.createSession(terminal, this.config, mode)
     try {
       await initializeSession(session, spec.signal)
       return session

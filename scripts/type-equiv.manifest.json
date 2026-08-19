@@ -977,6 +977,11 @@
     },
     {
       "doc": "docs/subsystems/terminal.md",
+      "symbol": "TerminalInteractiveAttachment",
+      "source": "packages/terminal/terminal/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/terminal.md",
       "symbol": "TerminalSendOperation",
       "source": "packages/terminal/terminal/src/types.ts"
     },
@@ -1523,6 +1528,11 @@
     {
       "doc": "docs/subsystems/subprocess.md",
       "symbol": "SubprocessOutcome",
+      "source": "packages/subprocess/subprocess/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subprocess.md",
+      "symbol": "SubprocessTerminalHandle",
       "source": "packages/subprocess/subprocess/src/types.ts"
     },
     {

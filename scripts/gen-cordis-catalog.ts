@@ -346,6 +346,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   SandboxMode: 'sandbox.md',
   SandboxPolicy: 'sandbox.md',
   TerminalBackend: 'terminal.md',
+  TerminalInteractiveAttachment: 'terminal.md',
   TerminalReadRequest: 'terminal.md',
   TerminalReadResult: 'terminal.md',
   TerminalSendOperation: 'terminal.md',

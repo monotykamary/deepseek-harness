@@ -2,11 +2,11 @@
 
 [English](README.md) | 中文
 
-外壳插件：三栏 AppFrame（拖动手柄与让步链）加 `ctx.layout` 面板几何服务；它注册到运行时拥有的 `root` slot，并声明 `sidebar`、`conversation`、`details` 和 `conversation.empty`。侧边栏的缩放边界是不可见命中条带，Details 边界则保留其浮动胶囊；让步期间只有 Details 会收缩。关闭的侧边栏仍保留 56px 控制栏；明确打开的 Details 偏好若无法保留中心栏下限，会收到 `sheet` 承载，而不是消失在派生的零内联宽度中。低于 1024px 时，AppFrame 会自动收起已打开的侧边栏；768–1023px 的平板范围保留轨道及其重新展开操作，低于 768px 时则用 portaled drawer 取代轨道，并显示一个与会话标题行对齐、无边框的 32px 面板操作。抽屉让会话占用完整 frame 宽度，并打开同一棵展开侧边栏树。该包还提供主题呈现器：它消费解析后的 `ctx.theme` 快照，并将其投影到 document（用 `html { color-scheme }` 驱动原生 UA 控件，依据当前配色方案设置 `body[data-ds-dark-theme]`，并将主题的别名 token 设为 body 上的内联变量，同时拥有一个 `<meta name="theme-color">`，其内容随计算后的 body 背景色更新）。在应用调色板和 token 后进行测量，可确保渲染后的背景成为唯一的颜色依据；呈现器在 dispose（资源释放）时会移除其自有的元数据节点，并一并清除其写入的其他全局状态。
+外壳插件：带可调整中心栏／底部拆分的三栏 AppFrame，加上 `ctx.layout` 面板几何服务；它注册到运行时拥有的 `root` slot，并声明 `sidebar`、`conversation`、`bottom-panel`、`details` 与 `shell.overlay`。侧边栏的缩放边界是不可见命中条带，Details 边界则保留其浮动胶囊；让步期间只有 Details 会收缩。关闭的侧边栏仍保留 56px 控制栏；明确打开的 Details 偏好若无法保留中心栏下限，会收到 `sheet` 承载，而不是消失在派生的零内联宽度中。低于 1024px 时，AppFrame 会自动收起已打开的侧边栏；768–1023px 的平板范围保留轨道及其重新展开操作，低于 768px 时则用 portaled drawer 取代轨道，并显示一个与会话标题行对齐、无边框的 32px 面板操作。抽屉让会话占用完整 frame 宽度，并打开同一棵展开侧边栏树。该包还提供主题呈现器：它消费解析后的 `ctx.theme` 快照，并将其投影到 document（用 `html { color-scheme }` 驱动原生 UA 控件，依据当前配色方案设置 `body[data-ds-dark-theme]`，并将主题的别名 token 设为 body 上的内联变量，同时拥有一个 `<meta name="theme-color">`，其内容随计算后的 body 背景色更新）。在应用调色板和 token 后进行测量，可确保渲染后的背景成为唯一的颜色依据；呈现器在 dispose（资源释放）时会移除其自有的元数据节点，并一并清除其写入的其他全局状态。
 
-AppFrame 始终挂载会话栏和详情栏；已连接 Session 通过 `SessionProvider` 渲染。布局 store 是瞬时状态，侧边栏以默认宽度启动，详情栏则保持关闭，且该 store 从不读写 `localStorage`。hero 和其他未选中状态也会将详情栏的渲染宽度派生为零，但不会改变存储的宽度偏好。AppFrame 会跨越这些状态保留最后一个非 blank 会话 id：首个会话保持关闭；显式打开详情栏的操作会使用约定默认宽度；返回同一会话时恢复其未改变的宽度；选择不同会话时，详情栏会在绘制前关闭。会话 owner share 携带 Details 是否请求打开，侧边栏 owner share 携带其栏／drawer 几何信息，Details owner share 为发货的 [`ui-workbench`](../ui-workbench/README.md) occupant 携带 `column | sheet` 与 layout 拥有的关闭回调；注册方通过标准钩子获取业务数据，并从各自的 inject 接口获取操作。
+AppFrame 始终挂载会话栏、零高度底部 host 与详情栏；已连接 Session 通过 `SessionProvider` 渲染。布局 store 是瞬时状态，侧边栏以默认宽度启动，详情栏和底部面板保持关闭，且该 store 从不读写 `localStorage`。底部面板首次以 280px 打开，可在 160px 到 520px 之间拖动，关闭后重新打开时恢复上次拖动高度，并会让出足够空间以保留 240px 的会话区域下限。hero 和其他未选中状态也会将详情栏的渲染宽度派生为零，但不会改变存储的宽度偏好。AppFrame 会跨越这些状态保留最后一个非 blank 会话 id：首个会话保持关闭；显式打开详情栏的操作会使用约定默认宽度；返回同一会话时恢复其未改变的宽度；选择不同会话时，详情栏会在绘制前关闭。会话 owner share 携带 Details 是否请求打开，侧边栏 owner share 携带其栏／drawer 几何信息，底部 owner share 携带让步后的高度与关闭回调，Details owner share 为发货的 [`ui-workbench`](../ui-workbench/README.md) occupant 携带 `column | sheet` 与 layout 拥有的关闭回调；注册方通过标准钩子获取业务数据，并从各自的 inject 接口获取操作。
 
-`/client` 导出表层包含插件主体（`apply`／`inject`）、`LayoutController` 和四个 owner-share 接口。AppFrame、面板 store 与让步求解器仍属于包内部。
+`/client` 导出表层包含插件主体（`apply`／`inject`）、`LayoutController` 和五个 owner-share 接口。AppFrame、面板 store 与让步求解器仍属于包内部。
 
 ## 模型体验
 
@@ -18,6 +18,6 @@ AppFrame 始终挂载会话栏和详情栏；已连接 Session 通过 `SessionPr
 
 ## 已知限制与暂缓事项
 
-- **面板几何信息是瞬时状态**：重新加载会恢复侧边栏默认值，并使详情栏保持关闭；在不同会话 id 之间切换同样会关闭详情栏，并忘记拖动后的宽度，而未选中表面会以零宽度渲染详情栏，但不会修改几何信息。
+- **面板几何信息是瞬时状态**：重新加载会恢复侧边栏默认值，并使详情栏和底部面板保持关闭；在不同会话 id 之间切换同样会关闭详情栏，并忘记拖动后的宽度，而未选中表面会以零宽度渲染详情栏，但不会修改几何信息。
 - **让步会派生零内联宽度，但不会改动偏好**：受限时，打开的 occupant 会收到 `sheet`；窗口变宽后，它会回到偏好的内联宽度。消费方禁止把 store 中的 Details 宽度当作实际宿主模式。
 - **挤压重排期间不提供滚动锚定**：布局变化可能移动读者的 viewport。

@@ -5,7 +5,9 @@
  * register() receives the factory and the browser derives its PropsStore
  * share from the return type.
  */
-import { defineStore, type EngineStoreHandle } from '@monotykamary/dsh-client-runtime/client'
+import {
+  defineStore, type EngineStoreHandle, type WorkspaceId,
+} from '@monotykamary/dsh-client-runtime/client'
 
 /** Browser-local order account for the hierarchy-free flat Session list. */
 export const FLAT_SESSION_ORDER_KEY = '__flat_session_order__'
@@ -17,6 +19,8 @@ export type SessionOrderBy = 'manual' | 'updated'
 
 /** Workspace browser viewing state persisted across surface remounts and reloads. */
 type WorkspaceViewState = {
+  /** Workspace whose Sessions remain visible, or null for every Workspace. */
+  workspaceScope: WorkspaceId | null
   groupBy: SessionGroupBy
   orderBy: SessionOrderBy
   /** Explicit zero-or-five-session state keyed by Workspace group identity. */
@@ -32,6 +36,7 @@ type WorkspaceViewState = {
  * return type); drift fails assignability at the defineStore call.
  */
 type WorkspaceViewActions = {
+  setWorkspaceScope: (draft: WorkspaceViewState, workspaceId: WorkspaceId | null) => void
   setGroupBy: (draft: WorkspaceViewState, mode: SessionGroupBy) => void
   setOrderBy: (draft: WorkspaceViewState, mode: SessionOrderBy) => void
   setGroupExpanded: (draft: WorkspaceViewState, key: string, expanded: boolean) => void
@@ -52,19 +57,22 @@ type WorkspaceViewActions = {
 export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState, WorkspaceViewActions> {
   return defineStore({
     init: (): WorkspaceViewState => ({
-      groupBy: 'workspace',
+      workspaceScope: null,
+      groupBy: 'flat',
       orderBy: 'updated',
       groupExpansion: {},
       sessionOrderByAccount: {},
       sessionUpdatedAtByAccount: {},
     }),
-    persist: 'dsh.workspace.view.v5',
+    persist: 'dsh.workspace.view.v6',
     actions: {
+      setWorkspaceScope: (d, workspaceId: WorkspaceId | null) => { d.workspaceScope = workspaceId },
       setGroupBy: (d, mode: SessionGroupBy) => { d.groupBy = mode },
       setOrderBy: (d, mode: SessionOrderBy) => { d.orderBy = mode },
       setGroupExpanded: (d, key: string, expanded: boolean) => { d.groupExpansion[key] = expanded },
       retainAccountKeys: (d, workspaceKeys: readonly string[]) => {
         const retained = new Set(workspaceKeys)
+        if (d.workspaceScope !== null && !retained.has(d.workspaceScope)) d.workspaceScope = null
         d.groupExpansion = Object.fromEntries(
           Object.entries(d.groupExpansion).filter(([key]) => retained.has(key)),
         )

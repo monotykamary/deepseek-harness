@@ -4,6 +4,7 @@
  * @module @monotykamary/dsh-terminal/types
  */
 
+import type { Readable } from 'node:stream'
 import type { Branded } from '@monotykamary/dsh-brand'
 import type { Agent } from '@monotykamary/dsh-agent'
 
@@ -48,6 +49,12 @@ export interface TerminalSpawnRequest {
   name?: string
   /** Optional initial working directory interpreted by the backend. */
   cwd?: string
+  /** Human-facing raw PTY that uses the user's native interactive shell presentation. */
+  interactive?: boolean
+  /** Optional initial row count chosen by an interactive Consumer. */
+  rows?: number
+  /** Optional initial column count chosen by an interactive Consumer. */
+  cols?: number
 }
 
 /** Fully identified request handed from the registry to a backend. */
@@ -122,6 +129,22 @@ export interface TerminalReadResult {
   truncated: boolean
 }
 
+/** Raw terminal attachment used by human-facing interactive consumers. */
+export interface TerminalInteractiveAttachment {
+  /** Retained raw PTY bytes followed by live output in delivery order. */
+  readonly output: Readable
+  /** Whether the retained raw prefix dropped older bytes. */
+  readonly replayTruncated: boolean
+  /** Write exact terminal input without implicit newline conversion. */
+  write(data: string): Promise<void>
+  /** Resize the underlying PTY viewport. */
+  resize(cols: number, rows: number): Promise<void>
+  /** Observe the current top-level process status. */
+  status(): TerminalSessionStatus
+  /** Idempotently release this attachment without closing the PTY session. */
+  close(): void
+}
+
 /** Result of delivering a signal to a verified foreground process group. */
 export interface TerminalSignalResult {
   /** True only after the backend delivered the signal. */
@@ -152,6 +175,8 @@ export interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
+  /** Open one raw terminal attachment. */
+  attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult
   /** Signal the verified foreground process group. */

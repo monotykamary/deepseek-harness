@@ -45,6 +45,8 @@ interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
+  /** Open one raw terminal attachment. */
+  attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult
   /** Signal the verified foreground process group. */
@@ -55,6 +57,30 @@ interface TerminalBackendSession {
   close(reason: string): Promise<void>
 }
 ```
+
+## 原始交互式 attachment
+
+面向人的 Consumer 可以附加到自己拥有且已发布的会话，而不进入面向模型的 send／就绪协议。attachment 会先提供有界原始 replay，再按顺序跟随实时 PTY 字节；它写入精确输入、转发 viewport resize、报告顶层状态，并在不终止进程的情况下 detach。多个 attachment 共享后端的 PTY 顺序，不会创建独立输入事务。
+
+```ts type-equiv
+/** Raw terminal attachment used by human-facing interactive consumers. */
+interface TerminalInteractiveAttachment {
+  /** Retained raw PTY bytes followed by live output in delivery order. */
+  readonly output: Readable
+  /** Whether the retained raw prefix dropped older bytes. */
+  readonly replayTruncated: boolean
+  /** Write exact terminal input without implicit newline conversion. */
+  write(data: string): Promise<void>
+  /** Resize the underlying PTY viewport. */
+  resize(cols: number, rows: number): Promise<void>
+  /** Observe the current top-level process status. */
+  status(): TerminalSessionStatus
+  /** Idempotently release this attachment without closing the PTY session. */
+  close(): void
+}
+```
+
+发货的 Host 为所有 Agent 挂载同一个 `ctx.terminals` 注册表与 shell 后端。[`dsh-terminal-web`](../../packages/terminal/terminal-web/README.md) 增加身份准入的 WebSocket framing，[`dsh-client-ui-terminal`](../../packages/client/ui-terminal/README.md) 则在独立的底部与右侧位置消费它。
 
 ## 发送与保留输出
 
@@ -144,6 +170,14 @@ hasOwnerActivity(owner: Agent): boolean
 startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation
 
 /**
+ * Open one exclusive raw attachment to an owned session.
+ * @param owner - exact session owner.
+ * @param id - target PTY identity.
+ * @returns Raw replay/live output plus direct input and resize operations.
+ */
+attach(owner: Agent, id: TerminalSessionId): TerminalInteractiveAttachment
+
+/**
  * Read one bounded scrollback page from an owned session.
  * @param owner - exact session owner.
  * @param id - target PTY identity.
@@ -180,5 +214,5 @@ list(owner: Agent): TerminalSessionSnapshot[]
 
 Types: [Agent](core.md)
 
-Source: [`packages/terminal/terminal/src/index.ts:105`](../../packages/terminal/terminal/src/index.ts)
+Source: [`packages/terminal/terminal/src/index.ts:110`](../../packages/terminal/terminal/src/index.ts)
 <!-- END GENERATED cordis-surface -->

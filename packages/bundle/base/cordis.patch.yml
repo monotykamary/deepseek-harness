@@ -144,6 +144,14 @@
         mode: !!js process.env.DSH_PERMISSION_MODE ?? 'workspace-write'
         workspaceRoot: !!js process.cwd()
 
+    # One exact-Agent terminal registry and shell backend serve model tools,
+    # browser attachments, and other Consumers across every preset.
+    - id: terminals
+      name: '@monotykamary/dsh-terminal'
+
+    - id: terminal-bash
+      name: '@monotykamary/dsh-terminal-bash'
+
     - id: bash-sandbox
       name: '@monotykamary/dsh-bash-sandbox'
       disabled: !!js process.platform === 'win32'

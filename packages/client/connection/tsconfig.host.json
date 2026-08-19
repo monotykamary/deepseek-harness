@@ -14,6 +14,7 @@
     "src/loopback-hostname.ts",
     "src/rpc-host.ts",
     "src/rpc.ts",
+    "src/upgrade.ts",
     "src/websocket-downlink.ts"
   ],
   "references": [

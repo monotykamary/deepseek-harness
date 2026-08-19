@@ -10,6 +10,7 @@ import { TerminalBackendCleanupError } from './types.ts'
 import type {
   TerminalBackend,
   TerminalBackendSession,
+  TerminalInteractiveAttachment,
   TerminalReadRequest,
   TerminalReadResult,
   TerminalSendOperation,
@@ -26,6 +27,7 @@ export type {
   TerminalBackend,
   TerminalBackendSession,
   TerminalBackendSpawnSpec,
+  TerminalInteractiveAttachment,
   TerminalReadRequest,
   TerminalReadResult,
   TerminalSendOperation,
@@ -56,6 +58,8 @@ export type TerminalErrorCode =
   | 'DUPLICATE_BACKEND'
   | 'DUPLICATE_NAME'
   | 'FOREIGN_SESSION'
+  | 'INTERACTIVE_ACTIVE'
+  | 'INTERACTIVE_ONLY'
   | 'NO_BACKEND'
   | 'NO_SESSION'
   | 'OWNER_NOT_LIVE'
@@ -86,6 +90,7 @@ interface SessionRecord {
   readonly type: string
   readonly session: TerminalBackendSession
   active: TerminalSendOperation | undefined
+  interactive: TerminalInteractiveAttachment | undefined
   closing: Promise<void> | undefined
 }
 
@@ -173,6 +178,7 @@ export class TerminalSessionService extends Service {
         type: request.type,
         ...request.name !== undefined ? { name: request.name } : {},
         ...request.cwd !== undefined ? { cwd: request.cwd } : {},
+        ...request.interactive !== undefined ? { interactive: request.interactive } : {},
         signal: backendSignal,
       })
       signal?.throwIfAborted()
@@ -189,6 +195,7 @@ export class TerminalSessionService extends Service {
         type: request.type,
         session,
         active: undefined,
+        interactive: undefined,
         closing: undefined,
       }
       this.sessions.set(sessionId, record)
@@ -243,6 +250,9 @@ export class TerminalSessionService extends Service {
   startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation {
     const record = this.expectOwned(owner, id)
     if (record.closing !== undefined) throw new Error(`PTY session ${id} is closing`)
+    if (record.interactive !== undefined) {
+      throw new TerminalError(`PTY session ${id} has an interactive attachment`, 'INTERACTIVE_ACTIVE')
+    }
     if (record.active !== undefined) throw new TerminalError(`PTY session ${id} already has an active send`, 'SEND_ACTIVE')
     const operation = record.session.startSend(request)
     record.active = operation
@@ -251,6 +261,38 @@ export class TerminalSessionService extends Service {
       () => { record.active = undefined },
     )
     return operation
+  }
+
+  /**
+   * Open one exclusive raw attachment to an owned session.
+   * @param owner - exact session owner.
+   * @param id - target PTY identity.
+   * @returns Raw replay/live output plus direct input and resize operations.
+   */
+  attach(owner: Agent, id: TerminalSessionId): TerminalInteractiveAttachment {
+    const record = this.expectOwned(owner, id)
+    if (record.closing !== undefined) throw new Error(`PTY session ${id} is closing`)
+    if (record.active !== undefined) throw new TerminalError(`PTY session ${id} already has an active send`, 'SEND_ACTIVE')
+    if (record.interactive !== undefined) {
+      throw new TerminalError(`PTY session ${id} already has an interactive attachment`, 'INTERACTIVE_ACTIVE')
+    }
+    const backend = record.session.attach()
+    let closed = false
+    const attachment: TerminalInteractiveAttachment = {
+      output: backend.output,
+      replayTruncated: backend.replayTruncated,
+      write: data => backend.write(data),
+      resize: (cols, rows) => backend.resize(cols, rows),
+      status: () => backend.status(),
+      close: () => {
+        if (closed) return
+        closed = true
+        backend.close()
+        if (record.interactive === attachment) record.interactive = undefined
+      },
+    }
+    record.interactive = attachment
+    return attachment
   }
 
   /**
@@ -288,6 +330,7 @@ export class TerminalSessionService extends Service {
       await record.closing
       return false
     }
+    record.interactive?.close()
     const closing = record.session.close(reason)
     record.closing = closing
     try {
@@ -455,6 +498,7 @@ export class TerminalSessionService extends Service {
 
   private async closeRecords(records: SessionRecord[], reason: string): Promise<void> {
     const results = await Promise.allSettled(records.map(async (record) => {
+      record.interactive?.close()
       const closing = record.closing ?? record.session.close(reason)
       record.closing = closing
       try {

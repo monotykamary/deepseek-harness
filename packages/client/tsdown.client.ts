@@ -2,13 +2,15 @@
  * Shared tsdown preset for UI plugin client bundles. Emits a closure-factory
  * artifact: the bundle calls window.__ModuleLoader__.load({id, factory})
  * and resolves externals through the injected require (loader module table —
- * cordis DI entities, no globals, no import map). CSS Modules are compiled by
- * lightningcss inside the bundle: importing `x.module.css` yields the
- * hashed class map, and the css text auto-injects a <style data-plugin="<id>">
+ * cordis DI entities, no globals, no import map). CSS Modules and explicit
+ * `*.global.css` files are compiled by lightningcss inside the bundle:
+ * importing `x.module.css` yields the hashed class map, while either kind auto-injects a <style data-plugin="<id>">
  * tag at factory execution (the loader removes plugin-owned tags on unload).
  * The virtual loader registers each real stylesheet as a watch dependency.
  */
+import { Buffer } from 'node:buffer'
 import { readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { existsSync } from 'node:fs'
 import { basename, dirname, relative, resolve as resolvePath, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,12 +19,13 @@ import { transform } from 'lightningcss'
 import { PLATFORM_MODULES } from './web/src/platform.ts'
 
 /**
- * Virtual-id wrapper keeping module CSS away from tsdown's own css pipeline
+ * Virtual-id wrapper keeping owned CSS away from tsdown's own css pipeline
  * (which requires @tsdown/css). The suffix matters: tsdown's guard matches ids
  * ending in `.css`, so the virtual id must not.
  */
 const CSS_VIRTUAL_PREFIX = '\0dsh-css:'
 const CSS_VIRTUAL_SUFFIX = '.mjs'
+const FONTSOURCE_CSS = /^@fontsource\/[a-z0-9-]+\/[a-z0-9-]+\.css$/
 
 /**
  * Wire/type layers a client bundle may inline: browser-safe contracts
@@ -42,6 +45,9 @@ const VENDORED_LIBRARY = /^@monotykamary\/(cosmokit|schemastery)(\/|$)/
 
 /** Generated descriptor/codec contribution with no shared runtime identity. */
 const GENERATED_REMOTE = /^@monotykamary\/dsh-[a-z0-9]+(?:-[a-z0-9]+)*\/remote$/
+
+/** Browser-safe terminal WebSocket constants and JSON control-frame types. */
+const TERMINAL_WEB_PROTOCOL = '@monotykamary/dsh-terminal-web/protocol'
 
 /**
  * Workspace mode replaces an empty config array with the root defaults. A
@@ -167,6 +173,28 @@ function clientLibraryConfig(
   }
 }
 
+async function inlineFontsourceAssets(
+  source: string,
+  stylesheet: string,
+): Promise<{ code: Buffer; assets: readonly string[] }> {
+  const woff2Only = source.replace(
+    /,\s*url\([^)]*\.woff\)\s*format\((?:'|")woff(?:'|")\)/g,
+    '',
+  )
+  const urls = [...woff2Only.matchAll(/url\((\.\/files\/[^)]+\.woff2)\)/g)]
+    .map(match => match[1])
+    .filter((value): value is string => value !== undefined)
+  let inlined = woff2Only
+  const assets: string[] = []
+  for (const url of new Set(urls)) {
+    const asset = resolvePath(dirname(stylesheet), url)
+    const bytes = await readFile(asset)
+    assets.push(asset)
+    inlined = inlined.replaceAll(`url(${url})`, `url(data:font/woff2;base64,${bytes.toString('base64')})`)
+  }
+  return { code: Buffer.from(inlined), assets }
+}
+
 function clientConfig(id: string, entry: string): UserConfig {
   return {
     name: `${id}/client`,
@@ -217,17 +245,20 @@ function clientConfig(id: string, entry: string): UserConfig {
         if (!source.startsWith('@monotykamary/')) return null
         if (CLIENT_EXTERNALS.includes(source)) return null // platform module: external wins
         if (VENDORED_LIBRARY.test(source)) return null // vendored library: inline, no shared identity
-        if (INLINE_SAFE.test(source) || GENERATED_REMOTE.test(source)) return null // wire contribution: inline is the point
+        if (INLINE_SAFE.test(source) || GENERATED_REMOTE.test(source) || source === TERMINAL_WEB_PROTOCOL) return null // wire contribution: inline is the point
         throw new Error(
           `client bundle purity: "${source}" is not a platform module (CLIENT_EXTERNALS), an inline-safe wire layer, or a generated /remote contribution — `
           + 'cross-plugin value imports are forbidden; collaborate through cordis services (type-only imports are erased and never reach this gate)',
         )
       },
     }, {
-      name: 'dsh-css-modules-inline',
+      name: 'dsh-css-inline',
       resolveId(source: string, importer: string | undefined) {
-        if (!source.endsWith('.module.css')) return null
-        const abs = importer !== undefined ? sourceAssetPath(source, importer) : source
+        const fontsource = FONTSOURCE_CSS.test(source)
+        if (!fontsource && !source.endsWith('.module.css') && !source.endsWith('.global.css')) return null
+        const abs = fontsource
+          ? createRequire(importer ?? import.meta.url).resolve(source)
+          : importer !== undefined ? sourceAssetPath(source, importer) : source
         return CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
       },
       async load(virtualId: string) {
@@ -235,11 +266,18 @@ function clientConfig(id: string, entry: string): UserConfig {
         const fileId = virtualId.slice(CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
         // The virtual id otherwise hides the physical stylesheet from Rolldown's watch graph.
         this.addWatchFile(fileId)
-        const source = await readFile(fileId)
+        const physicalSource = await readFile(fileId)
+        let source: Buffer = physicalSource
+        if (fileId.includes(`${sep}@fontsource${sep}`)) {
+          const fontsource = await inlineFontsourceAssets(physicalSource.toString(), fileId)
+          source = fontsource.code
+          for (const asset of fontsource.assets) this.addWatchFile(asset)
+        }
+        const modules = fileId.endsWith('.module.css')
         const { code, exports: cssExports } = transform({
           filename: fileId,
           code: source,
-          cssModules: { pattern: '[hash]_[local]' },
+          cssModules: modules ? { pattern: '[hash]_[local]' } : false,
           minify: true,
         })
         const classMap: Record<string, string> = {}

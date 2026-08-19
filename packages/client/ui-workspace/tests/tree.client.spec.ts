@@ -368,6 +368,25 @@ describe('deriveSearchResults', () => {
     expect(result.items).toEqual([])
   })
 
+  it('applies Workspace membership before merging and limiting results', () => {
+    const alpha = summary('alpha-hit', 1)
+    alpha.displayTitle = 'Needle Alpha'
+    const beta = summary('beta-hit', 2)
+    beta.displayTitle = 'Needle Beta'
+    const workspaces = [workspace('alpha', ['alpha-hit']), workspace('beta', ['beta-hit'])]
+    const result = deriveSearchResults(
+      list(alpha, beta),
+      workspaces,
+      'needle',
+      noArchive,
+      { items: [{ sessionId: beta.id, snippet: 'needle in beta' }], hasMore: false },
+      1,
+      wid('alpha'),
+    )
+    expect(result.items.map(item => item.id)).toEqual([alpha.id])
+    expect(result.hasMore).toBe(false)
+  })
+
   it('uses the supplied cap and preserves either local overflow or backend hasMore', () => {
     const rows = Array.from({ length: 5 }, (_, index) => {
       const item = summary(`s-${String(index).padStart(2, '0')}`, index)
@@ -401,10 +420,12 @@ describe('deriveSearchResults', () => {
 })
 
 describe('createWorkspaceViewStore', () => {
-  it('stores grouping, ordering, Workspace expansion, and recent-session view order', () => {
+  it('stores the fixed-list defaults, Workspace scope, expansion, and recent-session view order', () => {
     const store = createWorkspaceViewStore().create()
-    expect(store.getSnapshot().groupBy).toBe('workspace')
+    expect(store.getSnapshot().workspaceScope).toBeNull()
+    expect(store.getSnapshot().groupBy).toBe('flat')
     expect(store.getSnapshot().orderBy).toBe('updated')
+    store.actions.setWorkspaceScope(wid('alpha'))
     store.actions.setGroupBy('flat')
     store.actions.setOrderBy('updated')
     store.actions.setGroupExpanded('alpha', true)
@@ -412,6 +433,7 @@ describe('createWorkspaceViewStore', () => {
     store.actions.setSessionOrder('alpha', ['one', 'two'])
     expect(store.getSnapshot().groupBy).toBe('flat')
     expect(store.getSnapshot()).toMatchObject({
+      workspaceScope: wid('alpha'),
       orderBy: 'updated',
       groupExpansion: { alpha: true },
       sessionOrderByAccount: { alpha: ['one', 'two'] },
@@ -421,6 +443,7 @@ describe('createWorkspaceViewStore', () => {
 
   it('removes view state outside the retained Workspace key set', () => {
     const store = createWorkspaceViewStore().create()
+    store.actions.setWorkspaceScope(wid('deleted'))
     store.actions.setGroupExpanded('', true)
     store.actions.setGroupExpanded('alpha', true)
     store.actions.setGroupExpanded('deleted', true)
@@ -430,6 +453,7 @@ describe('createWorkspaceViewStore', () => {
     store.actions.retainAccountKeys(['', 'alpha'])
 
     const snapshot = store.getSnapshot()
+    expect(snapshot.workspaceScope).toBeNull()
     expect(snapshot.groupExpansion).toEqual({ '': true, alpha: true })
     expect(snapshot.sessionOrderByAccount).toEqual({ alpha: ['alpha-session'] })
     expect(snapshot.sessionUpdatedAtByAccount).toEqual({ alpha: { 'alpha-session': 2 } })

@@ -36,4 +36,4 @@ Per-file coverage pins the workbench store, presentation projection, service, em
 
 ## Consequences
 
-The Details region is an additive, HMR-safe plugin host; Inspect, loaded mutation Changes, and the separately owned Files feature coexist without coupling their data. The panel has one discoverable entry gesture even when no feature tab is open, and compact users can reach the same tabs without sacrificing Chat width. The cost is another client plugin and service plus per-session transient tab state. Interactive Terminal, Preview, Agents, and Git Diff remain separate feature work rather than placeholder tabs.
+The Details region is an additive, HMR-safe plugin host; Inspect, loaded mutation Changes, and the separately owned Files feature coexist without coupling their data. The panel has one discoverable entry gesture even when no feature tab is open, and compact users can reach the same tabs without sacrificing Chat width. The cost is another client plugin and service plus per-session transient tab state. Interactive Terminal and Files register as separate feature packages; Preview, Agents, and Git Diff remain separate feature work rather than placeholder tabs.

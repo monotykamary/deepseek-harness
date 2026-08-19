@@ -36,4 +36,4 @@ Layout 通过 Details owner share 传入 `column` 或 `sheet`。空间足够时�
 
 ## Consequences
 
-Details 区域成为可叠加且 HMR 安全的插件宿主；Inspect、已载入变更 Changes 与独立拥有的 Files 功能可以共存，而无需耦合其数据。即使没有打开任何功能标签页，面板也有一个可发现的入口手势；紧凑界面的用户可以访问相同标签页，且不会损失 Chat 宽度。代价是增加一个 client 插件与服务，以及每 Session 的临时标签状态。交互式 Terminal、Preview、Agents 与 Git Diff 仍是独立功能工作，而不是占位标签页。
+Details 区域成为可叠加且 HMR 安全的插件宿主；Inspect、已载入变更 Changes 与独立拥有的 Files 功能可以共存，而无需耦合其数据。即使没有打开任何功能标签页，面板也有一个可发现的入口手势；紧凑界面的用户可以访问相同标签页，且不会损失 Chat 宽度。代价是增加一个 client 插件与服务，以及每 Session 的临时标签状态。交互式 Terminal 与 Files 以独立功能包注册；Preview、Agents 与 Git Diff 仍是独立功能工作，而不是占位标签页。

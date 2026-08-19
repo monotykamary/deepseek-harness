@@ -1,3 +1,4 @@
+import { PassThrough } from 'node:stream'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@monotykamary/cordis'
 import { CallId } from '@monotykamary/dsh-llm'
@@ -112,6 +113,18 @@ class StubPtySession implements TerminalBackendSession {
 
   constructor(mode: StubMode) {
     this.mode = mode
+  }
+
+  attach() {
+    const output = new PassThrough()
+    return {
+      output,
+      replayTruncated: false,
+      write: async () => {},
+      resize: async () => {},
+      status: () => this.status(),
+      close: () => { output.destroy() },
+    }
   }
 
   startSend(request: TerminalSendRequest): TerminalSendOperation {

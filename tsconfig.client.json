@@ -64,6 +64,7 @@
     { "path": "./packages/test-support/client-runtime" },
     { "path": "./packages/client/ui-layout" },
     { "path": "./packages/client/ui-workbench" },
+    { "path": "./packages/client/ui-terminal" },
     { "path": "./packages/client/ui-files" },
     { "path": "./packages/client/ui-command-palette" },
     { "path": "./packages/client/ui-sidebar" },

@@ -30,16 +30,83 @@
 }
 
 .centerCol {
+  position: relative;
   min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+.conversationHost {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.bottomPanelHost {
+  min-width: 0;
+  min-height: 0;
+  flex: none;
+  overflow: hidden;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+  transition: height var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.frame[data-bottom-collapsed] .bottomPanelHost {
+  border-top: none;
+}
+
+.bottomHandle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.bottomHandle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 32px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l3);
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.bottomPanelHost:hover + .bottomHandle::after,
+.bottomHandle:hover::after,
+.bottomHandle[data-dragging='true']::after {
+  opacity: 1;
+}
+
+.frame[data-dragging] .bottomPanelHost {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottomPanelHost,
+  .bottomHandle::after {
+    transition: none;
+  }
+}
+
 .detailsCol {
   min-width: 0;
   overflow: hidden;
   border-left: 1px solid var(--dsw-alias-border-l2);
+}
+
+.detailsContent {
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* The details subtree stays mounted at zero width, so its border must not paint

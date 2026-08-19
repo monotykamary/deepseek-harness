@@ -16,6 +16,14 @@ import { IconCheckOutline16 } from './icons/index.tsx'
 import { usePointerGrace } from './pointer-grace.ts'
 import css from './Menu.module.css'
 
+/** Independent trailing action rendered inside one selectable menu row. */
+export interface MenuItemAction {
+  /** Accessible name for the icon-only action. */
+  label: string
+  /** Visible action glyph. */
+  icon: ReactNode
+}
+
 /** Selectable row (optionally with a nested submenu). */
 export interface MenuItem {
   id: string
@@ -27,6 +35,8 @@ export interface MenuItem {
   danger?: boolean
   /** Nested card opened to the right on hover/focus. */
   submenu?: readonly MenuItem[]
+  /** Optional icon action that does not select the row. */
+  action?: MenuItemAction
 }
 
 /** Hairline between item groups (not selectable). */
@@ -64,6 +74,7 @@ const MEASURE_STYLE: CSSProperties = { visibility: 'hidden', left: 0, top: 0 }
  * @param props.selectedId - row shown as selected.
  * @param props.selectedIds - rows shown as selected when a menu contains independent option groups.
  * @param props.onSelect - row click callback (not called for disabled rows or submenu parents that only open children).
+ * @param props.onAction - optional trailing-action callback receiving the row id and live action button.
  * @param props.onClose - invoked on outside click or Escape.
  * @param props.align - list alignment against the anchor (default 'start').
  * @param props.side - open below (`bottom`, default) or above (`top`) the anchor.
@@ -87,7 +98,7 @@ const MEASURE_STYLE: CSSProperties = { visibility: 'hidden', left: 0, top: 0 }
  * by a hairline; they stay visible while the items above scroll.
  * @returns anchor wrapper with the conditional list.
  */
-export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, onClose, align = 'start', side = 'bottom', portal = false, closeOnPointerLeave = false, dense = false, compact = false, getAnchorRect, footer, className }: {
+export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, onAction, onClose, align = 'start', side = 'bottom', portal = false, closeOnPointerLeave = false, dense = false, compact = false, getAnchorRect, footer, className }: {
   open: boolean
   anchor: ReactNode
   items: readonly MenuEntry[]
@@ -95,6 +106,7 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
   selectedId?: string | undefined
   selectedIds?: readonly string[] | undefined
   onSelect: (id: string) => void
+  onAction?: (id: string, target: HTMLElement) => void
   onClose: () => void
   align?: 'start' | 'end'
   side?: 'bottom' | 'top' | 'right'
@@ -219,7 +231,12 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
         <button
           type="button"
           role="menuitem"
-          className={clsx(css.item, selected && css.selected, entry.danger === true && css.danger)}
+          className={clsx(
+            css.item,
+            entry.action !== undefined && css.itemWithAction,
+            selected && css.selected,
+            entry.danger === true && css.danger,
+          )}
           disabled={entry.disabled}
           aria-haspopup={hasSub ? 'menu' : undefined}
           aria-expanded={hasSub ? subOpen : undefined}
@@ -237,6 +254,20 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
           {/* Selection marker is a trailing check (figma .Menu_cell), not a fill. */}
           {selected && <IconCheckOutline16 className={css.check} />}
         </button>
+        {entry.action !== undefined && (
+          <button
+            type="button"
+            role="menuitem"
+            className={css.itemAction}
+            aria-label={entry.action.label}
+            onClick={(event) => {
+              event.stopPropagation()
+              onAction?.(entry.id, event.currentTarget)
+            }}
+          >
+            {entry.action.icon}
+          </button>
+        )}
         {subOpen && entry.submenu !== undefined && (
           <div className={clsx(css.submenu, compact && css.compactList)} role="menu">
             {entry.submenu.map(sub => (

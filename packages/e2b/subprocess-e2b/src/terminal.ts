@@ -311,6 +311,14 @@ export class E2BTerminalHandle implements SubprocessTerminalHandle {
   }
 
   /** @inheritdoc */
+  resize(cols: number, rows: number): Promise<void> {
+    return this.trackOperation(async (signal) => {
+      if (this.topLevelExited) throw new Error('terminal process has exited')
+      await this.sandbox.pty.resize(this.pid, { cols, rows }, { signal })
+    })
+  }
+
+  /** @inheritdoc */
   inspectForeground(): Promise<SubprocessTerminalForeground | undefined> {
     return this.trackOperation(signal => this.inspectForegroundOnce(signal))
   }

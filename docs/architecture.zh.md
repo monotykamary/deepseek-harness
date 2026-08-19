@@ -116,6 +116,7 @@ seam 正是替换一个提供方就能改变整个产品的原因。文件系统
 | 让某个会话拥有不同的能力集合 | 组装一个 agent preset；其中的服务行需要 `isolate` realm |
 | 添加 shell 执行 | 注册 `ctx.shell` 后端；本地后端通过 `ctx.subprocess` spawn 进程 |
 | 添加持久化终端执行 | 注册 `ctx.terminals` 后端和 `dsh-tool-terminal` |
+| 添加浏览器终端 Consumer | 注册受信任的 Connection upgrade，并向 `bottom-panel` 或 `workbench.surface` 贡献内容；发货组合是 `dsh-terminal-web` 与 `dsh-client-ui-terminal` |
 | 添加用户命令 | 在 `ctx.commands` 上注册；它无需模型轮次即可分派 |
 | 添加后台工作 | 在 `ctx.jobs` 上注册；`job_*` 工具负责收集或停止 |
 | 添加文件系统访问或策略 | 注册 `ctx.fs` 提供方，或监听 `fs/*` 事件 |

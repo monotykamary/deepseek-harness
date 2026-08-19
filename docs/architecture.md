@@ -112,6 +112,7 @@ New behavior attaches to a documented extension point. Changing the loop itself 
 | Give one session a different capability set | compose an agent preset; a service row there needs an `isolate` realm |
 | Add shell execution | register a `ctx.shell` backend; the local one spawns through `ctx.subprocess` |
 | Add persistent terminal execution | register a `ctx.terminals` backend plus `dsh-tool-terminal` |
+| Add a browser terminal Consumer | register a trusted Connection upgrade and contribute to `bottom-panel` or `workbench.surface`; `dsh-terminal-web` and `dsh-client-ui-terminal` are the shipped pair |
 | Add a human command | register on `ctx.commands`; it dispatches without a model turn |
 | Add background work | register on `ctx.jobs`; `job_*` tools collect or stop it |
 | Add filesystem access or policy | register a `ctx.fs` provider or listen to `fs/*` events |

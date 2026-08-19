@@ -14,6 +14,7 @@ import {
 import { bridge, type FetchHandler } from './http-bridge.ts'
 import { assertTrustedAuthority, isTrustedApiRequest } from './api-request-trust.ts'
 import { API_PATH } from './api-path.ts'
+import { rejectWebSocketUpgrade } from './websocket-downlink.ts'
 import type {
   ConnectionRpcEndpointMatcher,
   ConnectionRpcHandler,
@@ -21,6 +22,7 @@ import type {
   HostConnectionHandle,
   HostConnectionRpc,
 } from './rpc.ts'
+import type { ConnectionUpgradeHandler } from './upgrade.ts'
 
 const INVALID_REQUEST_RPC_ID = RpcId('invalid-request')
 const CHANNEL_PATTERN = /^\/[A-Za-z0-9._~-]+$/
@@ -72,6 +74,15 @@ export class HostConnectionService extends Service implements HostConnectionHand
   addTrustedAuthority(authority: string): void {
     assertTrustedAuthority(authority)
     this.trustedHosts.push(authority)
+  }
+
+  /** Register one exact trusted WebSocket upgrade in the calling fiber. */
+  upgrade(
+    path: string,
+    handler: ConnectionUpgradeHandler,
+    options: ConnectionRpcHandlerOptions,
+  ): () => Promise<void> {
+    return this.registerUpgrade(this.ctx, path, handler, options)
   }
 
   /** Generic channel registry scoped to the Context reading this service. */
@@ -134,6 +145,36 @@ export class HostConnectionService extends Service implements HostConnectionHand
       () => owner.webServer.register(route),
       `client-connection: ${channel} rpc channel`,
     )
+  }
+
+  private registerUpgrade(
+    owner: Context,
+    path: string,
+    handler: ConnectionUpgradeHandler,
+    options: ConnectionRpcHandlerOptions,
+  ): () => Promise<void> {
+    assertUpgradePath(path)
+    const trustedHosts = options.authority === 'loopback' ? [] : this.trustedHosts
+    return owner.effect(() => owner.webServer.registerUpgrade({
+      path,
+      handler: async (request, socket, head) => {
+        if (!isTrustedApiRequest(request, trustedHosts)) {
+          rejectWebSocketUpgrade(socket)
+          return
+        }
+        const identity = owner.get('identity')
+        if (identity === undefined) {
+          await handler(request, socket, head, { owner: null, operator: false })
+          return
+        }
+        const admission = identity.admit(request, socket)
+        if (admission === undefined) {
+          rejectWebSocketUpgrade(socket, 401, 'unauthenticated')
+          return
+        }
+        await identity.runWith(admission, () => handler(request, socket, head, admission))
+      },
+    }), `client-connection: ${path} WebSocket upgrade`)
   }
 
   private registerInterceptor(
@@ -237,6 +278,20 @@ function errorResponse(rpcId: RpcIdType, error: RpcError): Response {
 function fullResponse(rpcId: RpcIdType, result: RpcServerResponse['result']): Response {
   const body: RpcServerResponse = { type: 'server-response', rpcId, result }
   return Response.json(body)
+}
+
+function assertUpgradePath(path: string): void {
+  let parsed: URL
+  try {
+    parsed = new URL(path, 'http://connection.invalid')
+  } catch {
+    throw new Error(`connection: invalid WebSocket path ${JSON.stringify(path)}`)
+  }
+  const segments = parsed.pathname.slice(1).split('/')
+  if (!path.startsWith('/') || parsed.pathname !== path || segments.some(segment =>
+    segment === '' || segment === '.' || segment === '..' || !ENDPOINT_SEGMENT_PATTERN.test(segment))) {
+    throw new Error(`connection: invalid WebSocket path ${JSON.stringify(path)}`)
+  }
 }
 
 function assertChannel(channel: string): void {

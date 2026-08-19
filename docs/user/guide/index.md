@@ -30,6 +30,14 @@ Start a session and send:
 
 The agent can read and edit workspace files, run commands, delegate work, and maintain a plan. The Web UI asks before operations that require approval under the active permission policy.
 
+## Use interactive terminals
+
+Open a Session, then use **Toggle bottom panel** in the Session header to reveal a resizable terminal below the conversation. Closing this panel hides it without ending the shell; reopening it returns to the same terminal tab. Use **New terminal** for another persistent shell and **Kill terminal** when the process should end.
+
+Open the right panel and choose **Terminal** to run a separate terminal beside the conversation. On compact screens the right Workbench moves into a Sheet while the bottom terminal remains attached below the conversation.
+
+Use **Terminal settings** in either placement to select the theme, font or custom font family, font size, line height, ligatures, color emoji, and cursor blinking. These appearance choices apply to both placements and stay in the current browser profile.
+
 ## Continue
 
 - [Configure models](./providers.md)

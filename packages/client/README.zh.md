@@ -22,6 +22,7 @@ dsh web GUI 的浏览器侧：shell 启动、浏览器与宿主通信、共享 U
 | [`ui-layout/`](ui-layout/README.md) | 排列应用的主要区域。 |
 | [`ui-workbench/`](ui-workbench/README.md) | 承载由插件注册的标签式右侧面板视图。 |
 | [`ui-files/`](ui-files/README.md) | 在 Workbench 中浏览并编辑 Session 授权的工作区文件。 |
+| [`ui-terminal/`](ui-terminal/README.md) | 在右侧 Workbench 与底部面板中承载 patched xterm.js 会话。 |
 | [`ui-sidebar/`](ui-sidebar/README.md) | 展示工作区与会话导航。 |
 | [`ui-workspace/`](ui-workspace/README.md) | 提供工作区选择与创建界面。 |
 | [`ui-conversation/`](ui-conversation/README.md) | 展示当前对话及其输入界面。 |
