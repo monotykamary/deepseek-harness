@@ -45,7 +45,7 @@ interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
-  /** Open one raw terminal attachment. */
+  /** Open one raw terminal viewer; concurrent viewers receive independent replay and live output. */
   attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult
@@ -60,10 +60,10 @@ interface TerminalBackendSession {
 
 ## 原始交互式 attachment
 
-面向人的 Consumer 可以附加到自己拥有且已发布的会话，而不进入面向模型的 send／就绪协议。attachment 会先提供有界原始 replay，再按顺序跟随实时 PTY 字节；它写入精确输入、转发 viewport resize、报告顶层状态，并在不终止进程的情况下 detach。多个 attachment 共享后端的 PTY 顺序，不会创建独立输入事务。
+面向人的 Consumer 可以附加到自己拥有且已发布的会话，而不进入面向模型的 send／就绪协议。每个查看方都会先收到有界原始 replay，再独立跟随实时 PTY 字节。所有查看方的输入保持有序，最近发生交互的查看方拥有共享 viewport 尺寸；该查看方 detach 后会恢复最近剩余查看方的网格，而不会终止进程。多个查看方不会创建独立输入事务。
 
 ```ts type-equiv
-/** Raw terminal attachment used by human-facing interactive consumers. */
+/** One independently disposable viewer of a human-facing raw terminal. */
 interface TerminalInteractiveAttachment {
   /** Retained raw PTY bytes followed by live output in delivery order. */
   readonly output: Readable
@@ -170,7 +170,7 @@ hasOwnerActivity(owner: Agent): boolean
 startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation
 
 /**
- * Open one exclusive raw attachment to an owned session.
+ * Open one independently disposable raw viewer of an owned session.
  * @param owner - exact session owner.
  * @param id - target PTY identity.
  * @returns Raw replay/live output plus direct input and resize operations.

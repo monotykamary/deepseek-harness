@@ -129,7 +129,7 @@ export interface TerminalReadResult {
   truncated: boolean
 }
 
-/** Raw terminal attachment used by human-facing interactive consumers. */
+/** One independently disposable viewer of a human-facing raw terminal. */
 export interface TerminalInteractiveAttachment {
   /** Retained raw PTY bytes followed by live output in delivery order. */
   readonly output: Readable
@@ -175,7 +175,7 @@ export interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
-  /** Open one raw terminal attachment. */
+  /** Open one raw terminal viewer; concurrent viewers receive independent replay and live output. */
   attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult

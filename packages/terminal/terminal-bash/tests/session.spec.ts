@@ -176,31 +176,65 @@ describe('LocalPtySession readiness and output', () => {
     await session.close('test complete')
   })
 
-  it('replays bounded raw bytes and gives one attachment exact input and resize ownership', async () => {
+  it('fans replay and live output to viewers while the latest input owner controls size', async () => {
     const terminal = new FakeTerminal()
     const session = new LocalPtySession(terminal, config({ interactiveReplayMaxBytes: 4 }))
     terminal.emitData('abcdef')
 
-    const attachment = session.attach()
-    expect(attachment.replayTruncated).toBe(true)
-    expect((await nextOutput(attachment.output)).toString()).toBe('cdef')
-    await attachment.write('printf hi')
-    await attachment.resize(132, 43)
-    expect(terminal.writes).toEqual(['printf hi'])
-    expect(terminal.resizes).toEqual([{ cols: 132, rows: 43 }])
-    expect(() => session.attach()).toThrow(expect.objectContaining({ code: 'INTERACTIVE_ACTIVE' }))
+    const first = session.attach()
+    const second = session.attach()
+    expect(first.replayTruncated).toBe(true)
+    expect(second.replayTruncated).toBe(true)
+    expect((await nextOutput(first.output)).toString()).toBe('cdef')
+    expect((await nextOutput(second.output)).toString()).toBe('cdef')
+
+    await first.resize(132, 43)
+    await second.resize(80, 24)
+    await first.write('first')
+    await second.write('second')
+    expect(terminal.writes).toEqual(['first', 'second'])
+    expect(terminal.resizes).toEqual([
+      { cols: 132, rows: 43 },
+      { cols: 80, rows: 24 },
+    ])
     expect(() => session.startSend({ text: 'blocked', submit: true }))
       .toThrow(expect.objectContaining({ code: 'INTERACTIVE_ACTIVE' }))
 
-    const live = once(attachment.output, 'data')
+    const firstLive = once(first.output, 'data')
+    const secondLive = once(second.output, 'data')
     terminal.emitData('!')
-    const liveEvents = await live as unknown[]
-    const liveBytes = liveEvents[0]
-    if (!(liveBytes instanceof Uint8Array)) throw new Error('live terminal event carried no bytes')
-    expect(Buffer.from(liveBytes).toString()).toBe('!')
-    attachment.close()
+    expect((await firstLive as unknown[])[0]).toEqual(Buffer.from('!'))
+    expect((await secondLive as unknown[])[0]).toEqual(Buffer.from('!'))
+
+    second.close()
+    await expect(second.write('closed')).rejects.toThrow('attachment is closed')
+    await expect(second.resize(90, 30)).rejects.toThrow('attachment is closed')
+    await vi.waitFor(() => {
+      expect(terminal.resizes.at(-1)).toEqual({ cols: 132, rows: 43 })
+    })
+    first.close()
     const successor = session.attach()
     successor.close()
+  })
+
+  it('drains input accepted before attachment close before terminating the PTY', async () => {
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config())
+    const attachment = session.attach()
+    const writeGate = Promise.withResolvers<undefined>()
+    terminal.write = async (data: string) => {
+      terminal.writes.push(data)
+      await writeGate.promise
+    }
+
+    const writing = attachment.write('accepted')
+    await vi.waitFor(() => { expect(terminal.writes).toEqual(['accepted']) })
+    const closing = session.close('test complete')
+    expect(terminal.kills).toEqual([])
+    writeGate.resolve(undefined)
+    await writing
+    await closing
+    expect(terminal.kills).toEqual(['SIGTERM'])
   })
 
   it('ends an interactive attachment after the terminal output drains', async () => {

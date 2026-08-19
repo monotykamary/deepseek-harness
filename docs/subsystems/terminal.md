@@ -45,7 +45,7 @@ interface TerminalBackendSession {
   readonly pid?: number
   /** Start one exclusive send operation. */
   startSend(request: TerminalSendRequest): TerminalSendOperation
-  /** Open one raw terminal attachment. */
+  /** Open one raw terminal viewer; concurrent viewers receive independent replay and live output. */
   attach(): TerminalInteractiveAttachment
   /** Read one bounded page from retained scrollback. */
   read(request: TerminalReadRequest): TerminalReadResult
@@ -60,10 +60,10 @@ interface TerminalBackendSession {
 
 ## Raw interactive attachments
 
-A human-facing Consumer can attach to an owned published session without entering the model-facing send/readiness protocol. The attachment starts with bounded raw replay, follows live PTY bytes in order, writes exact input, forwards viewport resize, reports top-level status, and detaches without killing the process. Multiple attachments share the backend’s PTY ordering; they do not create independent input transactions.
+A human-facing Consumer can attach to an owned published session without entering the model-facing send/readiness protocol. Every viewer starts with bounded raw replay and follows live PTY bytes independently. Input from all viewers is ordered, and the most recently interactive viewer owns the shared viewport size; detaching that viewer restores the latest remaining viewer’s grid without killing the process. Multiple viewers do not create independent input transactions.
 
 ```ts type-equiv
-/** Raw terminal attachment used by human-facing interactive consumers. */
+/** One independently disposable viewer of a human-facing raw terminal. */
 interface TerminalInteractiveAttachment {
   /** Retained raw PTY bytes followed by live output in delivery order. */
   readonly output: Readable
@@ -170,7 +170,7 @@ hasOwnerActivity(owner: Agent): boolean
 startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation
 
 /**
- * Open one exclusive raw attachment to an owned session.
+ * Open one independently disposable raw viewer of an owned session.
  * @param owner - exact session owner.
  * @param id - target PTY identity.
  * @returns Raw replay/live output plus direct input and resize operations.

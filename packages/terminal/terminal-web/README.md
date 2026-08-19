@@ -6,7 +6,7 @@ Host Consumer that exposes Agent-owned persistent terminals to the same-origin W
 
 ## Operations and framing
 
-A new socket starts with one JSON text handshake: `list`, `open`, `attach`, or `kill`. `open` creates a placement-named native interactive login shell in the selected Session cwd and forwards the requested initial grid; `list` returns only terminals owned by that browser placement. An attached socket carries UTF-8 terminal input as binary client frames, raw PTY output as binary Host frames, and `resize`, `kill`, `ready`, `exit`, `pong`, or failure controls as JSON text frames. Closing a socket detaches without killing the persistent process.
+A new socket starts with one JSON text handshake: `list`, `open`, `attach`, or `kill`. `open` creates a placement-named native interactive login shell in the selected Session cwd and forwards the requested initial grid; `list` returns only terminals owned by that browser placement. Any number of sockets may attach the same PTY: each receives bounded replay plus live output, input is ordered across viewers, and the most recently interactive viewer controls the shared PTY grid. An attached socket carries UTF-8 terminal input as binary client frames, raw PTY output as binary Host frames, and `resize`, `kill`, `ready`, `exit`, `pong`, or failure controls as JSON text frames. Closing a socket detaches only that viewer and does not terminate the persistent process.
 
 Output is combined into bounded short-window frames. A slow browser is disconnected before the WebSocket queue exceeds `maxBufferedBytes`; input size, handshake time, and PTY dimensions are bounded at the wire parser. Plugin disposal terminates accepted sockets, detaches their streams, and awaits queued terminal operations.
 
@@ -34,4 +34,4 @@ None; WebSocket input bypasses model requests.
 
 - Terminal bytes and attachments remain process-local; a Host restart ends every browser terminal.
 - The wire sends raw output without application-level compression.
-- One socket attaches one terminal; multiplexing occurs through independent sockets and UI tabs.
+- One socket attaches one terminal; sharing one PTY across viewers uses independent sockets rather than multiplexing several PTYs over one socket.

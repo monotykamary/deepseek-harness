@@ -1779,7 +1779,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'attach(owner: Agent, id: TerminalSessionId): TerminalInteractiveAttachment',
-        description: 'Open one exclusive raw attachment to an owned session.',
+        description: 'Open one independently disposable raw viewer of an owned session.',
         parameters: [{ name: 'owner', description: 'exact session owner.' }, { name: 'id', description: 'target PTY identity.' }],
         returns: 'Raw replay/live output plus direct input and resize operations.',
       },

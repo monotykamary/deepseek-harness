@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-该动态 Web 插件会在右侧 Workbench 与 layout 拥有的底部面板中放置交互式 xterm.js 终端。Session 标题栏按钮用于切换常驻底部面板；Workbench 启动器则会打开独立的右侧终端。每个位置只列出自己拥有的持久 Host 会话，在没有运行中会话时创建一个，并在面板关闭后仍保持活动 attachment 挂载。
+该动态 Web 插件会在右侧 Workbench 与 layout 拥有的底部面板中放置交互式 xterm.js 终端。Session 标题栏按钮用于切换常驻底部面板；Workbench 启动器则会打开独立的右侧终端。每个位置只列出自己拥有的持久 Host 会话，在没有运行中会话时创建一个，并在面板关闭后仍保持活动 attachment 挂载。同一个 Host 终端可以由多个浏览器页面查看和控制；输出会到达每个页面，输入活动则会转移共享 PTY 尺寸的所有权。
 
 工具栏提供终端标签、新建、终止、设置、重试和底部面板关闭操作。悬停终端标签时，状态点会替换为关闭控件；键盘焦点会显示相同操作。关闭操作会立即移除标签，同时 Host 在后台继续 teardown；Ctrl+D 等 shell EOF 会通过同一路径移除标签。标题栏使用 PanelBottom 控件，让面板未来可容纳其他内容；终端外观则在共享 modal 中打开，并使用紧凑的产品菜单与开关，而非浏览器原生控件。设置以 `dsh.terminal.preferences.v1` 保存在浏览器本地，并在两个位置之间实时共享：Harness、Tokyo Night、Catppuccin 与浅色调色板；内置的 Geist Mono、Fira Code、JetBrains Mono、Cascadia Code、Source Code Pro、IBM Plex Mono、Ubuntu Mono、Roboto Mono、Inconsolata、Hack 字体或自定义字体系列；字号；行高；按字体探测的连字；彩色表情符号；以及光标闪烁。旧版系统字体偏好会解析为内置 Geist Mono，因此渲染不依赖主机字体。
 

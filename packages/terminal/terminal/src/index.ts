@@ -90,7 +90,7 @@ interface SessionRecord {
   readonly type: string
   readonly session: TerminalBackendSession
   active: TerminalSendOperation | undefined
-  interactive: TerminalInteractiveAttachment | undefined
+  readonly interactive: Set<TerminalInteractiveAttachment>
   closing: Promise<void> | undefined
 }
 
@@ -195,7 +195,7 @@ export class TerminalSessionService extends Service {
         type: request.type,
         session,
         active: undefined,
-        interactive: undefined,
+        interactive: new Set(),
         closing: undefined,
       }
       this.sessions.set(sessionId, record)
@@ -250,7 +250,7 @@ export class TerminalSessionService extends Service {
   startSend(owner: Agent, id: TerminalSessionId, request: TerminalSendRequest): TerminalSendOperation {
     const record = this.expectOwned(owner, id)
     if (record.closing !== undefined) throw new Error(`PTY session ${id} is closing`)
-    if (record.interactive !== undefined) {
+    if (record.interactive.size > 0) {
       throw new TerminalError(`PTY session ${id} has an interactive attachment`, 'INTERACTIVE_ACTIVE')
     }
     if (record.active !== undefined) throw new TerminalError(`PTY session ${id} already has an active send`, 'SEND_ACTIVE')
@@ -264,7 +264,7 @@ export class TerminalSessionService extends Service {
   }
 
   /**
-   * Open one exclusive raw attachment to an owned session.
+   * Open one independently disposable raw viewer of an owned session.
    * @param owner - exact session owner.
    * @param id - target PTY identity.
    * @returns Raw replay/live output plus direct input and resize operations.
@@ -273,9 +273,6 @@ export class TerminalSessionService extends Service {
     const record = this.expectOwned(owner, id)
     if (record.closing !== undefined) throw new Error(`PTY session ${id} is closing`)
     if (record.active !== undefined) throw new TerminalError(`PTY session ${id} already has an active send`, 'SEND_ACTIVE')
-    if (record.interactive !== undefined) {
-      throw new TerminalError(`PTY session ${id} already has an interactive attachment`, 'INTERACTIVE_ACTIVE')
-    }
     const backend = record.session.attach()
     let closed = false
     const attachment: TerminalInteractiveAttachment = {
@@ -288,10 +285,10 @@ export class TerminalSessionService extends Service {
         if (closed) return
         closed = true
         backend.close()
-        if (record.interactive === attachment) record.interactive = undefined
+        record.interactive.delete(attachment)
       },
     }
-    record.interactive = attachment
+    record.interactive.add(attachment)
     return attachment
   }
 
@@ -330,7 +327,7 @@ export class TerminalSessionService extends Service {
       await record.closing
       return false
     }
-    record.interactive?.close()
+    for (const attachment of [...record.interactive]) attachment.close()
     const closing = record.session.close(reason)
     record.closing = closing
     try {
@@ -498,7 +495,7 @@ export class TerminalSessionService extends Service {
 
   private async closeRecords(records: SessionRecord[], reason: string): Promise<void> {
     const results = await Promise.allSettled(records.map(async (record) => {
-      record.interactive?.close()
+      for (const attachment of [...record.interactive]) attachment.close()
       const closing = record.closing ?? record.session.close(reason)
       record.closing = closing
       try {

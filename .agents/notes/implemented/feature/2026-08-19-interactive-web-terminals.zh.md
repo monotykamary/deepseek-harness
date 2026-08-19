@@ -12,7 +12,7 @@ Web UI 可以渲染已完成的终端样式 Tool 结果，却没有人与 PTY �
 
 `dsh-base` 挂载一个 Host `ctx.terminals` 注册表和 `terminal-bash` 后端。该注册表本就按确切拥有者 Agent 对每个会话与清理操作分键，因此所有 preset 都继承一个能力，而无需在 preset 子 realm 中发布服务实例。模型工具仍由 preset 贡献；浏览器使用不会增加 Tool 或模型可见输入。浏览器创建的 PTY 在所选 Session cwd 中启动，请求用户的原生 login shell 及其启动文件和提示符，通过 subprocess terminal type 与子进程环境声明 256 色 truecolor 支持，并使用保留的 `web-bottom-*` 或 `web-right-*` 名称。模型终端会话继续使用配置的受控 shell 与就绪 framing。浏览器传输会在每项 list／open／attach／kill 操作前解析获准的 Session owner，并拒绝附加这些 namespace 之外的会话。
 
-`dsh-client-connection` 公开 effect 拥有且仅限 Host 的 `upgrade()` 注册。它验证精确绝对路径，应用共享 Host／Origin 栅栏和可选身份权威，并把获准身份与原始 request／socket／head 交给协议拥有方。`dsh-terminal-web` 拥有 `/api/terminal`：第一条 JSON 文本帧选择一项操作；活动 socket 使用二进制帧传输 UTF-8 输入与 PTY 输出，并以 JSON 传输 resize／kill／status 控制。输出批处理、payload 上限、握手 deadline、WebSocket 缓冲字节上限、有序 attachment 操作和等待完成的 teardown 共同限制每条连接。
+`dsh-client-connection` 公开 effect 拥有且仅限 Host 的 `upgrade()` 注册。它验证精确绝对路径，应用共享 Host／Origin 栅栏和可选身份权威，并把获准身份与原始 request／socket／head 交给协议拥有方。`dsh-terminal-web` 拥有 `/api/terminal`：第一条 JSON 文本帧选择一项操作；活动 socket 使用二进制帧传输 UTF-8 输入与 PTY 输出，并以 JSON 传输 resize／kill／status 控制。输出批处理、payload 上限、握手 deadline、WebSocket 缓冲字节上限、有序 attachment 操作和等待完成的 teardown 共同限制每条连接。独立 socket 可以并发附加同一 PTY：后端会向每个查看方分发 replay 与实时字节、串行执行输入，并把 resize 所有权转移给最近发生交互的查看方，同时保留每个查看方的最新网格以供切换。
 
 `ui-layout` 在中心栏下声明 Session 作用域的 `bottom-panel`。其瞬时 store 控制 280px 首次打开默认值、记忆的 160–520px 拖动高度与 240px 会话区域下限。slot host 关闭后仍以零高度挂载，因此隐藏面板不会终止或分离 shell。`ui-terminal` 注册独立的底部与右侧 Workbench 位置，贡献通用的 PanelBottom Session 标题栏开关，并在两者之间共享浏览器本地外观偏好。其外观编辑器使用共享 modal、紧凑产品菜单与开关，而不是缩放不一致的浏览器原生控件。每个位置持有一个活动 attachment，并保留非活动进程。标签关闭会先移除 UI 状态，再等待 Host 清理；shell 退出会移除同一标签；显式新建和终止操作仍然可用。
 
@@ -22,7 +22,7 @@ xterm 实现改编自 localterm 修订版 `8de7394eb06cf562985d8f82d5a8145863cb8
 
 ## Verification
 
-包测试覆盖原生人类 shell 选择、受控模型 shell 保留、本地与 E2B provider 的终端 resize、就绪状态网格重放、原始 replay／attachment 生命周期、精确 Agent 授权、Connection upgrade 信任与清理、WebSocket framing／backpressure、浏览器协议解析、偏好持久化、面板操作、layout resize／让步，以及完整复制的 localterm 输出／连字回归套件。无密钥 Web 浏览器 journey 会启动发货 profile，通过真实底部与右侧 PTY 写入文件，在隐藏和重新打开底部面板时保留 shell 变量，修改终端设置，并验证紧凑宽度下的右侧 Sheet 与底部面板行为。普通 build 会机械检查已构建 client bundle，client CSS／纯度测试则覆盖全局 xterm 样式与唯一新增的 terminal protocol 内联例外。
+包测试覆盖原生人类 shell 选择、受控模型 shell 保留、本地与 E2B provider 的终端 resize、就绪状态网格重放、多查看方原始 replay／实时输出分发与 resize 切换、精确 Agent 授权、Connection upgrade 信任与清理、WebSocket framing／backpressure、浏览器协议解析、偏好持久化、面板操作、layout resize／让步，以及完整复制的 localterm 输出／连字回归套件。无密钥 Web 浏览器 journey 会启动发货 profile，通过真实底部与右侧 PTY 写入文件，在隐藏和重新打开底部面板时保留 shell 变量，证明隔离的第二个浏览器页面会附加同一 PTY 并观察该变量，修改终端设置，并验证紧凑宽度下的右侧 Sheet 与底部面板行为。普通 build 会机械检查已构建 client bundle，client CSS／纯度测试则覆盖全局 xterm 样式与唯一新增的 terminal protocol 内联例外。
 
 ## Alternatives considered
 

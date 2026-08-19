@@ -186,6 +186,14 @@ class LocalSendOperation implements TerminalSendOperation {
   }
 }
 
+interface InteractiveAttachmentState {
+  readonly output: PassThrough
+  cols?: number
+  rows?: number
+  activity: number
+  closed: boolean
+}
+
 /** Backend session wrapping one provider-owned terminal process. */
 export class LocalPtySession implements TerminalBackendSession {
   motd = ''
@@ -194,7 +202,10 @@ export class LocalPtySession implements TerminalBackendSession {
   private readonly sanitizer: TerminalSanitizer
   private readonly scrollback: BoundedTextBuffer
   private readonly rawReplay: BoundedByteBuffer
-  private interactive: { handle: TerminalInteractiveAttachment; output: PassThrough } | undefined
+  private readonly interactive = new Set<InteractiveAttachmentState>()
+  private interactiveResizeOwner: InteractiveAttachmentState | undefined
+  private interactiveActivity = 0
+  private interactiveOperations: Promise<void> = Promise.resolve()
   private readonly outputEnded = Promise.withResolvers<void>()
   private readonly completion: Promise<void>
   private statusValue: TerminalSessionStatus = { kind: 'running' }
@@ -270,7 +281,7 @@ export class LocalPtySession implements TerminalBackendSession {
     }
     if (this.closing) throw new Error('PTY session is closing')
     if (this.statusValue.kind === 'exited') throw new Error('PTY session has exited')
-    if (this.interactive !== undefined) throw new TerminalError('PTY session has an interactive attachment', 'INTERACTIVE_ACTIVE')
+    if (this.interactive.size > 0) throw new TerminalError('PTY session has an interactive attachment', 'INTERACTIVE_ACTIVE')
     if (this.active !== undefined) {
       const draining = this.activeWrite !== undefined
         ? ' or draining provider write'
@@ -307,28 +318,68 @@ export class LocalPtySession implements TerminalBackendSession {
     if (this.closing) throw new Error('PTY session is closing')
     if (this.statusValue.kind === 'exited') throw new Error('PTY session has exited')
     if (this.active !== undefined) throw new TerminalError('PTY session already has an active send', 'SEND_ACTIVE')
-    if (this.interactive !== undefined) {
-      throw new TerminalError('PTY session already has an interactive attachment', 'INTERACTIVE_ACTIVE')
-    }
     const replay = this.rawReplay.snapshot()
     const output = new PassThrough()
     if (replay.bytes.byteLength > 0) output.write(replay.bytes)
-    let closed = false
+    const state: InteractiveAttachmentState = {
+      output,
+      activity: ++this.interactiveActivity,
+      closed: false,
+    }
     const handle: TerminalInteractiveAttachment = {
       output,
       replayTruncated: replay.truncated,
-      write: data => this.terminal.write(data),
-      resize: (cols, rows) => this.terminal.resize(cols, rows),
-      status: () => this.statusValue,
-      close: () => {
-        if (closed) return
-        closed = true
-        if (this.interactive?.handle === handle) this.interactive = undefined
-        output.destroy()
+      write: (data) => {
+        if (state.closed || this.closing) return Promise.reject(new Error('PTY attachment is closed'))
+        return this.enqueueInteractive(async () => {
+          const ownerChanged = this.interactiveResizeOwner !== state
+          state.activity = ++this.interactiveActivity
+          this.interactiveResizeOwner = state
+          if (ownerChanged && state.cols !== undefined && state.rows !== undefined) {
+            await this.terminal.resize(state.cols, state.rows)
+          }
+          await this.terminal.write(data)
+        })
       },
+      resize: (cols, rows) => {
+        if (state.closed || this.closing) return Promise.reject(new Error('PTY attachment is closed'))
+        state.cols = cols
+        state.rows = rows
+        if (this.interactiveResizeOwner !== state) return Promise.resolve()
+        return this.enqueueInteractive(() => this.terminal.resize(cols, rows))
+      },
+      status: () => this.statusValue,
+      close: () => { this.closeInteractive(state) },
     }
-    this.interactive = { handle, output }
+    this.interactive.add(state)
+    this.interactiveResizeOwner ??= state
     return handle
+  }
+
+  private closeInteractive(state: InteractiveAttachmentState): void {
+    if (state.closed) return
+    state.closed = true
+    this.interactive.delete(state)
+    state.output.destroy()
+    if (this.interactiveResizeOwner === state) this.promoteInteractiveResizeOwner()
+  }
+
+  private enqueueInteractive(operation: () => Promise<void>): Promise<void> {
+    const result = this.interactiveOperations.then(operation)
+    this.interactiveOperations = result.then(() => undefined, () => undefined)
+    return result
+  }
+
+  private promoteInteractiveResizeOwner(): void {
+    let successor: InteractiveAttachmentState | undefined
+    for (const candidate of this.interactive) {
+      if (successor === undefined || candidate.activity > successor.activity) successor = candidate
+    }
+    this.interactiveResizeOwner = successor
+    if (successor?.cols === undefined || successor.rows === undefined) return
+    const { cols, rows } = successor
+    void this.enqueueInteractive(() => this.terminal.resize(cols, rows))
+      .catch((error: unknown) => { this.onTransportFailure(error) })
   }
 
   private async beginSend(operation: LocalSendOperation, request: TerminalSendRequest): Promise<void> {
@@ -425,7 +476,7 @@ export class LocalPtySession implements TerminalBackendSession {
 
   close(reason: string): Promise<void> {
     this.closing = true
-    this.interactive?.handle.close()
+    for (const attachment of [...this.interactive]) this.closeInteractive(attachment)
     if (this.closePromise !== undefined) return this.closePromise
     const closing = this.closeOnce(reason).catch((error: unknown) => {
       this.closePromise = undefined
@@ -439,14 +490,14 @@ export class LocalPtySession implements TerminalBackendSession {
   private readonly onTerminalData = (chunk: Buffer | Uint8Array | string): void => {
     const bytes = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk)
     this.rawReplay.append(bytes)
-    this.interactive?.output.write(bytes)
+    for (const attachment of this.interactive) attachment.output.write(bytes)
     this.onData(this.decoder.decode(bytes, { stream: true }))
   }
 
   private readonly onTerminalEnd = (): void => {
     this.onData(this.decoder.decode())
     this.appendOutput(this.sanitizer.flush())
-    this.interactive?.output.end()
+    for (const attachment of this.interactive) attachment.output.end()
     this.outputEnded.resolve()
   }
 
@@ -627,6 +678,7 @@ export class LocalPtySession implements TerminalBackendSession {
     // it as session_exit below, so an in-flight send is never mis-settled as
     // stdin_read/inferred_idle/timeout during the grace period.
     this.stopPolling()
+    await this.interactiveOperations
     try {
       await this.terminal.terminate()
     } catch (error: unknown) {

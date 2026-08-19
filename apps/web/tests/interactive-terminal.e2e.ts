@@ -19,11 +19,23 @@ const SEED_ID = 'interactive-terminal-web-e2e'
 const MODE = webSnapshotMode()
 
 async function openSeededSession(page: Page): Promise<void> {
+  const conversation = page.getByText('Browse the workspace files.', { exact: true })
   const group = page.locator('[role="treeitem"]').first()
   await group.waitFor({ timeout: 15_000 })
   if (await group.getAttribute('aria-expanded') !== 'true') await group.click()
-  await page.locator('[role="treeitem"]').nth(1).click()
-  await page.getByText('Browse the workspace files.', { exact: true }).waitFor({ timeout: 30_000 })
+  const sessionRow = page.locator('[role="treeitem"]').nth(1)
+  await Promise.any([
+    conversation.waitFor({ timeout: 30_000 }),
+    sessionRow.waitFor({ timeout: 30_000 }),
+  ])
+  if (!await conversation.isVisible()) await sessionRow.click()
+  await conversation.waitFor({ timeout: 30_000 })
+}
+
+async function restoreSeededSession(page: Page): Promise<void> {
+  await page.addInitScript((sessionId) => {
+    localStorage.setItem('dsh.sessions.current', JSON.stringify({ sessionId }))
+  }, SEED_ID)
 }
 
 function shellQuote(value: string): string {
@@ -45,6 +57,7 @@ function renderGolden(values: {
   readonly reopenedTabs: readonly string[]
   readonly settings: readonly string[]
   readonly bottomProof: string
+  readonly peerProof: string
   readonly rightProof: string
   readonly compactSide: string | null
   readonly compactBottomHeight: number
@@ -58,6 +71,7 @@ function renderGolden(values: {
     `- settings: ${values.settings.join(' → ')}`,
     `- reopened bottom tabs: ${values.reopenedTabs.join(' → ')}`,
     `- preserved shell variable: ${JSON.stringify(values.bottomProof)}`,
+    `- second browser shares PTY state: ${JSON.stringify(values.peerProof)}`,
     `- right terminal write: ${JSON.stringify(values.rightProof)}`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
     `- compact bottom panel height: ${String(values.compactBottomHeight)}px`,
@@ -76,6 +90,7 @@ describe('web e2e: interactive terminals', () => {
     await seedSession(scaffold, await readFile(SEED, 'utf8'), SEED_ID)
     browser = await chromium.launch()
     page = await newEnglishPage(browser, 900)
+    await restoreSeededSession(page)
     tripwire = watchConsole(page)
     consoleErrors = []
     page.on('console', (message) => {
@@ -132,6 +147,31 @@ describe('web e2e: interactive terminals', () => {
     await sendCommand(page, bottom, `printf "$DSH_PANEL_KEEP" > ${shellQuote(bottomProofPath)}`)
     await expect.poll(async () => readFile(bottomProofPath, 'utf8'), { timeout: 15_000 }).toBe('alive')
 
+    const peer = await newEnglishPage(browser, 900)
+    await restoreSeededSession(peer)
+    const peerTripwire = watchConsole(peer)
+    await peer.setViewportSize({ width: 1440, height: 900 })
+    await peer.goto(scaffold.baseUrl, { waitUntil: 'load' })
+    await peer.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await openSeededSession(peer)
+    await peer.getByRole('button', { name: 'Toggle bottom panel', exact: true }).click()
+    const peerBottom = peer.locator('[data-terminal-panel="bottom"]')
+    const peerTab = peerBottom.getByRole('tab', { name: 'Terminal 1', exact: true })
+    await peerTab.waitFor({ timeout: 30_000 })
+    await expect.poll(async () => {
+      const status = peerBottom.locator('[data-phase]')
+      return {
+        selected: await peerTab.getAttribute('aria-selected'),
+        status: await status.count() === 0 ? null : await status.textContent(),
+      }
+    }, { timeout: 30_000 }).toEqual({ selected: 'true', status: null })
+    const peerProofPath = join(scaffold.workspaceCwd, 'peer-terminal-proof.txt')
+    await sendCommand(peer, peerBottom, `printf "$DSH_PANEL_KEEP" > ${shellQuote(peerProofPath)}`)
+    await expect.poll(async () => readFile(peerProofPath, 'utf8'), { timeout: 15_000 }).toBe('alive')
+    expect(peerTripwire.pageErrors).toEqual([])
+    expect(peerTripwire.warnings).toEqual([])
+    await peer.close()
+
     await page.getByRole('button', { name: 'Open right panel', exact: true }).click()
     const workbench = page.locator('[data-workbench]')
     await workbench.getByRole('button', { name: 'Terminal', exact: true }).click()
@@ -160,6 +200,7 @@ describe('web e2e: interactive terminals', () => {
       reopenedTabs,
       settings,
       bottomProof: await readFile(bottomProofPath, 'utf8'),
+      peerProof: await readFile(peerProofPath, 'utf8'),
       rightProof: await readFile(rightProofPath, 'utf8'),
       compactSide: await dialog.getAttribute('data-side'),
       compactBottomHeight,

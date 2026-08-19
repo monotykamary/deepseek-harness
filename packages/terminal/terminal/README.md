@@ -14,6 +14,7 @@ Owner-scoped persistent PTY seam. `TerminalSessionService` registers as `ctx.ter
 - `hasOwnerActivity(owner)` spans unpublished setup through final close, so lifecycle policy can fence the exact owner without a publication race.
 - A successful spawn publishes one `TerminalSessionId`. The optional `name` is owner-local display metadata, never authority. The optional `interactive` intent distinguishes a direct human PTY from a model-framed session without changing ownership.
 - One session accepts at most one live send operation. Reads and signals may observe it; another send fails until the operation settles.
+- One session may expose multiple independently disposable raw viewers. Any attached viewer excludes model-facing sends until every viewer detaches; the backend owns output fan-out, ordered input, and shared-size policy.
 - `TerminalSendResult.waitReason` and `sessionStatus` are independent. `session_exit` describes the top-level PTY process, not an arbitrary foreground command.
 - `kill()` and disposal resolve only after the backend's captured process tree is quiescent. A cleanup failure rejects instead of claiming success and clears the matching backend and registry fences so a later close can retry without disturbing a newer attempt.
 

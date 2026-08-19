@@ -6,7 +6,7 @@
 
 ## 操作与帧
 
-新 socket 以一条 JSON 文本握手开始：`list`、`open`、`attach` 或 `kill`。`open` 会在所选 Session cwd 中创建带位置名称的原生交互式 login shell，并转发请求的初始网格；`list` 只返回该浏览器位置拥有的终端。附加后的 socket 使用客户端二进制帧传送 UTF-8 终端输入，使用 Host 二进制帧传送原始 PTY 输出，并使用 JSON 文本帧传送 `resize`、`kill`、`ready`、`exit`、`pong` 或失败控制。关闭 socket 只会分离连接，不会终止持久进程。
+新 socket 以一条 JSON 文本握手开始：`list`、`open`、`attach` 或 `kill`。`open` 会在所选 Session cwd 中创建带位置名称的原生交互式 login shell，并转发请求的初始网格；`list` 只返回该浏览器位置拥有的终端。任意数量的 socket 都可以附加同一 PTY：每个 socket 都会收到有界 replay 与实时输出，查看方之间的输入保持有序，最近发生交互的查看方控制共享 PTY 网格。附加后的 socket 使用客户端二进制帧传送 UTF-8 终端输入，使用 Host 二进制帧传送原始 PTY 输出，并使用 JSON 文本帧传送 `resize`、`kill`、`ready`、`exit`、`pong` 或失败控制。关闭 socket 只会分离该查看方，不会终止持久进程。
 
 输出会在有界的短时间窗口中合并。慢速浏览器会在 WebSocket 队列超过 `maxBufferedBytes` 前断开；wire 解析器会限制输入大小、握手时间和 PTY 尺寸。插件释放会终止已接受的 socket、分离其 stream，并等待排队中的终端操作。
 
@@ -34,4 +34,4 @@
 
 - 终端字节与 attachment 仅存在于进程内；Host 重启会结束所有浏览器终端。
 - wire 发送未经应用层压缩的原始输出。
-- 一个 socket 只附加一个终端；多路复用由独立 socket 与 UI 标签页完成。
+- 一个 socket 只附加一个终端；多个查看方共享同一 PTY 时使用独立 socket，而不是在一个 socket 上复用多个 PTY。
