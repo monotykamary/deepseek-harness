@@ -10,11 +10,15 @@ This fork is a custom flavor of upstream DeepSeek Harness: the shipped profile c
 
 ### The shipped profiles are the custom composition
 
-`PROFILE_TEMPLATES.web` is `['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea']` and `PROFILE_TEMPLATES.headless` is `['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea']`. Both bundles are dependencies of the `dsh` app, so they resolve from the installation anchor like every in-box bundle, and `healProfilesModuleFallback` symlinks them (and their `@dsh-fabric/*` and `@monotykamary/*` closures) into `$DSH_HOME/profiles/node_modules`. `INSTALLATION_OWNED_PROFILE_TUPLES` gained the exact pre-change web tuple, so an existing auto-initialized web profile migrates to the new composition on its next boot while any user-modified list stays untouched.
+`PROFILE_TEMPLATES.web` is `['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea']` and `PROFILE_TEMPLATES.headless` is `['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea']`. Both bundles are dependencies of the `dsh` app, so they resolve from the installation anchor like every in-box bundle, and `healProfilesModuleFallback` symlinks them (and their `dsh-fabric-*` and `@monotykamary/*` closures) into `$DSH_HOME/profiles/node_modules`. `INSTALLATION_OWNED_PROFILE_TUPLES` gained the exact pre-change web tuple, so an existing auto-initialized web profile migrates to the new composition on its next boot while any user-modified list stays untouched.
 
 ### Local development pins the sibling checkouts
 
 The workspace `overrides` map `dsh-fabric` and `dsh-fovea` to `link:../dsh-fabric` and `link:../dsh-fovea`. pnpm does not install the dependencies of `link:`-resolved packages, which is exactly right here: each sibling checkout carries its own complete install (its own overrides pin `@monotykamary/*` back to this checkout), and Node's symlink-following resolution reaches those packages from the linked real locations.
+
+### The fabric packages publish unscoped
+
+The seven fabric packages are unscoped (`dsh-fabric-protocol`, `dsh-fabric-compaction`, `dsh-fabric-host`, `dsh-fabric-mesh`, `dsh-fabric-system-prompt`, `dsh-fabric-code-runtime-quickjs`, `dsh-fabric-client-ui`) under the `dsh-fabric` umbrella bundle. The original `@dsh-fabric/*` scope could not be created: npm scopes are website-only artifacts and the publishing token is a granular 2FA-bypass token, so every publish to the absent scope answered `404 Scope not found`. Unscoped names publish without a scope.
 
 ### The sibling packages publish with semver ranges
 
@@ -22,7 +26,7 @@ Every `link:` spec in `dsh-fabric` (root and seven packages) and `dsh-fovea` bec
 
 ### Publication order
 
-The harness family publishes first (`release:pack` + `release:publish` for the `dsh` family at `0.1.0-rc.7`, prerelease `--tag next`, with `latest` moved to `0.1.0-rc.7` afterwards), then `@dsh-fabric/*` and `dsh-fabric` (topological, `workspace:` rewritten to `^0.1.0`), then `dsh-fovea` (`0.2.0`). The harness CLI's `dsh-fabric: ^0.1.0` and `dsh-fovea: ^0.2.0` dependencies only resolve once those publishes land.
+The harness family publishes first (`release:pack` + `release:publish` for the `dsh` family at `0.1.0-rc.7`, prerelease `--tag next`, with `latest` moved to `0.1.0-rc.7` afterwards), then the seven `dsh-fabric-*` packages and the `dsh-fabric` umbrella (topological, `workspace:` rewritten to `^0.1.0`), then `dsh-fovea` (`0.2.0`). The harness CLI's `dsh-fabric: ^0.1.0` and `dsh-fovea: ^0.2.0` dependencies only resolve once those publishes land.
 
 ## Alternatives considered
 
