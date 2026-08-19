@@ -251,6 +251,9 @@
 
     - id: ui-workspace
       name: '@monotykamary/dsh-client-ui-workspace'
+      config:
+        autoSettleInactive: true
+        autoSettleAfterDays: 3
 
     # Input triggers: the '/' | '@' pipeline (ui-input-trigger), the command surface over
     # it (ui-commands), and the two reference sources (ui-skill / ui-subagent).

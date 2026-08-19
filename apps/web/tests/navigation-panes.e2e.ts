@@ -27,6 +27,7 @@ const TRAJECTORY_EXPECTED = join(SNAPSHOT_DIR, 'trajectory.expected.md')
 const SEARCH_EXPECTED = join(SNAPSHOT_DIR, 'search-results.expected.md')
 const PALETTE_EXPECTED = join(SNAPSHOT_DIR, 'command-palette.expected.md')
 const TERMINAL_EXPECTED = join(SNAPSHOT_DIR, 'terminal-card.expected.md')
+const SETTLED_EXPECTED = join(SNAPSHOT_DIR, 'settled-shelf.expected.md')
 const MODE = webSnapshotMode()
 const SEED_ID = 'navigation-panes-web-e2e'
 
@@ -95,7 +96,7 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
       const raw = await readFile(SEED, 'utf8')
       expect(fixtureUserPrompts(raw), 'seed fixture must carry exactly the two drive prompts')
         .toEqual([PROMPT_TURN1, PROMPT_TURN2])
-      await seedSession(scaffold, raw, SEED_ID)
+      await seedSession(scaffold, raw, SEED_ID, undefined, Date.now() - 4 * 86_400_000)
     }
     browser = await chromium.launch()
   }, 120_000)
@@ -124,10 +125,9 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     ])
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     // The frame mounts before the asynchronous session-list baseline lands.
-    // Search must target the settled seeded row, not the startup input that
-    // the ready projection replaces (the compact layout dropped group session
-    // counts; the Ungrouped bucket row is the barrier).
-    await page.getByText('Ungrouped', { exact: true }).waitFor({ timeout: 30_000 })
+    // The fixture is older than the shipped three-day policy, so the settled
+    // shelf header is the user-visible barrier for the ready list projection.
+    await page.getByRole('button', { name: 'Settled (1)', exact: true }).waitFor({ timeout: 30_000 })
   }, 120_000)
 
   afterEach(async () => {
@@ -180,12 +180,28 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     expect(calls.map(e => e.data.name).sort()).toEqual(['bash', 'read', 'read'])
   }, 400_000)
 
+  it.skipIf(MODE === 'record')('collapses an inactive Session into the settled shelf and reveals it', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-navigation-settled'))
+    const listArea = '[class*="listArea"]'
+    const collapsed = (await captureStableAria(page, listArea, scaffold.workspaceCwd))
+      .split(SEED_ID).join('{{seededId}}')
+    const settledToggle = page.locator('[class*="settledShelfToggle"]')
+    await settledToggle.click()
+    await expect.poll(() => settledToggle.getAttribute('aria-expanded'), { timeout: 15_000 }).toBe('true')
+    await expect.poll(() => page.getByRole('treeitem').count(), { timeout: 15_000 }).toBeGreaterThan(0)
+    const expanded = (await captureStableAria(page, listArea, scaffold.workspaceCwd))
+      .split(SEED_ID).join('{{seededId}}')
+    await compareOrRefreshGolden(
+      SETTLED_EXPECTED,
+      ['# Collapsed', '', collapsed, '', '# Expanded', '', expanded].join('\n'),
+      MODE,
+    )
+  }, 60_000)
+
   it.skipIf(MODE === 'record')('finds an unopened seeded session by message content and opens it', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-navigation-search'))
-    // The API baselines can settle before React commits their projection. The
-    // seeded Ungrouped bucket row is the final user-visible barrier before
-    // editing search (the compact layout dropped group session counts).
-    await page.getByText('Ungrouped', { exact: true }).waitFor({ timeout: 30_000 })
+    // The settled shelf header above is the final projection barrier; search
+    // intentionally includes shelf history without requiring disclosure.
     const search = page.getByRole('searchbox', { name: 'Search sessions' })
     // The cold row has not been opened, so only the persisted log can satisfy
     // this query. First search lazily reconciles the SQLite content index.
@@ -323,7 +339,8 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     if (buttonBox === null || headerBox === null) {
       throw new Error('Session Header export geometry is unavailable')
     }
-    expect(headerBox.x + headerBox.width - (buttonBox.x + buttonBox.width)).toBeLessThanOrEqual(32)
+    // Export precedes the terminal/panel controls in the right-aligned header action track.
+    expect(headerBox.x + headerBox.width - (buttonBox.x + buttonBox.width)).toBeLessThanOrEqual(96)
     const responsePromise = page.waitForResponse(response =>
       response.request().method() === 'HEAD'
       && new URL(response.url()).pathname === '/api/session.export', { timeout: 30_000 })
@@ -365,7 +382,7 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
       assertBaselineSucceeded(observerSessionResponse, 'observer session.list'),
       assertBaselineSucceeded(observerWorkspaceResponse, 'observer workspace.list'),
     ])
-    await observer.getByText('Ungrouped', { exact: true }).waitFor({ timeout: 30_000 })
+    await observer.getByRole('button', { name: 'Settled (1)', exact: true }).waitFor({ timeout: 30_000 })
     await ensureSeedOpen(observer)
 
     try {
@@ -530,7 +547,7 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
   it.skipIf(MODE === 'record')('keeps the recorded fixture inventory exact', async () => {
     await assertFixtureInventory(SNAPSHOT_DIR, [
       'command-palette.expected.md', 'seed.jsonl', 'search-results.expected.md',
-      'trajectory.expected.md', 'terminal-card.expected.md',
+      'settled-shelf.expected.md', 'trajectory.expected.md', 'terminal-card.expected.md',
     ])
   })
 })

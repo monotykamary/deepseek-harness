@@ -32,6 +32,20 @@ async function bench() {
   const renameSession = vi.fn(async (title: string) => ({ ok: true, value: { title, seq: 1 } }))
   const binding = vi.fn(() => ({ session: { rename: renameSession } }))
   const fork = vi.fn(async () => 'forked' as never)
+  const settlement = {
+    getSnapshot: () => ({
+      status: 'ready', value: { autoSettleInactive: true, autoSettleAfterDays: 3 },
+      base: {}, user: {}, revision: 1,
+      writable: true, mode: 'host',
+    }),
+    subscribe: () => () => {},
+    set: vi.fn(async () => {}),
+    unset: vi.fn(async () => {}),
+  }
+  const bindSettlement = vi.fn(() => settlement)
+  ctx.provide('connection', {} as never)
+  ctx.provide('remote', {} as never)
+  ctx.provide('settingsScope', { bind: bindSettlement } as never)
   ctx.provide('workspaces', {
     create, startSession, rename, insertSessionBefore,
   } as never)
@@ -41,6 +55,7 @@ async function bench() {
   return {
     ctx, slots: ctx.get('slots') as SlotRegistry, locale, create, startSession, rename,
     insertSessionBefore, open, clear, search, renameSession, binding, fork,
+    settlement, bindSettlement,
   }
 }
 
@@ -54,7 +69,9 @@ function declare(slots: SlotRegistry, ...names: HoleName[]): () => void {
 
 describe('ui-workspace apply', () => {
   it('declares the services it drives', () => {
-    expect(inject).toEqual(['slots', 'sessions', 'workspaces', 'locale'])
+    expect(inject).toEqual([
+      'slots', 'sessions', 'workspaces', 'locale', 'connection', 'remote', 'settingsScope',
+    ])
   })
 
   it('registers browser and pickers for declarations arriving before or after apply', async () => {
@@ -81,6 +98,8 @@ describe('ui-workspace apply', () => {
     await b.ctx.plugin({ inject: [...inject], apply }).await()
 
     const browser = (b.slots.entries('sidebar.workspaces')[0]!.inject as () => WorkspaceBrowserInjected)()
+    expect(b.bindSettlement).toHaveBeenCalledWith({ namespace: 'ui-workspace' })
+    expect(browser.hooks.settlement).toBe(b.settlement)
     // Both arms delegate to the runtime's shared New Session action.
     browser.startSession('ws' as never)
     expect(b.startSession).toHaveBeenCalledWith('ws')

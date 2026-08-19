@@ -30,6 +30,12 @@
       "path": "../ui-conversation"
     },
     {
+      "path": "../../settings/settings"
+    },
+    {
+      "path": "../ui-settings"
+    },
+    {
       "path": "../../runtime-diagnostics/invariants"
     }
   ]

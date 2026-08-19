@@ -28,8 +28,10 @@ import type { HostObservable, PropsLocale, PropsRenderSlots, PropsRuntime, Props
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {
-  SessionId, SessionSearchResultItem, WorkspaceId, WorkspaceView,
+  SessionId, SessionSearchResultItem, SettingsScope, SettingsScopeSnapshot,
+  WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
+import type { WorkspaceSettings } from '../../settled-settings.ts'
 import type { createWorkspaceViewStore } from '../stores.ts'
 
 /**
@@ -89,7 +91,13 @@ export type DirectoryPickingHooks = {
  * Data reads use the global framework hooks; these are the Host actions the
  * browsing region drives.
  */
-export type WorkspaceBrowserInjected = DirectoryPickingInjected & {
+export type WorkspaceBrowserInjected = {
+  hooks: {
+    /** True while the sidebar directory-flow hole is occupied. */
+    directoryFlow: HostObservable<boolean>
+    /** Host-resolved inactivity policy for the settled Session shelf. */
+    settlement: SettingsScope<WorkspaceSettings>
+  }
   /**
    * Start a New Session in a Workspace: reuse-or-create its blank session and
    * open it; without an explicit workspace, inherit the current Session
@@ -143,7 +151,12 @@ export type WorkspaceBrowserProps =
   & PropsRenderSlots<'sidebar.workspaces.directoryFlow'>
   & PropsStore<ReturnType<typeof createWorkspaceViewStore>>
   & Omit<WorkspaceBrowserInjected, 'hooks'>
-  & DirectoryPickingHooks
+  & {
+    /** Selector hook over this surface's directory-flow occupancy. */
+    useDirectoryFlow: SnapshotSelectorHook<boolean>
+    /** Selector hook over the resolved settled-session policy. */
+    useSettlement: SnapshotSelectorHook<SettingsScopeSnapshot<WorkspaceSettings>>
+  }
   & PropsLocale<'workspace'>
 
 /**

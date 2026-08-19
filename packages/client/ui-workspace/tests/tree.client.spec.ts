@@ -3,7 +3,7 @@ import type {
   SessionId, SessionListState, SessionSummary, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
 import {
-  deriveFlat, deriveGroups, deriveSearchResults, workspaceLabel, relativeTime,
+  deriveAutoSettledSessionIds, deriveFlat, deriveGroups, deriveSearchResults, workspaceLabel, relativeTime,
   UNGROUPED_KEY, UNGROUPED_LABEL,
 } from '../src/client/tree.ts'
 import { createWorkspaceViewStore } from '../src/client/stores.ts'
@@ -30,6 +30,56 @@ const view = (expandedGroups: readonly string[] = [], ungroupedOrder?: readonly 
 })
 const noArchive: readonly SessionId[] = []
 const archived = (...ids: string[]): readonly SessionId[] => ids.map(sid)
+
+describe('deriveAutoSettledSessionIds', () => {
+  it('shelves only stale inactive Sessions and honors every live/actionable blocker', () => {
+    const day = 86_400_000
+    const now = 10 * day
+    const stale = summary('stale', now - 4 * day)
+    const boundary = summary('boundary', now - 3 * day)
+    const current = summary('current', now - 8 * day)
+    const running = { ...summary('running', now - 8 * day), running: true }
+    const pending = { ...summary('pending', now - 8 * day), pendingInteraction: 'question' as const }
+    const completed = { ...summary('completed', now - 8 * day), completed: true }
+    const parent = summary('parent', now - 8 * day)
+    const child = {
+      ...summary('child', now - 8 * day), parentId: parent.id, origin: 'subagent' as const, running: true,
+    }
+    const liveJob = summary('live-job', now - 8 * day)
+    const recentJob = summary('recent-job', now - 8 * day)
+    const state: SessionListState = {
+      ...list(stale, boundary, current, running, pending, completed, parent, child, liveJob, recentJob),
+      current: current.id,
+      jobsBySession: {
+        [liveJob.id]: [{
+          id: 'job-live', kind: 'bash', label: 'live', status: 'running', startedAt: now - 7 * day,
+        } as never],
+        [recentJob.id]: [{
+          id: 'job-done', kind: 'bash', label: 'done', status: 'completed',
+          startedAt: now - 2 * day, finishedAt: now - day,
+        } as never],
+      },
+    }
+
+    expect(deriveAutoSettledSessionIds(state, now, 3)).toEqual([stale.id])
+    expect(deriveAutoSettledSessionIds(state, now, null)).toEqual([])
+  })
+
+  it('removes shelved rows from browsing projections without hiding search metadata', () => {
+    const stale = summary('stale', 1, '/projects/alpha')
+    const active = summary('active', 2, '/projects/alpha')
+    const state = list(stale, active)
+    const shelved = [stale.id]
+    expect(deriveFlat(state, noArchive, shelved).map(row => row.id)).toEqual([active.id])
+    expect(deriveGroups(
+      state, [workspace('alpha', ['stale', 'active'])], noArchive, view(['alpha']), shelved,
+    )[0]!.sessions.map(row => row.id)).toEqual([active.id])
+    expect(deriveSearchResults(
+      state, [workspace('alpha', ['stale', 'active'])], 'stale', noArchive,
+      { items: [], hasMore: false }, 20,
+    ).items.map(row => row.id)).toEqual([stale.id])
+  })
+})
 
 describe('deriveGroups', () => {
   it('keeps Host Workspace and sessionIds order without Client recency sorting', () => {
@@ -385,6 +435,10 @@ describe('deriveSearchResults', () => {
     )
     expect(result.items.map(item => item.id)).toEqual([alpha.id])
     expect(result.hasMore).toBe(false)
+    expect(deriveSearchResults(
+      list(alpha, beta), workspaces, 'needle', noArchive,
+      { items: [], hasMore: false }, 10, wid('missing'),
+    ).items).toEqual([])
   })
 
   it('uses the supplied cap and preserves either local overflow or backend hasMore', () => {
@@ -429,6 +483,7 @@ describe('createWorkspaceViewStore', () => {
     store.actions.setGroupBy('flat')
     store.actions.setOrderBy('updated')
     store.actions.setGroupExpanded('alpha', true)
+    store.actions.setSettledShelfExpanded(true)
     store.actions.syncSessionOrderAccount('alpha', ['two', 'one'], { one: 1, two: 2 })
     store.actions.setSessionOrder('alpha', ['one', 'two'])
     expect(store.getSnapshot().groupBy).toBe('flat')
@@ -436,6 +491,7 @@ describe('createWorkspaceViewStore', () => {
       workspaceScope: wid('alpha'),
       orderBy: 'updated',
       groupExpansion: { alpha: true },
+      settledShelfExpanded: true,
       sessionOrderByAccount: { alpha: ['one', 'two'] },
       sessionUpdatedAtByAccount: { alpha: { one: 1, two: 2 } },
     })

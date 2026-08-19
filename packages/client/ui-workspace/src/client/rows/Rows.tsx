@@ -347,10 +347,11 @@ export function SearchResultItem({ result, currentId, onOpen, t }: {
  * @param props.onFork - fork a session at its last completed turn.
  * @param props.onArchive - archive a session by id.
  * @param props.drag - optional draggable-row wiring.
+ * @param props.settled - whether this row belongs to the receded history shelf.
  * @param props.t - the browser root's locale seat.
  * @returns the Session card.
  */
-export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, drag, t }: {
+export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, drag, settled = false, t }: {
   node: SessionNode
   currentId: string | undefined
   now: number
@@ -363,6 +364,8 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
   onArchive: (id: SessionNode['id']) => void
   /** Present only on draggable rows (workspace-group sessions outside search). */
   drag?: RowDragProps | undefined
+  /** Recede an inactivity-settled row until hover or focus. */
+  settled?: boolean | undefined
   t: RowTranslate
 }) {
   const row = node
@@ -387,7 +390,7 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
   const ownRow = (
     <div
       className={clsx(
-        css.sessionRow, selected && css.selected, menuOpen && css.menuOpen,
+        css.sessionRow, selected && css.selected, settled && css.settled, menuOpen && css.menuOpen,
         drag?.marker === 'before' && css.dropBefore, drag?.marker === 'after' && css.dropAfter,
       )}
       role="treeitem"

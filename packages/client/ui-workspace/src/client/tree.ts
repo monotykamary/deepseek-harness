@@ -15,6 +15,8 @@ export const UNGROUPED_KEY = ''
 /** Display label for the ungrouped bucket row. */
 export const UNGROUPED_LABEL = 'Ungrouped'
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
 /** One top-level session row in a group or the flat list. */
 export interface SessionNode {
   id: SessionId
@@ -179,6 +181,7 @@ function groupByWorkspace(
   list: SessionListState,
   workspaces: readonly WorkspaceView[],
   archived: ReadonlySet<SessionId>,
+  shelved: ReadonlySet<SessionId>,
   ungroupedOrder: readonly string[] | undefined,
 ): Group[] {
   const groups: Group[] = []
@@ -189,7 +192,7 @@ function groupByWorkspace(
       const summary = list.byId[id]
       if (summary === undefined) continue // account may lead the list pull; the row appears when the summary lands
       accounted.add(id)
-      if (!sessionVisible(summary, list.current, archived)) continue
+      if (!sessionVisible(summary, list.current, archived) || shelved.has(summary.id)) continue
       members.push(summary)
     }
     groups.push(buildGroup(
@@ -200,7 +203,8 @@ function groupByWorkspace(
   const stray = list.ids
     .map(id => list.byId[id])
     .filter((s): s is SessionSummary =>
-      s !== undefined && !accounted.has(s.id) && sessionVisible(s, list.current, archived))
+      s !== undefined && !accounted.has(s.id) && !shelved.has(s.id)
+      && sessionVisible(s, list.current, archived))
   if (stray.length > 0) {
     groups.push(buildGroup(
       UNGROUPED_KEY,
@@ -235,6 +239,46 @@ function sessionNode(
 }
 
 /**
+ * Classify inactivity-settled Sessions while retaining every actionable or live row.
+ * The current Session, blanks, unread completions, pending interaction, running
+ * parents/descendants, and live background jobs never enter the shelf. Settled
+ * jobs extend the activity clock through their finish time.
+ * @param list - complete Session list and job projection.
+ * @param now - current epoch milliseconds.
+ * @param autoSettleAfterDays - whole inactive days, or null to disable automatic settlement.
+ * @returns Session ids ordered like the source list; presentation sorts its shelf independently.
+ */
+export function deriveAutoSettledSessionIds(
+  list: SessionListState,
+  now: number,
+  autoSettleAfterDays: number | null,
+): SessionId[] {
+  if (autoSettleAfterDays === null) return []
+  const cutoff = now - autoSettleAfterDays * DAY_MS
+  const descendants = indexSubagentDescendants(list.byId)
+  const settled: SessionId[] = []
+  for (const id of list.ids) {
+    const session = list.byId[id]
+    if (session === undefined
+      || session.id === list.current
+      || session.origin === 'subagent'
+      || session.blank
+      || session.running
+      || session.pendingInteraction !== undefined
+      || session.completed === true
+      || (descendants.get(session.id)?.runningCount ?? 0) > 0) continue
+    let lastActivityAt = session.updatedAt
+    let liveJob = false
+    for (const job of list.jobsBySession[session.id] ?? []) {
+      if (job.status === 'running' || job.status === 'stopping') liveJob = true
+      lastActivityAt = Math.max(lastActivityAt, job.finishedAt ?? job.startedAt)
+    }
+    if (!liveJob && lastActivityAt < cutoff) settled.push(session.id)
+  }
+  return settled
+}
+
+/**
  * Derive the workspace browser groups with every session as a top-level row.
  *
  * Every group shows; sessions populate under expanded groups in the selected
@@ -246,6 +290,7 @@ function sessionNode(
  * @param workspaces - real workspaces in stable Host order.
  * @param archivedSessionIds - registry-global archive set.
  * @param view - local expansion arrays.
+ * @param shelvedSessionIds - auto-settled rows rendered by the separate history shelf.
  * @returns group sections in render order.
  */
 export function deriveGroups(
@@ -253,8 +298,10 @@ export function deriveGroups(
   workspaces: readonly WorkspaceView[],
   archivedSessionIds: readonly SessionId[],
   view: TreeView,
+  shelvedSessionIds: readonly SessionId[] = [],
 ): GroupNode[] {
   const archived = new Set(archivedSessionIds)
+  const shelved = new Set(shelvedSessionIds)
   const expandedGroups = new Set(view.expandedGroups)
   const descendants = indexSubagentDescendants(list.byId)
   const currentGroup = list.current === undefined
@@ -262,7 +309,7 @@ export function deriveGroups(
     : (workspaces.find(w => w.sessionIds.includes(list.current as SessionId))?.workspaceId as string | undefined)
         ?? UNGROUPED_KEY
   const groups: GroupNode[] = []
-  for (const g of groupByWorkspace(list, workspaces, archived, view.ungroupedOrder)) {
+  for (const g of groupByWorkspace(list, workspaces, archived, shelved, view.ungroupedOrder)) {
     const expanded = expandedGroups.has(g.key)
     groups.push({
       key: g.key,
@@ -286,18 +333,21 @@ export function deriveGroups(
  * (see {@link deriveSearchResults}).
  * @param list - sessions list snapshot.
  * @param archivedSessionIds - registry-global archive set.
+ * @param shelvedSessionIds - auto-settled rows rendered by the separate history shelf.
  * @returns flat rows in render order.
  */
 export function deriveFlat(
   list: SessionListState,
   archivedSessionIds: readonly SessionId[],
+  shelvedSessionIds: readonly SessionId[] = [],
 ): SessionNode[] {
   const archived = new Set(archivedSessionIds)
+  const shelved = new Set(shelvedSessionIds)
   const descendants = indexSubagentDescendants(list.byId)
   const rows: SessionSummary[] = []
   for (const id of list.ids) {
     const s = list.byId[id]
-    if (s === undefined || !sessionVisible(s, list.current, archived)) continue
+    if (s === undefined || shelved.has(s.id) || !sessionVisible(s, list.current, archived)) continue
     rows.push(s)
   }
   rows.sort(byRecency)

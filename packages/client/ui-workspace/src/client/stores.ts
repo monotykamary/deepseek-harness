@@ -25,6 +25,8 @@ type WorkspaceViewState = {
   orderBy: SessionOrderBy
   /** Explicit zero-or-five-session state keyed by Workspace group identity. */
   groupExpansion: Record<string, boolean>
+  /** Whether inactivity-settled Sessions are revealed below the active list. */
+  settledShelfExpanded?: boolean
   /** Shared editable order per Workspace group plus the browser-local flat-list account. */
   sessionOrderByAccount: Record<string, string[]>
   /** Last observed update timestamps per order account for one-time promotion events. */
@@ -40,6 +42,7 @@ type WorkspaceViewActions = {
   setGroupBy: (draft: WorkspaceViewState, mode: SessionGroupBy) => void
   setOrderBy: (draft: WorkspaceViewState, mode: SessionOrderBy) => void
   setGroupExpanded: (draft: WorkspaceViewState, key: string, expanded: boolean) => void
+  setSettledShelfExpanded: (draft: WorkspaceViewState, expanded: boolean) => void
   retainAccountKeys: (draft: WorkspaceViewState, workspaceKeys: readonly string[]) => void
   syncSessionOrderAccount: (
     draft: WorkspaceViewState,
@@ -61,6 +64,7 @@ export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState
       groupBy: 'flat',
       orderBy: 'updated',
       groupExpansion: {},
+      settledShelfExpanded: false,
       sessionOrderByAccount: {},
       sessionUpdatedAtByAccount: {},
     }),
@@ -70,6 +74,7 @@ export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState
       setGroupBy: (d, mode: SessionGroupBy) => { d.groupBy = mode },
       setOrderBy: (d, mode: SessionOrderBy) => { d.orderBy = mode },
       setGroupExpanded: (d, key: string, expanded: boolean) => { d.groupExpansion[key] = expanded },
+      setSettledShelfExpanded: (d, expanded: boolean) => { d.settledShelfExpanded = expanded },
       retainAccountKeys: (d, workspaceKeys: readonly string[]) => {
         const retained = new Set(workspaceKeys)
         if (d.workspaceScope !== null && !retained.has(d.workspaceScope)) d.workspaceScope = null

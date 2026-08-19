@@ -428,6 +428,22 @@ export interface Config {
 
 Source: [`packages/client/hmr/src/index.ts:31`](../packages/client/hmr/src/index.ts)
 
+<a id="monotykamarydsh-client-ui-workspace"></a>
+
+## `@monotykamary/dsh-client-ui-workspace`
+
+```ts config-catalog
+/** Cordis configuration and user-settings base for inactivity settlement. */
+export interface Config {
+  /** Whether inactivity moves eligible Sessions into the shelf (default true). */
+  autoSettleInactive?: boolean
+  /** Whole inactive days before an eligible Session enters the shelf (1–90, default 3). */
+  autoSettleAfterDays?: number
+}
+```
+
+Source: [`packages/client/ui-workspace/src/index.ts:14`](../packages/client/ui-workspace/src/index.ts)
+
 <a id="monotykamarydsh-code-runtime-worker-thread"></a>
 
 ## `@monotykamary/dsh-code-runtime-worker-thread`
@@ -3196,7 +3212,6 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@monotykamary/dsh-client-ui-user-questions` ([`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts))
 - `@monotykamary/dsh-client-ui-workbench` ([`packages/client/ui-workbench/src/index.ts`](../packages/client/ui-workbench/src/index.ts))
 - `@monotykamary/dsh-client-ui-workflow-run` ([`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts))
-- `@monotykamary/dsh-client-ui-workspace` ([`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts))
 - `@monotykamary/dsh-command-compact` — requires `commands` · `compaction` ([`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts))
 - `@monotykamary/dsh-command-feedback` — requires `commands` ([`packages/feedback/command-feedback/src/index.ts`](../packages/feedback/command-feedback/src/index.ts))
 - `@monotykamary/dsh-command-goal` — requires `commands` · `goals` ([`packages/goal/command-goal/src/index.ts`](../packages/goal/command-goal/src/index.ts))

@@ -11,14 +11,17 @@ import clsx from 'clsx'
 import { ChevronDown } from 'lucide-react'
 import {
   Button, IconCloseFill14, IconFolderClose16, IconPersonalizationOutline16,
-  IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
+  IconPlusOutline16, IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   SessionId, SessionListState, SessionSearchResultItem, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
+import { SHIPPED_WORKSPACE_SETTINGS } from '../settled-settings.ts'
 import type { WorkspaceBrowserProps } from './contract/slots.ts'
 import type { SessionNode, SessionOrderBy } from './tree.ts'
-import { deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY } from './tree.ts'
+import {
+  deriveAutoSettledSessionIds, deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY,
+} from './tree.ts'
 import { ProjectRowItem, SearchResultItem, SessionNodeItem } from './rows/Rows.tsx'
 import { FLAT_SESSION_ORDER_KEY } from './stores.ts'
 import { WorkspacePickFlow } from './WorkspacePicker.tsx'
@@ -35,6 +38,29 @@ const SEARCH_DEBOUNCE_MS = 250
 const SEARCH_QUERY_MAX_CODE_UNITS = 500
 /** Session rows visible per Workspace before the local overflow control. */
 const COLLAPSED_SESSION_LIMIT = 5
+/** T3-adapted first history page: recent settled work stays cheap to scan. */
+const SETTLED_INITIAL_COUNT = 10
+/** T3-adapted explicit deep-history page size. */
+const SETTLED_PAGE_COUNT = 25
+const MINUTE_MS = 60_000
+
+/** Minute-quantized clock shared by relative labels and day-granular auto-settlement. */
+function useMinuteNow(): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const remaining = MINUTE_MS - Date.now() % MINUTE_MS
+    let interval: number | undefined
+    const timeout = window.setTimeout(() => {
+      setNow(Date.now())
+      interval = window.setInterval(() => { setNow(Date.now()) }, MINUTE_MS)
+    }, remaining)
+    return () => {
+      window.clearTimeout(timeout)
+      window.clearInterval(interval)
+    }
+  }, [])
+  return now
+}
 
 /** Keep controlled input and RPC payload inside the session.search wire contract. */
 function sanitizeSearchQuery(value: string): string {
@@ -300,13 +326,88 @@ type SessionTreeProps = Pick<
   onSessionArchive: (sessionId: SessionNode['id']) => void
   /** Session order behavior: fixed after edits, or additionally promoted by user activity. */
   orderBy: SessionOrderBy
+  /** Minute-quantized activity clock. */
+  now: number
+  /** Whole inactive days before shelving, or null while disabled/unavailable. */
+  autoSettleAfterDays: number | null
+  /** Persisted disclosure state for the shared history shelf. */
+  settledShelfExpanded: boolean
+  /** Persist the shared history shelf disclosure state. */
+  setSettledShelfExpanded: (expanded: boolean) => void
+  /** Optional Workspace filter applied to active rows and shelf history. */
+  workspace?: WorkspaceView | undefined
+}
+
+/** T3-adapted settled-history disclosure shared by grouped and flat views. */
+function SettledShelf({
+  rows, expanded, setExpanded, currentId, now, open, onRename, onFork, onArchive, t,
+}: {
+  rows: readonly SessionNode[]
+  expanded: boolean
+  setExpanded: (expanded: boolean) => void
+  currentId: SessionId | undefined
+  now: number
+  open: (sessionId: SessionId) => void
+  onRename: (sessionId: SessionId, currentTitle: string) => void
+  onFork: (sessionId: SessionId) => void
+  onArchive: (sessionId: SessionId) => void
+  t: WorkspaceBrowserProps['t']
+}) {
+  const [visibleCount, setVisibleCount] = useState(SETTLED_INITIAL_COUNT)
+  useEffect(() => {
+    if (!expanded) setVisibleCount(SETTLED_INITIAL_COUNT)
+  }, [expanded])
+  if (rows.length === 0) return null
+  const rendered = expanded ? rows.slice(0, visibleCount) : []
+  const hiddenCount = Math.max(0, rows.length - rendered.length)
+  return (
+    <>
+      <div className={css.settledShelfHeader} role="presentation">
+        <button
+          type="button"
+          className={css.settledShelfToggle}
+          aria-expanded={expanded}
+          onClick={() => { setExpanded(!expanded) }}
+        >
+          <span>{expanded ? t('settled.label') : t('settled.collapsed', { n: rows.length })}</span>
+          <span className={css.settledShelfRule} />
+          <ChevronDown className={css.settledShelfChevron} size={14} aria-hidden="true" />
+        </button>
+      </div>
+      {rendered.map(node => (
+        <SessionNodeItem
+          key={node.id}
+          node={node}
+          currentId={currentId}
+          now={now}
+          onOpen={open}
+          onRename={onRename}
+          onFork={onFork}
+          onArchive={onArchive}
+          settled
+          t={t}
+        />
+      ))}
+      {expanded && hiddenCount > 0 && (
+        <button
+          type="button"
+          className={css.settledMore}
+          onClick={() => { setVisibleCount(count => count + SETTLED_PAGE_COUNT) }}
+        >
+          <IconPlusOutline16 size={14} />
+          <span>{t('settled.showMore', { n: Math.min(hiddenCount, SETTLED_PAGE_COUNT) })}</span>
+        </button>
+      )}
+    </>
+  )
 }
 
 /** The scrolling session tree; unmounting drops the sessions subscription and expand-all state. */
 function SessionTree({
   useSessions, startSession, open, forkSession, workspaces, archivedSessionIds,
   onRenameRequest, onDeleteRequest, onSessionRename, onSessionArchive,
-  insertWorkspaceBefore, insertSessionBefore, orderBy,
+  insertWorkspaceBefore, insertSessionBefore, orderBy, now, autoSettleAfterDays,
+  settledShelfExpanded, setSettledShelfExpanded, workspace,
   groupExpansion, setGroupExpanded,
   sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
 }: SessionTreeProps) {
@@ -375,16 +476,29 @@ function SessionTree({
     () => reconciledSessionOrder(ungroupedSessionIds, sessionOrderByAccount[UNGROUPED_KEY]),
     [sessionOrderByAccount, ungroupedSessionIds],
   )
+  const settledSessionIds = useMemo(
+    () => deriveAutoSettledSessionIds(list, now, autoSettleAfterDays),
+    [autoSettleAfterDays, list, now],
+  )
+  const settledSet = useMemo(() => new Set(settledSessionIds), [settledSessionIds])
   const groups = useMemo(
     () => deriveGroups(list, orderedWorkspaces, archivedSessionIds, {
       expandedGroups,
       ...(sessionOrderByAccount[UNGROUPED_KEY] === undefined
         ? {}
         : { ungroupedOrder: sessionOrderByAccount[UNGROUPED_KEY] }),
-    }),
-    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount],
+    }, settledSessionIds),
+    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount, settledSessionIds],
   )
-  const now = Date.now()
+  const scopedIds = useMemo(
+    () => workspace === undefined ? null : new Set(workspace.sessionIds),
+    [workspace],
+  )
+  const settledRows = useMemo(
+    () => deriveFlat(list, archivedSessionIds)
+      .filter(row => settledSet.has(row.id) && (scopedIds === null || scopedIds.has(row.id))),
+    [archivedSessionIds, list, scopedIds, settledSet],
+  )
   const commitSessionDrag = (activeDrag: DragState, over: NonNullable<DragState['over']>): void => {
     if (sessionDropCommitted.current) return
     sessionDropCommitted.current = true
@@ -445,7 +559,7 @@ function SessionTree({
         role="tree"
         aria-label={t('section.sessions')}
       >
-        {groups.length === 0 && (
+        {groups.length === 0 && settledRows.length === 0 && (
           <div className={css.empty}>{t('empty.none')}</div>
         )}
         {groups.map((group) => {
@@ -593,6 +707,18 @@ function SessionTree({
             </div>
           )
         })}
+        <SettledShelf
+          rows={settledRows}
+          expanded={settledShelfExpanded}
+          setExpanded={setSettledShelfExpanded}
+          currentId={current}
+          now={now}
+          open={open}
+          onRename={onSessionRename}
+          onFork={forkSession}
+          onArchive={onSessionArchive}
+          t={t}
+        />
       </div>
       <span className={css.fade} />
     </div>
@@ -602,7 +728,8 @@ function SessionTree({
 /** The flat "In one list" body: every session is one draggable top-level row. */
 function FlatList({
   useSessions, open, forkSession, onSessionRename, onSessionArchive, archivedSessionIds, workspace,
-  orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
+  orderBy, now, autoSettleAfterDays, settledShelfExpanded, setSettledShelfExpanded,
+  sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
 }: Pick<
   SessionTreeProps,
   | 'useSessions'
@@ -612,6 +739,10 @@ function FlatList({
   | 'onSessionArchive'
   | 'archivedSessionIds'
   | 'orderBy'
+  | 'now'
+  | 'autoSettleAfterDays'
+  | 'settledShelfExpanded'
+  | 'setSettledShelfExpanded'
   | 'sessionOrderByAccount'
   | 'sessionUpdatedAtByAccount'
   | 'syncSessionOrderAccount'
@@ -624,13 +755,18 @@ function FlatList({
     [workspace],
   )
   const accountKey = workspace?.workspaceId as string | undefined ?? FLAT_SESSION_ORDER_KEY
-  const baseRows = useMemo(
+  const allRows = useMemo(
     () => deriveFlat(list, archivedSessionIds).filter(
       row => workspaceSessionIds === null || workspaceSessionIds.has(row.id),
     ),
     [list, archivedSessionIds, workspaceSessionIds],
   )
-  const sessionIds = useMemo(() => baseRows.map(row => row.id), [baseRows])
+  const settledSessionIds = useMemo(
+    () => deriveAutoSettledSessionIds(list, now, autoSettleAfterDays),
+    [autoSettleAfterDays, list, now],
+  )
+  const settledSet = useMemo(() => new Set(settledSessionIds), [settledSessionIds])
+  const sessionIds = useMemo(() => allRows.map(row => row.id), [allRows])
   const previousOrderBy = useRef(orderBy)
   useEffect(() => {
     if (list.phase !== 'ready') return
@@ -650,14 +786,22 @@ function FlatList({
       syncSessionOrderAccount(accountKey, next.order.map(id => id as string), next.updatedAt)
     }
   }, [accountKey, list, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, sessionIds, syncSessionOrderAccount])
-  const rows = useMemo(() => {
-    const byId = new Map(baseRows.map(row => [row.id, row]))
+  const orderedRows = useMemo(() => {
+    const byId = new Map(allRows.map(row => [row.id, row]))
     return reconciledSessionOrder(sessionIds, sessionOrderByAccount[accountKey])
       .flatMap((id) => {
         const row = byId.get(id)
         return row === undefined ? [] : [row]
       })
-  }, [accountKey, baseRows, sessionOrderByAccount, sessionIds])
+  }, [accountKey, allRows, sessionOrderByAccount, sessionIds])
+  const rows = useMemo(
+    () => orderedRows.filter(row => !settledSet.has(row.id)),
+    [orderedRows, settledSet],
+  )
+  const settledRows = useMemo(
+    () => allRows.filter(row => settledSet.has(row.id)),
+    [allRows, settledSet],
+  )
   const [drag, setDrag] = useState<DragState | null>(null)
   const dropCommitted = useRef(false)
   useNativeDragAcceptance(drag !== null)
@@ -672,16 +816,15 @@ function FlatList({
     const sourceIndex = rows.findIndex(row => row.id === activeDrag.sessionId)
     const anchorIndex = anchor === undefined ? rows.length : rows.findIndex(row => row.id === anchor)
     if (sourceIndex !== -1 && (anchorIndex === sourceIndex || anchorIndex === sourceIndex + 1)) return
-    const nextOrder = rows.map(row => row.id).filter(id => id !== activeDrag.sessionId)
+    const nextOrder = orderedRows.map(row => row.id).filter(id => id !== activeDrag.sessionId)
     const insertAt = anchor === undefined ? nextOrder.length : nextOrder.indexOf(anchor)
     nextOrder.splice(insertAt === -1 ? nextOrder.length : insertAt, 0, activeDrag.sessionId)
     setSessionOrder(accountKey, nextOrder.map(id => id as string))
   }
-  const now = Date.now()
   return (
     <div className={clsx(css.treeBody, css.wide)}>
       <div className={clsx(css.list, css.flatList)} role="tree" aria-label={t('section.sessions')}>
-        {rows.length === 0 && (
+        {rows.length === 0 && settledRows.length === 0 && (
           <div className={css.empty}>{t('empty.none')}</div>
         )}
         {rows.map((node) => {
@@ -719,6 +862,18 @@ function FlatList({
             />
           )
         })}
+        <SettledShelf
+          rows={settledRows}
+          expanded={settledShelfExpanded}
+          setExpanded={setSettledShelfExpanded}
+          currentId={list.current}
+          now={now}
+          open={open}
+          onRename={onSessionRename}
+          onFork={forkSession}
+          onArchive={onSessionArchive}
+          t={t}
+        />
       </div>
       <span className={css.fade} />
     </div>
@@ -825,6 +980,7 @@ export function WorkspaceBrowser({
   searchSessions,
   searchResultLimit,
   useDirectoryFlow,
+  useSettlement,
   renderSlot,
   t,
 }: WorkspaceBrowserProps) {
@@ -834,10 +990,17 @@ export function WorkspaceBrowser({
   // Live occupancy of this surface's directory-flow hole (the same source the
   // flow reads): a composition without a picking affordance can add nothing.
   const directoryFlowAvailable = useDirectoryFlow(occupied => occupied)
+  const autoSettleAfterDays = useSettlement((snapshot) => {
+    const settings = snapshot.value
+      ?? (snapshot.status === 'unavailable' ? SHIPPED_WORKSPACE_SETTINGS : undefined)
+    return settings?.autoSettleInactive === true ? settings.autoSettleAfterDays : null
+  })
+  const now = useMinuteNow()
   const workspaceScope = useStore(s => s.workspaceScope)
   const groupBy = useStore(s => s.groupBy)
   const orderBy = useStore(s => s.orderBy)
   const groupExpansion = useStore(s => s.groupExpansion)
+  const settledShelfExpanded = useStore(s => s.settledShelfExpanded === true)
   const sessionOrderByAccount = useStore(s => s.sessionOrderByAccount)
   const sessionUpdatedAtByAccount = useStore(s => s.sessionUpdatedAtByAccount)
   const scopedWorkspace = workspaces.find(workspace => workspace.workspaceId === workspaceScope)
@@ -1165,6 +1328,10 @@ export function WorkspaceBrowser({
                 archivedSessionIds={archivedSessionIds}
                 workspace={scopedWorkspace}
                 orderBy={orderBy}
+                now={now}
+                autoSettleAfterDays={autoSettleAfterDays}
+                settledShelfExpanded={settledShelfExpanded}
+                setSettledShelfExpanded={actions.setSettledShelfExpanded}
                 sessionOrderByAccount={sessionOrderByAccount}
                 sessionUpdatedAtByAccount={sessionUpdatedAtByAccount}
                 syncSessionOrderAccount={actions.syncSessionOrderAccount}
@@ -1191,6 +1358,11 @@ export function WorkspaceBrowser({
                 insertWorkspaceBefore={insertWorkspaceBefore}
                 insertSessionBefore={insertSessionBefore}
                 orderBy={orderBy}
+                now={now}
+                autoSettleAfterDays={autoSettleAfterDays}
+                settledShelfExpanded={settledShelfExpanded}
+                setSettledShelfExpanded={actions.setSettledShelfExpanded}
+                workspace={scopedWorkspace}
                 t={t}
                 onRenameRequest={(workspaceId, currentTitle) => {
                   setRenameTarget({ workspaceId, currentTitle })

@@ -10,12 +10,17 @@
  */
 import type { HostObservable } from '@monotykamary/dsh-client-ui-slots'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
+// Type-only: pulls the settingsScope service Context merge.
+import type {} from '@monotykamary/dsh-client-ui-settings/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from './contract/slots.ts'
 import { createWorkspaceViewStore } from './stores.ts'
 import { WorkspaceBrowser } from './WorkspaceBrowser.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
+import {
+  WORKSPACE_SETTINGS_NAMESPACE, type WorkspaceSettings,
+} from '../settled-settings.ts'
 import { en, zh, type WorkspaceKey } from './locales.ts'
 
 export type {
@@ -23,6 +28,8 @@ export type {
   WorkspaceBrowserInjected, WorkspaceBrowserProps, WorkspacePickerInjected, WorkspacePickerProps,
 } from './contract/slots.ts'
 export type { WorkspaceKey } from './locales.ts'
+export { SHIPPED_WORKSPACE_SETTINGS } from '../settled-settings.ts'
+export type { WorkspaceSettings } from '../settled-settings.ts'
 
 declare module '@monotykamary/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -42,7 +49,9 @@ const NS = 'workspace'
  * provides a waitable service. apply therefore depends on each slot
  * declaration through `slots.inject()` instead of assuming order.
  */
-export const inject = ['slots', 'sessions', 'workspaces', 'locale']
+export const inject = [
+  'slots', 'sessions', 'workspaces', 'locale', 'connection', 'remote', 'settingsScope',
+]
 
 /**
  * Register the browser and picker once their slot declarations are on the
@@ -51,6 +60,7 @@ export const inject = ['slots', 'sessions', 'workspaces', 'locale']
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
+  const settlement = ctx.settingsScope.bind<WorkspaceSettings>({ namespace: WORKSPACE_SETTINGS_NAMESPACE })
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace: dictionaries')
 
   const searchSessions: WorkspaceBrowserInjected['searchSessions'] = async (query, signal) => {
@@ -99,7 +109,7 @@ export function apply(ctx: ClientContext): void {
       await ctx.workspaces.insertSessionBefore(workspaceId, sessionId, beforeSessionId)
     },
     createWorkspace: input => ctx.workspaces.create(input),
-    hooks: { directoryFlow: browserFlowSource },
+    hooks: { directoryFlow: browserFlowSource, settlement },
   })
   const pickerInjected = (): WorkspacePickerInjected => ({
     createWorkspace: input => ctx.workspaces.create(input),

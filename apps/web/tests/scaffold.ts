@@ -671,6 +671,7 @@ export function fixtureUserPrompts(fixtureText: string): string[] {
  * @param id - the seeded session id (stable for deterministic goldens).
  * @param agentPreset - the preset the recorded session was composed from,
  *   for scenarios asserting what a resumed session reports running.
+ * @param createdAt - optional header creation time for age-sensitive list scenarios.
  * @returns the seeded id.
  */
 /**
@@ -699,6 +700,7 @@ export async function seedSession(
   fixtureText: string,
   id: string,
   agentPreset?: string,
+  createdAt = Date.now() - 60_000,
 ): Promise<SessionId> {
   const events = parseSessionLog(realizeSeedFixture(scaffold, fixtureText, id))
   if (events.length === 0) throw new Error('seed fixture has no events')
@@ -709,7 +711,7 @@ export async function seedSession(
   const meta: SessionHeader = {
     version: SESSION_FORMAT_VERSION,
     id: SessionId(id),
-    createdAt: Date.now() - 60_000,
+    createdAt,
     cwd: scaffold.workspaceCwd,
     delegationDepth: 0,
     ...agentPreset === undefined ? {} : { agentPreset },

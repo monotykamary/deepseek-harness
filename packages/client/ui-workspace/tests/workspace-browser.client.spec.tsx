@@ -51,6 +51,33 @@ function hook<T>(snapshot: T) {
   return function select<S>(selector: (state: T) => S): S { return selector(snapshot) }
 }
 
+function unavailableSettlement() {
+  return hook({
+    status: 'unavailable' as const,
+    value: undefined,
+    base: undefined,
+    user: undefined,
+    revision: undefined,
+    writable: false,
+    mode: 'memory' as const,
+  })
+}
+
+function settlement(autoSettleAfterDays: number | null) {
+  return hook({
+    status: 'ready' as const,
+    value: {
+      autoSettleInactive: autoSettleAfterDays !== null,
+      autoSettleAfterDays: autoSettleAfterDays ?? 3,
+    },
+    base: {},
+    user: {},
+    revision: 1,
+    writable: true,
+    mode: 'host' as const,
+  })
+}
+
 /** jsdom lacks DragEvent — the fireEvent fallback drops clientY, so pin it on the built event. */
 function fireDrag(row: HTMLElement, kind: 'dragOver' | 'drop', clientY: number): void {
   const event = kind === 'dragOver' ? createEvent.dragOver(row) : createEvent.drop(row)
@@ -85,6 +112,7 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     insertSessionBefore: vi.fn(async () => {}),
     createWorkspace: vi.fn(async () => workspace('created', [])),
     useDirectoryFlow: bindSnapshotSelector({ getSnapshot: () => true, subscribe: () => () => {} }),
+    useSettlement: settlement(null),
     renderSlot: ((_name: string, owner: { open: boolean }) => (owner.open ? <div data-testid="directory-flow" /> : null)) as never,
     t,
     ...overrides,
@@ -111,6 +139,83 @@ function clickWorkspace(label: string): void {
 }
 
 describe('WorkspaceBrowser', () => {
+  it('collapses stale Sessions into a persisted settled shelf and reveals them on demand', () => {
+    const day = 86_400_000
+    const now = Date.now()
+    const active = summary('active-session', now - 2 * day)
+    const stale = summary('stale-session', now - 4 * day)
+    const b = mount({
+      useSessions: hook(sessionState([active, stale])),
+      useSettlement: settlement(3),
+    })
+    act(() => { b.store.actions.setGroupBy('flat') })
+
+    expect(screen.getByText('active-session')).toBeTruthy()
+    expect(screen.queryByText('stale-session')).toBeNull()
+    const toggle = screen.getByRole('button', { name: '已结（1）' })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(toggle)
+    expect(b.store.getSnapshot().settledShelfExpanded).toBe(true)
+    expect(screen.getByText('stale-session')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '已结' }).getAttribute('aria-expanded')).toBe('true')
+
+    b.view.unmount()
+    mount({
+      useSessions: hook(sessionState([active, stale])),
+      useSettlement: settlement(3),
+    })
+    expect(screen.getByText('stale-session')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '已结' }).getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('uses the shipped policy when remote settings are intentionally unavailable', () => {
+    const stale = summary('remote-stale', Date.now() - 4 * 86_400_000)
+    const b = mount({
+      useSessions: hook(sessionState([stale])),
+      useSettlement: unavailableSettlement(),
+    })
+    act(() => { b.store.actions.setGroupBy('flat') })
+    expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
+  })
+
+  it('moves a Session into the shelf when the minute clock crosses its inactivity boundary', () => {
+    vi.useFakeTimers()
+    try {
+      const now = new Date('2026-08-19T12:00:00.000Z').getTime()
+      vi.setSystemTime(now)
+      const boundary = summary('boundary-session', now - 3 * 86_400_000)
+      const b = mount({
+        useSessions: hook(sessionState([boundary])),
+        useSettlement: settlement(3),
+      })
+      act(() => { b.store.actions.setGroupBy('flat') })
+      expect(screen.getByText('boundary-session')).toBeTruthy()
+
+      act(() => { vi.advanceTimersByTime(120_000) })
+      expect(screen.queryByText('boundary-session')).toBeNull()
+      expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
+      b.view.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('pages settled history ten rows first and twenty-five rows at a time', () => {
+    const day = 86_400_000
+    const now = Date.now()
+    const stale = Array.from({ length: 36 }, (_, index) =>
+      summary(`stale-${String(index + 1)}`, now - (index + 4) * day))
+    const b = mount({ useSessions: hook(sessionState(stale)), useSettlement: settlement(3) })
+    act(() => { b.store.actions.setGroupBy('flat') })
+
+    fireEvent.click(screen.getByRole('button', { name: '已结（36）' }))
+    expect(screen.getAllByRole('treeitem')).toHaveLength(10)
+    const showMore = screen.getByRole('button', { name: '再显示 25 个' })
+    fireEvent.click(showMore)
+    expect(screen.getAllByRole('treeitem')).toHaveLength(35)
+    expect(screen.getByRole('button', { name: '再显示 1 个' })).toBeTruthy()
+  })
+
   it('prunes deleted Workspace view state only after the Workspace baseline is ready', async () => {
     const pending = {
       ...workspaceState([]),

@@ -25,6 +25,17 @@
   background: var(--dsw-specific-sidebar-row-active);
 }
 
+.sessionRow.settled {
+  opacity: 0.62;
+  transition: opacity var(--ds-transition-duration-fast) var(--ds-ease-in-out);
+}
+
+.sessionRow.settled:hover,
+.sessionRow.settled:focus-within,
+.sessionRow.settled.menuOpen {
+  opacity: 1;
+}
+
 .searchResultRow {
   display: flex;
   flex-direction: column;

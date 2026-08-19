@@ -6,6 +6,8 @@
 
 该浏览器通过全局运行时钩子将 Session 行渲染为分组或扁平形式，并负责 Workspace 添加／重命名／重排序以及 Session 重排序。每个 Workspace 会记住自身是关闭还是显示 Session；打开后默认显示五条 Session，其余条目通过临时的**展开其余**控件显示，而关闭并重新打开整个 Workspace 后会恢复为五条。从 Workspace 行创建 Session 时会先打开该分组，使 Session 状态到达后新行保持可见。Workspace 列表基线就绪后，浏览器持久化的展开状态与 Session 顺序记录只保留当前 Workspace id、Ungrouped 和单列表记账。视图选项把分组方式和每个记账各自的一份浏览器持久化 Session 顺序放在一起：真实 Workspace 从 `WorkspaceView.sessionIds` 初始化，Ungrouped 和跨 Workspace 的单列表则从最近更新时间顺序初始化。**手动排序**和**最近更新**在两种呈现方式下都可用。进入最近更新时会执行一次完整的时间排序，后续 user prompt 或 steer 会将对应 Session 置顶一次；进入手动排序则保留所有当前位置并停用后续置顶。两种模式下的拖拽都会编辑当前顺序；真实 Workspace 在手动模式下的拖拽还会更新 Host Session 记账，而 Ungrouped 和单列表因没有单一 Workspace 记账，其顺序始终只保存在浏览器本地。每条可见 Session 在分组和单列表模式下都使用同一张最小高度 78px 的卡片：顶行承载 Workspace 上下文与主要实时状态或相对时间，中行承载持久化标题，底行承载 agent preset 与时间。当前路由使用 active-row token；hover 或键盘焦点只会把尾部状态 seat 替换为行操作，因此文字不会位移。无论采用哪种 Session 顺序，Workspace 拖拽顺序都由 Host 持久化。
 
+已结 Session shelf 同样改编自该 T3 修订版。Host 注册 `ui-workspace` 设置 namespace：`autoSettleInactive` 启用策略，`autoSettleAfterDays` 接受 1 到 90 的整数；发货 Cordis 行显式配置为启用和三天；在 loopback 设置传输上，patch 或用户设置分节可以替换任一字段。配置平面有意不可用的非 loopback 浏览器会在进程内使用同一套发货值。分钟量化时钟只会把超过阈值的不活跃行移入 shelf。当前或空白 Session、待处理交互、未查看完成提醒、运行中的 parent 或 subagent 后代，以及 running／stopping 后台 job 都留在活跃区；已结 job 的完成时间会延长活动时间。分组和扁平模式会从活跃列表中移除陈旧行，并在底部共享一个按最近活动排序的 shelf。disclosure 偏好会跨重载保留，打开时先显示最新 10 行，之后每次显式操作再显示 25 行；shelf 卡片在 hover／focus 前保持弱化。Search 无需打开 shelf 也会继续包含已结 Session。
+
 卡片和固定区头层级改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`；DSH 保留自己的 Workspace 分组、状态点、操作、拖拽记账与对象层数据。[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整的 T3 MIT 文本。
 
 Search 在展开态始终作为第一行 32px 控件挂载，其后是包含视图选项与添加工作区操作的**所有工作区**或**所有会话**作用域行。查询在折叠后仍会保留；轨道中的 Search 控件会展开侧栏，并在 300 ms 滑动结束后聚焦输入框；清除操作只重置查询，不移除输入框。非空白查询会以单一扁平结果列表替代任一浏览模式：不区分大小写的标题和 Workspace 子串匹配项立即显示，经 250 ms 防抖的 Host 请求则加入经过排序的当前对话内容匹配项及其摘要片段。受控输入会移除 NUL，将查询限制在传输 schema 规定的 500 个 UTF-16 代码单元内且不会拆分代理项对，并保留防抖与取消。每次新查询都会中止前一个请求；内容搜索失败时，元数据匹配项仍会显示，同时给出警告。列表最多显示 20 条结果，并在查询过宽时提示用户缩小范围；打开所选 Session 时既不清除查询，也不跳转至特定事件。
@@ -33,6 +35,7 @@ Session 卡片渲染运行时的实时 `pendingInteraction` 分类：审批显�
 ## 已知限制与暂缓事项
 
 - **没有模糊内容搜索或事件深链接**：内容后端采用字面 token／短语匹配，选择结果会打开 Session，而不是匹配的事件。
-- **没有 Session 删除与取消归档控件**：会话可以归档，但已归档会话没有查看或取消归档入口；删除 Workspace 注册记录不会删除 Session。\n- **没有 T3 风格的已结会话 shelf**：不活跃 Session 仍保留在对应 Workspace 分组中；运行时没有可供浏览器按折叠历史 disclosure 分区的持久 settled 状态或不活跃策略。
+- **没有 Session 删除与取消归档控件**：会话可以归档，但已归档会话没有查看或取消归档入口；删除 Workspace 注册记录不会删除 Session。
 - **待处理的用户交互不会聚合到折叠的分组上**：折叠分组内正在等待的行不会点亮分组头指示，只有展开该分组后才可见。
+- **远程浏览器使用发货 auto-settle 值**：仅 operator 可用的设置平面不会向非 loopback 浏览器公开 Cordis 或用户 override，因此它在进程内使用启用／三天。
 - **原生文件夹选择依赖本地 Host 载体**：在 `-native` 组合下，进程内部署或远程浏览器部署无法打开本地操作系统对话框；模态框会显示平台故障，并允许重试。可远程的选取是 `-browse` 组合的应用内流程。

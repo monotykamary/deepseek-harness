@@ -10,9 +10,8 @@ describe('invariant companion', () => {
     await expect(ctx.plugin(WorkspaceInvariant).await()).resolves.toBeDefined()
   })
 
-  it('node-half apply is a no-op host placeholder', async () => {
-    const { apply } = await import('@monotykamary/dsh-client-ui-workspace')
-    apply()
-    expect(true).toBe(true) // reaching here without throw is the contract
+  it('node half exports its validated settled-session policy', async () => {
+    const { Config } = await import('@monotykamary/dsh-client-ui-workspace')
+    expect(Config({})).toEqual({ autoSettleInactive: true, autoSettleAfterDays: 3 })
   })
 })
