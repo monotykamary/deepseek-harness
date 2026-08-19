@@ -139,7 +139,7 @@ function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 24, cols: 80,
     scrollbackLines: 10, scrollbackMaxBytes: 128, interactiveReplayMaxBytes: 64, maxReadBytes: 64,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 50, handoffGraceMs: 10, timeoutMs: 100,
-    disposeGraceMs: 20,
+    disposeGraceMs: 20, unattendedExitMs: 30 * 60_000,
     ...overrides,
   }
 }
@@ -1394,4 +1394,70 @@ describe('LocalPtySession bounds, signals, and teardown', () => {
     expect((await operation.done).waitReason).toBe('session_exit')
   })
 
+})
+
+describe('LocalPtySession unattended teardown', () => {
+  it('closes an interactive session once its unattended window lapses with no viewer', async () => {
+    vi.useFakeTimers()
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config({ unattendedExitMs: 500 }), 'interactive')
+    expect(terminal.kills).toEqual([])
+
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(terminal.kills).toEqual(['SIGTERM'])
+    expect(session.status()).toEqual({ kind: 'exited', exitCode: null, signal: 'SIGTERM' })
+    expect(() => session.attach()).toThrow('closing')
+  })
+
+  it('a viewer clears the deadline and its detach re-arms it', async () => {
+    vi.useFakeTimers()
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config({ unattendedExitMs: 500 }), 'interactive')
+    const attachment = session.attach()
+
+    await vi.advanceTimersByTimeAsync(2_000)
+
+    expect(terminal.kills).toEqual([])
+    expect(session.status()).toEqual({ kind: 'running' })
+
+    attachment.close()
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(terminal.kills).toEqual(['SIGTERM'])
+  })
+
+  it('does not close a naturally exited interactive session again on the deadline', async () => {
+    vi.useFakeTimers()
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config({ unattendedExitMs: 500 }), 'interactive')
+    terminal.emitExit(0)
+
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    expect(terminal.kills).toEqual([])
+    expect(session.status()).toEqual({ kind: 'exited', exitCode: 0, signal: null })
+  })
+
+  it('disables unattended teardown when unattendedExitMs is 0', async () => {
+    vi.useFakeTimers()
+    const terminal = new FakeTerminal()
+    const session = new LocalPtySession(terminal, config({ unattendedExitMs: 0 }), 'interactive')
+
+    await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1_000)
+
+    expect(terminal.kills).toEqual([])
+    expect(session.status()).toEqual({ kind: 'running' })
+  })
+
+  it('never arms unattended teardown for controlled (model) sessions', async () => {
+    vi.useFakeTimers()
+    const terminal = new FakeTerminal()
+    const session = makeSession(terminal, new FakeInspector(), config({ unattendedExitMs: 500 }))
+
+    await vi.advanceTimersByTimeAsync(2_000)
+
+    expect(terminal.kills).toEqual([])
+    expect(session.status()).toEqual({ kind: 'running' })
+  })
 })

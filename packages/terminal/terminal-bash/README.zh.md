@@ -10,7 +10,7 @@
 
 带有 `interactive: true` 的 spawn 会启动从 `$SHELL` 解析的原生 login shell（缺失时使用平台默认值），保留其启动文件与提示符，声明 `TERM=xterm-256color` 和 `COLORTERM=truecolor`，并且不经过模型 shell 的受控就绪提示符即可发布。模型会话继续使用配置的 shell argv 与就绪 framing。
 
-每个交互式 attachment 会先收到受 `interactiveReplayMaxBytes` 限制的原始 replay，随后接收实时 PTY 字节流；输出会分发给所有已附加查看方。原始 replay 与面向行的 retention 使用增量 leading-trim deque，因此每个 PTY callback 只处理新增与丢弃的 chunk，而不会重新扫描保留历史；snapshot 仅在请求时拼接。来自所有查看方的输入操作会串行执行。首个查看方拥有 PTY 尺寸；输入会把对应查看方提升为 resize owner，并在写入前应用该查看方的最新网格；owner detach 后会恢复最近交互的剩余查看方网格。detach 只移除对应 stream tap，并保留 shell。浏览器与模型 Consumer 因此可以共享同一个后端，但并发输入只保留 PTY 顺序，不提供事务隔离。
+每个交互式 attachment 会先收到受 `interactiveReplayMaxBytes` 限制的原始 replay，随后接收实时 PTY 字节流；输出会分发给所有已附加查看方。原始 replay 与面向行的 retention 使用增量 leading-trim deque，因此每个 PTY callback 只处理新增与丢弃的 chunk，而不会重新扫描保留历史；snapshot 仅在请求时拼接。来自所有查看方的输入操作会串行执行。首个查看方拥有 PTY 尺寸；输入会把对应查看方提升为 resize owner，并在写入前应用该查看方的最新网格；owner detach 后会恢复最近交互的剩余查看方网格。detach 只移除对应 stream tap，并保留 shell。若交互式会话在 `unattendedExitMs`（默认 30 分钟；设为 `0` 可禁用）内一直没有查看方，后端会将其关闭，回收孤立的 PTY 进程。浏览器与模型 Consumer 因此可以共享同一个后端，但并发输入只保留 PTY 顺序，不提供事务隔离。
 
 就绪检测结合以下机制：由前台状态验证的私有 bash 提示符标记、提供方报告的前台 stdin 等待事实、静默回退和绝对超时。只有最新自有标记之后的可打印尾部与受控 `PS1` 完全相等，标记才算就绪；即使 OSC 标记和提示符被拆到多个数据回调中也一样。因此，较早提示符之后的回显输入或输出无法使当前 send 完成。受控 `PROMPT_COMMAND` 会在每次输出提示符前重新设定该 `PS1`，因此在 shell 内覆盖提示符不会使后续 send 退化到静默就绪。提供方写入前收集的提示符与静默证据，包括写入前前台检查仍在等待时收集的证据，都会在写入边界丢弃。如果 bash 在终端提供方发布其重新取得前台进程组的状态前打印标记，轮询会在普通静默上限之后再保留该候选状态 `handoffGraceMs`，使恰好同时发生的前台交接有机会胜出。因此，继承 `PROMPT_COMMAND` 的交互式子进程无法一直抑制推断空闲就绪直至绝对超时。未知的前台状态绝不会作为精确空闲的正向信号。同样，一次 send 之前就已存在的前台进程组 stdin 等待并不代表写入后就绪：必须先观察到同一进程组脱离该等待，之后再次进入等待才能使该次 send 完成；前台进程组发生变化则构成新的证据。尚未发布的启动过程中，回退路径要求已经观察到输出；零输出静默不能发布空会话，超时则拒绝 spawn。取消操作会关闭尚未发布的 shell，并以调用方提供的确切中止原因拒绝；`TerminalBackendCleanupError` 会单独保留清理失败。调用方的 signal 会转发给终端分配与就绪初始化；发布后，句柄负责其生命周期。未完成的终端控制序列受 `maxReadBytes` 限制；超过上限后，系统会丢弃内容直到其终止符。格式错误的 UTF-8 终端输出使用替换字符；末尾的回车会跨回调保留，使拆分的 CRLF 合并为一个换行。
 
@@ -37,4 +37,5 @@
 - 面向模型的保留读取仍按行规范化；原始交互式 attachment 支持备用缓冲区程序，但 replay 有界，可能从已丢弃的历史之后开始。
 - 精确 stdin 等待检测取决于已挂载的进程管理提供方；无法证明该状态的提供方使用提示符标记和静默／超时就绪机制。
 - 清理保证以 `SubprocessTerminalHandle` 的保证为准；提供方特定的缺口属于该实现的约定，而非这个 PTY 消费方。
+- 无人值守回收会在 `unattendedExitMs` 后关闭没有查看方的浏览器会话；已 detach 的长时间运行命令不会延长该窗口。
 - harness 进程退出后，会话无法继续存在。

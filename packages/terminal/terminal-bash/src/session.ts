@@ -149,6 +149,7 @@ export class LocalPtySession implements TerminalBackendSession {
   private closing = false
   private closePromise: Promise<void> | undefined
   private transportFailure: Error | undefined
+  private unattendedTimer: NodeJS.Timeout | undefined
 
   constructor(
     private readonly terminal: SubprocessTerminalHandle,
@@ -166,6 +167,11 @@ export class LocalPtySession implements TerminalBackendSession {
       outcome => this.onExit(outcome),
       (error: unknown) => { this.onTransportFailure(error) },
     )
+    // Browser-spawned (interactive) sessions start unattended: the gateway that
+    // spawns them attaches a viewer in the same handshake, and armUnattendedExit
+    // is cleared by that attach. A deadline that fires before any viewer ever
+    // attached reclaims the orphaned PTY.
+    if (this.mode === 'interactive') this.armUnattendedExit()
   }
 
   /**
@@ -271,6 +277,7 @@ export class LocalPtySession implements TerminalBackendSession {
     }
     this.interactive.add(state)
     this.interactiveResizeOwner ??= state
+    this.clearUnattendedExit()
     return handle
   }
 
@@ -280,6 +287,9 @@ export class LocalPtySession implements TerminalBackendSession {
     this.interactive.delete(state)
     state.output.destroy()
     if (this.interactiveResizeOwner === state) this.promoteInteractiveResizeOwner()
+    // Last viewer out restarts the unattended window; close() clears it first
+    // so its own attachment teardown never re-arms.
+    if (this.interactive.size === 0 && !this.closing) this.armUnattendedExit()
   }
 
   private enqueueInteractive(operation: () => Promise<void>): Promise<void> {
@@ -296,6 +306,32 @@ export class LocalPtySession implements TerminalBackendSession {
     const { cols, rows } = successor
     void this.enqueueInteractive(() => this.terminal.resize(cols, rows))
       .catch((error: unknown) => { this.onTransportFailure(error) })
+  }
+
+  /**
+   * Arm the unattended-exit deadline. Interactive sessions are attachment-only
+   * (startSend rejects), so a deadline can only find the session still viewerless;
+   * the fire-time guards below recheck the live facts anyway.
+   */
+  private armUnattendedExit(): void {
+    if (this.unattendedTimer !== undefined || this.config.unattendedExitMs <= 0) return
+    this.unattendedTimer = setTimeout(() => {
+      this.unattendedTimer = undefined
+      this.onUnattendedDeadline()
+    }, this.config.unattendedExitMs)
+  }
+
+  /** Cancel the unattended-exit deadline (a viewer attached or the session is closing). */
+  private clearUnattendedExit(): void {
+    if (this.unattendedTimer === undefined) return
+    clearTimeout(this.unattendedTimer)
+    this.unattendedTimer = undefined
+  }
+
+  /** Close a viewerless interactive session once its unattended window lapses. */
+  private onUnattendedDeadline(): void {
+    if (this.closing || this.statusValue.kind !== 'running' || this.interactive.size > 0) return
+    void this.close('unattended')
   }
 
   private async beginSend(operation: LocalSendOperation, request: TerminalSendRequest): Promise<void> {
@@ -392,6 +428,7 @@ export class LocalPtySession implements TerminalBackendSession {
 
   close(reason: string): Promise<void> {
     this.closing = true
+    this.clearUnattendedExit()
     for (const attachment of [...this.interactive]) this.closeInteractive(attachment)
     if (this.closePromise !== undefined) return this.closePromise
     const closing = this.closeOnce(reason).catch((error: unknown) => {
@@ -449,6 +486,7 @@ export class LocalPtySession implements TerminalBackendSession {
     await this.outputEnded.promise
     if (this.transportFailure !== undefined) return
     this.statusValue = { kind: 'exited', exitCode: outcome.exitCode, signal: outcome.signal }
+    this.clearUnattendedExit()
     this.settleActive('session_exit')
   }
 
@@ -456,6 +494,7 @@ export class LocalPtySession implements TerminalBackendSession {
     const failure = error instanceof Error ? error : new Error(String(error))
     this.transportFailure ??= failure
     this.statusValue = { kind: 'exited', exitCode: null, signal: null }
+    this.clearUnattendedExit()
     this.failActive(failure)
     void this.terminal.terminate().catch(() => {})
   }

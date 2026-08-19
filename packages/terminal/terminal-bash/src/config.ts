@@ -41,6 +41,12 @@ export interface Config {
   timeoutMs?: number
   /** Grace before teardown escalates to `SIGKILL`. */
   disposeGraceMs?: number
+  /**
+   * Maximum wall-clock time an interactive (browser-facing) session may remain
+   * without any interactive attachment before the backend closes it; `0`
+   * disables unattended teardown (default: 30 minutes).
+   */
+  unattendedExitMs?: number
 }
 
 /** Configuration after Schemastery defaults. */
@@ -67,6 +73,7 @@ export const Config: z<Config> = z.object({
   handoffGraceMs: z.number().default(500),
   timeoutMs: z.number().default(30_000),
   disposeGraceMs: z.number().default(3_000),
+  unattendedExitMs: z.number().min(0).default(30 * 60_000),
 })
 
 /**
@@ -82,9 +89,14 @@ export function validateConfig(config: Config): asserts config is ResolvedConfig
     throw new Error('terminal-bash: interactiveShellPath must be non-empty when provided')
   }
   for (const [name, value] of Object.entries(resolved)) {
+    // unattendedExitMs is the one zero-valued field (0 = disabled); check it below.
+    if (name === 'unattendedExitMs') continue
     if (typeof value === 'number' && (!Number.isSafeInteger(value) || value <= 0)) {
       throw new Error(`terminal-bash: ${name} must be a positive safe integer`)
     }
+  }
+  if (!Number.isSafeInteger(resolved.unattendedExitMs) || resolved.unattendedExitMs < 0) {
+    throw new Error('terminal-bash: unattendedExitMs must be a non-negative safe integer')
   }
   if (resolved.maxReadBytes > resolved.scrollbackMaxBytes) {
     throw new Error('terminal-bash: maxReadBytes must not exceed scrollbackMaxBytes')

@@ -7,7 +7,7 @@ function config(overrides: Partial<Config> = {}): Config {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 40, cols: 160,
     scrollbackLines: 100, scrollbackMaxBytes: 1024, interactiveReplayMaxBytes: 768, maxReadBytes: 512,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 100, handoffGraceMs: 50, timeoutMs: 1000,
-    disposeGraceMs: 100,
+    disposeGraceMs: 100, unattendedExitMs: 30 * 60_000,
     ...overrides,
   }
 }
@@ -29,5 +29,11 @@ describe('terminal-bash config', () => {
   it('rejects a handoff grace shorter than one readiness poll', () => {
     expect(() => { validateConfig(config({ handoffGraceMs: 9, pollIntervalMs: 10 })) }).toThrow('handoffGraceMs must be at least pollIntervalMs')
     expect(() => { validateConfig(config({ handoffGraceMs: 10, pollIntervalMs: 10 })) }).not.toThrow()
+  })
+
+  it('accepts a disabled unattended-exit window and rejects negative or fractional values', () => {
+    expect(() => { validateConfig(config({ unattendedExitMs: 0 })) }).not.toThrow()
+    expect(() => { validateConfig(config({ unattendedExitMs: -1 })) }).toThrow('unattendedExitMs')
+    expect(() => { validateConfig(config({ unattendedExitMs: 1.5 })) }).toThrow('unattendedExitMs')
   })
 })

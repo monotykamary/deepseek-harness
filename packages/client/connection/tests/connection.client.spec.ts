@@ -19,6 +19,27 @@ function subscribedFrame(lastSeq = 0) {
   return { type: 'session/subscribed', sessionId: SID, lastSeq } as const
 }
 
+/** Minimal document stub for the visibility gate (node-env specs have no document). */
+function installDocumentVisibility(initial: 'visible' | 'hidden' = 'visible'): { hide(): void; show(): void; restore(): void } {
+  const listeners = new Set<() => void>()
+  const state = { hidden: initial === 'hidden' }
+  const document = {
+    get visibilityState() { return state.hidden ? 'hidden' : 'visible' },
+    addEventListener(type: string, listener: () => void) {
+      if (type === 'visibilitychange') listeners.add(listener)
+    },
+    removeEventListener(type: string, listener: () => void) {
+      if (type === 'visibilitychange') listeners.delete(listener)
+    },
+  }
+  vi.stubGlobal('document', document)
+  return {
+    hide() { state.hidden = true },
+    show() { state.hidden = false; for (const listener of [...listeners]) listener() },
+    restore() { vi.unstubAllGlobals() },
+  }
+}
+
 describe('connection lifecycle', () => {
   it('announces connected after describe + both streams open, then pumps frames to sinks', async () => {
     const api = new FakeApiClient()
@@ -317,6 +338,90 @@ describe('connection lifecycle', () => {
       expect(api.callsOf('host.describe')).toHaveLength(1)
     } finally {
       controller.stop()
+    }
+  })
+
+  it('pauses retries while the document is hidden and resumes immediately on visibility', async () => {
+    const visibility = installDocumentVisibility('visible')
+    const api = new FakeApiClient()
+    const failure = deferred<Awaited<ReturnType<FakeApiClient['onDescribe']>>>()
+    let describeCalls = 0
+    api.onDescribe = () => {
+      describeCalls++
+      return describeCalls === 1
+        ? failure.promise
+        : Promise.resolve(ok({ version: '0', cwd: '/f', attachedSessions: 0, canOpenPath: true }))
+    }
+    let connected = 0
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const controller = new ConnectionController(api, { onConnected: () => { connected++ } }, FAST)
+    controller.start()
+    try {
+      await vi.waitFor(() => { expect(describeCalls).toBe(1) })
+      visibility.hide()
+      failure.reject(new Error('host down'))
+      // Several backoff windows pass while hidden: the loop must not retry.
+      await new Promise(resolve => setTimeout(resolve, 60))
+      expect(describeCalls).toBe(1)
+      visibility.show()
+      await vi.waitFor(() => { expect(describeCalls).toBe(2) }) // immediate retry on visibility
+      await vi.waitFor(() => { expect(connected).toBe(1) })
+    } finally {
+      controller.stop()
+      visibility.restore()
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('stop() ends a hidden-tab visibility wait without further retries', async () => {
+    const visibility = installDocumentVisibility('visible')
+    const api = new FakeApiClient()
+    const failure = deferred<Awaited<ReturnType<FakeApiClient['onDescribe']>>>()
+    let describeCalls = 0
+    api.onDescribe = () => {
+      describeCalls++
+      return failure.promise
+    }
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const controller = new ConnectionController(api, {}, FAST)
+    controller.start()
+    try {
+      await vi.waitFor(() => { expect(describeCalls).toBe(1) })
+      visibility.hide()
+      failure.reject(new Error('host down'))
+      await new Promise(resolve => setTimeout(resolve, 30)) // settled into the paused wait
+      controller.stop()
+      visibility.show()
+      await new Promise(resolve => setTimeout(resolve, 40))
+      expect(describeCalls).toBe(1) // no retry after stop + visibility
+      expect(api.openMuxCount).toBe(0)
+    } finally {
+      controller.stop()
+      visibility.restore()
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('stop() aborts an in-flight backoff sleep so a restart never races a stale loop', async () => {
+    const api = new FakeApiClient()
+    const SLOW = { backoffBaseMs: 300, backoffFactor: 1, backoffMaxMs: 300, streamOpenTimeoutMs: 500 }
+    let connected = 0
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const controller = new ConnectionController(api, { onConnected: () => { connected++ } }, SLOW)
+    controller.start()
+    try {
+      await vi.waitFor(() => { expect(connected).toBe(1) })
+      api.failStreams(new Error('torn'))
+      await vi.waitFor(() => { expect(api.openMuxCount).toBe(0) })
+      controller.stop() // the loop now sleeps 150-300ms; stop() must abort it
+      controller.start() // a fresh loop reconnects immediately (first attempt always runs)
+      await vi.waitFor(() => { expect(connected).toBe(2) })
+      await new Promise(resolve => setTimeout(resolve, 400)) // past the abandoned backoff window
+      expect(api.openMuxCount).toBe(1) // the stale loop never woke to open a second generation
+      expect(api.callsOf('host.describe')).toHaveLength(2)
+    } finally {
+      controller.stop()
+      warnSpy.mockRestore()
     }
   })
 })

@@ -35,6 +35,23 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   })
 }
 
+/** Whether the current document is a hidden tab; false where no document exists. */
+const isDocumentHidden = (): boolean =>
+  typeof document !== 'undefined' && document.visibilityState === 'hidden'
+
+/** Resolve when the document becomes visible or the signal aborts. */
+function waitForVisible(signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const done = (): void => {
+      document.removeEventListener('visibilitychange', done)
+      signal.removeEventListener('abort', done)
+      resolve()
+    }
+    document.addEventListener('visibilitychange', done)
+    signal.addEventListener('abort', done, { once: true })
+  })
+}
+
 /** Coarse connection state for the UI: 'connected' after each generation's handshake,
  *  'reconnecting' the moment the generation fails (covers the whole backoff+retry span). */
 export type ConnectionState = 'connected' | 'reconnecting'
@@ -54,14 +71,20 @@ export interface ConnectionSinks {
 /**
  * Opens both streams and keeps iterating (pull mode: nothing reads the socket and the tap
  * never fires unless someone for-awaits), reconnecting with exponential backoff on loss.
- * State (generation/attempt) is instance-private, never in the store.
+ * While the document is hidden, retries wait for visibility instead of backing off (nothing
+ * renders in a hidden tab, so the retry churn is pure waste); the first attempt of a started
+ * controller always runs. stop() aborts the active generation and the current backoff or
+ * visibility wait, and each start() begins a new loop epoch that invalidates any earlier loop
+ * still parked in a wait. State (generation/attempt) is instance-private, never in the store.
  * The pump body feeds each frame to a sink (sink exceptions must
  * not kill the pump — a broken business layer must not drag down the connection layer).
  */
 export class ConnectionController {
   private generation = 0
   private attempt = 0
+  private loopEpoch = 0
   private current: AbortController | null = null
+  private backoffWait: AbortController | null = null
   private running = false
   private lastState: ConnectionState | null = null
   private readonly config: Required<ConnectionConfig>
@@ -74,18 +97,24 @@ export class ConnectionController {
     this.config = { ...CONNECTION_DEFAULTS, ...config }
   }
 
-  /** Idempotent: begin the connect/pump/reconnect loop. */
+  /** Idempotent: begin the connect/pump/reconnect loop under a fresh epoch. */
   start(): void {
     if (this.running) return
     this.running = true
-    void this.loop()
+    this.loopEpoch += 1
+    void this.loop(this.loopEpoch)
   }
 
-  /** Stop the loop and abort the current generation's streams. */
+  /** Stop the loop, the current generation's streams, and any backoff or visibility wait.
+   *  The epoch bump also invalidates a loop still parked in that wait, so a quick
+   *  stop()/start() can never race a stale second loop into reopening streams. */
   stop(): void {
     this.running = false
+    this.loopEpoch += 1
     this.current?.abort()
     this.current = null
+    this.backoffWait?.abort()
+    this.backoffWait = null
   }
 
   private backoffDelay(attempt: number): number {
@@ -104,8 +133,8 @@ export class ConnectionController {
     return this.isRunning() && !controller.signal.aborted
   }
 
-  private async loop(): Promise<void> {
-    while (this.running) {
+  private async loop(epoch: number): Promise<void> {
+    while (this.running && epoch === this.loopEpoch) {
       const gen = ++this.generation
       const ac = new AbortController()
       this.current = ac
@@ -159,12 +188,22 @@ export class ConnectionController {
       }
 
       await failed
-      if (!this.isRunning()) return
+      if (!this.isRunning() || epoch !== this.loopEpoch) return
       this.emitState('reconnecting')
       this.attempt += 1
       console.warn(`[web-runtime] connection lost, retry #${this.attempt}`)
+      // Hidden tabs pause between generations: the backoff span is replaced by a
+      // visibility wait, and the return to visibility reconnects immediately (the
+      // delay has already elapsed while hidden). Both waits share one controller
+      // so stop() aborts whichever is armed.
       const idle = new AbortController()
-      await sleep(this.backoffDelay(this.attempt), idle.signal)
+      this.backoffWait = idle
+      if (isDocumentHidden()) {
+        await waitForVisible(idle.signal)
+      } else {
+        await sleep(this.backoffDelay(this.attempt), idle.signal)
+      }
+      this.backoffWait = null
     }
   }
 
