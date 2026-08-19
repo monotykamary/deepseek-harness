@@ -26,6 +26,7 @@ None.
 
 ## Known Limitations and Deferred Work
 
+- Predictive local echo is not enabled. The browser does not have an authoritative prompt-versus-password state for an arbitrary native login shell, so speculative rendering could expose input that the shell intentionally suppresses; PTY echo remains authoritative.
 - Appearance preferences are local to one browser profile rather than synchronized through Host user settings.
 - Only the active tab holds a WebSocket attachment; switching tabs detaches the prior terminal but leaves its process alive.
 - Named JetBrains Mono, Fira Code, and custom families must be installed in the browser’s system; unavailable choices fall back to the system monospace chain.

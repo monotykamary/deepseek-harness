@@ -11,7 +11,7 @@ import type {
 } from '@monotykamary/dsh-terminal'
 import WebSocket from 'ws'
 import {
-  BrowserTerminalGateway, TERMINAL_WEBSOCKET_PATH,
+  BrowserTerminalGateway, Config, TERMINAL_WEBSOCKET_PATH,
 } from '../src/index.ts'
 import type { BrowserTerminalServerControl } from '../src/protocol.ts'
 
@@ -338,6 +338,7 @@ describe('BrowserTerminalGateway', () => {
   })
 
   it('validates deployment limits and destroys upgrades after disposal starts', async () => {
+    expect(Config({})).toMatchObject({ outputBatchWindowMs: 2, outputStreamThresholdMs: 100 })
     expect(() => harness(new FakeTerminals(), 'owner', { backendType: '' })).toThrow('backendType')
     expect(() => harness(new FakeTerminals(), 'owner', { maxRows: 0 })).toThrow('maxRows')
     expect(() => harness(new FakeTerminals(), 'owner', {

@@ -60,7 +60,7 @@ interface TerminalBackendSession {
 
 ## Raw interactive attachments
 
-A human-facing Consumer can attach to an owned published session without entering the model-facing send/readiness protocol. Every viewer starts with bounded raw replay and follows live PTY bytes independently. Input from all viewers is ordered, and the most recently interactive viewer owns the shared viewport size; detaching that viewer restores the latest remaining viewer’s grid without killing the process. Multiple viewers do not create independent input transactions.
+A human-facing Consumer can attach to an owned published session without entering the model-facing send/readiness protocol. Every viewer starts with bounded raw replay and follows live PTY bytes independently. Input from all viewers is ordered, and the most recently interactive viewer owns the shared viewport size; detaching that viewer restores the latest remaining viewer’s grid without killing the process. Multiple viewers do not create independent input transactions. `SerialOperationQueue` starts an idle terminal operation in the accepting task, preserves FIFO order once a provider becomes asynchronous, isolates failed operations, and exposes quiescence for teardown.
 
 ```ts type-equiv
 /** One independently disposable viewer of a human-facing raw terminal. */
@@ -214,5 +214,5 @@ list(owner: Agent): TerminalSessionSnapshot[]
 
 Types: [Agent](core.md)
 
-Source: [`packages/terminal/terminal/src/index.ts:110`](../../packages/terminal/terminal/src/index.ts)
+Source: [`packages/terminal/terminal/src/index.ts:112`](../../packages/terminal/terminal/src/index.ts)
 <!-- END GENERATED cordis-surface -->

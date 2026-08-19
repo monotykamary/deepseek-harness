@@ -7,7 +7,7 @@ import type {
   SubprocessTerminalForeground,
   SubprocessTerminalHandle,
 } from '@monotykamary/dsh-subprocess'
-import { TerminalError } from '@monotykamary/dsh-terminal'
+import { SerialOperationQueue, TerminalError } from '@monotykamary/dsh-terminal'
 import type {
   TerminalBackendSession,
   TerminalInteractiveAttachment,
@@ -22,91 +22,9 @@ import type {
   TerminalSignalResult,
   TerminalWaitReason,
 } from '@monotykamary/dsh-terminal'
+import { BoundedByteBuffer, BoundedTextBuffer, utf8Tail } from './bounded-output.ts'
 import type { ResolvedConfig } from './config.ts'
 import { CONTROLLED_PROMPT, TerminalSanitizer } from './sanitize.ts'
-
-function utf8Tail(text: string, maxBytes: number): { text: string; truncated: boolean } {
-  if (Buffer.byteLength(text) <= maxBytes) return { text, truncated: false }
-  const chars = Array.from(text)
-  let bytes = 0
-  let start = chars.length
-  while (start > 0) {
-    const next = Buffer.byteLength(chars[start - 1] as string)
-    if (bytes + next > maxBytes) break
-    bytes += next
-    start -= 1
-  }
-  return { text: chars.slice(start).join(''), truncated: true }
-}
-
-class BoundedTextBuffer {
-  private value = ''
-  private dropped = false
-
-  constructor(
-    private readonly maxBytes: number,
-    private readonly maxLines?: number,
-  ) {}
-
-  append(text: string): void {
-    if (text.length === 0) return
-    this.value += text
-    if (this.maxLines !== undefined) {
-      const lines = this.value.split('\n')
-      if (lines.length > this.maxLines) {
-        this.value = lines.slice(lines.length - this.maxLines).join('\n')
-        this.dropped = true
-      }
-    }
-    const tail = utf8Tail(this.value, this.maxBytes)
-    this.value = tail.text
-    this.dropped ||= tail.truncated
-  }
-
-  consume(): TerminalSendRead {
-    const delta = this.value
-    const truncated = this.dropped
-    this.value = ''
-    this.dropped = false
-    return { delta, truncated }
-  }
-
-  snapshot(): { text: string; truncated: boolean } {
-    return { text: this.value, truncated: this.dropped }
-  }
-}
-
-class BoundedByteBuffer {
-  private readonly chunks: Buffer[] = []
-  private byteLength = 0
-  private dropped = false
-
-  constructor(private readonly maxBytes: number) {}
-
-  append(value: Uint8Array): void {
-    if (value.byteLength === 0) return
-    const chunk = Buffer.from(value)
-    this.chunks.push(chunk)
-    this.byteLength += chunk.byteLength
-    while (this.byteLength > this.maxBytes) {
-      const first = this.chunks[0]
-      if (first === undefined) break
-      const overflow = this.byteLength - this.maxBytes
-      this.dropped = true
-      if (overflow >= first.byteLength) {
-        this.chunks.shift()
-        this.byteLength -= first.byteLength
-      } else {
-        this.chunks[0] = first.subarray(overflow)
-        this.byteLength -= overflow
-      }
-    }
-  }
-
-  snapshot(): { bytes: Buffer; truncated: boolean } {
-    return { bytes: Buffer.concat(this.chunks, this.byteLength), truncated: this.dropped }
-  }
-}
 
 class LocalSendOperation implements TerminalSendOperation {
   private readonly output: BoundedTextBuffer
@@ -205,7 +123,7 @@ export class LocalPtySession implements TerminalBackendSession {
   private readonly interactive = new Set<InteractiveAttachmentState>()
   private interactiveResizeOwner: InteractiveAttachmentState | undefined
   private interactiveActivity = 0
-  private interactiveOperations: Promise<void> = Promise.resolve()
+  private readonly interactiveOperations = new SerialOperationQueue()
   private readonly outputEnded = Promise.withResolvers<void>()
   private readonly completion: Promise<void>
   private statusValue: TerminalSessionStatus = { kind: 'running' }
@@ -365,9 +283,7 @@ export class LocalPtySession implements TerminalBackendSession {
   }
 
   private enqueueInteractive(operation: () => Promise<void>): Promise<void> {
-    const result = this.interactiveOperations.then(operation)
-    this.interactiveOperations = result.then(() => undefined, () => undefined)
-    return result
+    return this.interactiveOperations.enqueue(operation)
   }
 
   private promoteInteractiveResizeOwner(): void {
@@ -488,7 +404,9 @@ export class LocalPtySession implements TerminalBackendSession {
   }
 
   private readonly onTerminalData = (chunk: Buffer | Uint8Array | string): void => {
-    const bytes = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk)
+    const bytes = typeof chunk === 'string'
+      ? Buffer.from(chunk, 'utf8')
+      : Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
     this.rawReplay.append(bytes)
     for (const attachment of this.interactive) attachment.output.write(bytes)
     this.onData(this.decoder.decode(bytes, { stream: true }))
@@ -678,7 +596,7 @@ export class LocalPtySession implements TerminalBackendSession {
     // it as session_exit below, so an in-flight send is never mis-settled as
     // stdin_read/inferred_idle/timeout during the grace period.
     this.stopPolling()
-    await this.interactiveOperations
+    await this.interactiveOperations.idle()
     try {
       await this.terminal.terminate()
     } catch (error: unknown) {

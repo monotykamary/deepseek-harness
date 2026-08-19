@@ -60,7 +60,7 @@ interface TerminalBackendSession {
 
 ## 原始交互式 attachment
 
-面向人的 Consumer 可以附加到自己拥有且已发布的会话，而不进入面向模型的 send／就绪协议。每个查看方都会先收到有界原始 replay，再独立跟随实时 PTY 字节。所有查看方的输入保持有序，最近发生交互的查看方拥有共享 viewport 尺寸；该查看方 detach 后会恢复最近剩余查看方的网格，而不会终止进程。多个查看方不会创建独立输入事务。
+面向人的 Consumer 可以附加到自己拥有且已发布的会话，而不进入面向模型的 send／就绪协议。每个查看方都会先收到有界原始 replay，再独立跟随实时 PTY 字节。所有查看方的输入保持有序，最近发生交互的查看方拥有共享 viewport 尺寸；该查看方 detach 后会恢复最近剩余查看方的网格，而不会终止进程。多个查看方不会创建独立输入事务。`SerialOperationQueue` 会在接收 task 中启动 idle 终端操作，在 provider 转为异步后保持 FIFO 顺序、隔离失败操作，并为 teardown 公开 quiescence。
 
 ```ts type-equiv
 /** One independently disposable viewer of a human-facing raw terminal. */
@@ -214,5 +214,5 @@ list(owner: Agent): TerminalSessionSnapshot[]
 
 Types: [Agent](core.md)
 
-Source: [`packages/terminal/terminal/src/index.ts:110`](../../packages/terminal/terminal/src/index.ts)
+Source: [`packages/terminal/terminal/src/index.ts:112`](../../packages/terminal/terminal/src/index.ts)
 <!-- END GENERATED cordis-surface -->

@@ -7,13 +7,14 @@ import { Context } from '@monotykamary/cordis'
 import type { Agent } from '@monotykamary/dsh-agent'
 import type { ConnectionUpgradeAdmission } from '@monotykamary/dsh-client-connection'
 import { SessionId } from '@monotykamary/dsh-session'
-import { TerminalError, TerminalSessionId } from '@monotykamary/dsh-terminal'
+import { SerialOperationQueue, TerminalError, TerminalSessionId } from '@monotykamary/dsh-terminal'
 import type {
   TerminalInteractiveAttachment, TerminalSessionSnapshot, TerminalSessionStatus,
 } from '@monotykamary/dsh-terminal'
 import z from '@monotykamary/schemastery'
 import WebSocket, { WebSocketServer } from 'ws'
 import type { RawData } from 'ws'
+import { TerminalOutputBatcher } from './output-batcher.ts'
 import {
   TERMINAL_WEBSOCKET_PATH,
   type BrowserTerminalClientControl,
@@ -45,8 +46,10 @@ export interface Config {
   maxInputBytes?: number
   /** Maximum terminal output bytes combined into one WebSocket frame. */
   outputBatchBytes?: number
-  /** Maximum delay before a partial output batch is sent. */
+  /** Trailing idle delay before a partial output batch is sent. */
   outputBatchWindowMs?: number
+  /** Maximum duration before a continuous partial output burst is sent. */
+  outputStreamThresholdMs?: number
   /** Maximum queued WebSocket bytes before a slow attachment is disconnected. */
   maxBufferedBytes?: number
   /** Maximum wait for the first text handshake frame. */
@@ -62,6 +65,7 @@ interface ResolvedConfig {
   readonly maxInputBytes: number
   readonly outputBatchBytes: number
   readonly outputBatchWindowMs: number
+  readonly outputStreamThresholdMs: number
   readonly maxBufferedBytes: number
   readonly handshakeTimeoutMs: number
   readonly maxCols: number
@@ -73,7 +77,8 @@ export const Config: z<Config> = z.object({
   backendType: z.string().default('shell'),
   maxInputBytes: z.number().default(64 * 1024),
   outputBatchBytes: z.number().default(64 * 1024),
-  outputBatchWindowMs: z.number().default(8),
+  outputBatchWindowMs: z.number().default(2),
+  outputStreamThresholdMs: z.number().default(100),
   maxBufferedBytes: z.number().default(4 * 1024 * 1024),
   handshakeTimeoutMs: z.number().default(10_000),
   maxCols: z.number().default(1_000),
@@ -92,7 +97,8 @@ function resolveConfig(config: Config = {}): ResolvedConfig {
     backendType: config.backendType ?? 'shell',
     maxInputBytes: config.maxInputBytes ?? 64 * 1024,
     outputBatchBytes: config.outputBatchBytes ?? 64 * 1024,
-    outputBatchWindowMs: config.outputBatchWindowMs ?? 8,
+    outputBatchWindowMs: config.outputBatchWindowMs ?? 2,
+    outputStreamThresholdMs: config.outputStreamThresholdMs ?? 100,
     maxBufferedBytes: config.maxBufferedBytes ?? 4 * 1024 * 1024,
     handshakeTimeoutMs: config.handshakeTimeoutMs ?? 10_000,
     maxCols: config.maxCols ?? 1_000,
@@ -251,56 +257,6 @@ function sendBinary(socket: WebSocket, bytes: Buffer, maxBufferedBytes: number):
       else reject(error)
     })
   })
-}
-
-class OutputBatcher {
-  private readonly chunks: Buffer[] = []
-  private byteLength = 0
-  private timer: ReturnType<typeof setTimeout> | undefined
-  private tail: Promise<void> = Promise.resolve()
-  private stopped = false
-
-  constructor(
-    private readonly socket: WebSocket,
-    private readonly config: ResolvedConfig,
-    private readonly fail: (error: unknown) => void,
-  ) {}
-
-  push(chunk: Uint8Array): void {
-    if (this.stopped || chunk.byteLength === 0) return
-    const copy = Buffer.from(chunk)
-    this.chunks.push(copy)
-    this.byteLength += copy.byteLength
-    if (this.byteLength >= this.config.outputBatchBytes) this.flush()
-    else this.timer ??= setTimeout(() => { this.timer = undefined; this.flush() }, this.config.outputBatchWindowMs)
-  }
-
-  flush(): void {
-    if (this.stopped || this.byteLength === 0) return
-    if (this.timer !== undefined) {
-      clearTimeout(this.timer)
-      this.timer = undefined
-    }
-    const bytes = Buffer.concat(this.chunks, this.byteLength)
-    this.chunks.length = 0
-    this.byteLength = 0
-    this.tail = this.tail.then(() => sendBinary(this.socket, bytes, this.config.maxBufferedBytes))
-      .catch((error: unknown) => { this.fail(error) })
-  }
-
-  async finish(): Promise<void> {
-    this.flush()
-    await this.tail
-    this.stopped = true
-  }
-
-  abort(): void {
-    this.stopped = true
-    if (this.timer !== undefined) clearTimeout(this.timer)
-    this.timer = undefined
-    this.chunks.length = 0
-    this.byteLength = 0
-  }
 }
 
 function nextBrowserName(snapshots: readonly TerminalSessionSnapshot[], placement: BrowserTerminalPlacement): string {
@@ -471,7 +427,7 @@ export class BrowserTerminalGateway {
     attachment: TerminalInteractiveAttachment,
   ): Promise<void> {
     let settled = false
-    let operationTail: Promise<void> = Promise.resolve()
+    const operations = new SerialOperationQueue()
     const connectionDone = Promise.withResolvers<void>()
     const settle = (): void => {
       if (settled) return
@@ -483,10 +439,13 @@ export class BrowserTerminalGateway {
       settled = true
       connectionDone.reject(error)
     }
-    const output = new OutputBatcher(socket, this.config, fail)
+    const output = new TerminalOutputBatcher(
+      this.config,
+      bytes => sendBinary(socket, bytes, this.config.maxBufferedBytes),
+      fail,
+    )
     const enqueue = (operation: () => Promise<void>): void => {
-      operationTail = operationTail.then(operation)
-      void operationTail.catch(fail)
+      void operations.enqueue(operation).catch(fail)
     }
     const onData = (chunk: Buffer): void => { output.push(chunk) }
     const onEnd = (): void => {
@@ -540,7 +499,7 @@ export class BrowserTerminalGateway {
     socket.once('close', onClose)
     try {
       await connectionDone.promise
-      await operationTail
+      await operations.idle()
     } finally {
       output.abort()
       socket.off('message', onMessage)

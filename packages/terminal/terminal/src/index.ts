@@ -7,6 +7,7 @@
 import { Context, Service } from '@monotykamary/cordis'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { TerminalBackendCleanupError } from './types.ts'
+
 import type {
   TerminalBackend,
   TerminalBackendSession,
@@ -42,6 +43,7 @@ export type {
   TerminalSpawnResult,
   TerminalWaitReason,
 } from './types.ts'
+export { SerialOperationQueue } from './serial-operation-queue.ts'
 export { TerminalBackendCleanupError } from './types.ts'
 
 /** Opaque identity minted by {@link TerminalSessionService} for one live PTY session. */

@@ -228,7 +228,7 @@ describe('LocalPtySession readiness and output', () => {
     }
 
     const writing = attachment.write('accepted')
-    await vi.waitFor(() => { expect(terminal.writes).toEqual(['accepted']) })
+    expect(terminal.writes).toEqual(['accepted'])
     const closing = session.close('test complete')
     expect(terminal.kills).toEqual([])
     writeGate.resolve(undefined)

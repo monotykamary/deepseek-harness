@@ -8,7 +8,7 @@ Host Consumer that exposes Agent-owned persistent terminals to the same-origin W
 
 A new socket starts with one JSON text handshake: `list`, `open`, `attach`, or `kill`. `open` creates a placement-named native interactive login shell in the selected Session cwd and forwards the requested initial grid; `list` returns only terminals owned by that browser placement. Any number of sockets may attach the same PTY: each receives bounded replay plus live output, input is ordered across viewers, and the most recently interactive viewer controls the shared PTY grid. An attached socket carries UTF-8 terminal input as binary client frames, raw PTY output as binary Host frames, and `resize`, `kill`, `ready`, `exit`, `pong`, or failure controls as JSON text frames. Closing a socket detaches only that viewer and does not terminate the persistent process.
 
-Output is combined into bounded short-window frames. A slow browser is disconnected before the WebSocket queue exceeds `maxBufferedBytes`; input size, handshake time, and PTY dimensions are bounded at the wire parser. Plugin disposal terminates accepted sockets, detaches their streams, and awaits queued terminal operations.
+Output uses LocalTerm's two-millisecond trailing idle window and a continuous-burst bound: each kernel fragment resets the idle timer, 65,536 bytes flush immediately, and a partial stream flushes within `outputStreamThresholdMs`. The sender retains immutable stream buffers without an intermediate copy. A slow browser is disconnected before the WebSocket queue exceeds `maxBufferedBytes`; input size, handshake time, and PTY dimensions are bounded at the wire parser. The shared terminal operation queue starts idle input synchronously, preserves FIFO order across asynchronous providers and viewers, and lets plugin disposal await quiescence.
 
 ## Configuration
 
@@ -17,7 +17,8 @@ Output is combined into bounded short-window frames. A slow browser is disconnec
 | `backendType` | `shell` | `ctx.terminals` backend used by `open`. |
 | `maxInputBytes` | 65,536 | Maximum bytes in one client input/control frame. |
 | `outputBatchBytes` | 65,536 | Maximum bytes combined before immediate output flush. |
-| `outputBatchWindowMs` | 8 | Maximum delay for a partial output batch. |
+| `outputBatchWindowMs` | 2 | Trailing idle delay for a partial output batch. |
+| `outputStreamThresholdMs` | 100 | Maximum duration for a continuous partial output burst. |
 | `maxBufferedBytes` | 4,194,304 | WebSocket queue limit before disconnect. |
 | `handshakeTimeoutMs` | 10,000 | First-frame deadline. |
 | `maxCols` / `maxRows` | 1,000 | Accepted PTY dimension limits. |

@@ -2359,8 +2359,10 @@ export interface Config {
   maxInputBytes?: number
   /** Maximum terminal output bytes combined into one WebSocket frame. */
   outputBatchBytes?: number
-  /** Maximum delay before a partial output batch is sent. */
+  /** Trailing idle delay before a partial output batch is sent. */
   outputBatchWindowMs?: number
+  /** Maximum duration before a continuous partial output burst is sent. */
+  outputStreamThresholdMs?: number
   /** Maximum queued WebSocket bytes before a slow attachment is disconnected. */
   maxBufferedBytes?: number
   /** Maximum wait for the first text handshake frame. */
@@ -2372,7 +2374,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/terminal/terminal-web/src/index.ts:41`](../packages/terminal/terminal-web/src/index.ts)
+Source: [`packages/terminal/terminal-web/src/index.ts:42`](../packages/terminal/terminal-web/src/index.ts)
 
 <a id="monotykamarydsh-time-context"></a>
 

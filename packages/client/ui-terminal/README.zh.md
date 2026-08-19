@@ -26,6 +26,7 @@
 
 ## 已知限制与暂缓事项
 
+- Predictive local echo 未启用。浏览器没有任意原生 login shell 的权威 prompt／password 状态，因此 speculative rendering 可能暴露 shell 有意抑制的输入；PTY echo 保持权威。
 - 外观偏好只保存在单个浏览器配置中，不会通过 Host 用户设置同步。
 - 只有活动标签持有 WebSocket attachment；切换标签会分离上一个终端，但会保留其进程。
 - JetBrains Mono、Fira Code 与自定义字体系列必须安装在浏览器所在系统；不可用的选择会回退到系统等宽字体链。
