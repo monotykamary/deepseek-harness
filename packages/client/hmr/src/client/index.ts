@@ -72,6 +72,16 @@ export { EVENTS_ENDPOINT } from '../events.ts'
 /** Cordis plugin name. */
 export const name = 'client-hmr'
 
+/**
+ * Decide whether a reconnect snapshot belongs to a different complete client graph.
+ * @param bootRevision - graph revision embedded in the current document.
+ * @param currentRevision - graph revision reported by the connected host.
+ * @returns true when the document must reload instead of attempting partial HMR.
+ */
+export function graphRevisionChanged(bootRevision: unknown, currentRevision: string): boolean {
+  return typeof bootRevision === 'string' && bootRevision !== currentRevision
+}
+
 /** Required services: the vendored Loader (entry governance) and the client module system (boot provide, service name `modules`). */
 export const inject = ['loader', 'modules']
 
@@ -142,6 +152,7 @@ export function apply(ctx: Context): void {
   // Serialize reloads: frames can arrive faster than a swap completes, and
   // interleaved dispose/execute chains would corrupt the single-slot handoff.
   let queue: Promise<void> = Promise.resolve()
+  let pageReloadRequested = false
   const handle = (frame: PluginsEventFrame): void => {
     switch (frame.type) {
       case 'rebuilt':
@@ -150,12 +161,16 @@ export function apply(ctx: Context): void {
           ctx.logger.error(error)
         })
         break
-      case 'graph':
-        // Connect-time snapshot, unused. The loader's cached graph rev
-        // goes stale after rebuilds — harmless, since prefetch hits the
-        // network anyway (host serves bundles no-cache); graph rev refresh
-        // lands with the reconnect-handshake mechanism.
+      case 'graph': {
+        const boot = (globalThis as { __DSH_BOOT__?: { rev?: unknown } }).__DSH_BOOT__
+        if (!pageReloadRequested && graphRevisionChanged(boot?.rev, frame.graph.rev)) {
+          // A background tab can miss rebuild frames while Chromium suspends its SSE connection.
+          // The new host cannot replay that ordered swap sequence, so reload the complete graph.
+          pageReloadRequested = true
+          globalThis.location.reload()
+        }
         break
+      }
       default:
         // Merge-extensible frame union: unknown frame types from newer hosts
         // are ignored by design.

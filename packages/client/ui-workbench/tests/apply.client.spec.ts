@@ -61,13 +61,13 @@ describe('ui-workbench apply', () => {
     })
     await Promise.resolve()
     expect(face.hooks.surfaces.getSnapshot()).toEqual([{
-      id: INSPECT, label: 'Inspect', icon: 'inspect', description: 'Inspect a tool call',
+      id: INSPECT, label: 'Inspect', icon: 'inspect', description: 'Inspect a tool call', immersive: false, repeatable: false,
     }])
 
     b.ctx.workbench.show()
     expect(b.layout.openDetails).toHaveBeenCalledTimes(1)
     b.ctx.workbench.open(INSPECT)
-    expect(instance.store.getSnapshot().activeId).toBe(INSPECT)
+    expect(instance.store.getSnapshot().activePanelId).toBe('inspect:1')
     expect(b.layout.openDetails).toHaveBeenCalledTimes(2)
     disposePresentation()
     b.ctx.workbench.close()

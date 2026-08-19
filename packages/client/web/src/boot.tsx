@@ -51,6 +51,25 @@ import './base.css'
 export type BootSeams = Pick<ClientModuleSystemOptions, 'loadBundle'>
 
 /**
+ * Reload a visible document whose shell-owned React mount point has become empty.
+ * @param element - shell mount point that must retain one AppRoot child after render.
+ * @param reload - document reload action, replaceable by browser tests.
+ * @returns disposer for the visibility listener.
+ */
+export function installBlankRootRecovery(element: HTMLElement, reload: () => void = () => { globalThis.location.reload() }): () => void {
+  const recover = (): void => {
+    if (document.visibilityState === 'visible' && element.childElementCount === 0) reload()
+  }
+  const observer = new MutationObserver(recover)
+  observer.observe(element, { childList: true })
+  document.addEventListener('visibilitychange', recover)
+  return () => {
+    observer.disconnect()
+    document.removeEventListener('visibilitychange', recover)
+  }
+}
+
+/**
  * The modules package's own graph row id. The kernel adopts that entry
  * itself (its wrapper is statically registered — shell-bundled code, never
  * fetched), so the plugin-row loop must skip it: the vendored Group.create
@@ -76,6 +95,7 @@ export class AppWebEntry {
   private modules!: ClientModuleSystem
   private manifest!: BootManifest
   private root: Root | undefined
+  private disposeBlankRootRecovery: (() => void) | undefined
 
   /**
    * Hold the mount point; all work happens in {@link run}.
@@ -125,6 +145,7 @@ export class AppWebEntry {
         }}
       />,
     )
+    this.disposeBlankRootRecovery = installBlankRootRecovery(this.el)
 
     // The immediately tier prefetches in parallel with Loader mounting;
     // runPluginBoot awaits it before creating entries (see module comment:
@@ -144,6 +165,8 @@ export class AppWebEntry {
 
   /** Unmount the shell (loading page or settled UI). */
   dispose(): void {
+    this.disposeBlankRootRecovery?.()
+    this.disposeBlankRootRecovery = undefined
     this.root?.unmount()
   }
 

@@ -9,7 +9,7 @@
 
 .surface {
   position: absolute;
-  inset: 8px 10px;
+  inset: 8px;
   min-width: 0;
   background-color: inherit;
   min-height: 0;

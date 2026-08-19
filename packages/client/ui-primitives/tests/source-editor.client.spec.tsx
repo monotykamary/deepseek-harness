@@ -73,4 +73,16 @@ describe('SourceEditor', () => {
     expect(input.value).toBe('first\n\nthird')
     expect(backdrop.textContent).toContain('2')
   })
+
+  it('soft-wraps both native input and highlighted backdrop when requested', () => {
+    const view = render(
+      <SourceEditor value="a very long source line" ariaLabel="Wrapped editor" wrap onChange={() => {}} />,
+    )
+    const root = view.container.querySelector('[data-source-editor]')
+    const input = screen.getByRole('textbox', { name: 'Wrapped editor' })
+    expect(root?.hasAttribute('data-wrap')).toBe(true)
+    expect(input.getAttribute('wrap')).toBe('soft')
+    view.container.querySelector('[aria-hidden="true"]')?.remove()
+    fireEvent.scroll(input)
+  })
 })

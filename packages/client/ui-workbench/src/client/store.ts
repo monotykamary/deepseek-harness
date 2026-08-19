@@ -1,42 +1,75 @@
 import { defineStore, type EngineStoreHandle } from '@monotykamary/dsh-client-runtime/client'
 import type { WorkbenchSurfaceId } from './contract.ts'
 
-/** Per-session open-tab and active-tab state. */
+/** One open panel instance backed by a registered Workbench surface. */
+export interface WorkbenchPanel {
+  readonly id: string
+  readonly surfaceId: WorkbenchSurfaceId
+  readonly ordinal: number
+}
+
+/** Per-session open-panel and active-panel state. */
 export interface WorkbenchState {
-  openIds: WorkbenchSurfaceId[]
-  activeId: WorkbenchSurfaceId | null
+  panels: WorkbenchPanel[]
+  activePanelId: string | null
 }
 
 type WorkbenchActions = {
   openSurface: (draft: WorkbenchState, id: WorkbenchSurfaceId) => void
-  closeSurface: (draft: WorkbenchState, id: WorkbenchSurfaceId) => void
+  openNewSurface: (draft: WorkbenchState, id: WorkbenchSurfaceId) => void
+  ensureSurfaceCount: (draft: WorkbenchState, id: WorkbenchSurfaceId, count: number) => void
+  activatePanel: (draft: WorkbenchState, panelId: string) => void
+  closePanel: (draft: WorkbenchState, panelId: string) => void
   reconcile: (draft: WorkbenchState, available: readonly WorkbenchSurfaceId[]) => void
 }
 
+function nextOrdinal(panels: readonly WorkbenchPanel[], surfaceId: WorkbenchSurfaceId): number {
+  const used = new Set(panels.filter(panel => panel.surfaceId === surfaceId).map(panel => panel.ordinal))
+  let ordinal = 1
+  while (used.has(ordinal)) ordinal += 1
+  return ordinal
+}
+
+function appendPanel(draft: WorkbenchState, surfaceId: WorkbenchSurfaceId): WorkbenchPanel {
+  const ordinal = nextOrdinal(draft.panels, surfaceId)
+  const panel = { id: `${String(surfaceId)}:${String(ordinal)}`, surfaceId, ordinal }
+  draft.panels.push(panel)
+  return panel
+}
+
 /**
- * Create the transient per-session workbench store.
- * @returns workbench store handle with the complete tab mutation set.
+ * Create the transient per-session Workbench panel store.
+ * @returns store handle with singleton opening and repeatable panel mutation actions.
  */
 export function createWorkbenchStore(): EngineStoreHandle<WorkbenchState, WorkbenchActions> {
   return defineStore({
-    init: (): WorkbenchState => ({ openIds: [], activeId: null }),
+    init: (): WorkbenchState => ({ panels: [], activePanelId: null }),
     actions: {
       openSurface: (draft, id: WorkbenchSurfaceId) => {
-        if (!draft.openIds.includes(id)) draft.openIds.push(id)
-        draft.activeId = id
+        const panel = draft.panels.find(item => item.surfaceId === id) ?? appendPanel(draft, id)
+        draft.activePanelId = panel.id
       },
-      closeSurface: (draft, id: WorkbenchSurfaceId) => {
-        const index = draft.openIds.indexOf(id)
+      openNewSurface: (draft, id: WorkbenchSurfaceId) => {
+        draft.activePanelId = appendPanel(draft, id).id
+      },
+      ensureSurfaceCount: (draft, id: WorkbenchSurfaceId, count: number) => {
+        while (draft.panels.filter(panel => panel.surfaceId === id).length < count) appendPanel(draft, id)
+      },
+      activatePanel: (draft, panelId: string) => {
+        if (draft.panels.some(panel => panel.id === panelId)) draft.activePanelId = panelId
+      },
+      closePanel: (draft, panelId: string) => {
+        const index = draft.panels.findIndex(panel => panel.id === panelId)
         if (index === -1) return
-        draft.openIds.splice(index, 1)
-        if (draft.activeId !== id) return
-        draft.activeId = draft.openIds[Math.min(index, draft.openIds.length - 1)] ?? null
+        draft.panels.splice(index, 1)
+        if (draft.activePanelId !== panelId) return
+        draft.activePanelId = draft.panels[Math.min(index, draft.panels.length - 1)]?.id ?? null
       },
       reconcile: (draft, available: readonly WorkbenchSurfaceId[]) => {
         const allowed = new Set(available)
-        draft.openIds = draft.openIds.filter(id => allowed.has(id))
-        if (draft.activeId !== null && !allowed.has(draft.activeId)) {
-          draft.activeId = draft.openIds.at(-1) ?? null
+        draft.panels = draft.panels.filter(panel => allowed.has(panel.surfaceId))
+        if (draft.activePanelId !== null && !draft.panels.some(panel => panel.id === draft.activePanelId)) {
+          draft.activePanelId = draft.panels.at(-1)?.id ?? null
         }
       },
     },

@@ -27,7 +27,7 @@ describe('WorkbenchSurfaceDirectory', () => {
     const stop = directory.start()
 
     const first = directory.getSnapshot()
-    expect(first).toEqual([{ id: 'inspect', label: 'Inspect', icon: 'generic', description: '' }])
+    expect(first).toEqual([{ id: 'inspect', label: 'Inspect', icon: 'generic', description: '', immersive: false, repeatable: false }])
     expect(directory.has('inspect' as WorkbenchSurfaceId)).toBe(true)
     slotListener()
     expect(directory.getSnapshot()).toBe(first)
@@ -37,8 +37,8 @@ describe('WorkbenchSurfaceDirectory', () => {
     entries = [entry('inspect', 'Inspect'), entry('changes', () => translated), entry(undefined)]
     slotListener()
     expect(directory.getSnapshot()).toEqual([
-      { id: 'inspect', label: 'Inspect', icon: 'generic', description: '' },
-      { id: 'changes', label: 'Changes', icon: 'generic', description: '' },
+      { id: 'inspect', label: 'Inspect', icon: 'generic', description: '', immersive: false, repeatable: false },
+      { id: 'changes', label: 'Changes', icon: 'generic', description: '', immersive: false, repeatable: false },
     ])
     expect(listener).toHaveBeenCalledTimes(1)
 
@@ -62,10 +62,10 @@ describe('WorkbenchSurfaceDirectory', () => {
     const files = 'files' as WorkbenchSurfaceId
     let description = 'Browse files'
     const dispose = directory.registerPresentation(files, {
-      icon: 'files', description: () => description,
+      icon: 'files', description: () => description, immersive: true, repeatable: true,
     })
     expect(directory.getSnapshot()).toEqual([{
-      id: 'files', label: 'Files', icon: 'files', description: 'Browse files',
+      id: 'files', label: 'Files', icon: 'files', description: 'Browse files', immersive: true, repeatable: true,
     }])
     expect(() => directory.registerPresentation(files, { icon: 'files', description: '' }))
       .toThrow(/already registered/u)
@@ -74,7 +74,7 @@ describe('WorkbenchSurfaceDirectory', () => {
     expect(directory.getSnapshot()[0]?.description).toBe('浏览文件')
     dispose()
     dispose()
-    expect(directory.getSnapshot()[0]).toMatchObject({ icon: 'generic', description: '' })
+    expect(directory.getSnapshot()[0]).toMatchObject({ icon: 'generic', description: '', immersive: false, repeatable: false })
   })
 
   it('falls back to ids and contains subscriber failures', () => {

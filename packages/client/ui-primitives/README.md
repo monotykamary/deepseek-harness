@@ -18,7 +18,7 @@ Pure React atoms (zero cordis): StateDot, DisclosureRow, ic_ds_* icons, Button/P
 
 ## Source editor
 
-`SourceEditor` overlays a native controlled `textarea` on an `aria-hidden`, line-numbered token projection from the same lazy Shiki grammar registry as `CodeBlock` and `ReadBlock`. The textarea owns selection, input, caret, IME, and both scrollbars; each scroll event synchronizes the highlighted backdrop, unknown languages render plain text, and the owner receives the complete next value. Tab inserts one tab character, while Ctrl/Cmd+S invokes the optional `onSave` gesture. The atom performs no persistence and takes its accessible file label from the owner because this package is zero-cordis.
+`SourceEditor` overlays a native controlled `textarea` on an `aria-hidden`, line-numbered token projection from the same lazy Shiki grammar registry as `CodeBlock` and `ReadBlock`. The textarea owns selection, input, caret, IME, and both scrollbars; each scroll event synchronizes the highlighted backdrop, unknown languages render plain text, and the owner receives the complete next value. The owner may enable soft wrapping, which hides horizontal overflow and applies the same pre-wrap line flow to the editable and highlighted layers. Tab inserts one tab character, while Ctrl/Cmd+S invokes the optional `onSave` gesture. The atom performs no persistence and takes its accessible file label from the owner because this package is zero-cordis.
 
 ## Terminal output
 

@@ -1769,7 +1769,9 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
         doc: 'Display text where the owner projects one (nav rows, tabs). A thunk is re-read on every projection, so localized text follows the active locale without re-registering.',
       },
     ],
-    ownerProps: [],
+    ownerProps: [
+      '/** Owner props identifying one mounted Workbench panel instance. */\nexport interface WorkbenchSurfaceOwnerProps {\n  /** Stable ordinal for repeatable surfaces; singleton surface components may omit it in direct use. */\n  readonly workbenchPanelOrdinal?: number\n}',
+    ],
     ownerPropsReferences: [],
     standardProps: [
       'useSessions: SnapshotSelectorHook<SessionListState>',
@@ -1792,7 +1794,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     ],
     replaceRisk: 'none',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'workbench.surface\', () => ctx.slots.register(\n      { name: \'workbench.surface\', id: \'my-entry\', order: 100, label: \'My entry\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
-    source: 'packages/client/ui-workbench/src/client/index.ts:36',
+    source: 'packages/client/ui-workbench/src/client/index.ts:37',
   },
 ]
 /* jscpd:ignore-end */

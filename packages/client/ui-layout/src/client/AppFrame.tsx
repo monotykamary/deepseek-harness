@@ -18,7 +18,7 @@ import {
   computeColumns, DETAILS_DEFAULT, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT,
   SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH,
 } from './columns.ts'
-import { resolveBottomHeight } from './rows.ts'
+import { BOTTOM_DEFAULT, resolveBottomHeight } from './rows.ts'
 import type { createLayoutStore } from './stores.ts'
 import css from './AppFrame.module.css'
 
@@ -57,86 +57,43 @@ function DetailsColumn(props: { children?: ReactNode; contentWidth: number }) {
   )
 }
 
-/**
- * One drag handle: pointer capture, rAF-throttled dx reports against the drag-start origin.
- * `side` keys the hover-reveal CSS to the owning column.
- */
-function DragHandle(props: { side: 'sidebar' | 'details'; left: number; onStart: () => void; onDrag: (dx: number) => void; onEnd: () => void }) {
-  const [dragging, setDragging] = useState(false)
-  const origin = useRef(0)
-  const latest = useRef(0)
-  const frame = useRef<number | null>(null)
-  const callbacks = useRef({ onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd })
-  callbacks.current = { onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd }
-
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.currentTarget.setPointerCapture(e.pointerId)
-    origin.current = e.clientX
-    latest.current = e.clientX
-    callbacks.current.onStart()
-    setDragging(true)
-  }, [])
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
-    latest.current = e.clientX
-    frame.current ??= requestAnimationFrame(() => {
-      frame.current = null
-      callbacks.current.onDrag(latest.current - origin.current)
-    })
-  }, [])
-  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
-    e.currentTarget.releasePointerCapture(e.pointerId)
-    if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null }
-    callbacks.current.onDrag(latest.current - origin.current)
-    setDragging(false)
-    callbacks.current.onEnd()
-  }, [])
-
-  return (
-    <div
-      className={css.handle}
-      style={{ left: props.left }}
-      data-side={props.side}
-      data-dragging={dragging || undefined}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-    />
-  )
+/** Callbacks shared by horizontal and vertical frame drag handles. */
+interface DragCallbacks {
+  readonly onStart: () => void
+  readonly onDrag: (delta: number) => void
+  readonly onEnd: () => void
+  readonly onReset: () => void
 }
 
-/** Horizontal drag handle owned by the center column's bottom-panel split. */
-function BottomDragHandle(props: {
-  readonly bottom: number
-  readonly onStart: () => void
-  readonly onDrag: (dy: number) => void
-  readonly onEnd: () => void
-}) {
+/** Pointer-captured, animation-frame-coalesced drag behavior for one axis. */
+function useAxisDrag(axis: 'x' | 'y', props: DragCallbacks) {
   const [dragging, setDragging] = useState(false)
   const origin = useRef(0)
   const latest = useRef(0)
   const frame = useRef<number | null>(null)
-  const callbacks = useRef({ onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd })
-  callbacks.current = { onStart: props.onStart, onDrag: props.onDrag, onEnd: props.onEnd }
+  const callbacks = useRef(props)
+  callbacks.current = props
+  const coordinate = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => axis === 'x' ? event.clientX : event.clientY,
+    [axis],
+  )
 
   const onPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
-    origin.current = event.clientY
-    latest.current = event.clientY
+    origin.current = coordinate(event)
+    latest.current = origin.current
     callbacks.current.onStart()
     setDragging(true)
-  }, [])
+  }, [coordinate])
   const onPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
-    latest.current = event.clientY
+    latest.current = coordinate(event)
     frame.current ??= requestAnimationFrame(() => {
       frame.current = null
       callbacks.current.onDrag(latest.current - origin.current)
     })
-  }, [])
+  }, [coordinate])
   const onPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
     event.currentTarget.releasePointerCapture(event.pointerId)
@@ -146,14 +103,40 @@ function BottomDragHandle(props: {
     callbacks.current.onEnd()
   }, [])
 
+  return {
+    dragging,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onDoubleClick: () => { callbacks.current.onReset() },
+    },
+  }
+}
+
+/** One vertical frame boundary with layout-owned horizontal drag behavior. */
+function DragHandle(props: DragCallbacks & { readonly side: 'sidebar' | 'details'; readonly left: number }) {
+  const drag = useAxisDrag('x', props)
+  return (
+    <div
+      className={css.handle}
+      style={{ left: props.left }}
+      data-side={props.side}
+      data-dragging={drag.dragging || undefined}
+      {...drag.handlers}
+    />
+  )
+}
+
+/** Horizontal boundary owned by the center column's bottom-panel split. */
+function BottomDragHandle(props: DragCallbacks & { readonly bottom: number }) {
+  const drag = useAxisDrag('y', props)
   return (
     <div
       className={css.bottomHandle}
       style={{ bottom: props.bottom - 4 }}
-      data-dragging={dragging || undefined}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
+      data-dragging={drag.dragging || undefined}
+      {...drag.handlers}
     />
   )
 }
@@ -304,6 +287,7 @@ export function AppFrame({
               onStart={onBottomStart}
               onDrag={onBottomDrag}
               onEnd={onDragEnd}
+              onReset={() => { actions.setBottom(BOTTOM_DEFAULT) }}
             />
           ) : null}
         >
@@ -335,8 +319,8 @@ export function AppFrame({
       </div>
       {/* The collapsed rail is fixed-width: no resize handle while closed;
           compact mode owns no drag surfaces at all. */}
-      {!compact && !sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
-      {!compact && cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} />}
+      {!compact && !sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} onReset={() => { actions.setSidebar(SIDEBAR_DEFAULT) }} />}
+      {!compact && cols.details > 0 && <DragHandle side="details" left={viewport - cols.details} onStart={onDetailsStart} onDrag={onDetailsDrag} onEnd={onDragEnd} onReset={() => { actions.setDetails(DETAILS_DEFAULT) }} />}
       {compact && (
         <Sheet open={drawerOpen} onClose={() => { setDrawerOpen(false) }} title="Sidebar" side="left">
           <div className={css.drawerSidebar}>

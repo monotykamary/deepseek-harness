@@ -15,7 +15,7 @@ import { Workbench } from '../src/client/Workbench.tsx'
 const SID = 'session' as SessionId
 const id = (value: string) => value as WorkbenchSurfaceId
 const surface = (value: string, label: string): WorkbenchSurface => ({
-  id: id(value), label, icon: value === 'changes' ? 'changes' : 'inspect', description: `${label} description`,
+  id: id(value), label, icon: value === 'changes' ? 'changes' : 'inspect', description: `${label} description`, immersive: false, repeatable: false,
 })
 const inputActions: WorkbenchProps['inputActions'] = {
   setDraft: () => {}, addImages: () => true, removeImage: () => {}, pruneImages: () => {}, submit: () => {},
@@ -123,15 +123,58 @@ describe('Workbench', () => {
     expect(mounted.closePanel).toHaveBeenCalledTimes(1)
   })
 
+  it('renders repeatable terminal instances as outer Workbench panels', () => {
+    const terminal = { ...surface('terminal', 'Terminal'), icon: 'terminal' as const, repeatable: true }
+    const mounted = mountWorkbench({ surfaces: [terminal], open: [terminal.id] })
+    expect(screen.getByRole('tab', { name: 'Terminal 1' })).toBeTruthy()
+    expect(mounted.renderSlot).toHaveBeenLastCalledWith(
+      'workbench.surface', { workbenchPanelOrdinal: 1 }, { only: terminal.id },
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '添加面板' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Terminal' }))
+    expect(screen.getByRole('tab', { name: 'Terminal 2' }).getAttribute('aria-selected')).toBe('true')
+    expect(mounted.renderSlot).toHaveBeenLastCalledWith(
+      'workbench.surface', { workbenchPanelOrdinal: 2 }, { only: terminal.id },
+    )
+    const secondBody = mounted.view.container.querySelector('[role="tabpanel"]')
+    fireEvent.click(screen.getByRole('tab', { name: 'Terminal 1' }))
+    expect(screen.getByRole('tab', { name: 'Terminal 1' }).getAttribute('aria-selected')).toBe('true')
+    expect(mounted.view.container.querySelector('[role="tabpanel"]')).not.toBe(secondBody)
+    fireEvent.click(screen.getByRole('button', { name: '关闭Terminal 1' }))
+    expect(screen.queryByRole('tab', { name: 'Terminal 1' })).toBeNull()
+  })
+
+  it('lets a sole immersive surface own the top panel chrome', () => {
+    const terminal = { ...surface('terminal', 'Terminal'), immersive: true }
+    mountWorkbench({ surfaces: [terminal], open: [terminal.id] })
+    expect(screen.queryByRole('tab', { name: 'Terminal' })).toBeNull()
+    expect(screen.getByTestId('surface-terminal')).toBeTruthy()
+  })
+
+  it('renders every surface icon and the no-registration launcher state', () => {
+    const icons = ['files', 'terminal', 'generic'] as const
+    const surfaces = icons.map((icon, index) => ({
+      id: id(icon), label: icon, icon, description: `surface ${String(index)}`, immersive: false, repeatable: false,
+    }))
+    const mounted = mountWorkbench({ surfaces, open: surfaces.map(item => item.id) })
+    expect(mounted.view.container.querySelectorAll('[data-workbench-tab-icon] svg')).toHaveLength(3)
+    mounted.view.unmount()
+    mountWorkbench({ surfaces: [], open: [] })
+    expect(screen.getByText(zh['empty.unavailable'])).toBeTruthy()
+  })
+
   it('leaves the launcher open after the last tab and reconciles plugin disposal', async () => {
     const mounted = mountWorkbench({ open: [id('inspect'), id('changes')] })
     mounted.setSurfaces([surface('inspect', 'Inspect')])
     await waitFor(() => { expect(screen.queryByRole('tab', { name: 'Changes' })).toBeNull() })
-    expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [id('inspect')], activeId: id('inspect') })
+    expect(mounted.instance.store.getSnapshot()).toEqual({
+      panels: [{ id: 'inspect:1', surfaceId: id('inspect'), ordinal: 1 }], activePanelId: 'inspect:1',
+    })
 
     fireEvent.click(screen.getByRole('button', { name: '关闭Inspect' }))
     expect(mounted.closePanel).not.toHaveBeenCalled()
-    expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [], activeId: null })
+    expect(mounted.instance.store.getSnapshot()).toEqual({ panels: [], activePanelId: null })
     expect(screen.getByRole('heading', { name: '打开面板' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Inspect' })).toBeTruthy()
   })
@@ -169,7 +212,9 @@ describe('Workbench', () => {
     const mounted = mountWorkbench({ open: [] })
     expect(screen.getByText('选择要在右侧面板中显示的内容。')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Changes' }))
-    expect(mounted.instance.store.getSnapshot()).toEqual({ openIds: [id('changes')], activeId: id('changes') })
+    expect(mounted.instance.store.getSnapshot()).toEqual({
+      panels: [{ id: 'changes:1', surfaceId: id('changes'), ordinal: 1 }], activePanelId: 'changes:1',
+    })
     expect(mounted.closePanel).not.toHaveBeenCalled()
   })
 })

@@ -23,7 +23,18 @@ export interface IWorkbench {
    * @param id - registered workbench surface id.
    */
   open(id: WorkbenchSurfaceId): void
-  /** Hide the workbench while retaining its per-session tab set. */
+  /**
+   * Open and activate a new panel instance of a repeatable surface.
+   * @param id - registered repeatable Workbench surface id.
+   */
+  openNew(id: WorkbenchSurfaceId): void
+  /**
+   * Ensure a repeatable surface has enough panels to represent restored resources.
+   * @param id - registered repeatable Workbench surface id.
+   * @param count - required panel count.
+   */
+  ensureCount(id: WorkbenchSurfaceId, count: number): void
+  /** Hide the workbench while retaining its per-session panel set. */
   close(): void
 }
 
@@ -68,14 +79,35 @@ export class WorkbenchController implements IWorkbench {
    * @param id - registered surface id.
    */
   open(id: WorkbenchSurfaceId): void {
-    if (!this.surfaces.has(id)) throw new Error(`workbench surface is not registered: ${String(id)}`)
+    this.requireSurface(id)
     this.requireActions().openSurface(id)
     this.layout.openDetails()
+  }
+
+  /** Open one new panel instance of a repeatable Workbench surface. */
+  openNew(id: WorkbenchSurfaceId): void {
+    const surface = this.requireSurface(id)
+    if (!surface.repeatable) throw new Error(`workbench surface is not repeatable: ${String(id)}`)
+    this.requireActions().openNewSurface(id)
+    this.layout.openDetails()
+  }
+
+  /** Ensure enough panels exist for restored instances of a repeatable surface. */
+  ensureCount(id: WorkbenchSurfaceId, count: number): void {
+    const surface = this.requireSurface(id)
+    if (!surface.repeatable) throw new Error(`workbench surface is not repeatable: ${String(id)}`)
+    this.requireActions().ensureSurfaceCount(id, count)
   }
 
   /** Hide the workbench without discarding its tabs. */
   close(): void {
     this.layout.closeDetails()
+  }
+
+  private requireSurface(id: WorkbenchSurfaceId) {
+    const surface = this.surfaces.get(id)
+    if (surface === undefined) throw new Error(`workbench surface is not registered: ${String(id)}`)
+    return surface
   }
 
   private requireActions(): WorkbenchActions {

@@ -14,7 +14,7 @@ import { BottomTerminal, WorkbenchTerminal } from '../src/client/TerminalPanel.t
 import type { BottomTerminalToggleInjected, TerminalInjected } from '../src/client/contract.ts'
 
 usePinnedBrowserLanguages('zh-CN')
-afterEach(() => { cleanup(); localStorage.clear() })
+afterEach(() => { cleanup(); localStorage.clear(); vi.unstubAllGlobals() })
 
 async function bench() {
   const ctx = new Context()
@@ -23,6 +23,8 @@ async function bench() {
   ctx.provide('locale', locale)
   class WorkbenchService extends Service {
     readonly open = vi.fn()
+    readonly openNew = vi.fn()
+    readonly ensureCount = vi.fn()
     readonly show = vi.fn()
     readonly close = vi.fn()
     readonly registerPresentation = vi.fn((
@@ -84,10 +86,19 @@ describe('ui-terminal browser plugin', () => {
     expect(presentation.icon).toBe('terminal')
     expect((presentation.description as () => string)()).toBe('打开交互式持久终端')
 
-    const rightInjected = (surface.inject as unknown as () => TerminalInjected)()
-    const bottomInjected = (bottom.inject as unknown as () => TerminalInjected)()
+    const rightInjected = (surface.inject as unknown as (sessionId: string) => TerminalInjected)('session')
+    const bottomInjected = (bottom.inject as unknown as (sessionId: string) => TerminalInjected)('session')
     expect(rightInjected.hooks.preferences).toBe(bottomInjected.hooks.preferences)
     expect(rightInjected.socketFactory).toBeTypeOf('function')
+    const socket = {}
+    vi.stubGlobal('WebSocket', vi.fn(function WebSocketStub() { return socket }))
+    expect(rightInjected.socketFactory('wss://terminal.test')).toBe(socket)
+    rightInjected.openWorkbenchPanel()
+    rightInjected.ensureWorkbenchPanels(3)
+    bottomInjected.ensureWorkbenchPanels(4)
+    expect(b.workbench.openNew).toHaveBeenCalledWith('terminal')
+    expect(b.workbench.ensureCount).toHaveBeenCalledOnce()
+    expect(b.workbench.ensureCount).toHaveBeenCalledWith('terminal', 3)
     const listener = vi.fn()
     rightInjected.hooks.preferences.subscribe(listener)
     rightInjected.updatePreferences({ theme: 'light', ligatures: false })

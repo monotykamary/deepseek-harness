@@ -15,6 +15,14 @@ import css from './FilesPanel.module.css'
 
 const SAVE_DEBOUNCE_MS = 500
 
+function WrapTextIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M1.5 3h8a2.5 2.5 0 0 1 0 5H5.5M7.5 6 5.5 8l2 2M1.5 11h2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 type SavePhase = 'idle' | 'pending' | 'saved' | 'conflict' | 'too-large' | 'not-file' | 'error'
 
 interface FilePreviewProps {
@@ -38,6 +46,7 @@ interface EditableFileProps {
   readonly t: TranslateNS<typeof NS>
   readonly onWrite: FilePreviewProps['onWrite']
   readonly onCommit: FilePreviewProps['onCommit']
+  readonly wrap: boolean
 }
 
 /* v8 ignore next 3 -- closed Remote reason union backstop. */
@@ -72,7 +81,7 @@ function saveMessage(phase: SavePhase, t: TranslateNS<typeof NS>): string {
   }
 }
 
-function EditableFile({ file, value, t, onWrite, onCommit }: EditableFileProps) {
+function EditableFile({ file, value, t, onWrite, onCommit, wrap }: EditableFileProps) {
   const [draft, setDraft] = useState(value.content)
   const [phase, setPhase] = useState<SavePhase>('idle')
   const version = useRef(value.version)
@@ -102,6 +111,7 @@ function EditableFile({ file, value, t, onWrite, onCommit }: EditableFileProps) 
         case 'not-file':
           if (mounted.current) setPhase(result.kind)
           return false
+        /* v8 ignore next 2 -- closed WorkspaceFileWriteResult union backstop. */
         default:
           return assertNever(result)
       }
@@ -110,6 +120,7 @@ function EditableFile({ file, value, t, onWrite, onCommit }: EditableFileProps) 
       if (mounted.current) setPhase(pending ? 'pending' : 'saved')
     },
     onError: () => {
+      /* v8 ignore next -- disposed coordinators cannot publish transport errors. */
       if (mounted.current) setPhase('error')
     },
   }), [fileKey, file, onCommit, onWrite])
@@ -136,6 +147,7 @@ function EditableFile({ file, value, t, onWrite, onCommit }: EditableFileProps) 
         value={draft}
         ariaLabel={t('editor.label', { path: fileKey })}
         lang={languageFor(file)}
+        wrap={wrap}
         onChange={(content) => {
           setDraft(content)
           coordinator.change(content)
@@ -156,6 +168,10 @@ export function FilePreview({
   file, preview, t, onBack, onRefresh, onRetry, onWrite, onCommit,
 }: FilePreviewProps) {
   const loading = preview === null || preview.phase === 'loading'
+  const editable = preview?.phase === 'ready' && preview.value?.kind === 'text'
+  const [wrap, setWrap] = useState(false)
+  const fileKey = locatorLabel(file)
+  useEffect(() => { setWrap(false) }, [fileKey])
   return (
     <div className={css.previewSurface}>
       <div className={css.subheader} data-surface-subheader="">
@@ -172,6 +188,19 @@ export function FilePreview({
             </span>
           ))}
         </div>
+        {editable && (
+          <Tooltip label={wrap ? t('editor.wrapOff') : t('editor.wrapOn')} side="bottom">
+            <button
+              type="button"
+              className={css.iconButton}
+              aria-label={wrap ? t('editor.wrapOff') : t('editor.wrapOn')}
+              aria-pressed={wrap}
+              onClick={() => { setWrap(value => !value) }}
+            >
+              <WrapTextIcon />
+            </button>
+          </Tooltip>
+        )}
         <Tooltip label={t('preview.refresh')} side="bottom">
           <button
             type="button"
@@ -204,6 +233,7 @@ export function FilePreview({
           t={t}
           onWrite={onWrite}
           onCommit={onCommit}
+          wrap={wrap}
         />
       ) : null}
     </div>

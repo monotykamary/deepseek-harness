@@ -314,8 +314,11 @@ export class BrowserTerminalGateway {
     for (const socket of this.server.clients) socket.terminate()
     await new Promise<void>((resolve, reject) => {
       this.server.close((error) => {
-        if (error === undefined) resolve()
-        else reject(error)
+        if (error !== undefined) {
+          reject(error)
+          return
+        }
+        resolve()
       })
     })
     await Promise.all(this.connections)

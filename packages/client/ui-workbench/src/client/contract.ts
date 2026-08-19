@@ -18,6 +18,10 @@ export interface WorkbenchSurfacePresentation {
   readonly icon: WorkbenchSurfaceIcon
   /** Locale-aware launcher description. */
   readonly description: string | (() => string)
+  /** Let this surface own the top chrome while it is the only open Workbench panel. */
+  readonly immersive?: boolean
+  /** Allow several independently mounted panels backed by this surface. */
+  readonly repeatable?: boolean
 }
 
 /** One surface projected from the workbench slot ledger. */
@@ -30,6 +34,10 @@ export interface WorkbenchSurface {
   readonly icon: WorkbenchSurfaceIcon
   /** Locale-resolved launcher description; empty without plugin presentation metadata. */
   readonly description: string
+  /** Whether the surface owns top chrome when opened alone. */
+  readonly immersive: boolean
+  /** Whether the Workbench may create several independent panel instances. */
+  readonly repeatable: boolean
 }
 
 /** Registration-private live surface directory. */
@@ -38,6 +46,12 @@ export interface WorkbenchInjected {
     /** Ordered workbench surface registrations with locale-resolved labels. */
     surfaces: ObservableSnapshot<readonly WorkbenchSurface[]>
   }
+}
+
+/** Owner props identifying one mounted Workbench panel instance. */
+export interface WorkbenchSurfaceOwnerProps {
+  /** Stable ordinal for repeatable surfaces; singleton surface components may omit it in direct use. */
+  readonly workbenchPanelOrdinal?: number
 }
 
 /** Full props of the workbench occupying the layout-owned Details slot. */

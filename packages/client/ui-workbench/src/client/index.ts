@@ -12,7 +12,8 @@ import { en, NS, zh, type WorkbenchKey } from './locales.ts'
 export type { IWorkbench } from './service.ts'
 export type { WorkbenchKey } from './locales.ts'
 export type {
-  WorkbenchSurface, WorkbenchSurfaceIcon, WorkbenchSurfaceId, WorkbenchSurfacePresentation,
+  WorkbenchSurface, WorkbenchSurfaceIcon, WorkbenchSurfaceId, WorkbenchSurfaceOwnerProps,
+  WorkbenchSurfacePresentation,
 } from './contract.ts'
 
 declare module '@monotykamary/cordis' {
@@ -33,7 +34,11 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * One independently registered right-panel surface. Entries are available
      * to the workbench launcher and render only when their tab is active.
      */
-    'workbench.surface': { kind: 'list'; scope: 'session' }
+    'workbench.surface': {
+      kind: 'list'
+      scope: 'session'
+      owner: import('./contract.ts').WorkbenchSurfaceOwnerProps
+    }
   }
 }
 

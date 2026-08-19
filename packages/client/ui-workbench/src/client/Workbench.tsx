@@ -10,6 +10,7 @@ import type {
 } from './contract.ts'
 import css from './Workbench.module.css'
 
+/* v8 ignore next 3 -- closed WorkbenchSurfaceIcon union backstop. */
 function assertNever(value: never): never {
   throw new Error(`unknown workbench surface icon: ${String(value)}`)
 }
@@ -21,6 +22,7 @@ function SurfaceIcon({ icon }: { readonly icon: WorkbenchSurfaceIcon }) {
     case 'files': return <IconFolderOpenOutline16 size={12} />
     case 'terminal': return <IconCodeOutline16 size={12} />
     case 'generic': return <IconCodeOutline16 size={12} />
+    /* v8 ignore next -- closed WorkbenchSurfaceIcon union backstop. */
     default: return assertNever(icon)
   }
 }
@@ -75,67 +77,69 @@ export function Workbench({
   mode, closePanel, useStore, actions, renderSlot, useSurfaces, t,
 }: WorkbenchProps) {
   const surfaces = useSurfaces(value => value)
-  const openIds = useStore(state => state.openIds)
-  const activeId = useStore(state => state.activeId)
+  const panels = useStore(state => state.panels)
+  const activePanelId = useStore(state => state.activePanelId)
   const [launcherOpen, setLauncherOpen] = useState(false)
-  const tabRefs = useRef(new Map<WorkbenchSurfaceId, HTMLButtonElement>())
+  const tabRefs = useRef(new Map<string, HTMLButtonElement>())
   const byId = useMemo(() => new Map(surfaces.map(surface => [surface.id, surface])), [surfaces])
-  const openSurfaces = useMemo(
-    () => openIds.flatMap((id) => {
-      const surface = byId.get(id)
-      return surface === undefined ? [] : [surface]
+  const openPanels = useMemo(
+    () => panels.flatMap((panel) => {
+      const surface = byId.get(panel.surfaceId)
+      return surface === undefined ? [] : [{ panel, surface }]
     }),
-    [byId, openIds],
+    [byId, panels],
   )
   const addable = useMemo(
-    () => surfaces.filter(surface => !openIds.includes(surface.id)),
-    [openIds, surfaces],
+    () => surfaces.filter(surface => surface.repeatable || !panels.some(panel => panel.surfaceId === surface.id)),
+    [panels, surfaces],
   )
-  const active = activeId === null ? undefined : byId.get(activeId)
+  const active = activePanelId === null ? undefined : openPanels.find(item => item.panel.id === activePanelId)
   const availableIds = useMemo(() => surfaces.map(surface => surface.id), [surfaces])
 
   useEffect(() => {
     actions.reconcile(availableIds)
   }, [actions, availableIds])
 
-  const activateAndFocus = (surface: WorkbenchSurface): void => {
+  const activateSurface = (surface: WorkbenchSurface): void => {
     actions.openSurface(surface.id)
-    requestAnimationFrame(() => { tabRefs.current.get(surface.id)?.focus() })
   }
 
   const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
     let next = index
-    if (event.key === 'ArrowLeft') next = (index - 1 + openSurfaces.length) % openSurfaces.length
-    else if (event.key === 'ArrowRight') next = (index + 1) % openSurfaces.length
+    if (event.key === 'ArrowLeft') next = (index - 1 + openPanels.length) % openPanels.length
+    else if (event.key === 'ArrowRight') next = (index + 1) % openPanels.length
     else if (event.key === 'Home') next = 0
-    else if (event.key === 'End') next = openSurfaces.length - 1
+    else if (event.key === 'End') next = openPanels.length - 1
     else return
     event.preventDefault()
-    const surface = openSurfaces[next]
+    const item = openPanels[next]
     /* v8 ignore next -- the handler exists only on a rendered tab, so the modulo index resolves. */
-    if (surface === undefined) throw new Error('workbench tab navigation resolved no surface')
-    activateAndFocus(surface)
+    if (item === undefined) throw new Error('workbench tab navigation resolved no panel')
+    actions.activatePanel(item.panel.id)
+    tabRefs.current.get(item.panel.id)?.focus()
   }
 
   const launcherItems: MenuItem[] = addable.map(surface => ({ id: surface.id, label: surface.label }))
+  const immersive = openPanels.length === 1 && active?.surface.immersive === true
   const panel = (
-    <section className={css.root} data-workbench="">
-      <div className={css.tabBar}>
+    <section className={css.root} data-workbench="" data-immersive={immersive || undefined}>
+      {!immersive && <div className={css.tabBar}>
         <div className={css.tabs} role="tablist" aria-label={t('title')}>
-          {openSurfaces.map((surface, index) => {
-            const selected = surface.id === active?.id
+          {openPanels.map(({ panel, surface }, index) => {
+            const selected = panel.id === active?.panel.id
+            const label = surface.repeatable ? `${surface.label} ${String(panel.ordinal)}` : surface.label
             return (
               <div
                 key={surface.id}
                 className={css.tabCell}
                 data-active={selected || undefined}
-                data-workbench-tab={surface.id}
+                data-workbench-tab={panel.id}
               >
                 <button
                   type="button"
                   className={css.tabClose}
-                  aria-label={t('closeSurface', { name: surface.label })}
-                  onClick={() => { actions.closeSurface(surface.id) }}
+                  aria-label={t('closeSurface', { name: label })}
+                  onClick={() => { actions.closePanel(panel.id) }}
                 >
                   <span className={css.tabIcon} data-workbench-tab-icon="">
                     <SurfaceIcon icon={surface.icon} />
@@ -146,25 +150,25 @@ export function Workbench({
                 </button>
                 <button
                   ref={(node) => {
-                    if (node === null) tabRefs.current.delete(surface.id)
-                    else tabRefs.current.set(surface.id, node)
+                    if (node === null) tabRefs.current.delete(panel.id)
+                    else tabRefs.current.set(panel.id, node)
                   }}
                   type="button"
-                  id={`workbench-tab-${encodeURIComponent(surface.id)}`}
+                  id={`workbench-tab-${encodeURIComponent(panel.id)}`}
                   className={css.tab}
                   role="tab"
                   aria-selected={selected}
-                  aria-controls={`workbench-panel-${encodeURIComponent(surface.id)}`}
+                  aria-controls={`workbench-panel-${encodeURIComponent(panel.id)}`}
                   tabIndex={selected ? 0 : -1}
-                  onClick={() => { actions.openSurface(surface.id) }}
+                  onClick={() => { actions.activatePanel(panel.id) }}
                   onKeyDown={(event) => { onTabKeyDown(event, index) }}
                 >
-                  {surface.label}
+                  {label}
                 </button>
               </div>
             )
           })}
-          {openSurfaces.length > 0 && addable.length > 0 && (
+          {openPanels.length > 0 && addable.length > 0 && (
             <Menu
               open={launcherOpen}
               items={launcherItems}
@@ -185,7 +189,9 @@ export function Workbench({
                 </Tooltip>
               )}
               onSelect={(id) => {
-                actions.openSurface(id as WorkbenchSurfaceId)
+                const surface = byId.get(id as WorkbenchSurfaceId)
+                if (surface?.repeatable === true) actions.openNewSurface(surface.id)
+                else actions.openSurface(id as WorkbenchSurfaceId)
                 setLauncherOpen(false)
               }}
               onClose={() => { setLauncherOpen(false) }}
@@ -197,16 +203,17 @@ export function Workbench({
             <IconCloseOutline16 />
           </button>
         </Tooltip>
-      </div>
+      </div>}
       <div
+        key={active?.panel.id ?? 'launcher'}
         className={css.body}
         role="tabpanel"
-        id={active === undefined ? undefined : `workbench-panel-${encodeURIComponent(active.id)}`}
-        aria-labelledby={active === undefined ? undefined : `workbench-tab-${encodeURIComponent(active.id)}`}
+        id={active === undefined ? undefined : `workbench-panel-${encodeURIComponent(active.panel.id)}`}
+        aria-labelledby={active === undefined ? undefined : `workbench-tab-${encodeURIComponent(active.panel.id)}`}
       >
         {active === undefined
-          ? <EmptyLauncher surfaces={surfaces} onOpen={activateAndFocus} t={t} />
-          : renderSlot('workbench.surface', {}, { only: active.id })}
+          ? <EmptyLauncher surfaces={surfaces} onOpen={activateSurface} t={t} />
+          : renderSlot('workbench.surface', { workbenchPanelOrdinal: active.panel.ordinal }, { only: active.surface.id })}
       </div>
     </section>
   )

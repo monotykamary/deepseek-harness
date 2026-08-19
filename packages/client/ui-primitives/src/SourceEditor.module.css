@@ -71,6 +71,26 @@
   -webkit-text-fill-color: transparent;
 }
 
+.root[data-wrap] .backdropContent {
+  width: auto;
+}
+
+.root[data-wrap] .line {
+  min-width: 0;
+  width: 100%;
+}
+
+.root[data-wrap] .content {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.root[data-wrap] .input {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .input::selection {
   background: var(--dsw-alias-interactive-bg-active);
 }

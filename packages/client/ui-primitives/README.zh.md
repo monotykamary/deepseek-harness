@@ -18,7 +18,7 @@
 
 ## 源码编辑器
 
-`SourceEditor` 把原生受控 `textarea` 叠在带行号且 `aria-hidden` 的 token 投影上，后者使用与 `CodeBlock` 和 `ReadBlock` 相同的延迟 Shiki grammar registry。textarea 拥有选区、输入、光标、IME 和两个方向的滚动条；每次滚动都会同步高亮背景，未知语言渲染为纯文本，owner 接收完整的新值。Tab 会插入一个制表符，Ctrl／Cmd＋S 则调用可选 `onSave` 手势。该原子组件不执行持久化，并因本包为 zero-cordis 而从 owner 接收文件的无障碍标签。
+`SourceEditor` 把原生受控 `textarea` 叠在带行号且 `aria-hidden` 的 token 投影上，后者使用与 `CodeBlock` 和 `ReadBlock` 相同的延迟 Shiki grammar registry。textarea 拥有选区、输入、光标、IME 和两个方向的滚动条；每次滚动都会同步高亮背景，未知语言渲染为纯文本，owner 接收完整的新值。Owner 可以启用软换行；此时水平溢出会隐藏，可编辑层与高亮层采用相同的 pre-wrap 行布局。Tab 会插入一个制表符，Ctrl／Cmd＋S 则调用可选 `onSave` 手势。该原子组件不执行持久化，并因本包为 zero-cordis 而从 owner 接收文件的无障碍标签。
 
 ## 终端输出
 

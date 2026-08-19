@@ -53,18 +53,26 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-terminal: dictionaries')
   const t = ctx.locale.bind(NS)
   const preferences = new TerminalPreferenceStore()
+  const restoredWorkbenchSessions = new Set<string>()
   ctx.effect(() => () => { preferences.dispose() }, 'ui-terminal: preference subscriptions')
 
-  const terminalInjected = (): TerminalInjected => ({
+  const terminalInjected = (sessionId: string): TerminalInjected => ({
     hooks: { preferences },
     updatePreferences: (patch) => { preferences.update(patch) },
     resetPreferences: () => { preferences.reset() },
     socketFactory: url => new WebSocket(url),
+    openWorkbenchPanel: () => { ctx.workbench.openNew(TERMINAL_SURFACE_ID) },
+    ensureWorkbenchPanels: (count) => {
+      if (restoredWorkbenchSessions.has(sessionId)) return
+      ctx.workbench.ensureCount(TERMINAL_SURFACE_ID, count)
+      restoredWorkbenchSessions.add(sessionId)
+    },
   })
 
   ctx.effect(() => ctx.workbench.registerPresentation(TERMINAL_SURFACE_ID, {
     icon: 'terminal',
     description: () => t('launcher.description'),
+    repeatable: true,
   }), 'ui-terminal: workbench presentation')
 
   ctx.slots.inject('workbench.surface', () => ctx.slots.register({

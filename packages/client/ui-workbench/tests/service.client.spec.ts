@@ -26,13 +26,16 @@ describe('WorkbenchController', () => {
     const disposePresentation = vi.fn()
     const registerPresentation = vi.fn(() => disposePresentation)
     const surfaces = {
-      has: (surfaceId: WorkbenchSurfaceId) => surfaceId === id('inspect'),
+      get: (surfaceId: WorkbenchSurfaceId) => surfaceId === id('inspect')
+        ? { id: surfaceId, repeatable: true }
+        : undefined,
       registerPresentation,
     }
     const controller = new WorkbenchController(panels, surfaces as never)
     controller.attach({
       openSurface: (surfaceId) => { calls.push(`surface:${String(surfaceId)}`) },
-      closeSurface: vi.fn(), reconcile: vi.fn(),
+      openNewSurface: (surfaceId) => { calls.push(`new:${String(surfaceId)}`) },
+      ensureSurfaceCount: vi.fn(), activatePanel: vi.fn(), closePanel: vi.fn(), reconcile: vi.fn(),
     })
 
     controller.show()
@@ -47,18 +50,22 @@ describe('WorkbenchController', () => {
     expect(disposePresentation).toHaveBeenCalledOnce()
 
     controller.open(id('inspect'))
-    expect(calls).toEqual(['layout', 'surface:inspect', 'layout'])
+    controller.openNew(id('inspect'))
+    controller.ensureCount(id('inspect'), 2)
+    expect(calls).toEqual(['layout', 'surface:inspect', 'layout', 'new:inspect', 'layout'])
     controller.close()
     expect(closeDetails).toHaveBeenCalledTimes(1)
   })
 
   it('fails loud for an unavailable surface or before the Details entry wires actions', () => {
     const { panels, openDetails } = layout()
-    const controller = new WorkbenchController(panels, { has: () => false } as never)
+    const controller = new WorkbenchController(panels, { get: () => undefined } as never)
     expect(() => { controller.open(id('missing')) }).toThrow(/not registered/u)
 
-    const unwired = new WorkbenchController(panels, { has: () => true } as never)
+    const unwired = new WorkbenchController(panels, { get: () => ({ repeatable: false }) } as never)
     expect(() => { unwired.open(id('inspect')) }).toThrow(/actions not wired/u)
+    expect(() => { unwired.openNew(id('inspect')) }).toThrow(/not repeatable/u)
+    expect(() => { unwired.ensureCount(id('inspect'), 2) }).toThrow(/not repeatable/u)
     expect(openDetails).not.toHaveBeenCalled()
   })
 })

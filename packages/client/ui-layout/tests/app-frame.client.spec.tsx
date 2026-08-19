@@ -475,6 +475,25 @@ describe('AppFrame — compact drawer', () => {
 })
 
 describe('AppFrame — guard branches', () => {
+  it('double-click resets left, right, and bottom splitters to defaults', () => {
+    const { frame, instance } = mountFrame()
+    act(() => {
+      instance.actions.setSidebar(340)
+      instance.actions.openDetails()
+      instance.actions.setDetails(420)
+      instance.actions.openBottom()
+      instance.actions.setBottom(400)
+    })
+    const sidebar = frame.querySelector('[data-side="sidebar"]')
+    const details = frame.querySelector('[data-side="details"]')
+    const bottom = frame.querySelector('[class*="bottomHandle"]')
+    if (sidebar === null || details === null || bottom === null) throw new Error('missing resize handle')
+    fireEvent.doubleClick(sidebar)
+    fireEvent.doubleClick(details)
+    fireEvent.doubleClick(bottom)
+    expect(instance.getSnapshot()).toMatchObject({ sidebar: 280, details: 360, bottom: 280 })
+  })
+
   it('pointer moves without capture are ignored (no width write)', () => {
     const { frame, instance } = mountFrame()
     const handle = frame.querySelectorAll('[class*="handle"]')[0]!

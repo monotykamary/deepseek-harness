@@ -18,6 +18,10 @@ export interface TerminalInjected {
   resetPreferences: () => void
   /** Same-origin WebSocket constructor seam. */
   socketFactory: TerminalWebSocketFactory
+  /** Open a new right-side terminal as another Workbench panel. */
+  openWorkbenchPanel: () => void
+  /** Ensure restored right-side terminals have one Workbench panel each. */
+  ensureWorkbenchPanels: (count: number) => void
 }
 
 /** Props of the terminal occupying the right workbench surface. */

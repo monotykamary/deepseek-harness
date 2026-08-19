@@ -14,6 +14,8 @@ export interface SourceEditorProps {
   lang?: string | undefined
   /** Whether text mutation is disabled while selection and scrolling remain available. */
   readOnly?: boolean | undefined
+  /** Soft-wrap long source lines to the available editor width. */
+  wrap?: boolean | undefined
   /** Receive the complete next source value after an edit. */
   onChange: (value: string) => void
   /** Optional save gesture invoked by Ctrl/Cmd+S. */
@@ -30,7 +32,7 @@ function renderSpans(spans: readonly HighlightSpan[]) {
  * @returns one native textarea editor with an aria-hidden highlighted backdrop.
  */
 export function SourceEditor({
-  value, ariaLabel, lang, readOnly = false, onChange, onSave,
+  value, ariaLabel, lang, readOnly = false, wrap = false, onChange, onSave,
 }: SourceEditorProps) {
   const textarea = useRef<HTMLTextAreaElement>(null)
   const backdrop = useRef<HTMLDivElement>(null)
@@ -39,6 +41,7 @@ export function SourceEditor({
   const lines = useMemo(() => value.split('\n'), [value])
 
   const syncScroll = (event: UIEvent<HTMLTextAreaElement>): void => {
+    /* v8 ignore next -- the textarea scroll handler is removed with its sibling backdrop. */
     if (backdrop.current === null) return
     backdrop.current.scrollTop = event.currentTarget.scrollTop
     backdrop.current.scrollLeft = event.currentTarget.scrollLeft
@@ -67,7 +70,7 @@ export function SourceEditor({
   }
 
   return (
-    <div className={css.root} data-source-editor="">
+    <div className={css.root} data-source-editor="" data-wrap={wrap || undefined}>
       <div ref={backdrop} className={css.backdrop} aria-hidden="true">
         <div className={css.backdropContent}>
           {lines.map((line, index) => (
@@ -90,7 +93,7 @@ export function SourceEditor({
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"
-        wrap="off"
+        wrap={wrap ? 'soft' : 'off'}
         onChange={change}
         onKeyDown={keyDown}
         onScroll={syncScroll}

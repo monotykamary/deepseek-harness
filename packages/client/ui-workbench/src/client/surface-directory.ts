@@ -17,6 +17,8 @@ function sameSurfaces(left: readonly WorkbenchSurface[], right: readonly Workben
         && surface.label === other.label
         && surface.icon === other.icon
         && surface.description === other.description
+        && surface.immersive === other.immersive
+        && surface.repeatable === other.repeatable
     })
 }
 
@@ -92,7 +94,16 @@ export class WorkbenchSurfaceDirectory {
    * @returns whether the surface is registered now.
    */
   has(id: WorkbenchSurfaceId): boolean {
-    return this.snapshot.some(surface => surface.id === id)
+    return this.get(id) !== undefined
+  }
+
+  /**
+   * Resolve one registered surface.
+   * @param id - surface id to resolve.
+   * @returns current surface metadata, or undefined when unregistered.
+   */
+  get(id: WorkbenchSurfaceId): WorkbenchSurface | undefined {
+    return this.snapshot.find(surface => surface.id === id)
   }
 
   private readonly refresh = (): void => {
@@ -124,6 +135,8 @@ export class WorkbenchSurfaceDirectory {
           : typeof presentation.description === 'function'
             ? presentation.description()
             : presentation.description,
+        immersive: presentation?.immersive ?? false,
+        repeatable: presentation?.repeatable ?? false,
       })
     }
     return surfaces

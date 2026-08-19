@@ -115,6 +115,12 @@ describe('FilePreview', () => {
       />,
     )
     const editor = screen.getByRole('textbox', { name: 'Edit src/value.ts' })
+    const wrap = screen.getByRole('button', { name: en['editor.wrapOn'] })
+    expect(wrap.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(wrap)
+    expect(screen.getByRole('button', { name: en['editor.wrapOff'] }).getAttribute('aria-pressed')).toBe('true')
+    fireEvent.keyDown(editor, { key: 's', ctrlKey: true })
+    expect(editor.getAttribute('wrap')).toBe('soft')
     fireEvent.change(editor, { target: { value: 'const value = 2\n' } })
     expect(screen.getByRole('status').textContent).toBe(en['editor.saving'])
     await act(async () => { await vi.advanceTimersByTimeAsync(500) })
@@ -123,6 +129,25 @@ describe('FilePreview', () => {
       kind: 'text', file, name: 'value.ts', content: 'const value = 2\n', byteLength: 16, version: 'v2',
     })
     expect(screen.getByRole('status').textContent).toBe(en['editor.saved'])
+  })
+
+  it('accepts a provider-normalized saved locator without a final segment', async () => {
+    vi.useFakeTimers()
+    const root = { segments: [] }
+    onWrite.mockResolvedValue({
+      kind: 'saved', file: root, content: 'value', byteLength: 5,
+      version: 'v2' as WorkspaceFileVersion,
+    })
+    render(
+      <FilePreview
+        file={file} preview={textCell()} t={t}
+        onWrite={onWrite} onCommit={onCommit}
+        onBack={() => {}} onRefresh={() => {}} onRetry={() => {}}
+      />,
+    )
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'value' } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(500) })
+    expect(onCommit).toHaveBeenCalledWith(expect.objectContaining({ file: root, name: '' }))
   })
 
   it.each([

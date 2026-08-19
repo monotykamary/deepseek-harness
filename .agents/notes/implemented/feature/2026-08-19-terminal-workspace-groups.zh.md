@@ -1,0 +1,31 @@
+# Agent Note: Terminal workspace groups
+
+Status: implemented
+
+[English](2026-08-19-terminal-workspace-groups.md) | 中文
+
+## Problem
+
+在 Workbench 标签行内部再嵌套终端专用标签行，会把同一面板层级呈现两次。它还会让「新建终端」看起来像 pane 局部操作，尽管新的右侧终端实际上是另一个同级面板。水平与垂直拆分仍然需要独立的 group-local 目标。
+
+## Decision
+
+Workbench 界面注册仍是静态插件声明，但 presentation 可以声明为 repeatable。每 Session 的 Workbench store 在这一个注册之上拥有 panel instance。每个 instance 都有稳定且会复用空缺的序号，通过已注册的 surface id 渲染，并以 owner prop 接收序号。`openNew(id)` 创建同级面板，`ensureCount(id, count)` 则为已运行资源恢复足够数量的 panel instance，而无需把应用数据动态注册为 slot。
+
+`ui-terminal` 把右侧 surface 标记为 repeatable。每个右侧终端 group 直接映射为外层 Workbench 面板，并依次标记为 Terminal 1、Terminal 2 等；「新建终端」会请求另一个 Workbench 面板。恢复时，第 N 个面板 attach 第 N 个运行中终端；每个 Session 的首次 discovery 只会执行一次面板数量恢复，因此后续活动面板切换不会重新创建用户已关闭的面板。底部位置继续在紧凑树中展示 group，「新建终端」会向活动 group 添加 pane。水平与垂直拆分控件在两个位置都始终向活动 group 添加 pane，三个 pane 是视觉上限。
+
+每个已挂载 pane 都拥有独立 WebSocket attachment 与 xterm surface。关闭 Workbench 面板会卸载浏览器 attachment，但不会终止 Host PTY；重新打开可复用序号时可通过有界 Host replay attach。Workbench body 以 panel instance 为 key，因此切换序号时会在 attachment 前替换完整 xterm DOM，不会暴露上一面板的 canvas。连接建立期间保持视觉空白，error 状态仍然可见且可操作。选择 pane 会转移输入焦点与 Host resize-owner 活动。全屏只改变 CSS 呈现，因此终端扩展与恢复时 attachment 和 xterm instance 都保持挂载。Group shelf 会为六个控件保留完整宽度，因此显示 split pane 时不会裁切工具栏操作。xterm surface 的四边使用同一个 inset，使外部可见 gutter 保持对称。
+
+Group tree、拆分控件与紧凑分段操作改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`，主要参考 `ThreadTerminalDrawer.tsx` 与 `terminalUiStateStore.ts`；[`THIRD_PARTY_NOTICES.md`](../../../../THIRD_PARTY_NOTICES.md) 保留完整 MIT 声明。
+
+## Alternatives considered
+
+**在 Workbench 面板内嵌套终端标签。** 这种方式会重复现有面板层级，并使同级终端看起来从属于活动 Terminal surface。
+
+**为每个 PTY 动态注册一个 Workbench surface。** Workbench 注册是具有 effect 生命周期的插件声明，而不是每 Session 的应用数据。Repeatable instance 在允许一个声明拥有多个面板的同时保留这一所有权。
+
+**把每个 split pane 当作外层面板。** 这种方式无法同时显示拆分终端，也无法为水平与垂直操作提供 group-local 目标。
+
+## Consequences
+
+右侧创建会产生同级 Workbench 面板，底部面板创建继续保持 group-local，而拆分操作在两个位置都保持 pane-local。隐藏的右侧面板保留 Host 进程，但不保留浏览器 attachment。聚焦覆盖固定 repeatable 面板创建、序号恢复、精确面板激活、两个拆分方向、全屏恢复、独立 IO、exit、retry 与 teardown；组装后的交互终端浏览器 journey 覆盖真实 Host 路径。
