@@ -446,6 +446,7 @@ export class BrowserTerminalGateway {
       this.config,
       bytes => sendBinary(socket, bytes, this.config.maxBufferedBytes),
       fail,
+      boundary => sendControl(socket, { type: boundary }),
     )
     const enqueue = (operation: () => Promise<void>): void => {
       void operations.enqueue(operation).catch(fail)

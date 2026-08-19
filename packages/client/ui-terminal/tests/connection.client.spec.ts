@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import {
+  TERMINAL_ATOMIC_OUTPUT_FRAME_MAX_BYTES,
+} from '@monotykamary/dsh-terminal-web/protocol'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   BrowserTerminalConnection, BrowserTerminalError, killBrowserTerminal, listBrowserTerminals,
@@ -77,6 +80,33 @@ describe('terminal WebSocket short operations', () => {
     expect(socket?.close).toHaveBeenCalledOnce()
   })
 
+  it('uses the secure WebSocket scheme and ignores close or error races after settlement', async () => {
+    vi.stubGlobal('window', { location: { href: 'https://terminal.example/chat' } })
+    const result = listBrowserTerminals(factory, 'session-1', 'bottom')
+    const socket = sockets[0]!
+    expect(urls[0]).toBe('wss://terminal.example/api/terminal')
+    socket.open()
+    control(socket, { type: 'list', terminals: [] })
+    await expect(result).resolves.toEqual([])
+    socket.fail()
+    socket.disconnect()
+    vi.unstubAllGlobals()
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    window.history.replaceState({}, '', '/chat')
+    expect(socket.close).toHaveBeenCalledOnce()
+  })
+
+  it('rejects non-text and unexpected list responses after the handshake', async () => {
+    const binary = listBrowserTerminals(factory, 'session-1', 'bottom')
+    sockets[0]?.message(new ArrayBuffer(0))
+    await expect(binary).rejects.toMatchObject({ code: 'BAD_RESPONSE' })
+
+    const unexpected = listBrowserTerminals(factory, 'session-1', 'bottom')
+    sockets[1]?.open()
+    control(sockets[1]!, { type: 'killed', terminalId: 'terminal-1' })
+    await expect(unexpected).rejects.toThrow('expected terminal list')
+  })
+
   it('kills a detached terminal and rejects Host, malformed, unexpected, and disconnected results', async () => {
     const killed = killBrowserTerminal(factory, 'session-1', 'terminal-3')
     sockets[0]?.open()
@@ -108,10 +138,13 @@ describe('terminal WebSocket short operations', () => {
     const failed = listBrowserTerminals(factory, 'session-1', 'right')
     sockets[5]?.fail()
     await expect(failed).rejects.toThrow('connection failed')
+    sockets[4]?.disconnect()
+    sockets[5]?.fail()
   })
 
   it.each([
     [{ type: 'list', terminals: [{ terminalId: 1, label: 'bad', status: { kind: 'running' } }] }],
+    [{ type: 'list', terminals: [{ terminalId: 'id', label: 'bad' }] }],
     [{ type: 'list', terminals: [{ terminalId: 'id', label: 'bad', status: { kind: 'other' } }] }],
     [{ type: 'list', terminals: [{ terminalId: 'id', label: 'bad', status: { kind: 'exited', exitCode: '2', signal: null } }] }],
     [null],
@@ -172,6 +205,82 @@ describe('BrowserTerminalConnection', () => {
     expect(() => { live.write('late') }).toThrow(BrowserTerminalError)
   })
 
+  it('commits bracketed transport chunks as one output write', async () => {
+    const output = vi.fn()
+    const callbacks = { output, exit: vi.fn(), killed: vi.fn(), disconnected: vi.fn() }
+    const connected = BrowserTerminalConnection.connect(factory, {
+      type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
+    }, callbacks)
+    const socket = sockets[0]!
+    socket.message(new Uint8Array([9]).buffer)
+    control(socket, { type: 'output-frame-start' })
+    control(socket, { type: 'output-frame-end' })
+    socket.open()
+    control(socket, {
+      type: 'ready',
+      terminal: { terminalId: 'terminal-1', label: 'Terminal 1', status: { kind: 'running' } },
+      replayTruncated: false,
+    })
+    const live = await connected
+
+    control(socket, { type: 'pong', sentAt: 1 })
+    control(socket, { type: 'output-frame-start' })
+    socket.message(new Uint8Array([1]).buffer)
+    control(socket, { type: 'output-frame-start' })
+    socket.message(new Uint8Array([2, 3]).buffer)
+    expect(output).not.toHaveBeenCalled()
+    control(socket, { type: 'output-frame-end' })
+    expect(output).toHaveBeenCalledOnce()
+    expect(Array.from(output.mock.calls[0]?.[0] as Uint8Array)).toEqual([1, 2, 3])
+
+    control(socket, { type: 'output-frame-start' })
+    socket.message(new Uint8Array([4]).buffer)
+    control(socket, { type: 'output-frame-end' })
+    expect(Array.from(output.mock.calls[1]?.[0] as Uint8Array)).toEqual([4])
+
+    control(socket, { type: 'output-frame-start' })
+    control(socket, { type: 'output-frame-end' })
+    expect(output).toHaveBeenCalledTimes(2)
+
+    live.close()
+    control(socket, { type: 'output-frame-start' })
+    control(socket, { type: 'output-frame-end' })
+    socket.message(new Uint8Array([5]).buffer)
+    expect(output).toHaveBeenCalledTimes(2)
+  })
+
+  it('disconnects a browser attachment whose staged atomic frame exceeds the wire bound', async () => {
+    const output = vi.fn()
+    const disconnected = vi.fn()
+    const callbacks = { output, exit: vi.fn(), killed: vi.fn(), disconnected }
+    const connected = BrowserTerminalConnection.connect(factory, {
+      type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
+    }, callbacks)
+    const socket = sockets[0]!
+    socket.open()
+    control(socket, {
+      type: 'ready',
+      terminal: { terminalId: 'terminal-1', label: 'Terminal 1', status: { kind: 'running' } },
+      replayTruncated: false,
+    })
+    const live = await connected
+
+    control(socket, { type: 'output-frame-start' })
+    socket.message(new ArrayBuffer(TERMINAL_ATOMIC_OUTPUT_FRAME_MAX_BYTES))
+    socket.message(new ArrayBuffer(1))
+    expect(disconnected).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'OUTPUT_FRAME_OVERFLOW',
+      message: 'terminal atomic output frame exceeded its size limit',
+    }))
+    expect(socket.close).toHaveBeenCalledOnce()
+    expect(output).not.toHaveBeenCalled()
+
+    control(socket, { type: 'output-frame-end' })
+    socket.message(new Uint8Array([1]).buffer)
+    expect(output).not.toHaveBeenCalled()
+    expect(live.terminal.terminalId).toBe('terminal-1')
+  })
+
   it('rejects before ready and reports invalid frames after ready', async () => {
     const callbacks = { output: vi.fn(), exit: vi.fn(), killed: vi.fn(), disconnected: vi.fn() }
     const refused = BrowserTerminalConnection.connect(factory, {
@@ -180,6 +289,8 @@ describe('BrowserTerminalConnection', () => {
     sockets[0]?.open()
     control(sockets[0]!, { type: 'error', code: 'NO_SESSION', message: 'missing' })
     await expect(refused).rejects.toMatchObject({ code: 'NO_SESSION' })
+    sockets[0]?.disconnect()
+    sockets[0]?.fail()
 
     const disconnected = BrowserTerminalConnection.connect(factory, {
       type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
@@ -193,16 +304,48 @@ describe('BrowserTerminalConnection', () => {
     sockets[2]?.fail()
     await expect(failed).rejects.toThrow('connection failed')
 
+    const malformed = BrowserTerminalConnection.connect(factory, {
+      type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
+    }, callbacks)
+    sockets[3]?.message('not json')
+    await expect(malformed).rejects.toMatchObject({ code: 'BAD_RESPONSE' })
+
     const livePromise = BrowserTerminalConnection.connect(factory, {
       type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
     }, callbacks)
-    sockets[3]?.open()
-    control(sockets[3]!, {
+    sockets[4]?.open()
+    control(sockets[4]!, {
       type: 'ready', terminal: { terminalId: 'terminal-1', label: 'Terminal 1', status: { kind: 'running' } }, replayTruncated: false,
     })
     await livePromise
-    sockets[3]?.message('not json')
+    control(sockets[4]!, {
+      type: 'ready', terminal: { terminalId: 'terminal-1', label: 'Terminal 1', status: { kind: 'running' } }, replayTruncated: false,
+    })
     expect(callbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'BAD_RESPONSE' }))
+    control(sockets[4]!, { type: 'error', code: 'INTERNAL', message: 'host failed' })
+    expect(callbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'INTERNAL' }))
+    sockets[4]?.message('not json')
+    expect(callbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'BAD_RESPONSE' }))
+    sockets[4]?.message(JSON.stringify({ type: 'unknown' }))
+    expect(callbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'BAD_RESPONSE' }))
+    control(sockets[4]!, { type: 'list', terminals: [] })
+    expect(callbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'BAD_RESPONSE' }))
+
+    const throwingCallbacks = {
+      ...callbacks,
+      exit: () => { throw 'exit failed' },
+      disconnected: vi.fn(),
+    }
+    const throwingExit = BrowserTerminalConnection.connect(factory, {
+      type: 'attach', sessionId: 'session-1', terminalId: 'terminal-1', cols: 80, rows: 24,
+    }, throwingCallbacks)
+    sockets[5]?.open()
+    control(sockets[5]!, {
+      type: 'ready', terminal: { terminalId: 'terminal-1', label: 'Terminal 1', status: { kind: 'running' } }, replayTruncated: false,
+    })
+    await throwingExit
+    control(sockets[5]!, { type: 'exit', status: { kind: 'running' } })
+    expect(throwingCallbacks.disconnected).toHaveBeenCalledWith(expect.objectContaining({ code: 'BAD_RESPONSE' }))
   })
 
   it('reports unexpected close and error after readiness', async () => {

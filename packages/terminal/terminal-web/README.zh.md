@@ -6,9 +6,9 @@
 
 ## 操作与帧
 
-新 socket 以一条 JSON 文本握手开始：`list`、`open`、`attach` 或 `kill`。`open` 会在所选 Session cwd 中创建带位置名称的原生交互式 login shell，并转发请求的初始网格；`list` 只返回该浏览器位置拥有的终端。任意数量的 socket 都可以附加同一 PTY：每个 socket 都会收到有界 replay 与实时输出，查看方之间的输入保持有序，最近发生交互的查看方控制共享 PTY 网格。附加后的 socket 使用客户端二进制帧传送 UTF-8 终端输入，使用 Host 二进制帧传送原始 PTY 输出，并使用 JSON 文本帧传送 `resize`、`kill`、`ready`、`exit`、`pong` 或失败控制。关闭 socket 只会分离该查看方，不会终止持久进程。
+新 socket 以一条 JSON 文本握手开始：`list`、`open`、`attach` 或 `kill`。`open` 会在所选 Session cwd 中创建带位置名称的原生交互式 login shell，并转发请求的初始网格；`list` 只返回该浏览器位置拥有的终端。任意数量的 socket 都可以附加同一 PTY：每个 socket 都会收到有界 replay 与实时输出，查看方之间的输入保持有序，最近发生交互的查看方控制共享 PTY 网格。附加后的 socket 使用客户端二进制帧传送 UTF-8 终端输入，使用 Host 二进制帧传送原始 PTY 输出，并使用 JSON 文本帧传送 `resize`、`kill`、`ready`、`output-frame-start`、`output-frame-end`、`exit`、`pong` 或失败控制。关闭 socket 只会分离该查看方，不会终止持久进程。
 
-输出采用 LocalTerm 的两毫秒 trailing idle 窗口与连续 burst 上限：每个 kernel fragment 都会重置 idle timer，达到 65,536 字节时立即刷新，部分 stream 会在 `outputStreamThresholdMs` 内刷新。发送方会保留不可变 stream buffer，避免中间复制。慢速浏览器会在 WebSocket 队列超过 `maxBufferedBytes` 前断开；wire 解析器会限制输入大小、握手时间和 PTY 尺寸。共享终端操作队列会同步启动 idle 输入、在异步 provider 与查看方之间保持 FIFO 顺序，并让插件释放等待 quiescence。
+输出采用 LocalTerm 的两毫秒 trailing idle 窗口与连续 burst 上限：每个 kernel fragment 都会重置 idle timer，达到 65,536 字节时立即刷新，部分 stream 会在 `outputStreamThresholdMs` 内刷新。跨越字节上限的 redraw 会打开 `output-frame-start`，按顺序发送每个 transport chunk，并在 trailing idle 边界发送 `output-frame-end`，使浏览器把完整 redraw 作为一次 xterm parse transaction 提交；达到 `outputStreamThresholdMs` 的 burst 会关闭 bracket 并恢复渐进式交付。浏览器 attachment 最多为一个 staged frame 保留 16 MiB，超过该上限时会断开。发送方会保留不可变 stream buffer，避免中间复制。慢速浏览器会在 WebSocket 队列超过 `maxBufferedBytes` 前断开；wire 解析器会限制输入大小、握手时间和 PTY 尺寸。共享终端操作队列会同步启动 idle 输入、在异步 provider 与查看方之间保持 FIFO 顺序，并让插件释放等待 quiescence。
 
 ## 配置
 

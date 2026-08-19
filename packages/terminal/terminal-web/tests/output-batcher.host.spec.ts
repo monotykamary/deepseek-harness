@@ -24,6 +24,61 @@ describe('TerminalOutputBatcher', () => {
     expect(delivered.map(bytes => bytes.toString())).toEqual(['ab'])
   })
 
+  it('brackets size-capped chunks and commits the idle tail as one atomic redraw', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(0)
+    const ordered: string[] = []
+    const batcher = new TerminalOutputBatcher(
+      { outputBatchBytes: 4, outputBatchWindowMs: 2, outputStreamThresholdMs: 100 },
+      async (bytes) => { ordered.push(`binary:${bytes.toString()}`) },
+      vi.fn(),
+      async (boundary) => { ordered.push(`control:${boundary}`) },
+    )
+
+    batcher.push(Buffer.from('abcd'))
+    batcher.push(Buffer.from('e'))
+    batcher.push(Buffer.from('fghi'))
+    await vi.advanceTimersByTimeAsync(2)
+    await batcher.finish()
+
+    expect(ordered).toEqual([
+      'control:output-frame-start',
+      'binary:abcd',
+      'binary:efghi',
+      'control:output-frame-end',
+    ])
+  })
+
+  it('closes an open atomic frame when the duration threshold reclassifies the burst as a stream', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(0)
+    const ordered: string[] = []
+    const batcher = new TerminalOutputBatcher(
+      { outputBatchBytes: 4, outputBatchWindowMs: 10, outputStreamThresholdMs: 20 },
+      async (bytes) => { ordered.push(`binary:${bytes.toString()}`) },
+      vi.fn(),
+      async (boundary) => { ordered.push(`control:${boundary}`) },
+    )
+
+    batcher.push(Buffer.from('a'))
+    await vi.advanceTimersByTimeAsync(9)
+    batcher.push(Buffer.from('b'))
+    await vi.advanceTimersByTimeAsync(9)
+    batcher.push(Buffer.from('c'))
+    await vi.advanceTimersByTimeAsync(1)
+    batcher.push(Buffer.from('d'))
+    await vi.advanceTimersByTimeAsync(1)
+    batcher.push(Buffer.from('e'))
+    await batcher.finish()
+
+    expect(ordered).toEqual([
+      'control:output-frame-start',
+      'binary:abcd',
+      'binary:e',
+      'control:output-frame-end',
+    ])
+  })
+
   it('drops an aborted partial batch and ignores empty or stopped input', async () => {
     vi.useFakeTimers()
     const deliver = vi.fn<(bytes: Buffer) => Promise<undefined>>(async () => undefined)

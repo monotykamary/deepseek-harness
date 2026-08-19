@@ -1,6 +1,7 @@
 /** Browser WebSocket client for the terminal-web binary/output protocol. */
 
 import {
+  TERMINAL_ATOMIC_OUTPUT_FRAME_MAX_BYTES,
   TERMINAL_WEBSOCKET_PATH,
   type BrowserTerminalClientControl,
   type BrowserTerminalHandshake,
@@ -63,6 +64,8 @@ function parseControl(data: unknown): BrowserTerminalServerControl {
   if (value.type === 'ready' && typeof value.replayTruncated === 'boolean') {
     return { type: 'ready', terminal: parseSnapshot(value.terminal), replayTruncated: value.replayTruncated }
   }
+  if (value.type === 'output-frame-start') return { type: 'output-frame-start' }
+  if (value.type === 'output-frame-end') return { type: 'output-frame-end' }
   if (value.type === 'exit') return { type: 'exit', status: parseStatus(value.status) }
   if (value.type === 'killed' && typeof value.terminalId === 'string') {
     return { type: 'killed', terminalId: value.terminalId }
@@ -85,6 +88,7 @@ function sendHandshake(socket: WebSocket, handshake: BrowserTerminalHandshake): 
 }
 
 function asError(error: unknown): Error {
+  /* v8 ignore next -- request parsers and expected-frame callbacks throw BrowserTerminalError only. */
   return error instanceof Error ? error : new BrowserTerminalError('BAD_RESPONSE', String(error))
 }
 
@@ -189,6 +193,9 @@ export interface BrowserTerminalConnectionCallbacks {
 /** Live binary-input/output connection for one browser terminal attachment. */
 export class BrowserTerminalConnection {
   private closed = false
+  private atomicOutputFrameOpen = false
+  private atomicOutputFrameChunks: Uint8Array[] = []
+  private atomicOutputFrameBytes = 0
 
   private constructor(
     private readonly socket: WebSocket,
@@ -221,7 +228,7 @@ export class BrowserTerminalConnection {
       socket.addEventListener('open', () => { sendHandshake(socket, handshake) }, { once: true })
       socket.addEventListener('message', (event) => {
         if (event.data instanceof ArrayBuffer) {
-          if (live !== undefined) callbacks.output(new Uint8Array(event.data))
+          if (live !== undefined) live.handleOutput(new Uint8Array(event.data), callbacks)
           return
         }
         try {
@@ -235,9 +242,14 @@ export class BrowserTerminalConnection {
             const error = new BrowserTerminalError(control.code, control.message)
             if (live === undefined) rejectBeforeReady(error)
             else callbacks.disconnected(error)
+          } else if (control.type === 'output-frame-start') {
+            if (live !== undefined) live.beginAtomicOutputFrame()
+          } else if (control.type === 'output-frame-end') {
+            if (live !== undefined) live.finishAtomicOutputFrame(callbacks)
           } else if (control.type === 'exit') callbacks.exit(control.status)
           else if (control.type === 'killed') callbacks.killed(control.terminalId)
-          else if (control.type === 'pong') callbacks.pong?.(control.sentAt)
+          else if (control.type === 'list') throw new BrowserTerminalError('BAD_RESPONSE', 'unexpected terminal list frame')
+          else callbacks.pong?.(control.sentAt)
         } catch (error: unknown) {
           const failure = error instanceof BrowserTerminalError
             ? error
@@ -255,6 +267,62 @@ export class BrowserTerminalConnection {
         else callbacks.disconnected(new BrowserTerminalError('DISCONNECTED', 'terminal connection failed'))
       }, { once: true })
     })
+  }
+
+  /** Stage one bracketed transport chunk or pass unbracketed output through. */
+  private handleOutput(bytes: Uint8Array, callbacks: BrowserTerminalConnectionCallbacks): void {
+    if (this.closed) return
+    if (!this.atomicOutputFrameOpen) {
+      callbacks.output(bytes)
+      return
+    }
+    if (this.atomicOutputFrameBytes + bytes.byteLength > TERMINAL_ATOMIC_OUTPUT_FRAME_MAX_BYTES) {
+      this.clearAtomicOutputFrame()
+      this.close()
+      callbacks.disconnected(new BrowserTerminalError(
+        'OUTPUT_FRAME_OVERFLOW',
+        'terminal atomic output frame exceeded its size limit',
+      ))
+      return
+    }
+    this.atomicOutputFrameChunks.push(bytes)
+    this.atomicOutputFrameBytes += bytes.byteLength
+  }
+
+  /** Begin retaining transport chunks for one redraw. */
+  private beginAtomicOutputFrame(): void {
+    if (this.closed || this.atomicOutputFrameOpen) return
+    this.atomicOutputFrameOpen = true
+    this.atomicOutputFrameChunks = []
+    this.atomicOutputFrameBytes = 0
+  }
+
+  /** Commit a complete bracketed redraw as one output write. */
+  private finishAtomicOutputFrame(callbacks: BrowserTerminalConnectionCallbacks): void {
+    if (this.closed || !this.atomicOutputFrameOpen) return
+    const chunks = this.atomicOutputFrameChunks
+    const byteLength = this.atomicOutputFrameBytes
+    this.clearAtomicOutputFrame()
+    const first = chunks[0]
+    if (first === undefined) return
+    if (chunks.length === 1) {
+      callbacks.output(first)
+      return
+    }
+    const bytes = new Uint8Array(byteLength)
+    let byteOffset = 0
+    for (const chunk of chunks) {
+      bytes.set(chunk, byteOffset)
+      byteOffset += chunk.byteLength
+    }
+    callbacks.output(bytes)
+  }
+
+  /** Forget a staged frame after commit, overflow, or connection disposal. */
+  private clearAtomicOutputFrame(): void {
+    this.atomicOutputFrameOpen = false
+    this.atomicOutputFrameChunks = []
+    this.atomicOutputFrameBytes = 0
   }
 
   /**
@@ -283,6 +351,7 @@ export class BrowserTerminalConnection {
   /** Close only this browser attachment, leaving the terminal process alive. */
   close(): void {
     if (this.closed) return
+    this.clearAtomicOutputFrame()
     this.closed = true
     this.socket.close()
   }

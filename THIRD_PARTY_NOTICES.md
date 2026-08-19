@@ -53,7 +53,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-The xterm output scheduler, scroll anchoring, ligature detection, Unicode width corrections, renderer settings, and addon patches adapt [localterm](https://github.com/monotykamary/localterm) revision `8de7394eb06cf562985d8f82d5a8145863cb8ecd`.
+The xterm output scheduler, atomic output transport framing, scroll anchoring, ligature detection, Unicode width corrections, renderer settings, and addon patches adapt [localterm](https://github.com/monotykamary/localterm) revision `8de7394eb06cf562985d8f82d5a8145863cb8ecd`.
 
 ```text
 MIT License

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-atomic-terminal-transport-frames.md
+2026-08-19-atomic-terminal-transport-frames.md: e4313137711a18d4e6d620dfbd00789bdb521149
+2026-08-19-atomic-terminal-transport-frames.zh.md: e9c2f46b8fb86b17a83cedd14f5c3c9a07c1b54c

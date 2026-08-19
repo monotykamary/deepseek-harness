@@ -207,6 +207,27 @@ describe('BrowserTerminalGateway', () => {
     expect(terminals.attachment.close).toHaveBeenCalledOnce()
   })
 
+  it('orders atomic boundaries around size-split output chunks', async () => {
+    const terminals = new FakeTerminals([snapshot('right-1', 'web-right-1')])
+    const { gateway } = harness(terminals, 'owner-1', {
+      outputBatchBytes: 4, outputBatchWindowMs: 20, outputStreamThresholdMs: 100,
+    })
+    const { socket, frames } = await connect(await serve(gateway))
+    socket.send(JSON.stringify({
+      type: 'attach', sessionId: 'session-1', terminalId: 'right-1', cols: 80, rows: 24,
+    }))
+    await frames.control()
+
+    terminals.attachment.output.write('abcd')
+    expect(await frames.control()).toEqual({ type: 'output-frame-start' })
+    expect(await frames.next()).toEqual({ binary: true, data: Buffer.from('abcd') })
+    terminals.attachment.output.write('e')
+    expect(await frames.next()).toEqual({ binary: true, data: Buffer.from('e') })
+    expect(await frames.control()).toEqual({ type: 'output-frame-end' })
+
+    await closeSocket(socket)
+  })
+
   it('attaches an existing right terminal, flushes final output, and reports process exit', async () => {
     const terminals = new FakeTerminals([
       snapshot('right-2', 'web-right-2'),

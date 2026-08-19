@@ -796,7 +796,7 @@ The Web command palette, sidebar, conversation, workbench, Files explorer, and i
 ${T3_CODE_LICENSE}
 \`\`\`
 
-The xterm output scheduler, scroll anchoring, ligature detection, Unicode width corrections, renderer settings, and addon patches adapt [localterm](https://github.com/monotykamary/localterm) revision \`${LOCALTERM_REVISION}\`.
+The xterm output scheduler, atomic output transport framing, scroll anchoring, ligature detection, Unicode width corrections, renderer settings, and addon patches adapt [localterm](https://github.com/monotykamary/localterm) revision \`${LOCALTERM_REVISION}\`.
 
 \`\`\`text
 ${LOCALTERM_LICENSE}

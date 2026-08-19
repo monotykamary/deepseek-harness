@@ -43,6 +43,9 @@ export type BrowserTerminalClientControl =
   | { readonly type: 'kill' }
   | { readonly type: 'ping'; readonly sentAt: number }
 
+/** Maximum combined output bytes one client retains for an atomic redraw. */
+export const TERMINAL_ATOMIC_OUTPUT_FRAME_MAX_BYTES = 16 * 1024 * 1024
+
 /** Host text frames; raw terminal output uses binary WebSocket frames. */
 export type BrowserTerminalServerControl =
   | { readonly type: 'list'; readonly terminals: readonly BrowserTerminalSnapshot[] }
@@ -51,6 +54,8 @@ export type BrowserTerminalServerControl =
     readonly terminal: BrowserTerminalSnapshot
     readonly replayTruncated: boolean
   }
+  | { readonly type: 'output-frame-start' }
+  | { readonly type: 'output-frame-end' }
   | { readonly type: 'exit'; readonly status: BrowserTerminalStatus }
   | { readonly type: 'killed'; readonly terminalId: string }
   | { readonly type: 'pong'; readonly sentAt: number }
