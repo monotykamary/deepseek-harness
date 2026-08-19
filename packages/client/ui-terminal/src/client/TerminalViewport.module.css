@@ -21,6 +21,57 @@
 }
 
 .surface :global(.xterm-viewport) {
+  overflow: hidden !important;
   background-color: inherit !important;
-  scrollbar-color: var(--dsw-alias-scrollbar-bg-l1) transparent;
+  scrollbar-width: none;
+}
+
+.surface :global(.xterm-viewport::-webkit-scrollbar) {
+  display: none;
+}
+
+.surface :global(.xterm .xterm-scrollable-element > .scrollbar),
+.surface :global(.xterm .xterm-scrollable-element > .xterm-scrollbar) {
+  display: none !important;
+}
+
+.scrollbarTrack {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: 10px;
+  pointer-events: none;
+  opacity: 0;
+  color: var(--dsw-alias-label-secondary);
+  transition: opacity var(--ds-transition-duration) var(--ds-ease-in-out);
+}
+
+.scrollbarTrack[data-visible] {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.scrollbarThumb {
+  position: absolute;
+  right: 2px;
+  left: 2px;
+  min-height: 24px;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  cursor: default;
+}
+
+.scrollbarThumb:hover {
+  background: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.scrollbarThumb:active {
+  background: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollbarTrack {
+    transition: none;
+  }
 }

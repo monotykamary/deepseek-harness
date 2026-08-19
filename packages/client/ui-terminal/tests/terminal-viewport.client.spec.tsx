@@ -10,8 +10,10 @@ const mocks = vi.hoisted(() => ({
     fit: ReturnType<typeof vi.fn>
     refreshFontMetrics: ReturnType<typeof vi.fn>
     input: (value: string) => void
+    scrollbar: { track: HTMLDivElement; thumb: HTMLDivElement }
   }>,
   fits: [] as Array<{ cols: number; rows: number } | undefined>,
+  addScreen: false,
 }))
 
 vi.mock('../src/client/xterm-surface.ts', () => ({
@@ -20,7 +22,19 @@ vi.mock('../src/client/xterm-surface.ts', () => ({
     readonly dispose = vi.fn()
     readonly fit = vi.fn(() => mocks.fits.shift())
     readonly refreshFontMetrics = vi.fn()
-    constructor(_container: HTMLDivElement, _preferences: unknown, readonly input: (value: string) => void) {
+    readonly scrollbar: { track: HTMLDivElement; thumb: HTMLDivElement }
+    constructor(
+      container: HTMLDivElement,
+      _preferences: unknown,
+      readonly input: (value: string) => void,
+      scrollbar: { track: HTMLDivElement; thumb: HTMLDivElement },
+    ) {
+      this.scrollbar = scrollbar
+      if (mocks.addScreen) {
+        const screen = document.createElement('div')
+        screen.className = 'xterm-screen'
+        container.append(screen)
+      }
       mocks.instances.push(this)
     }
   },
@@ -41,6 +55,7 @@ import { TerminalViewport } from '../src/client/TerminalViewport.tsx'
 beforeEach(() => {
   mocks.instances.length = 0
   mocks.fits.length = 0
+  mocks.addScreen = false
   resizeCallback = undefined
   disconnect.mockClear()
   observe.mockClear()
@@ -94,7 +109,94 @@ describe('TerminalViewport', () => {
     expect(onResize.mock.invocationCallOrder[0]!).toBeLessThan(onReady.mock.invocationCallOrder[0]!)
   })
 
+  it('handles transition events that cannot produce terminal dimensions', () => {
+    mocks.fits.push(undefined, { cols: 90, rows: 28 })
+    const onReady = vi.fn()
+    const onResize = vi.fn()
+    const view = render(
+      <div data-testid="owner" style={{ transitionProperty: 'height', transitionDuration: '0.2s' }}>
+        <TerminalViewport
+          preferences={DEFAULT_TERMINAL_PREFERENCES}
+          onReady={onReady}
+          onInput={vi.fn()}
+          onResize={onResize}
+          layoutHeight={0}
+        />
+      </div>,
+    )
+    fireEvent.transitionEnd(view.getByTestId('owner'), { propertyName: 'width' })
+    expect(onReady).not.toHaveBeenCalled()
+    fireEvent.transitionEnd(view.getByTestId('owner'), { propertyName: 'height' })
+    expect(onReady).toHaveBeenCalledOnce()
+    expect(onResize).not.toHaveBeenCalled()
+    fireEvent.transitionEnd(view.getByTestId('owner'), { propertyName: 'height' })
+    expect(onReady).toHaveBeenCalledOnce()
+    expect(onResize).toHaveBeenCalledWith({ cols: 90, rows: 28 })
+  })
+
+  it('publishes readiness when a collapsed viewport becomes measurable without a transition', () => {
+    const onReady = vi.fn()
+    const onResize = vi.fn()
+    const view = render(
+      <TerminalViewport
+        preferences={DEFAULT_TERMINAL_PREFERENCES}
+        onReady={onReady}
+        onInput={vi.fn()}
+        onResize={onResize}
+        layoutHeight={0}
+      />,
+    )
+    const container = view.container.querySelector<HTMLElement>('[data-terminal-viewport] > div')!
+    Object.defineProperty(container, 'clientHeight', { configurable: true, value: 200 })
+    mocks.fits.push({ cols: 70, rows: 20 }, undefined)
+    resizeCallback?.([], {} as ResizeObserver)
+    expect(onReady).toHaveBeenCalledWith(mocks.instances[0])
+    expect(onResize).toHaveBeenCalledWith({ cols: 70, rows: 20 })
+    resizeCallback?.([], {} as ResizeObserver)
+    expect(onReady).toHaveBeenCalledOnce()
+  })
+
+  it('publishes readiness when the owned height transition reaches its target', () => {
+    mocks.fits.push({ cols: 72, rows: 22 })
+    const onReady = vi.fn()
+    const view = render(
+      <div data-testid="owner" style={{ height: '200px', transitionProperty: 'height', transitionDuration: '0.2s' }}>
+        <TerminalViewport
+          preferences={DEFAULT_TERMINAL_PREFERENCES}
+          onReady={onReady}
+          onInput={vi.fn()}
+          onResize={vi.fn()}
+          layoutHeight={0}
+        />
+      </div>,
+    )
+    Object.defineProperty(view.getByTestId('owner'), 'clientHeight', { configurable: true, value: 200 })
+    resizeCallback?.([], {} as ResizeObserver)
+    expect(onReady).toHaveBeenCalledWith(mocks.instances[0])
+    fireEvent.transitionCancel(view.getByTestId('owner'), { propertyName: 'height' })
+    expect(onReady).toHaveBeenCalledOnce()
+  })
+
+  it('ignores zero-duration height owners and an unavailable post-font fit', async () => {
+    mocks.fits.push({ cols: 80, rows: 24 }, { cols: 81, rows: 25 }, undefined)
+    const onResize = vi.fn()
+    render(
+      <div style={{ transitionProperty: 'height', transitionDuration: '0s' }}>
+        <TerminalViewport
+          preferences={DEFAULT_TERMINAL_PREFERENCES}
+          onReady={vi.fn()}
+          onInput={vi.fn()}
+          onResize={onResize}
+          layoutHeight={1}
+        />
+      </div>,
+    )
+    await waitFor(() => { expect(mocks.instances[0]?.refreshFontMetrics).toHaveBeenCalledOnce() })
+    expect(onResize).toHaveBeenCalledTimes(2)
+  })
+
   it('mounts once, forwards input and dimensions, reapplies preferences, observes resize, and disposes', () => {
+    mocks.addScreen = true
     mocks.fits.push({ cols: 80, rows: 24 }, { cols: 81, rows: 25 })
     const onReady = vi.fn()
     const onInput = vi.fn()
@@ -113,7 +215,9 @@ describe('TerminalViewport', () => {
     expect(viewport.dataset.terminalLigatures).toBe('true')
     expect(viewport.style.backgroundColor).toBe('rgb(21, 21, 22)')
     expect(viewport.firstElementChild).not.toBeNull()
-    expect(observe).toHaveBeenCalledTimes(2)
+    expect(surface.scrollbar.track.hasAttribute('data-terminal-scrollbar-track')).toBe(true)
+    expect(surface.scrollbar.thumb.hasAttribute('data-terminal-scrollbar-thumb')).toBe(true)
+    expect(observe).toHaveBeenCalledTimes(3)
     expect(onReady).toHaveBeenCalledWith(surface)
     expect(onResize).toHaveBeenNthCalledWith(1, { cols: 80, rows: 24 })
     expect(onResize.mock.invocationCallOrder[0]!).toBeLessThan(onReady.mock.invocationCallOrder[0]!)

@@ -27,9 +27,14 @@ async function openSeededSession(page: Page): Promise<void> {
   const group = page.locator('[role="treeitem"]').first()
   await group.waitFor({ timeout: 15_000 })
   if (await group.getAttribute('aria-expanded') !== 'true') await group.click()
-  await page.locator('[role="treeitem"]').nth(1).click()
-  await page.getByText('Browse the workspace files.', { exact: true })
-    .waitFor({ timeout: 30_000 })
+  const conversation = page.getByText('Browse the workspace files.', { exact: true })
+  const sessionRow = page.locator('[role="treeitem"]').nth(1)
+  await Promise.any([
+    conversation.waitFor({ timeout: 30_000 }),
+    sessionRow.waitFor({ timeout: 30_000 }),
+  ])
+  if (!await conversation.isVisible()) await sessionRow.click()
+  await conversation.waitFor({ timeout: 30_000 })
 }
 
 function renderGolden(values: {
@@ -42,6 +47,7 @@ function renderGolden(values: {
   emptyCards: string[]
   expandedRows: string[]
   filteredRows: string[]
+  fullscreenEditor: boolean
   iconBeforeHover: boolean
   closeAfterHover: boolean
   preview: string
@@ -56,6 +62,7 @@ function renderGolden(values: {
     `- expanded rows: ${values.expandedRows.join(' → ')}`,
     `- preview: ${JSON.stringify(values.preview)}`,
     `- edited source: ${JSON.stringify(values.editedSource)}`,
+    `- fullscreen editor: ${String(values.fullscreenEditor)}`,
     `- tab icon before hover: ${String(values.iconBeforeHover)}`,
     `- tab close after hover: ${String(values.closeAfterHover)}`,
     `- filtered rows: ${values.filteredRows.join(' → ')}`,
@@ -126,7 +133,7 @@ describe('web e2e: Files workbench', () => {
     await treeRows.filter({ hasText: /^src$/u }).waitFor({ timeout: 10_000 })
     const rootRows = await rowLabels(treeRows)
 
-    const filesTab = workbench.locator('[data-workbench-tab="files"]')
+    const filesTab = workbench.getByRole('tab', { name: 'Files', exact: true }).locator('..')
     const icon = filesTab.locator('[data-workbench-tab-icon]')
     const closeGlyph = filesTab.locator('[data-workbench-tab-close-glyph]')
     const iconBeforeHover = await icon.evaluate(element => getComputedStyle(element).display !== 'none')
@@ -141,6 +148,16 @@ describe('web e2e: Files workbench', () => {
     const editor = panel.getByRole('textbox', { name: 'Edit src/index.ts', exact: true })
     await editor.waitFor({ timeout: 10_000 })
     const preview = await editor.inputValue()
+    await panel.getByRole('button', { name: 'Edit file in fullscreen', exact: true }).click()
+    const fullscreenBox = await panel.locator('[data-fullscreen]').boundingBox()
+    const fullscreenEditor = fullscreenBox !== null
+      && Math.round(fullscreenBox.x) === 0
+      && Math.round(fullscreenBox.y) === 0
+      && Math.round(fullscreenBox.width) === 1440
+      && Math.round(fullscreenBox.height) === 900
+      && await editor.isVisible()
+    await panel.getByRole('button', { name: 'Restore editor size', exact: true }).click()
+    await expect.poll(() => panel.locator('[data-fullscreen]').count()).toBe(0)
     const editedSource = 'export const answer = 43\n'
     await editor.fill(editedSource)
     await panel.getByText('Saved', { exact: true }).waitFor({ timeout: 10_000 })
@@ -179,6 +196,7 @@ describe('web e2e: Files workbench', () => {
       emptyCards,
       expandedRows,
       filteredRows,
+      fullscreenEditor,
       iconBeforeHover,
       preview,
       rootRows,

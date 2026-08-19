@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   },
   probes: [] as { supports: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn> }[],
   fontLoads: [] as Promise<unknown>[],
+  charMeasure: vi.fn(),
+  emojiNormal: undefined as (() => boolean) | undefined,
 }))
 
 class FakeDisposable { dispose = vi.fn() }
@@ -36,17 +38,23 @@ class FakeBatcher {
   readonly noteUserInput = vi.fn()
   readonly pushBytes = vi.fn()
   readonly detach = vi.fn()
+  afterFlush: (() => void) | null = null
+  readonly setAfterFlush = vi.fn((callback: (() => void) | null) => { this.afterFlush = callback })
   constructor() { mocks.batchers.push(this) }
 }
 class FakeTerminal {
   readonly options: Record<string, unknown>
-  readonly buffer = { active: { type: 'normal' } }
+  readonly buffer = { active: { type: 'normal', length: 24, viewportY: 0 } }
   readonly unicode = { register: vi.fn(), activeVersion: '' }
   readonly element = document.createElement('div')
   readonly loadAddon = vi.fn()
   readonly open = vi.fn()
   readonly reset = vi.fn()
   readonly resize = vi.fn()
+  readonly scrollLines = vi.fn((delta: number) => {
+    this.buffer.active.viewportY += delta
+    this.scrollCallback?.()
+  })
   readonly rows = 24
   readonly write = vi.fn((_data: string, callback?: () => void) => { callback?.() })
   readonly refresh = vi.fn()
@@ -63,6 +71,7 @@ class FakeTerminal {
     this.options = options
     ;(this as unknown as { _core: unknown })._core = {
       unicodeService: { _activeProvider: { wcwidth: () => 1, charProperties: () => 2 } },
+      _charSizeService: { measure: mocks.charMeasure },
     }
     mocks.terminals.push(this)
   }
@@ -85,7 +94,10 @@ vi.doMock('../src/client/performance/output-scroll-controller.ts', () => ({
   createTerminalOutputScrollController: () => mocks.scroll,
 }))
 vi.doMock('../src/client/performance/emoji-width-unicode-provider.ts', () => ({
-  EmojiWidthUnicodeProvider: class { readonly fake = true },
+  EmojiWidthUnicodeProvider: class {
+    readonly fake = true
+    constructor(_provider: unknown, normal: () => boolean) { mocks.emojiNormal = normal }
+  },
 }))
 vi.doMock('../src/client/performance/ligature-joiner.ts', () => ({
   findLigatureRanges: () => [[0, 2], [3, 5]],
@@ -111,6 +123,8 @@ beforeEach(() => {
   mocks.fitDimensions = { cols: 80, rows: 24 }
   mocks.throwWebgl = false
   FakeWebglAddon.instances.length = 0
+  mocks.charMeasure.mockClear()
+  mocks.emojiNormal = undefined
   for (const value of Object.values(mocks.scroll)) value.mockClear()
   Object.defineProperty(document, 'fonts', {
     configurable: true,
@@ -124,11 +138,18 @@ describe('XtermSurface', () => {
     const surface = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, input)
     const terminal = mocks.terminals[0]!
     const batcher = mocks.batchers[0]!
-    expect(terminal.options).toMatchObject({ fontSize: 13, lineHeight: 1.2, minimumContrastRatio: 1 })
+    expect(terminal.options).toMatchObject({
+      fontSize: 13, lineHeight: 1.2, minimumContrastRatio: 1,
+      scrollbar: { showScrollbar: false },
+    })
     expect(terminal.loadAddon).toHaveBeenCalledTimes(5)
     expect(terminal.open).toHaveBeenCalledOnce()
     expect(batcher.attach).toHaveBeenCalledWith(terminal, mocks.scroll)
     expect(batcher.setInteractiveRenderingEnabled).toHaveBeenCalledWith(true)
+    expect(mocks.emojiNormal?.()).toBe(true)
+    terminal.buffer.active.type = 'alternate'
+    expect(mocks.emojiNormal?.()).toBe(false)
+    terminal.buffer.active.type = 'normal'
 
     terminal.dataCallback?.('ls\n')
     expect(batcher.noteUserInput).toHaveBeenCalledOnce()
@@ -143,6 +164,9 @@ describe('XtermSurface', () => {
     expect(surface.fit()).toEqual({ cols: 80, rows: 24 })
     expect(terminal.resize).toHaveBeenCalledWith(80, 24)
     expect(mocks.scroll.restore).toHaveBeenCalled()
+    surface.refreshFontMetrics()
+    expect(mocks.charMeasure).toHaveBeenCalledOnce()
+    expect(terminal.clearTextureAtlas).toHaveBeenCalled()
     surface.focus()
     expect(terminal.focus).toHaveBeenCalledOnce()
     surface.showCursor()
@@ -156,7 +180,15 @@ describe('XtermSurface', () => {
     expect(terminal.deregisterCharacterJoiner).toHaveBeenCalledWith(7)
     expect(mocks.probes[0]?.dispose).toHaveBeenCalledOnce()
 
+    const refreshCount = terminal.refresh.mock.calls.length
+    let delayedCursorWrite: (() => void) | undefined
+    terminal.write.mockImplementationOnce((_data: string, callback?: () => void) => {
+      delayedCursorWrite = callback
+    })
+    surface.showCursor()
     surface.dispose()
+    delayedCursorWrite?.()
+    expect(terminal.refresh).toHaveBeenCalledTimes(refreshCount)
     surface.dispose()
     expect(batcher.detach).toHaveBeenCalledOnce()
     expect(terminal.dataDisposable.dispose).toHaveBeenCalledOnce()
@@ -164,9 +196,91 @@ describe('XtermSurface', () => {
     expect(terminal.dispose).toHaveBeenCalledOnce()
     surface.write(new Uint8Array([2]))
     surface.reset()
+    surface.refreshFontMetrics()
     surface.focus()
+    surface.showCursor()
     surface.apply(DEFAULT_TERMINAL_PREFERENCES)
     expect(surface.fit()).toBeUndefined()
+  })
+
+  it('overlays an implicit scrollbar without reserving xterm grid width', () => {
+    const track = document.createElement('div')
+    const thumb = document.createElement('div')
+    track.append(thumb)
+    Object.defineProperty(track, 'clientHeight', { configurable: true, value: 100 })
+    track.getBoundingClientRect = () => ({
+      x: 0, y: 0, width: 10, height: 100, top: 0, right: 10, bottom: 100, left: 0,
+      toJSON: () => ({}),
+    })
+    thumb.setPointerCapture = vi.fn()
+    const surface = new XtermSurface(
+      document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, vi.fn(), { track, thumb },
+    )
+    const terminal = mocks.terminals[0]!
+    const batcher = mocks.batchers[0]!
+    expect(track.hasAttribute('data-visible')).toBe(false)
+
+    terminal.buffer.active.length = 100
+    terminal.buffer.active.viewportY = 50
+    terminal.scrollCallback?.()
+    expect(track.hasAttribute('data-visible')).toBe(true)
+    expect(thumb.style.height).toBe('24%')
+    expect(thumb.style.top).toBe('50%')
+
+    terminal.buffer.active.viewportY = 76
+    batcher.afterFlush?.()
+    expect(track.hasAttribute('data-visible')).toBe(false)
+    terminal.buffer.active.viewportY = 50
+    expect(surface.fit()).toEqual({ cols: 80, rows: 24 })
+    expect(track.hasAttribute('data-visible')).toBe(true)
+
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 75 }))
+    expect(terminal.scrollLines).toHaveBeenLastCalledWith(13)
+    terminal.scrollLines.mockClear()
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 1, clientY: 25 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
+
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 20 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
+    thumb.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 1, clientY: 10 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
+    thumb.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 10 }))
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 20 }))
+    expect(terminal.scrollLines).toHaveBeenLastCalledWith(8)
+    terminal.scrollLines.mockClear()
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 20 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
+    terminal.buffer.active.length = 24
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 30 }))
+    Object.defineProperty(track, 'clientHeight', { configurable: true, value: 0 })
+    terminal.buffer.active.length = 100
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 30 }))
+    Object.defineProperty(track, 'clientHeight', { configurable: true, value: 100 })
+    thumb.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }))
+    thumb.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientY: 30 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
+
+    thumb.setPointerCapture = vi.fn(() => { throw new Error('capture unavailable') })
+    thumb.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 10 }))
+    thumb.dispatchEvent(new MouseEvent('pointercancel', { bubbles: true }))
+
+    terminal.buffer.active.length = 24
+    terminal.buffer.active.viewportY = 0
+    track.getBoundingClientRect = () => ({
+      x: 0, y: 0, width: 10, height: 0, top: 0, right: 10, bottom: 0, left: 0,
+      toJSON: () => ({}),
+    })
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 0 }))
+    track.getBoundingClientRect = () => ({
+      x: 0, y: 0, width: 10, height: 100, top: 0, right: 10, bottom: 100, left: 0,
+      toJSON: () => ({}),
+    })
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 12 }))
+    batcher.afterFlush?.()
+    expect(track.hasAttribute('data-visible')).toBe(false)
+    surface.dispose()
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientY: 75 }))
+    expect(terminal.scrollLines).not.toHaveBeenCalled()
   })
 
   it('handles hidden dimensions, stale font readiness, WebGL context loss, and renderer fallback', async () => {
@@ -193,12 +307,17 @@ describe('XtermSurface', () => {
 
     const webgl = FakeWebglAddon.instances[0]!
     webgl.contextLoss?.()
-    expect(webgl.dispose).toHaveBeenCalledOnce()
+    webgl.contextLoss?.()
+    expect(webgl.dispose).toHaveBeenCalledTimes(2)
     expect(mocks.batchers[0]?.setInteractiveRenderingEnabled).toHaveBeenLastCalledWith(false)
     first.dispose()
 
     mocks.throwWebgl = true
-    const fallback = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, vi.fn())
+    const fallback = new XtermSurface(
+      document.createElement('div'),
+      { ...DEFAULT_TERMINAL_PREFERENCES, theme: 'light' },
+      vi.fn(),
+    )
     expect(mocks.batchers.at(-1)?.setInteractiveRenderingEnabled).not.toHaveBeenCalledWith(true)
     fallback.dispose()
   })

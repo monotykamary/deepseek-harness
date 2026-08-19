@@ -78,6 +78,7 @@ function renderGolden(values: {
   readonly bottomPanes: number
   readonly floatingActionsCollapsed: boolean
   readonly floatingActionsAnimated: boolean
+  readonly floatingActionButtonsStable: boolean
   readonly bottomGroupedFullscreenVisible: boolean
   readonly bottomActionsClipped: boolean
   readonly reopenedPanes: number
@@ -88,6 +89,8 @@ function renderGolden(values: {
   readonly groupTreeIndented: boolean
   readonly groupHeadingPill: boolean
   readonly rightGuttersConsistent: boolean
+  readonly implicitScrollbarVisible: boolean
+  readonly implicitScrollbarNoGap: boolean
   readonly settings: readonly string[]
   readonly bottomProof: string
   readonly peerProof: string
@@ -105,6 +108,7 @@ function renderGolden(values: {
     `- bottom panes: ${String(values.bottomPanes)}`,
     `- floating actions default: ${values.floatingActionsCollapsed ? 'collapsed' : 'expanded'}`,
     `- floating actions animate on hover: ${String(values.floatingActionsAnimated)}`,
+    `- floating action buttons stable on icon hover: ${String(values.floatingActionButtonsStable)}`,
     `- bottom grouped fullscreen action: ${values.bottomGroupedFullscreenVisible ? 'visible' : 'missing'}`,
     `- bottom grouped actions clipped: ${String(values.bottomActionsClipped)}`,
     `- settings: ${values.settings.join(' → ')}`,
@@ -121,6 +125,8 @@ function renderGolden(values: {
     `- group tree indented: ${String(values.groupTreeIndented)}`,
     `- group heading pill: ${String(values.groupHeadingPill)}`,
     `- right PTY gutters consistent: ${String(values.rightGuttersConsistent)}`,
+    `- implicit scrollbar visible above bottom: ${String(values.implicitScrollbarVisible)}`,
+    `- implicit scrollbar reserves no width: ${String(values.implicitScrollbarNoGap)}`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
     `- compact bottom panel height: ${String(values.compactBottomHeight)}px`,
   ].join('\n')
@@ -186,6 +192,20 @@ describe('web e2e: interactive terminals', () => {
     await page.mouse.move(0, 0)
 
     await revealTerminalActions(bottom)
+    await page.waitForTimeout(250)
+    const floatingButtons = floatingOverlay.locator('button')
+    const buttonGeometryBeforeHover = await floatingButtons.evaluateAll(buttons => buttons.map((button) => {
+      const rect = button.getBoundingClientRect()
+      return [rect.x, rect.width]
+    }))
+    await bottom.getByRole('button', { name: 'Split terminal horizontally', exact: true }).hover()
+    await page.getByRole('tooltip', { name: 'Split terminal horizontally', exact: true }).waitFor()
+    const buttonGeometryAfterHover = await floatingButtons.evaluateAll(buttons => buttons.map((button) => {
+      const rect = button.getBoundingClientRect()
+      return [rect.x, rect.width]
+    }))
+    expect(buttonGeometryAfterHover).toEqual(buttonGeometryBeforeHover)
+    const floatingActionButtonsStable = true
     await bottom.getByRole('button', { name: 'Terminal settings', exact: true }).click()
     const settingsDialog = page.getByRole('dialog', { name: 'Terminal settings', exact: true })
     await settingsDialog.waitFor({ timeout: 10_000 })
@@ -317,6 +337,27 @@ describe('web e2e: interactive terminals', () => {
       const gutters = [inner.top - outer.top, outer.right - inner.right, outer.bottom - inner.bottom, inner.left - outer.left]
       return Math.max(...gutters) - Math.min(...gutters) <= 1
     })
+    await sendCommand(page, right, 'i=0; while [ "$i" -lt 80 ]; do printf "scroll-%s\n" "$i"; i=$((i+1)); done')
+    const activeRightPane = right.locator('[data-terminal-pane][data-active]')
+    const implicitTrack = activeRightPane.locator('[data-terminal-scrollbar-track]')
+    await activeRightPane.locator('[data-terminal-viewport]').hover()
+    await page.mouse.wheel(0, -1600)
+    await expect.poll(() => implicitTrack.getAttribute('data-visible')).toBe('')
+    const implicitScrollbarVisible = await implicitTrack.isVisible()
+    const implicitScrollbarNoGap = await activeRightPane.evaluate((pane) => {
+      const terminal = pane.querySelector('.xterm')
+      const viewport = pane.querySelector('.xterm-viewport')
+      const track = pane.querySelector('[data-terminal-scrollbar-track]')
+      const nativeScrollbar = pane.querySelector('.xterm-scrollable-element > .scrollbar, .xterm-scrollable-element > .xterm-scrollbar')
+      if (!(terminal instanceof HTMLElement) || !(viewport instanceof HTMLElement) || !(track instanceof HTMLElement)) return false
+      const terminalRect = terminal.getBoundingClientRect()
+      const viewportRect = viewport.getBoundingClientRect()
+      return Math.abs(terminalRect.width - viewportRect.width) <= 1
+        && (nativeScrollbar === null || getComputedStyle(nativeScrollbar).display === 'none')
+    })
+    await page.mouse.wheel(0, 100_000)
+    await expect.poll(() => implicitTrack.getAttribute('data-visible')).toBeNull()
+
     await right.getByRole('button', { name: 'Expand terminal to fullscreen', exact: true }).click()
     await expect.poll(() => right.getAttribute('data-fullscreen')).toBe('true')
     await right.getByRole('button', { name: 'Restore terminal size', exact: true }).click()
@@ -344,6 +385,7 @@ describe('web e2e: interactive terminals', () => {
       bottomPanes,
       floatingActionsCollapsed,
       floatingActionsAnimated,
+      floatingActionButtonsStable,
       bottomGroupedFullscreenVisible,
       bottomActionsClipped,
       reopenedPanes,
@@ -354,6 +396,8 @@ describe('web e2e: interactive terminals', () => {
       groupTreeIndented: groupTreeStyle.indented,
       groupHeadingPill: groupTreeStyle.pill,
       rightGuttersConsistent,
+      implicitScrollbarVisible,
+      implicitScrollbarNoGap,
       settings,
       bottomProof: await readFile(bottomProofPath, 'utf8'),
       peerProof: await readFile(peerProofPath, 'utf8'),

@@ -11,7 +11,10 @@
  * clean, and a pin entry whose debt drops is stale — the pin only shrinks.
  * After cleanup, rewrite the pin with --write-baseline; never to grow it.
  *
- * Scope is packages/client CSS sources. Tailwind margin utilities in tsx
+ * Scope is product-authored packages/client CSS sources. The pinned upstream
+ * xterm stylesheet is excluded because its internal IME, accessibility, canvas,
+ * decoration, and scrollable layers require the numeric stack shipped by xterm.
+ * Tailwind margin utilities in tsx
  * class lists join this gate when the utility layer lands (m-*, space-* are
  * the utility spellings of the same banned construct).
  */
@@ -82,6 +85,9 @@ export function diffAgainstBaseline(current: DebtMap, baseline: DebtMap): string
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 const baselinePath = join(repoRoot, 'scripts', 'ui-layout-baseline.json')
 const clientRoot = join(repoRoot, 'packages', 'client')
+const upstreamCssExemptions = new Set([
+  'packages/client/ui-terminal/src/client/xterm.global.css',
+])
 
 function walkCss(dir: string): string[] {
   const out: string[] = []
@@ -105,9 +111,11 @@ function collectCurrent(): DebtMap {
       continue
     }
     for (const file of walkCss(src)) {
+      const repoPath = relative(repoRoot, file).split(sep).join('/')
+      if (upstreamCssExemptions.has(repoPath)) continue
       const found = scanSource(readFileSync(file, 'utf8'))
       if (found.margins > 0 || found.zindexes > 0) {
-        debt[relative(repoRoot, file).split(sep).join('/')] = found
+        debt[repoPath] = found
       }
     }
   }

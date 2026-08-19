@@ -107,7 +107,7 @@ describe('FilePreview', () => {
       kind: 'saved', file, content: 'const value = 2\n', byteLength: 16,
       version: 'v2' as WorkspaceFileVersion,
     })
-    render(
+    const view = render(
       <FilePreview
         file={file} preview={textCell()} t={t}
         onWrite={onWrite} onCommit={onCommit}
@@ -119,6 +119,11 @@ describe('FilePreview', () => {
     expect(wrap.getAttribute('aria-pressed')).toBe('false')
     fireEvent.click(wrap)
     expect(screen.getByRole('button', { name: en['editor.wrapOff'] }).getAttribute('aria-pressed')).toBe('true')
+    expect(view.container.querySelector('[data-fullscreen]')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: en['editor.fullscreen'] }))
+    expect(view.container.querySelector('[data-fullscreen]')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: en['editor.restore'] }))
+    expect(view.container.querySelector('[data-fullscreen]')).toBeNull()
     fireEvent.keyDown(editor, { key: 's', ctrlKey: true })
     expect(editor.getAttribute('wrap')).toBe('soft')
     fireEvent.change(editor, { target: { value: 'const value = 2\n' } })

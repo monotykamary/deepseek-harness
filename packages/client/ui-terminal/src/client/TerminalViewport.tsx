@@ -22,7 +22,9 @@ function heightTransitionOwner(container: HTMLElement): HTMLElement | undefined 
     const properties = style.transitionProperty.split(',').map(value => value.trim())
     const durations = style.transitionDuration.split(',').map(value => Number.parseFloat(value))
     const index = properties.findIndex(property => property === 'height')
-    if (index >= 0 && (durations[index % durations.length] ?? 0) > 0) return element
+    if (index < 0) continue
+    const duration = durations[index % durations.length] as number
+    if (duration > 0) return element
   }
   return undefined
 }
@@ -32,6 +34,8 @@ export function TerminalViewport({
   preferences, onReady, onInput, onResize, layoutHeight,
 }: TerminalViewportProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const scrollbarTrackRef = useRef<HTMLDivElement | null>(null)
+  const scrollbarThumbRef = useRef<HTMLDivElement | null>(null)
   const surfaceRef = useRef<XtermSurface | null>(null)
   const inputRef = useRef(onInput)
   const resizeRef = useRef(onResize)
@@ -41,8 +45,16 @@ export function TerminalViewport({
 
   useLayoutEffect(() => {
     const container = containerRef.current
-    if (container === null) return
-    const surface = new XtermSurface(container, preferences, (input) => { inputRef.current(input) })
+    const scrollbarTrack = scrollbarTrackRef.current
+    const scrollbarThumb = scrollbarThumbRef.current
+    /* v8 ignore next -- React commits all three rendered sibling refs before layout effects. */
+    if (container === null || scrollbarTrack === null || scrollbarThumb === null) return
+    const surface = new XtermSurface(
+      container,
+      preferences,
+      (input) => { inputRef.current(input) },
+      { track: scrollbarTrack, thumb: scrollbarThumb },
+    )
     surfaceRef.current = surface
     const transitionOwner = layoutHeight === undefined ? undefined : heightTransitionOwner(container)
     const publishReady = (): void => {
@@ -73,6 +85,7 @@ export function TerminalViewport({
     transitionOwner?.addEventListener('transitionend', onTransitionEnd)
     transitionOwner?.addEventListener('transitioncancel', onTransitionEnd)
     observer.observe(container)
+    /* v8 ignore next -- the surface container is always rendered inside the viewport root. */
     if (container.parentElement !== null) observer.observe(container.parentElement)
     const screen = container.querySelector('.xterm-screen')
     if (screen !== null) observer.observe(screen)
@@ -87,6 +100,7 @@ export function TerminalViewport({
 
   useEffect(() => {
     const surface = surfaceRef.current
+    /* v8 ignore next -- the layout effect owns the surface before passive effects run. */
     if (surface === null) return
     let cancelled = false
     surface.apply(preferences)
@@ -107,6 +121,7 @@ export function TerminalViewport({
   }, [preferences])
 
 
+  /* v8 ignore next -- every validated terminal palette defines its background. */
   const background = terminalTheme(preferences.theme).background ?? '#000000'
   return (
     <div
@@ -117,6 +132,14 @@ export function TerminalViewport({
       data-terminal-ligatures={preferences.ligatures}
     >
       <div ref={containerRef} className={css.surface} />
+      <div
+        ref={scrollbarTrackRef}
+        className={css.scrollbarTrack}
+        data-terminal-scrollbar-track=""
+        aria-hidden="true"
+      >
+        <div ref={scrollbarThumbRef} className={css.scrollbarThumb} data-terminal-scrollbar-thumb="" />
+      </div>
     </div>
   )
 }

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-terminal-workspace-groups.md
-2026-08-19-terminal-workspace-groups.md: ea3132e18af72adc1bd2c22e76fbe092c8091514
-2026-08-19-terminal-workspace-groups.zh.md: 42966ea4f754d5e0f4700110e7c4137836ad1e9c
+2026-08-19-terminal-workspace-groups.md: daf8d68365c86fd5eb3a5d6279e83abc206ba91a
+2026-08-19-terminal-workspace-groups.zh.md: 905eaf60f4bdedf1d8894a3f0a2d41ffb54df620

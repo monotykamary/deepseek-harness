@@ -24,6 +24,11 @@ export interface TerminalDimensions {
   readonly rows: number
 }
 
+interface TerminalScrollbarElements {
+  readonly track: HTMLDivElement
+  readonly thumb: HTMLDivElement
+}
+
 /** Imperative high-throughput xterm surface owned by one React viewport. */
 export class XtermSurface {
   /** Underlying xterm instance retained for addon and viewport operations. */
@@ -36,10 +41,19 @@ export class XtermSurface {
   private ligatureJoinerId: number | undefined
   private ligatureProbe: LigatureSupportProbe | undefined
   private ligatureGeneration = 0
+  private scrollbar: TerminalScrollbarElements | undefined
+  private scrollbarDragging = false
+  private scrollbarDragStartY = 0
+  private scrollbarDragStartViewportY = 0
   private disposed = false
 
   /** Create and open one xterm instance inside its stable DOM container. */
-  constructor(container: HTMLDivElement, preferences: TerminalPreferences, onInput: (input: string) => void) {
+  constructor(
+    container: HTMLDivElement,
+    preferences: TerminalPreferences,
+    onInput: (input: string) => void,
+    scrollbar?: TerminalScrollbarElements,
+  ) {
     const theme = terminalTheme(preferences.theme)
     this.terminal = new XtermTerminal({
       allowProposedApi: true,
@@ -58,7 +72,7 @@ export class XtermSurface {
         getCellSizePixels: true,
         getWinSizeChars: true,
       },
-      scrollbar: { showScrollbar: true },
+      scrollbar: { showScrollbar: false },
     })
     this.outputScroll = createTerminalOutputScrollController(this.terminal)
     this.outputBatcher.attach(this.terminal, this.outputScroll)
@@ -75,12 +89,18 @@ export class XtermSurface {
     ))
     this.terminal.unicode.activeVersion = '15-graphemes-emoji'
     this.terminal.open(container)
+    this.scrollbar = scrollbar
+    this.installScrollbar()
     this.disposables.push(this.terminal.onData((input) => {
       this.outputBatcher.noteUserInput()
       this.outputScroll.scrollToBottomOnUserInput()
       onInput(input)
     }))
-    this.disposables.push(this.terminal.onScroll(() => { this.outputScroll.noteUserScroll() }))
+    this.disposables.push(this.terminal.onScroll(() => {
+      this.outputScroll.noteUserScroll()
+      this.updateScrollbar()
+    }))
+    this.outputBatcher.setAfterFlush(this.updateScrollbar)
     this.loadWebgl(preferences.muteEmojiColors)
     this.applyLigatures(preferences)
   }
@@ -95,7 +115,9 @@ export class XtermSurface {
 
   /** Reset the visible buffer before a different persistent terminal replays. */
   reset(): void {
-    if (!this.disposed) this.terminal.reset()
+    if (this.disposed) return
+    this.terminal.reset()
+    this.updateScrollbar()
   }
 
   /**
@@ -109,6 +131,7 @@ export class XtermSurface {
     const snapshot = this.outputScroll.capture()
     this.terminal.resize(dimensions.cols, dimensions.rows)
     this.outputScroll.restore(snapshot)
+    this.updateScrollbar()
     return dimensions
   }
 
@@ -159,10 +182,102 @@ export class XtermSurface {
     this.disposed = true
     this.ligatureGeneration += 1
     this.disposeLigatures()
+    this.uninstallScrollbar()
     this.outputBatcher.detach()
     for (const disposable of this.disposables) disposable.dispose()
     this.webgl = undefined
     this.terminal.dispose()
+  }
+
+  private readonly updateScrollbar = (): void => {
+    const scrollbar = this.scrollbar
+    if (scrollbar === undefined) return
+    const buffer = this.terminal.buffer.active
+    const totalLines = buffer.length
+    const visibleLines = this.terminal.rows
+    const hasScrollback = totalLines > visibleLines
+    const atBottom = buffer.viewportY + visibleLines >= totalLines
+    scrollbar.track.toggleAttribute('data-visible', hasScrollback && !atBottom)
+    if (!hasScrollback) return
+    scrollbar.thumb.style.height = `${String((visibleLines / totalLines) * 100)}%`
+    scrollbar.thumb.style.top = `${String((buffer.viewportY / totalLines) * 100)}%`
+  }
+
+  private readonly onScrollbarThumbPointerDown = (event: PointerEvent): void => {
+    if (event.button !== 0) return
+    this.outputScroll.noteUserScroll()
+    this.scrollbarDragging = true
+    this.scrollbarDragStartY = event.clientY
+    this.scrollbarDragStartViewportY = this.terminal.buffer.active.viewportY
+    try {
+      ;(event.target as HTMLElement).setPointerCapture(event.pointerId)
+    } catch {
+      // Browsers without pointer capture still deliver track clicks and wheel scrolling.
+    }
+    event.preventDefault()
+  }
+
+  private readonly onScrollbarThumbPointerMove = (event: PointerEvent): void => {
+    if (!this.scrollbarDragging) return
+    const scrollbar = this.scrollbar
+    /* v8 ignore next -- uninstall removes the pointer listener before clearing this owned pair. */
+    if (scrollbar === undefined) return
+    const trackHeight = scrollbar.track.clientHeight
+    const lastViewportLine = this.terminal.buffer.active.length - this.terminal.rows
+    if (lastViewportLine <= 0 || trackHeight <= 0) return
+    const targetViewportY = Math.max(0, Math.min(
+      lastViewportLine,
+      this.scrollbarDragStartViewportY
+        + Math.round((event.clientY - this.scrollbarDragStartY) / (trackHeight / lastViewportLine)),
+    ))
+    const delta = targetViewportY - this.terminal.buffer.active.viewportY
+    if (delta !== 0) this.terminal.scrollLines(delta)
+  }
+
+  private readonly onScrollbarThumbPointerUp = (): void => {
+    this.scrollbarDragging = false
+  }
+
+  private readonly onScrollbarTrackPointerDown = (event: PointerEvent): void => {
+    if (event.button !== 0) return
+    const scrollbar = this.scrollbar
+    /* v8 ignore next -- uninstall removes the pointer listener before clearing this owned pair. */
+    if (scrollbar === undefined) return
+    if (event.target === scrollbar.thumb) return
+    this.outputScroll.noteUserScroll()
+    const trackRect = scrollbar.track.getBoundingClientRect()
+    if (trackRect.height <= 0) return
+    const buffer = this.terminal.buffer.active
+    const lastViewportLine = Math.max(0, buffer.length - this.terminal.rows)
+    const clickRatio = (event.clientY - trackRect.top) / trackRect.height
+    const targetViewportY = Math.max(0, Math.min(
+      lastViewportLine,
+      Math.round(clickRatio * buffer.length) - Math.floor(this.terminal.rows / 2),
+    ))
+    const delta = targetViewportY - buffer.viewportY
+    if (delta !== 0) this.terminal.scrollLines(delta)
+  }
+
+  private installScrollbar(): void {
+    const scrollbar = this.scrollbar
+    if (scrollbar === undefined) return
+    scrollbar.thumb.addEventListener('pointerdown', this.onScrollbarThumbPointerDown)
+    scrollbar.thumb.addEventListener('pointermove', this.onScrollbarThumbPointerMove)
+    scrollbar.thumb.addEventListener('pointerup', this.onScrollbarThumbPointerUp)
+    scrollbar.thumb.addEventListener('pointercancel', this.onScrollbarThumbPointerUp)
+    scrollbar.track.addEventListener('pointerdown', this.onScrollbarTrackPointerDown)
+    this.updateScrollbar()
+  }
+
+  private uninstallScrollbar(): void {
+    const scrollbar = this.scrollbar
+    if (scrollbar === undefined) return
+    scrollbar.thumb.removeEventListener('pointerdown', this.onScrollbarThumbPointerDown)
+    scrollbar.thumb.removeEventListener('pointermove', this.onScrollbarThumbPointerMove)
+    scrollbar.thumb.removeEventListener('pointerup', this.onScrollbarThumbPointerUp)
+    scrollbar.thumb.removeEventListener('pointercancel', this.onScrollbarThumbPointerUp)
+    scrollbar.track.removeEventListener('pointerdown', this.onScrollbarTrackPointerDown)
+    this.scrollbar = undefined
   }
 
   private loadWebgl(muteEmojiColors: boolean): void {

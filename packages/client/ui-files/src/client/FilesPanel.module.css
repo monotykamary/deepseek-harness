@@ -11,6 +11,14 @@
   background: var(--dsw-specific-workbench-canvas);
 }
 
+.previewSurface[data-fullscreen] {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: var(--dsw-layer-overlay);
+}
+
 .subheader {
   display: flex;
   flex: none;

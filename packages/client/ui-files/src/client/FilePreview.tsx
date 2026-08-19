@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconLoadingOutline16, IconRefreshOutline14, SourceEditor, Tooltip,
+  IconChevronLeftOutline14, IconFullscreenOutline16, IconLoadingOutline16, IconRefreshOutline14,
+  SourceEditor, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   WorkspaceFileLocator, WorkspaceFilePreview, WorkspaceFileVersion, WorkspaceFileWriteResult,
@@ -170,10 +171,11 @@ export function FilePreview({
   const loading = preview === null || preview.phase === 'loading'
   const editable = preview?.phase === 'ready' && preview.value?.kind === 'text'
   const [wrap, setWrap] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const fileKey = locatorLabel(file)
-  useEffect(() => { setWrap(false) }, [fileKey])
+  useEffect(() => { setWrap(false); setFullscreen(false) }, [fileKey])
   return (
-    <div className={css.previewSurface}>
+    <div className={css.previewSurface} data-fullscreen={fullscreen || undefined}>
       <div className={css.subheader} data-surface-subheader="">
         <Tooltip label={t('preview.back')} side="bottom">
           <button type="button" className={css.iconButton} aria-label={t('preview.back')} onClick={onBack}>
@@ -198,6 +200,18 @@ export function FilePreview({
               onClick={() => { setWrap(value => !value) }}
             >
               <WrapTextIcon />
+            </button>
+          </Tooltip>
+        )}
+        {editable && (
+          <Tooltip label={fullscreen ? t('editor.restore') : t('editor.fullscreen')} side="bottom">
+            <button
+              type="button"
+              className={css.iconButton}
+              aria-label={fullscreen ? t('editor.restore') : t('editor.fullscreen')}
+              onClick={() => { setFullscreen(value => !value) }}
+            >
+              <IconFullscreenOutline16 />
             </button>
           </Tooltip>
         )}

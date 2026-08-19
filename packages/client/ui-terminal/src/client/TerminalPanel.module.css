@@ -247,8 +247,7 @@
 }
 
 .actionRevealInner > .actionButton,
-.actionRevealInner > .actionButton + .actionGroup,
-.actionGroup > .actionButton + .actionButton {
+.actionGroup > .actionButton {
   border-left: 1px solid var(--dsw-alias-border-l2);
   border-radius: 0;
 }
@@ -282,7 +281,7 @@
   border-radius: 0;
 }
 
-.sidebarActions .actionButton + .actionButton {
+.sidebarActions .actionGroup > .actionButton {
   border-left: 1px solid var(--dsw-alias-border-l2);
 }
 

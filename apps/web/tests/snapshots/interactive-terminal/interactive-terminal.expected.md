@@ -5,6 +5,7 @@
 - bottom panes: 1
 - floating actions default: collapsed
 - floating actions animate on hover: true
+- floating action buttons stable on icon hover: true
 - bottom grouped fullscreen action: visible
 - bottom grouped actions clipped: false
 - settings: Theme → Harness → Font → Geist Mono → Font size → Line height → Ligatures → Color emoji → Cursor blink
@@ -21,5 +22,7 @@
 - group tree indented: true
 - group heading pill: true
 - right PTY gutters consistent: true
+- implicit scrollbar visible above bottom: true
+- implicit scrollbar reserves no width: true
 - compact workbench side: right
 - compact bottom panel height: 280px
