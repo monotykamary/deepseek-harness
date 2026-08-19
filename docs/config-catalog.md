@@ -2339,6 +2339,12 @@ export interface Config {
   timeoutMs?: number
   /** Grace before teardown escalates to `SIGKILL`. */
   disposeGraceMs?: number
+  /**
+   * Maximum wall-clock time an interactive (browser-facing) session may remain
+   * without any interactive attachment before the backend closes it; `0`
+   * disables unattended teardown (default: 30 minutes).
+   */
+  unattendedExitMs?: number
 }
 ```
 

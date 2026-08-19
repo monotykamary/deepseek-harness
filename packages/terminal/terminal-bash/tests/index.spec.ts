@@ -40,7 +40,7 @@ function config(): ResolvedConfig {
     backendType: 'shell', shellPath: '/bin/bash', shellArgs: [], rows: 24, cols: 80,
     scrollbackLines: 10, scrollbackMaxBytes: 100, interactiveReplayMaxBytes: 80, maxReadBytes: 50,
     pollIntervalMs: 10, exactProbeAfterMs: 20, idleSilenceMs: 50, handoffGraceMs: 10, timeoutMs: 100,
-    disposeGraceMs: 10,
+    disposeGraceMs: 10, unattendedExitMs: 30 * 60_000,
   }
 }
 
