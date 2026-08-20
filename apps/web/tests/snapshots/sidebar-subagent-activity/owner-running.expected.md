@@ -12,8 +12,3 @@
     - button "Session actions for Delegate a background job.":
       - img
     - text: Delegate a background job. now
-  - treeitem "workspace New Session standard" [selected]:
-    - img
-    - text: workspace New Session
-    - img
-    - text: standard

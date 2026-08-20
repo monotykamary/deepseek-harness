@@ -22,11 +22,6 @@ import css from './Rows.module.css'
 /** The standard locale seat, prop-passed from the browser root. */
 type RowTranslate = WorkspaceBrowserProps['t']
 
-/** Row display title: blank rows show the localized New Session label. */
-function displayTitle(node: SessionNode, t: RowTranslate): string {
-  return node.blank ? t('session.new') : node.title
-}
-
 /** Localized compact relative time ("刚刚"/"5分钟" in zh, "now"/"5min" in en). */
 function timeLabel(updatedAt: number, now: number, t: RowTranslate): string {
   const { unit, n } = relativeTime(updatedAt, now)
@@ -277,10 +272,8 @@ function SessionHoverContent({ node, now, t }: { node: SessionNode; now: number;
   const statuses = sessionStatuses(node, t)
   return (
     <div className={css.hoverContent}>
-      <div className={css.hoverTitle}>{displayTitle(node, t)}</div>
-      {/* Same placeholder rule as the row's trailing cell: no timestamp
-          before the first prompt. */}
-      {!node.blank && <div className={css.hoverTime}>{hoverTimeLabel(node.updatedAt, now, t)}</div>}
+      <div className={css.hoverTitle}>{node.title}</div>
+      <div className={css.hoverTime}>{hoverTimeLabel(node.updatedAt, now, t)}</div>
       {statuses.map(status => (
         <div className={css.hoverStatus} key={status.label}>
           <StateDot state={status.state} />
@@ -369,7 +362,7 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
   t: RowTranslate
 }) {
   const row = node
-  const title = displayTitle(node, t)
+  const title = row.title
   const selected = node.id === currentId
   const statuses = sessionStatuses(node, t)
   const primaryStatus = statuses[0]
@@ -437,34 +430,32 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
                 ))}
               </span>
             )
-            : !row.blank && <span className={css.cardTime} data-sidebar-session-time>{timeLabel(row.updatedAt, now, t)}</span>}
-          {!row.blank && (
-            <span className={css.rowActions}>
-              <Menu
-                open={menuOpen}
-                onClose={() => { setMenuOpen(false) }}
-                items={sessionMenuItems}
-                onSelect={(id) => {
-                  setMenuOpen(false)
-                  if (id === 'rename') onRename(node.id, row.title)
-                  if (id === 'fork') onFork(node.id)
-                  if (id === 'archive') onArchive(node.id)
-                }}
-                portal
-                closeOnPointerLeave
-                anchor={(
-                  <button
-                    type="button"
-                    className={css.iconButton}
-                    aria-label={t('actions.session.aria', { name: title })}
-                    onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
-                  >
-                    <IconEllipsisOutline16 />
-                  </button>
-                )}
-              />
-            </span>
-          )}
+            : <span className={css.cardTime} data-sidebar-session-time>{timeLabel(row.updatedAt, now, t)}</span>}
+          <span className={css.rowActions}>
+            <Menu
+              open={menuOpen}
+              onClose={() => { setMenuOpen(false) }}
+              items={sessionMenuItems}
+              onSelect={(id) => {
+                setMenuOpen(false)
+                if (id === 'rename') onRename(node.id, row.title)
+                if (id === 'fork') onFork(node.id)
+                if (id === 'archive') onArchive(node.id)
+              }}
+              portal
+              closeOnPointerLeave
+              anchor={(
+                <button
+                  type="button"
+                  className={css.iconButton}
+                  aria-label={t('actions.session.aria', { name: title })}
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+                >
+                  <IconEllipsisOutline16 />
+                </button>
+              )}
+            />
+          </span>
         </span>
       </div>
       <span className={css.title}>{title}</span>
@@ -477,7 +468,7 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
               <span>{node.agentPreset}</span>
             </span>
           )}
-        {!row.blank && showStatus && (
+        {showStatus && (
           <span className={css.cardTime} data-sidebar-session-time>{timeLabel(row.updatedAt, now, t)}</span>
         )}
       </div>
@@ -488,7 +479,7 @@ export function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork
       anchor={ownRow}
       content={<SessionHoverContent node={node} now={now} t={t} />}
       disabled={menuOpen || drag?.active === true}
-      copyText={row.blank ? undefined : row.title}
+      copyText={row.title}
       copyLabel={t('copy')}
       copiedLabel={t('hover.copied')}
     />

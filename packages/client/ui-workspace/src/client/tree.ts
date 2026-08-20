@@ -1,7 +1,7 @@
 /**
  * Derives the workspace browser tree from Host Workspace order and membership.
- * Unassigned Sessions trail under Ungrouped; only the selected blank Session
- * remains visible.
+ * Unassigned Sessions trail under Ungrouped; blank Sessions (nothing started)
+ * are hidden everywhere until the first prompt converts them.
  */
 import {
   indexSubagentDescendants, type PendingInteractionStatus, type SessionId, type SessionListState,
@@ -24,10 +24,8 @@ export interface SessionNode {
   workspace: string
   /** Agent preset shown as the card's stable execution-context label. */
   agentPreset?: string
-  /** Stored display title; the renderer substitutes the localized New Session label for blank rows. */
+  /** Stored display title. */
   title: string
-  /** The provisional blank session (renderer shows the localized New Session title). */
-  blank: boolean
   /** The runtime Session list reports an interaction awaiting this user. */
   pendingInteraction?: PendingInteractionStatus
   running: boolean
@@ -116,24 +114,16 @@ function byRecency(a: SessionSummary, b: SessionSummary): number {
 }
 
 /**
- * Ordinary sessions are visible; among blank sessions, only the current one
- * is visible. Subagent children use their parent header catalog; archived
- * sessions are visible nowhere, while their accounting slots remain so
- * unarchiving restores position.
+ * Ordinary sessions are visible; blank sessions (nothing started yet) are
+ * visible nowhere — New Session is an ephemeral page until the first prompt
+ * converts the session. Subagent children use their parent header catalog;
+ * archived sessions are visible nowhere, while their accounting slots remain
+ * so unarchiving restores position.
  */
-function sessionVisible(session: SessionSummary, current: SessionId | undefined, archived: ReadonlySet<SessionId>): boolean {
+function sessionVisible(session: SessionSummary, archived: ReadonlySet<SessionId>): boolean {
   return session.origin !== 'subagent'
     && !archived.has(session.id)
-    && (!session.blank || session.id === current)
-}
-
-/**
- * A blank session is the selected Workspace's provisional New Session row;
- * its canonical title never enters search (blank rows are query-excluded)
- * and the renderer localizes its display label.
- */
-function sessionTitle(session: SessionSummary): string {
-  return session.blank ? 'New Session' : session.displayTitle
+    && !session.blank
 }
 
 /** Build one group without projecting session lineage into presentation. */
@@ -192,7 +182,7 @@ function groupByWorkspace(
       const summary = list.byId[id]
       if (summary === undefined) continue // account may lead the list pull; the row appears when the summary lands
       accounted.add(id)
-      if (!sessionVisible(summary, list.current, archived) || shelved.has(summary.id)) continue
+      if (!sessionVisible(summary, archived) || shelved.has(summary.id)) continue
       members.push(summary)
     }
     groups.push(buildGroup(
@@ -204,7 +194,7 @@ function groupByWorkspace(
     .map(id => list.byId[id])
     .filter((s): s is SessionSummary =>
       s !== undefined && !accounted.has(s.id) && !shelved.has(s.id)
-      && sessionVisible(s, list.current, archived))
+      && sessionVisible(s, archived))
   if (stray.length > 0) {
     groups.push(buildGroup(
       UNGROUPED_KEY,
@@ -228,8 +218,7 @@ function sessionNode(
     id: s.id,
     workspace,
     ...(s.agentPreset === undefined ? {} : { agentPreset: s.agentPreset }),
-    title: sessionTitle(s),
-    blank: s.blank,
+    title: s.displayTitle,
     running: s.running,
     runningSubagentCount: descendants.get(s.id)?.runningCount ?? 0,
     completed: s.completed === true,
@@ -282,8 +271,8 @@ export function deriveAutoSettledSessionIds(
  * Derive the workspace browser groups with every session as a top-level row.
  *
  * Every group shows; sessions populate under expanded groups in the selected
- * local order. Blank sessions are excluded except for the selected
- * provisional New Session row; archived sessions are excluded everywhere.
+ * local order. Blank sessions are excluded everywhere; archived sessions are
+ * excluded everywhere.
  * Content search lives outside this derivation
  * (see {@link deriveSearchResults}).
  * @param list - sessions list snapshot (`current` feeds containsCurrent).
@@ -347,7 +336,7 @@ export function deriveFlat(
   const rows: SessionSummary[] = []
   for (const id of list.ids) {
     const s = list.byId[id]
-    if (s === undefined || shelved.has(s.id) || !sessionVisible(s, list.current, archived)) continue
+    if (s === undefined || shelved.has(s.id) || !sessionVisible(s, archived)) continue
     rows.push(s)
   }
   rows.sort(byRecency)
@@ -411,16 +400,16 @@ export function deriveSearchResults(
   const local: SessionSummary[] = []
   for (const id of list.ids) {
     const summary = list.byId[id]
-    // Blank placeholders never match a query (their canonical title displays
-    // localized, so matching it would tie search to one language).
+    // Blank sessions never match a query: nothing has started in them, so
+    // their placeholder title carries no searchable content.
     if (
       summary === undefined
       || summary.blank
       || !inScope(summary.id)
-      || !sessionVisible(summary, list.current, archived)
+      || !sessionVisible(summary, archived)
     ) continue
     if (
-      sessionTitle(summary).toLowerCase().includes(q)
+      summary.displayTitle.toLowerCase().includes(q)
       || labelOf(summary).toLowerCase().includes(q)
     ) {
       local.push(summary)
@@ -442,7 +431,7 @@ export function deriveSearchResults(
       summary !== undefined
       && !summary.blank
       && inScope(summary.id)
-      && sessionVisible(summary, list.current, archived)
+      && sessionVisible(summary, archived)
     ) include(summary)
   }
 
@@ -451,7 +440,7 @@ export function deriveSearchResults(
       const match = contentBySession.get(summary.id)
       return {
         id: summary.id,
-        title: sessionTitle(summary),
+        title: summary.displayTitle,
         workspace: labelOf(summary),
         running: summary.running,
         runningSubagentCount: descendants.get(summary.id)?.runningCount ?? 0,
