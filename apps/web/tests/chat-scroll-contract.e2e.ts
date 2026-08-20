@@ -493,7 +493,7 @@ describe('web e2e: long Chat scroll contract', () => {
 
       const settled = world.scaffold.whenTurnSettled(60_000)
       try {
-        const composer = world.page.locator('textarea:enabled').last()
+        const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_TEXT_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
         await world.page.getByText(LIVE_TEXT_FIRST, { exact: false }).last().waitFor({ timeout: 15_000 })
@@ -556,7 +556,7 @@ describe('web e2e: long Chat scroll contract', () => {
       const settled = world.scaffold.whenTurnSettled(60_000)
       let released = false
       try {
-        const composer = world.page.locator('textarea:enabled').last()
+        const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_TOOL_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
         await expect.poll(() => fileExists(readyPath), { timeout: 15_000 }).toBe(true)
@@ -697,7 +697,7 @@ describe('web e2e: long Chat scroll contract', () => {
         RESTORE_FIXTURE_A.markers.assistant(RESTORE_FIXTURE_A.turns),
       )
       await expectBottom(world.page)
-      const composer = world.page.locator('textarea:enabled').last()
+      const composer = world.page.locator('textarea:enabled').first()
       const longDraft = Array.from(
         { length: 18 },
         (_, index) => `composer resize line ${String(index + 1).padStart(2, '0')}`,
@@ -786,7 +786,7 @@ describe('web e2e: long Chat scroll contract', () => {
       const settled = world.scaffold.whenTurnSettled(60_000)
       let released = false
       try {
-        const composer = world.page.locator('textarea:enabled').last()
+        const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_FLING_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
         await expect.poll(() => fileExists(readyPath), { timeout: 15_000 }).toBe(true)

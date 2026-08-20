@@ -195,7 +195,11 @@ describe('web e2e: continuous conversation grown through the composer', () => {
     page = await newEnglishPage(browser, 900)
     tripwire = watchConsole(page)
     page.on('console', (message) => {
-      if (message.type() === 'warning') consoleWarnings.push(message.text())
+      if (message.type() !== 'warning') return
+      // Browser-internal GPU-process noise (ANGLE ReadPixels stalls) is not
+      // an application warning; it varies by machine and GPU driver.
+      if (/GL Driver Message|GPU stall/i.test(message.text())) return
+      consoleWarnings.push(message.text())
     })
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
@@ -216,7 +220,7 @@ describe('web e2e: continuous conversation grown through the composer', () => {
 
   it.skipIf(MODE === 'record')('keeps twelve generated turns and tool rows bound to one live session', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-chat-continuous-conversation'))
-    const composer = page.locator('textarea:enabled').last()
+    const composer = page.locator('textarea:enabled').first()
     await composer.waitFor({ timeout: 15_000 })
     let sessionId: SessionId | undefined
 

@@ -9,7 +9,14 @@
   - text: All Folders
 - button "Add workspace":
   - img
-- tree "Sessions": No sessions yet
+- tree "Sessions":
+  - treeitem "workspace Workspace actions for workspace New session in workspace" [expanded]:
+    - img
+    - text: workspace
+    - button "Workspace actions for workspace":
+      - img
+    - button "New session in workspace":
+      - img
 - button "Settings":
   - img
   - text: Settings

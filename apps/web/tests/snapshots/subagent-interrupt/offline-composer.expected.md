@@ -5,8 +5,14 @@
     - button "event-sourcing researcher" [disabled]
   - img
   - text: Standard mode
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -26,3 +32,6 @@
 - 'button "Access mode, current: Custom" [disabled]': Custom
 - button "Stop generating"
 - button "Send message" [disabled]
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

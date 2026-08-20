@@ -235,7 +235,7 @@ describe('web e2e: agent-preset selection', () => {
     // Continues the previous case: the chip has already applied `minimal` to
     // the blank session, and this one reads the menu that switch left behind.
     onTestFailed(() => saveFailureShot(page, 'web-e2e-agent-preset-slash-catalog'))
-    const composer = page.locator('textarea:enabled').last()
+    const composer = page.locator('textarea:enabled').first()
 
     // `minimal` mounts neither the compaction group nor plan mode nor local
     // skill discovery, so the catalog the composer warmed under the
@@ -272,9 +272,18 @@ describe('web e2e: agent-preset selection', () => {
   it('labels a resumed session with the preset it was created under', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-agent-preset-header'))
     // The seeded session's cwd is the scaffold root rather than the connected
-    // workspace; the T3 sidebar's default flat view lists it as the trailing
-    // session row without an Ungrouped group to expand first.
-    await page.locator('[role="treeitem"]').last().click()
+    // workspace, so it lists under Ungrouped; the group collapses by default.
+    // Expand it, then open the seeded row so the conversation is on screen.
+    const ungroupedRow = page.locator('[role="treeitem"][aria-expanded]')
+      .filter({ hasText: 'Ungrouped' }).first()
+    await expect.poll(async () => {
+      if (await ungroupedRow.getAttribute('aria-expanded') !== 'true') {
+        await ungroupedRow.click()
+        await page.waitForTimeout(50)
+      }
+      return await ungroupedRow.getAttribute('aria-expanded')
+    }, { timeout: 5_000 }).toBe('true')
+    await ungroupedRow.locator('..').locator('[role="treeitem"]').nth(1).click()
     await page.getByText('Seeded turn.').waitFor({ timeout: 15_000 })
 
     const snapshot = await captureStableAria(page, '[class*="titleRow"]', scaffold.workspaceCwd)

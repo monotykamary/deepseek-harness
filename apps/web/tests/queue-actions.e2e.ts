@@ -39,6 +39,28 @@ function turnEndReasons(events: readonly SessionEvent[]): string[] {
   return events.flatMap(event => event.type === 'turn/end' ? [event.data.reason.kind] : [])
 }
 
+/**
+ * Wait until the composer/queue responsive geometry stops moving after a
+ * viewport change. The column widths reflow asynchronously (layout
+ * transitions + ResizeObserver-driven updates), so measuring immediately
+ * after {@link Page.setViewportSize} races the moving dock seat.
+ * @param page - the page whose dock seat must settle.
+ */
+async function settleComposerGeometry(page: Page): Promise<void> {
+  const seat = (): Promise<string> => page.locator('[data-queue-dock], [data-composer-card]')
+    .evaluateAll(nodes => nodes.map((node) => {
+      const rect = node.getBoundingClientRect()
+      return rect.x + ':' + rect.width
+    }).join('|'))
+  let previous = ''
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await page.waitForTimeout(50)
+    const current = await seat()
+    if (current === previous) return
+    previous = current
+  }
+}
+
 describe('web e2e: queue row actions', () => {
   let scaffold: WebScaffold | undefined
   let browser: Browser | undefined
@@ -112,6 +134,7 @@ describe('web e2e: queue row actions', () => {
     ).toBe(2)
 
     await page.setViewportSize({ width: 640, height: 1000 })
+    await settleComposerGeometry(page)
     const queueBox = await page.locator('[data-queue-dock]').boundingBox()
     const composerBox = await page.locator('[data-composer-card]').boundingBox()
     expect(queueBox).not.toBeNull()
@@ -244,6 +267,7 @@ describe('web e2e: queue row actions', () => {
     }
     await expectAlignedContextPanels()
     await page.setViewportSize({ width: 640, height: 1000 })
+    await settleComposerGeometry(page)
     await expectAlignedContextPanels()
     await page.setViewportSize({ width: 1680, height: 1000 })
 

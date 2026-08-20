@@ -3,8 +3,14 @@
     - button "workspace" [disabled]
   - img
   - text: Standard mode
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -212,3 +218,6 @@
 - button "9% of context used"
 - button "Send message" [disabled]
 - text: 2 turns · 12 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 91% Input 113K tok · Output 2.4K tok
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

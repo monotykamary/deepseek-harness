@@ -8,8 +8,14 @@
   - button "1 subagent":
     - text: 1 subagent
     - img
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -57,4 +63,9 @@
 - 'button "Access mode, current: Custom"': Custom
 - button "6% of context used"
 - button "Send message" [disabled]
-- text: 2 turns · 2 steps LLM {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 99% Input 15.6K tok · Output 158 tok
+- text: 2 turns · 2 steps LLM {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 99% Input 15.6K tok · Output 158 tok session not found
+- button "Retry connection":
+  - img
+  - text: Retry connection
+- button "Show terminal actions":
+  - img

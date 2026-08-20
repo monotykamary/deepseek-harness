@@ -1,8 +1,14 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Math rendering" [disabled]
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -49,3 +55,6 @@
   - img
 - button "Send message" [disabled]
 - text: 1 turns · 1 steps LLM {{duration}}
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

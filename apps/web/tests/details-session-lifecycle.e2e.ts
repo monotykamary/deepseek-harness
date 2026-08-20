@@ -143,10 +143,20 @@ describe.skipIf(MODE === 'record')('web e2e: details panel follows the current S
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)
     expect(await page.getByText('Details', { exact: true }).isVisible()).toBe(false)
 
-    // The seeded history session renders as the trailing session row (the
-    // T3 sidebar's default flat view has no Ungrouped bucket); opening it is
+    // The seeded history session's cwd is the scaffold root, so the
+    // workspace-grouped sidebar lists it under Ungrouped; opening it is
     // another Session switch that keeps details closed.
-    const seeded = page.getByRole('tree', { name: 'Sessions' }).locator('[role="treeitem"]').last()
+    const ungroupedRow = page.locator('[role="treeitem"][aria-expanded]')
+      .filter({ hasText: 'Ungrouped' }).first()
+    const ungroupedSection = ungroupedRow.locator('..')
+    await expect.poll(async () => {
+      if (await ungroupedRow.getAttribute('aria-expanded') !== 'true') {
+        await ungroupedRow.click()
+        await page.waitForTimeout(50)
+      }
+      return await ungroupedRow.getAttribute('aria-expanded')
+    }, { timeout: 5_000 }).toBe('true')
+    const seeded = ungroupedSection.locator('[role="treeitem"]').nth(1)
     await seeded.click()
     await page.getByText('DONE', { exact: true }).waitFor({ timeout: 15_000 })
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)

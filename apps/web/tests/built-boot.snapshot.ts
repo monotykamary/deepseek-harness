@@ -21,12 +21,9 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
 
   // The sidebar renders from the boot graph: every inject layer activated.
   const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
-  // The compact layout dropped group session counts; the fixture workspace
-  // group row renders immediately with its sessions beneath it.
-  const fixtureGroup = (await within(tree).findAllByText('fixture'))
-    .map(el => el.closest<HTMLElement>('[role="treeitem"]'))
-    .find(el => el?.getAttribute('aria-expanded') !== null)
-  if (fixtureGroup === undefined) throw new Error('fixture Workspace group missing')
+  // The workspace browser's shipped default is the flat "In one list" view,
+  // so every fixture session is a top-level tree row with its workspace meta
+  // inline (no workspace group row to expand).
 
   // The resident fixture has both a question and an approval; composer routing
   // exposes the question first, and the assembled workspace plugin mirrors that

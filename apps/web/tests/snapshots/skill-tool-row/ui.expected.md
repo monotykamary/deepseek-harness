@@ -1,8 +1,14 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Load the snapshot-skill skill with" [disabled]
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -50,3 +56,6 @@
   - img
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 0% Input 280 tok · Output 30 tok
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

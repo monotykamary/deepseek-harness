@@ -344,20 +344,13 @@ describe.skipIf(MODE === 'record')('web e2e: conversational reminders', () => {
     await workspace.attachSession(atHandle.agent.id)
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
-    const workspaceItem = page.locator('[role="treeitem"]').first()
-    await workspaceItem.waitFor({ timeout: 15_000 })
-    const expansionDeadline = Date.now() + 5_000
-    while (await workspaceItem.getAttribute('aria-expanded') !== 'true') {
-      if (Date.now() >= expansionDeadline) throw new Error('workspace item did not expand')
-      if (await workspaceItem.getAttribute('aria-expanded') !== 'true') {
-        await workspaceItem.click()
-      }
-      await new Promise<void>(resolve => setTimeout(resolve, 50))
-    }
+    // The shipped sidebar default is the flat "In one list" view: the
+    // attached session is a top-level row, so no workspace group exists to
+    // expand — the session row opens directly.
     const atSession = page.getByRole('treeitem', { name: /Explicit local-time reminder/ })
     await atSession.waitFor({ timeout: 15_000 })
     await atSession.click()
-    const composer = page.locator('textarea:enabled').last()
+    const composer = page.locator('textarea:enabled').first()
     await composer.fill(AT_USER_PROMPT)
     const settled = scaffold.whenTurnSettled(60_000)
     await page.getByRole('button', { name: 'Send message', exact: true }).click()

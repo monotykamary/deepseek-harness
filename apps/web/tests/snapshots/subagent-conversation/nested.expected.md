@@ -5,8 +5,14 @@
     - button "event-sourcing researcher"
     - text: /
     - button "example editor" [disabled]
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -17,3 +23,9 @@
 - status:
   - strong: This subagent is read-only for now
   - text: The parent session is offline; reopen it to continue sending messages.
+- text: session not found
+- button "Retry connection":
+  - img
+  - text: Retry connection
+- button "Show terminal actions":
+  - img

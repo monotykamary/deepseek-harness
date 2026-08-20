@@ -3,8 +3,14 @@
     - button "Reply with a one-sentence description" [disabled]
   - img
   - text: Standard mode
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -36,3 +42,6 @@
   - text: DeepSeek-V4-Flash
   - img
 - button "Stop generating"
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

@@ -18,6 +18,27 @@ export const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
 export const ZH_BROWSER_LOCALE = 'zh-CN'
 
 /**
+ * The workspace browser's persisted view state with the grouped mode forced:
+ * the shipped default is the flat "In one list" view, but the suite's session
+ * navigation (workspace group rows, per-workspace new-session actions, group
+ * disclosure) was written against the grouped view, which remains a supported
+ * persisted-user state. Seeding it here keeps that baseline deterministic;
+ * the flat default is covered by the workspace-browser unit suites, the
+ * assembled-jsdom lane, and the workspace-management toggle scenario. Keep
+ * the shape in sync with ui-workspace's createWorkspaceViewStore init and
+ * its persist key 'dsh.workspace.view.v6'.
+ */
+const GROUPED_WORKSPACE_VIEW = {
+  workspaceScope: null,
+  groupBy: 'workspace',
+  orderBy: 'updated',
+  groupExpansion: {},
+  settledShelfExpanded: false,
+  sessionOrderByAccount: {},
+  sessionUpdatedAtByAccount: {},
+}
+
+/**
  * Open the standard browser-test page advertising English before client boot.
  * This keeps role locators and goldens deterministic while leaving the Host
  * settings document free to override the provisional browser-derived locale;
@@ -28,7 +49,17 @@ export const ZH_BROWSER_LOCALE = 'zh-CN'
  * @returns the initialized page.
  */
 export async function newEnglishPage(browser: Browser, height = 1000): Promise<Page> {
-  return await browser.newPage({ viewport: { width: 1680, height }, locale: 'en-US' })
+  const page = await browser.newPage({ viewport: { width: 1680, height }, locale: 'en-US' })
+  // Seed the grouped baseline only on the first load: an init script runs
+  // before every navigation, and unconditional re-seeding would clobber view
+  // state a scenario deliberately writes (e.g. the flat-view persistence
+  // spec) before its reloads.
+  await page.addInitScript((seed) => {
+    if (localStorage.getItem('dsh.workspace.view.v6') === null) {
+      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify(seed))
+    }
+  }, GROUPED_WORKSPACE_VIEW)
+  return page
 }
 
 /** Fail loud on a stale checkout instead of testing yesterday's bundle. */

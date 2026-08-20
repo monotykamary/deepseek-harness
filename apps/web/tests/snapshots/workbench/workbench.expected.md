@@ -1,7 +1,7 @@
 # UI workbench
 
 - inline conversation width: 800px
-- inline workbench width: 359px
+- inline workbench width: 360px
 - tabs after Tool Inspect: Changes → Inspect
 - inspector title: write
 - inspector sticky gap after scroll: 0px

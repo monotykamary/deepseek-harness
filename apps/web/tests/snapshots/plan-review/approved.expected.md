@@ -3,8 +3,14 @@
     - 'button "Plan a small change: add" [disabled]'
   - img
   - text: Standard mode
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -53,3 +59,6 @@
 - button "4% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 51% Input 10.2K tok · Output 346 tok
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

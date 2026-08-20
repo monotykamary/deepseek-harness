@@ -28,6 +28,11 @@ const PLUGINS: readonly (WebBootEntry & { bundlePath: string })[] = [
   { id: '@monotykamary/dsh-client-ui-theme', bundlePath: 'packages/client/ui-theme/lib/client.js', url: '/plugins/ui-theme.js', rev: 'fx', inject: ['@monotykamary/dsh-client-connection', '@monotykamary/dsh-client-runtime', '@monotykamary/dsh-client-locale', '@monotykamary/dsh-client-ui-settings', '@monotykamary/dsh-api-remotes'], immediately: true },
   { id: '@monotykamary/dsh-client-locale', bundlePath: 'packages/client/locale/lib/client.js', url: '/plugins/locale.js', rev: 'fx', inject: ['@monotykamary/dsh-client-connection', '@monotykamary/dsh-client-runtime', '@monotykamary/dsh-client-ui-settings', '@monotykamary/dsh-api-remotes'], immediately: true },
   { id: '@monotykamary/dsh-client-ui-layout', bundlePath: 'packages/client/ui-layout/lib/client.js', url: '/plugins/ui-layout.js', rev: 'fx', inject: ['@monotykamary/dsh-client-runtime'] },
+  // The workbench service is a hard dependency of the conversation plugin
+  // (it injects the workbench service since the tabbed workbench landed), so
+  // the minimal assembled graph must include the provider row or
+  // ui-conversation stays pending and the boot fails.
+  { id: '@monotykamary/dsh-client-ui-workbench', bundlePath: 'packages/client/ui-workbench/lib/client.js', url: '/plugins/ui-workbench.js', rev: 'fx', inject: ['@monotykamary/dsh-client-locale', '@monotykamary/dsh-client-runtime', '@monotykamary/dsh-client-ui-layout'] },
   { id: '@monotykamary/dsh-client-ui-sidebar', bundlePath: 'packages/client/ui-sidebar/lib/client.js', url: '/plugins/ui-sidebar.js', rev: 'fx', inject: ['@monotykamary/dsh-client-ui-layout'] },
   { id: '@monotykamary/dsh-client-ui-conversation', bundlePath: 'packages/client/ui-conversation/lib/client.js', url: '/plugins/ui-conversation.js', rev: 'fx', inject: ['@monotykamary/dsh-client-ui-layout'] },
   { id: '@monotykamary/dsh-client-ui-tool', bundlePath: 'packages/client/ui-tool/lib/client.js', url: '/plugins/ui-tool.js', rev: 'fx', inject: ['@monotykamary/dsh-client-runtime', '@monotykamary/dsh-client-locale', '@monotykamary/dsh-client-ui-conversation'] },

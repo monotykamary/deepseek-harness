@@ -3,8 +3,14 @@
     - button "Use only Cordis tools. First" [disabled]
   - img
   - text: Standard mode
+  - button "Open files":
+    - img
+    - text: Files
   - button "Session log":
     - text: Session log
+    - img
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -97,3 +103,6 @@
 - button "0% of context used"
 - button "Send message" [disabled]
 - text: 3 turns · 7 steps LLM {{duration}} · Tool call {{duration}} Cache hit 77% Input 66.5K tok · Output 318 tok
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

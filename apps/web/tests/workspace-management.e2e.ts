@@ -313,6 +313,14 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
       { timeout: 10_000 },
     ).toBe(0)
 
+    // The re-registration flow minted a fresh blank session that took the
+    // selection, and a blank session never renders a tree row. Put the kept
+    // session back in front so the reload below verifies deletion
+    // persistence against the selection the deletion preserved.
+    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1)
+    await page.getByRole('treeitem', { name: /Use the read tool twice/ }).click()
+
     const warningStart = tripwire.warnings.length
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
@@ -385,28 +393,39 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
 
-  it('switches to the flat "In one list" view and persists the preference', async () => {
+  it('persists the flat "In one list" view preference across reload', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-flat'))
-    // Grouped default: workspace group rows render (the seeded session sits
-    // under Ungrouped; the created workspaces are empty groups).
-    await expect.poll(() => page.getByText('All Workspaces', { exact: true }).count(), { timeout: 10_000 }).toBe(1)
-    // Grouping and ordering moved into the View options menu.
-    await page.getByRole('button', { name: 'View options' }).click()
-    await page.getByRole('menuitem', { name: 'In one list' }).click()
-    // Flat mode: the section label flips and the seeded session is a
-    // top-level row with no group headers above it.
-    await expect.poll(() => page.getByText('All Sessions', { exact: true }).count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 5_000 }).toBe(0)
-    await expect.poll(() => page.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
-    expect(await page.evaluate(() => localStorage.getItem('dsh.workspace.view.v5'))).toContain('flat')
-    // Persisted across reload; then restore grouped for inter-spec hygiene.
+    // The suite baseline seeds the grouped view (support.ts); the workspace
+    // browser no longer owns a view-switch control, so this spec restores
+    // the shipped flat preference through the same persisted store and
+    // verifies both the rendering and the reload round-trip.
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}')
+      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'flat' }))
+    })
     const warningStart = tripwire.warnings.length
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
+    // Flat mode: the seeded session is a top-level tree row and no group
+    // headers (Ungrouped included) render above it.
+    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
+    await expect.poll(() => page.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
+    expect(await page.evaluate(() => localStorage.getItem('dsh.workspace.view.v6'))).toContain('flat')
+    // The persisted preference survives a second reload.
+    const secondWarningStart = tripwire.warnings.length
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    acknowledgeReloadConnectionLoss(tripwire, secondWarningStart)
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 15_000 }).toBe(0)
-    await page.getByRole('button', { name: 'View options' }).click()
-    await page.getByRole('menuitem', { name: 'WorkSpace' }).click()
+    // Restore the grouped baseline for inter-spec hygiene.
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}')
+      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'workspace' }))
+    })
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    acknowledgeReloadConnectionLoss(tripwire, secondWarningStart)
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
@@ -608,7 +627,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
-    await expect.poll(() => page.getByText('All Workspaces', { exact: true }).count(), { timeout: 15_000 }).toBe(1)
+    await expect.poll(() => page.getByText('All Folders', { exact: true }).count(), { timeout: 15_000 }).toBe(1)
     // The archived row must not resurface (the Ungrouped bucket itself may
     // reappear if selection restore lands on another stray — not this test's
     // concern).

@@ -269,7 +269,7 @@ describe('web e2e: long Chat interaction contract', () => {
       .toBe(`${FIXTURE.title} (1)`)
     await page.getByText(branchAssistantMarker, { exact: false }).last().waitFor({ timeout: 15_000 })
     const settled = scaffold.whenTurnSettled(60_000)
-    const composer = page.locator('textarea:enabled').last()
+    const composer = page.locator('textarea:enabled').first()
     await composer.fill(CONTINUE_PROMPT)
     await page.getByRole('button', { name: 'Send message', exact: true }).click()
     await expect.poll(() => page.getByText(CONTINUE_PROMPT, { exact: true }).count(), { timeout: 15_000 }).toBe(1)

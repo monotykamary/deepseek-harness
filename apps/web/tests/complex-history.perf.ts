@@ -936,7 +936,7 @@ async function continueConversation(
     readonly checkpointInterval?: number
   },
 ): Promise<ConversationReport> {
-  const composer = world.page.locator('textarea:enabled').last()
+  const composer = world.page.locator('textarea:enabled').first()
   await composer.waitFor({ timeout: 15_000 })
   const retainedBefore = await retainedBrowserState(cdp, world.page)
   const checkpoints: RetainedCheckpoint[] = [{ turns: options.startingTurns, state: retainedBefore }]
@@ -1064,7 +1064,7 @@ async function measurePostSoakUserRender(
   if (spec.toolResultMarker !== undefined) {
     throw new Error('post-soak render probe must remain a text-only turn')
   }
-  const composer = world.page.locator('textarea:enabled').last()
+  const composer = world.page.locator('textarea:enabled').first()
   const composerFill = await measure(cdp, async () => {
     await composer.fill(spec.prompt)
     await expect.poll(() => composer.inputValue()).toBe(spec.prompt)
