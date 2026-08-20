@@ -268,6 +268,61 @@ export function deriveAutoSettledSessionIds(
 }
 
 /**
+ * Shelf membership derived from the inactivity policy plus the user's
+ * settle/snooze overrides.
+ */
+export interface SessionShelfSets {
+  /** Session ids in the settled shelf: inactivity-settled or explicitly settled, minus keep-active pins. */
+  settledIds: ReadonlySet<SessionId>
+  /** Wake time (epoch ms) per still-snoozed Session (wake still in the future). */
+  snoozedUntil: Readonly<Record<string, number>>
+  /** Session ids whose snooze elapsed (or raised a pending interaction): back in the active list with the Woke pill. */
+  wokeIds: ReadonlySet<SessionId>
+}
+
+/**
+ * Combine the inactivity policy with the user's shelf overrides. A settle
+ * parks the Session until un-settled; an un-settle clears an explicit settle
+ * and pins an auto-settled row back into the active list. A snooze hides the
+ * row until its wake time, then returns it with the Woke pill — a pending
+ * interaction wakes it early so blocked-on-you work is never hidden.
+ * @param list - complete Session list snapshot.
+ * @param now - current epoch milliseconds.
+ * @param autoSettleAfterDays - whole inactive days, or null to disable automatic settlement.
+ * @param explicitlySettledSessionIds - user-settled Session ids (persisted browser state).
+ * @param pinnedActiveSessionIds - user-un-settled ids pinned out of auto-settlement.
+ * @param snoozedUntilBySession - wake time per snoozed Session (persisted browser state).
+ * @returns the three shelf memberships.
+ */
+export function deriveShelfSets(
+  list: SessionListState,
+  now: number,
+  autoSettleAfterDays: number | null,
+  explicitlySettledSessionIds: readonly string[] | undefined,
+  pinnedActiveSessionIds: readonly string[] | undefined,
+  snoozedUntilBySession: Readonly<Record<string, number>> | undefined,
+): SessionShelfSets {
+  const autoSettled = deriveAutoSettledSessionIds(list, now, autoSettleAfterDays)
+  const auto = new Set(autoSettled)
+  const pinned = new Set(pinnedActiveSessionIds ?? [])
+  const explicit = new Set(explicitlySettledSessionIds ?? [])
+  const settledIds = new Set<SessionId>()
+  const snoozedUntil: Record<string, number> = {}
+  const wokeIds = new Set<SessionId>()
+  for (const id of list.ids) {
+    if (pinned.has(id)) continue
+    if (auto.has(id) || explicit.has(id)) settledIds.add(id)
+  }
+  for (const [id, until] of Object.entries(snoozedUntilBySession ?? {})) {
+    const session = list.byId[id as SessionId]
+    if (session === undefined) continue
+    if (until > now && session.pendingInteraction === undefined) snoozedUntil[id] = until
+    else wokeIds.add(session.id)
+  }
+  return { settledIds, snoozedUntil, wokeIds }
+}
+
+/**
  * Derive the workspace browser groups with every session as a top-level row.
  *
  * Every group shows; sessions populate under expanded groups in the selected

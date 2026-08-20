@@ -27,6 +27,14 @@ type WorkspaceViewState = {
   groupExpansion: Record<string, boolean>
   /** Whether inactivity-settled Sessions are revealed below the active list. */
   settledShelfExpanded?: boolean
+  /** Session ids the user settled explicitly (shelf membership independent of inactivity). */
+  explicitlySettledSessionIds?: string[]
+  /** Auto-settled session ids the user pinned back into the active list (un-settle). */
+  pinnedActiveSessionIds?: string[]
+  /** Wake time (epoch ms) per snoozed Session; the row hides until then. */
+  snoozedUntilBySession?: Record<string, number>
+  /** Whether the snoozed shelf reveals its rows (default collapsed). */
+  snoozedShelfExpanded?: boolean
   /** Shared editable order per Workspace group plus the browser-local flat-list account. */
   sessionOrderByAccount: Record<string, string[]>
   /** Last observed update timestamps per order account for one-time promotion events. */
@@ -43,6 +51,15 @@ type WorkspaceViewActions = {
   setOrderBy: (draft: WorkspaceViewState, mode: SessionOrderBy) => void
   setGroupExpanded: (draft: WorkspaceViewState, key: string, expanded: boolean) => void
   setSettledShelfExpanded: (draft: WorkspaceViewState, expanded: boolean) => void
+  setSnoozedShelfExpanded: (draft: WorkspaceViewState, expanded: boolean) => void
+  /** Settle a Session into the history shelf (also clears any snooze: settle parks it for good). */
+  settleSession: (draft: WorkspaceViewState, sessionId: string) => void
+  /** Un-settle a Session: clear an explicit settle; pin an auto-settled row back into the active list. */
+  unsettleSession: (draft: WorkspaceViewState, sessionId: string) => void
+  /** Snooze a Session until the given epoch ms (hidden wins: leaves both settle sets). */
+  snoozeSession: (draft: WorkspaceViewState, sessionId: string, until: number) => void
+  /** Wake a Session now / dismiss its Woke indicator. */
+  wakeSession: (draft: WorkspaceViewState, sessionId: string) => void
   retainAccountKeys: (draft: WorkspaceViewState, workspaceKeys: readonly string[]) => void
   syncSessionOrderAccount: (
     draft: WorkspaceViewState,
@@ -65,6 +82,10 @@ export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState
       orderBy: 'updated',
       groupExpansion: {},
       settledShelfExpanded: false,
+      explicitlySettledSessionIds: [],
+      pinnedActiveSessionIds: [],
+      snoozedUntilBySession: {},
+      snoozedShelfExpanded: false,
       sessionOrderByAccount: {},
       sessionUpdatedAtByAccount: {},
     }),
@@ -75,6 +96,39 @@ export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState
       setOrderBy: (d, mode: SessionOrderBy) => { d.orderBy = mode },
       setGroupExpanded: (d, key: string, expanded: boolean) => { d.groupExpansion[key] = expanded },
       setSettledShelfExpanded: (d, expanded: boolean) => { d.settledShelfExpanded = expanded },
+      setSnoozedShelfExpanded: (d, expanded: boolean) => { d.snoozedShelfExpanded = expanded },
+      // The rehydrated shape may predate these fields (older localStorage
+      // blobs): every mutator initializes its collections before touching them.
+      settleSession: (d, sessionId: string) => {
+        d.explicitlySettledSessionIds ??= []
+        d.pinnedActiveSessionIds ??= []
+        d.snoozedUntilBySession ??= {}
+        if (!d.explicitlySettledSessionIds.includes(sessionId)) d.explicitlySettledSessionIds.push(sessionId)
+        d.pinnedActiveSessionIds = d.pinnedActiveSessionIds.filter(id => id !== sessionId)
+        d.snoozedUntilBySession = Object.fromEntries(
+          Object.entries(d.snoozedUntilBySession).filter(([id]) => id !== sessionId),
+        )
+      },
+      unsettleSession: (d, sessionId: string) => {
+        d.explicitlySettledSessionIds ??= []
+        d.pinnedActiveSessionIds ??= []
+        d.explicitlySettledSessionIds = d.explicitlySettledSessionIds.filter(id => id !== sessionId)
+        if (!d.pinnedActiveSessionIds.includes(sessionId)) d.pinnedActiveSessionIds.push(sessionId)
+      },
+      snoozeSession: (d, sessionId: string, until: number) => {
+        d.snoozedUntilBySession ??= {}
+        d.explicitlySettledSessionIds ??= []
+        d.pinnedActiveSessionIds ??= []
+        d.snoozedUntilBySession[sessionId] = until
+        d.explicitlySettledSessionIds = d.explicitlySettledSessionIds.filter(id => id !== sessionId)
+        d.pinnedActiveSessionIds = d.pinnedActiveSessionIds.filter(id => id !== sessionId)
+      },
+      wakeSession: (d, sessionId: string) => {
+        d.snoozedUntilBySession ??= {}
+        d.snoozedUntilBySession = Object.fromEntries(
+          Object.entries(d.snoozedUntilBySession).filter(([id]) => id !== sessionId),
+        )
+      },
       retainAccountKeys: (d, workspaceKeys: readonly string[]) => {
         const retained = new Set(workspaceKeys)
         if (d.workspaceScope !== null && !retained.has(d.workspaceScope)) d.workspaceScope = null

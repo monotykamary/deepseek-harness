@@ -19,7 +19,7 @@ Status: implemented
 - **保留整行光带。** 否决：光带经过时会盖过图标与背景，且横跨整个对话宽度，读作嘈杂的 chrome 而非文字信号。
 - **一档更亮的灰色带**（摘要 tertiary → secondary）。否决：对比跨度太小，浅色模式下尤其不明显，运行状态难以看清。
 - **品牌蓝光带**（turn-status 行的 `--dsw-static-deepseek-500/200` 扫光）。否决：harness 对话行保持中性的运行语言；蓝色是 Deep Diving 的 shimmer 的身份，用户明确不希望照搬。
-- **整行调暗 mask**（2026-07-28 之前的实现，见已归档的 [web-conversation-polish-sweep](../../../archived/bug-fix/2026-07-28-web-conversation-polish-sweep.md)）。此前已否决：mask 会调暗整行内容，包括状态点。
+- **整行调暗 mask**（2026-07-28 之前的实现）。此前已否决：mask 会调暗整行内容，包括状态点。
 
 ## 后果
 

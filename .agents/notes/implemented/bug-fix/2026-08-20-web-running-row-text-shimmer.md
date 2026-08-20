@@ -19,7 +19,7 @@ The rules live in six surfaces that must stay in lockstep: `ToolRow.module.css` 
 - **Keep the full-row glare band.** Rejected: the band washes the icon and background as it passes and spans the whole chat width, which reads as noisy chrome rather than a text signal.
 - **One-step-brighter neutral band** (summary tertiary → secondary). Rejected: the contrast step is too small, especially in light mode; the running state was hard to see.
 - **Brand-blue band** (the turn-status row's `--dsw-static-deepseek-500/200` sweep). Rejected: the harness transcript rows keep a neutral running language; blue is the identity of Deep Diving's shimmer, which the user explicitly did not want copied.
-- **Whole-row dimming mask** (the pre-2026-07-28 implementation, see the archived [web-conversation-polish-sweep](../../../archived/bug-fix/2026-07-28-web-conversation-polish-sweep.md)). Rejected earlier: the mask dims the entire row content including state dots.
+- **Whole-row dimming mask** (the pre-2026-07-28 implementation). Rejected earlier: the mask dims the entire row content including state dots.
 
 ## Consequences
 

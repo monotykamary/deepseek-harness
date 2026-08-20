@@ -33,6 +33,11 @@ function dragProps(overrides: Partial<RowDragProps> = {}): RowDragProps {
   }
 }
 
+/** Right-click the row: the context menu is the row menu's only trigger now. */
+function openRowMenu(row: HTMLElement): void {
+  fireEvent.contextMenu(row, { clientX: 10, clientY: 10 })
+}
+
 /** Install the async browser clipboard and restore its prior host shape. */
 function installClipboard(writeText: (text: string) => Promise<void>): () => void {
   const prior = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
@@ -63,7 +68,8 @@ describe('workspace browser rows', () => {
       running: false, runningSubagentCount: 0, completed: false, updatedAt: 0,
     }
     const view = render(<SessionNodeItem node={idle} currentId={undefined} now={0} onOpen={vi.fn()}
-      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
     const row = screen.getByRole('treeitem')
     expect(row.textContent).toContain('Project')
     expect(row.textContent).toContain('Flat Session')
@@ -71,7 +77,8 @@ describe('workspace browser rows', () => {
     expect(row.querySelector('[data-state]')).toBeNull()
 
     view.rerender(<SessionNodeItem node={{ ...idle, running: true }} currentId={undefined} now={0}
-      onOpen={vi.fn()} onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+      onOpen={vi.fn()} onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
     expect(screen.getByRole('treeitem').querySelector('[data-state="ongoing"]')).toBeTruthy()
     expect(screen.getByText('进行中')).toBeTruthy()
   })
@@ -140,7 +147,8 @@ describe('workspace browser rows', () => {
     const onOpen = vi.fn()
     render(
       <SessionNodeItem node={node} currentId={node.id} now={0} onOpen={onOpen}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />,
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />,
     )
 
     const row = screen.getByRole('treeitem')
@@ -159,7 +167,8 @@ describe('workspace browser rows', () => {
           runningSubagentCount: 0, completed: false, updatedAt: 0, ...over,
         }}
         currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t}
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t}
       />,
     )
     const stateDot = (view: ReturnType<typeof renderRow>) =>
@@ -191,7 +200,8 @@ describe('workspace browser rows', () => {
         runningSubagentCount: 2, completed: false, updatedAt: 0,
       }
       render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       const row = screen.getByRole('treeitem')
       expect(row.querySelector('[data-state="ongoing"]')).not.toBeNull()
       expect(screen.getByText('2 个子代理运行中')).toBeTruthy()
@@ -213,7 +223,8 @@ describe('workspace browser rows', () => {
         runningSubagentCount: 1, completed: false, updatedAt: 0,
       }
       render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       const row = screen.getByRole('treeitem')
       expect(row.querySelectorAll('[data-state="ongoing"]')).toHaveLength(1)
       expect(screen.getByText('进行中')).toBeTruthy()
@@ -234,7 +245,8 @@ describe('workspace browser rows', () => {
       running: false, runningSubagentCount: 1, completed: false, updatedAt: 0,
     }
     render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
     const row = screen.getByRole('treeitem')
     expect(row.querySelector('[data-state="warning"]')).not.toBeNull()
     expect(row.querySelector('[data-state="ongoing"]')).toBeNull()
@@ -253,7 +265,7 @@ describe('workspace browser rows', () => {
     expect(screen.getByRole('treeitem').querySelector('[data-state="done"]')).not.toBeNull()
   })
 
-  it('workspace row menu opens on the ellipsis, renames, and shows the danger delete row', () => {
+  it('workspace row menu opens on right-click, renames, and shows the danger delete row', () => {
     const onRename = vi.fn()
     const onDelete = vi.fn()
     const onToggle = vi.fn()
@@ -265,20 +277,21 @@ describe('workspace browser rows', () => {
       group={group} onToggle={onToggle} onCreate={vi.fn()}
       actions={{ rename: onRename, delete: onDelete }} t={t}
     />)
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Project”的操作' }))
+    const row = screen.getByRole('treeitem')
+    openRowMenu(row)
     // Opening the menu neither toggles the group nor renames yet.
     expect(onToggle).not.toHaveBeenCalled()
     expect(screen.getByRole('menuitem', { name: '删除工作区' }).className).toMatch(/danger/)
     fireEvent.click(screen.getByRole('menuitem', { name: '重命名' }))
     expect(onRename).toHaveBeenCalledOnce()
     expect(screen.queryByRole('menu')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Project”的操作' }))
+    openRowMenu(row)
     fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
     expect(screen.queryByRole('menu')).toBeNull()
     expect(onRename).toHaveBeenCalledOnce()
     expect(onDelete).toHaveBeenCalledOnce()
     // Escape closes without selecting (Menu onClose path).
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Project”的操作' }))
+    openRowMenu(row)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('menu')).toBeNull()
   })
@@ -327,8 +340,9 @@ describe('workspace browser rows', () => {
       runningSubagentCount: 0, completed: false, updatedAt: 0,
     }
     render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={onOpen}
-      onRename={onRename} onFork={onFork} onArchive={onArchive} t={t} />)
-    fireEvent.click(screen.getByRole('button', { name: '会话“One”的操作' }))
+      onRename={onRename} onFork={onFork} onArchive={onArchive}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
+    openRowMenu(screen.getByRole('treeitem'))
     expect(onOpen).not.toHaveBeenCalled()
     // Archive is not destructive (log and accounting slot remain): no danger styling.
     expect(screen.getByRole('menuitem', { name: '归档会话' }).className).not.toMatch(/danger/)
@@ -337,17 +351,17 @@ describe('workspace browser rows', () => {
     expect(screen.queryByRole('menu')).toBeNull()
     expect(onRename).toHaveBeenCalledWith(node.id, 'One')
     expect(onOpen).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: '会话“One”的操作' }))
+    openRowMenu(screen.getByRole('treeitem'))
     fireEvent.click(screen.getByRole('menuitem', { name: '分叉会话' }))
     expect(onFork).toHaveBeenCalledWith(node.id)
     // Archive dispatches without opening the session.
-    fireEvent.click(screen.getByRole('button', { name: '会话“One”的操作' }))
+    openRowMenu(screen.getByRole('treeitem'))
     fireEvent.click(screen.getByRole('menuitem', { name: '归档会话' }))
     expect(onArchive).toHaveBeenCalledWith(node.id)
     expect(onRename).toHaveBeenCalledOnce()
     expect(onOpen).not.toHaveBeenCalled()
     // Escape closes without selecting (Menu onClose path).
-    fireEvent.click(screen.getByRole('button', { name: '会话“One”的操作' }))
+    openRowMenu(screen.getByRole('treeitem'))
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('menu')).toBeNull()
   })
@@ -361,7 +375,8 @@ describe('workspace browser rows', () => {
         runningSubagentCount: 0, completed: false, updatedAt: 0,
       }
       render(<SessionNodeItem node={node} currentId={undefined} now={60_000} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       const wrapper = screen.getByRole('treeitem').parentElement as HTMLElement
       fireEvent.pointerEnter(wrapper)
       act(() => { vi.advanceTimersByTime(500) })
@@ -371,7 +386,7 @@ describe('workspace browser rows', () => {
       expect(screen.getAllByText('进行中')).toHaveLength(2)
       fireEvent.pointerLeave(wrapper)
       // Menu open (disabled=true) suppresses the card for the same hover.
-      fireEvent.click(screen.getByRole('button', { name: '会话“Hovered”的操作' }))
+      openRowMenu(screen.getByRole('treeitem'))
       fireEvent.pointerEnter(wrapper)
       act(() => { vi.advanceTimersByTime(1000) })
       expect(screen.queryByText('1分钟前')).toBeNull()
@@ -392,14 +407,16 @@ describe('workspace browser rows', () => {
         pendingInteraction, running: true, runningSubagentCount: 0, completed: false, updatedAt: 0,
       }
       const view = render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       const row = screen.getByRole('treeitem')
       expect(row.querySelector('[data-state="warning"]')).toBeTruthy()
       expect(row.querySelector('[data-state="ongoing"]')).toBeNull()
       expect(screen.getByText(label)).toBeTruthy()
 
       view.rerender(<SessionNodeItem node={{ ...node, running: false }} currentId={undefined} now={0}
-        onOpen={vi.fn()} onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onOpen={vi.fn()} onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       expect(screen.getByRole('treeitem').querySelector('[data-state="warning"]')).toBeTruthy()
 
       fireEvent.pointerEnter(screen.getByRole('treeitem').parentElement as HTMLElement)
@@ -419,7 +436,8 @@ describe('workspace browser rows', () => {
         runningSubagentCount: 0, completed: false, updatedAt: 0,
       }
       render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       fireEvent.pointerEnter(screen.getByRole('treeitem').parentElement as HTMLElement)
       act(() => { vi.advanceTimersByTime(500) })
       expect(screen.getByText('空闲')).toBeTruthy()
@@ -437,7 +455,8 @@ describe('workspace browser rows', () => {
         runningSubagentCount: 0, completed: true, updatedAt: 0,
       }
       render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} t={t} />)
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
       fireEvent.pointerEnter(screen.getByRole('treeitem').parentElement as HTMLElement)
       act(() => { vi.advanceTimersByTime(500) })
       // Row's visually-hidden reminder label plus the hover card's status line.
@@ -455,7 +474,8 @@ describe('workspace browser rows', () => {
     const inactive = dragProps()
     const { rerender } = render(
       <SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} drag={inactive} t={t} />,
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} drag={inactive} t={t} />,
     )
     const row = screen.getByRole('treeitem')
     stubRect(row)
@@ -473,7 +493,8 @@ describe('workspace browser rows', () => {
     const active = dragProps({ active: true, marker: 'before' })
     rerender(
       <SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} drag={active} t={t} />,
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} drag={active} t={t} />,
     )
     stubRect(screen.getByRole('treeitem'))
     // Top half hovers/drops 'before'; bottom half 'after' (row mid = 117).
@@ -487,8 +508,171 @@ describe('workspace browser rows', () => {
     const after = dragProps({ active: true, marker: 'after' })
     rerender(
       <SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
-        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()} drag={after} t={t} />,
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} drag={after} t={t} />,
     )
     expect(screen.getByRole('treeitem').className).toMatch(/dropAfter/)
+  })
+  it('settles from the hover quick action without opening the session', () => {
+    const onOpen = vi.fn()
+    const onSettle = vi.fn()
+    const node: SessionNode = {
+      id: sid('s1'), workspace: 'Project', title: 'Park me', running: false,
+      runningSubagentCount: 0, completed: false, updatedAt: 0,
+    }
+    render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={onOpen}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={onSettle} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
+    fireEvent.click(screen.getByRole('button', { name: '结算会话' }))
+    expect(onSettle).toHaveBeenCalledWith(node.id)
+    expect(onOpen).not.toHaveBeenCalled()
+  })
+
+  it('snoozes from the popover: presets resolve at open time and dispatch the wake time', () => {
+    vi.useFakeTimers()
+    try {
+      const now = new Date(2026, 7, 19, 10, 0, 0, 0).getTime()
+      vi.setSystemTime(now)
+      const onSnooze = vi.fn()
+      const node: SessionNode = {
+        id: sid('s1'), workspace: 'Project', title: 'Later', running: false,
+        runningSubagentCount: 0, completed: false, updatedAt: 0,
+      }
+      render(<SessionNodeItem node={node} currentId={undefined} now={now} onOpen={vi.fn()}
+        onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+        onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={onSnooze} onWake={vi.fn()} t={t} />)
+      fireEvent.click(screen.getByRole('button', { name: '稍后提醒会话' }))
+      // Evening appears only while it is >1h before 18:00.
+      expect(screen.getByRole('menuitem', { name: /今晚/ })).toBeTruthy()
+      fireEvent.click(screen.getByRole('menuitem', { name: /1 小时后/ }))
+      expect(onSnooze).toHaveBeenCalledWith(node.id, now + 3_600_000)
+      expect(screen.queryByRole('menu')).toBeNull()
+      // Escape closes the reopened popover through the Menu onClose path.
+      fireEvent.click(screen.getByRole('button', { name: '稍后提醒会话' }))
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(screen.queryByRole('menu')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('parked rows swap the quick action: un-settle on settled, wake on snoozed', () => {
+    const onUnsettle = vi.fn()
+    const onWake = vi.fn()
+    const base = {
+      workspace: 'Project', running: false, runningSubagentCount: 0, completed: false, updatedAt: 0,
+    }
+    const settledNode: SessionNode = { id: sid('settled'), title: 'Settled', ...base }
+    const settled = render(<SessionNodeItem node={settledNode} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={onUnsettle} onSnooze={vi.fn()} onWake={vi.fn()} settled t={t} />)
+    expect(screen.queryByRole('button', { name: '结算会话' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '取消结算会话' }))
+    expect(onUnsettle).toHaveBeenCalledWith(settledNode.id)
+    settled.unmount()
+
+    const snoozedNode: SessionNode = { id: sid('snoozed'), title: 'Snoozed', ...base }
+    const snoozedView = render(<SessionNodeItem node={snoozedNode} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={onWake}
+      snoozedUntil={7_200_000} t={t} />)
+    // The trailing seat shows the countdown instead of the status or time.
+    expect(screen.getByText('2小时')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '立即唤醒会话' }))
+    expect(onWake).toHaveBeenCalledWith(snoozedNode.id)
+    snoozedView.unmount()
+    // Multi-day wakes count down in days.
+    render(<SessionNodeItem node={{ ...snoozedNode, id: sid('long') }} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()}
+      snoozedUntil={3 * 86_400_000} t={t} />)
+    expect(screen.getByText('3天')).toBeTruthy()
+  })
+
+  it('shows the Woke pill on a woken row; clicking it dismisses and opening acknowledges', () => {
+    const onOpen = vi.fn()
+    const onWake = vi.fn()
+    const node: SessionNode = {
+      id: sid('s1'), workspace: 'Project', title: 'Back', running: false,
+      runningSubagentCount: 0, completed: false, updatedAt: 0,
+    }
+    render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={onOpen}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={onWake} woke t={t} />)
+    const pill = screen.getByRole('button', { name: '关闭唤醒提示' })
+    expect(pill.textContent).toContain('已唤醒')
+    fireEvent.click(pill)
+    expect(onWake).toHaveBeenCalledWith(node.id)
+    expect(onOpen).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('treeitem'))
+    expect(onOpen).toHaveBeenCalledWith(node.id)
+    // A visit is an acknowledgment: the second wake dispatch clears the pill.
+    expect(onWake).toHaveBeenCalledTimes(2)
+  })
+
+  it('offers lifecycle items in the context menu per row state and snoozes via the submenu', () => {
+    const onSettle = vi.fn()
+    const onUnsettle = vi.fn()
+    const onWake = vi.fn()
+    const onSnooze = vi.fn()
+    const base = {
+      workspace: 'Project', running: false, runningSubagentCount: 0, completed: false, updatedAt: 0,
+    }
+    const active: SessionNode = { id: sid('a'), title: 'Active', ...base }
+    const activeView = render(<SessionNodeItem node={active} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={onSettle} onUnsettle={onUnsettle} onSnooze={onSnooze} onWake={onWake} t={t} />)
+    openRowMenu(screen.getByRole('treeitem'))
+    // The Snooze entry is a submenu; the presets dispatch like the popover.
+    fireEvent.mouseEnter(screen.getByRole('menuitem', { name: '稍后提醒' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /1 小时后/ }))
+    expect(onSnooze).toHaveBeenCalledTimes(1)
+    expect(onSnooze.mock.calls[0]?.[0]).toBe(active.id)
+    activeView.unmount()
+
+    const settled: SessionNode = { id: sid('s'), title: 'Settled', ...base }
+    const settledView = render(<SessionNodeItem node={settled} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={onSettle} onUnsettle={onUnsettle} onSnooze={onSnooze} onWake={onWake} settled t={t} />)
+    openRowMenu(screen.getByRole('treeitem'))
+    expect(screen.getByRole('menuitem', { name: '取消结算' })).toBeTruthy()
+    expect(screen.queryByRole('menuitem', { name: '结算会话' })).toBeNull()
+    fireEvent.click(screen.getByRole('menuitem', { name: '取消结算' }))
+    expect(onUnsettle).toHaveBeenCalledWith(settled.id)
+    settledView.unmount()
+
+    const snoozed: SessionNode = { id: sid('n'), title: 'Snoozed', ...base }
+    const snoozedView = render(<SessionNodeItem node={snoozed} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={onSettle} onUnsettle={onUnsettle} onSnooze={onSnooze} onWake={onWake}
+      snoozedUntil={3_600_000} t={t} />)
+    openRowMenu(screen.getByRole('treeitem'))
+    fireEvent.click(screen.getByRole('menuitem', { name: '立即唤醒' }))
+    expect(onWake).toHaveBeenCalledWith(snoozed.id)
+    snoozedView.unmount()
+
+    const activeTwo: SessionNode = { id: sid('a2'), title: 'Active Two', ...base }
+    render(<SessionNodeItem node={activeTwo} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={onSettle} onUnsettle={onUnsettle} onSnooze={onSnooze} onWake={onWake} t={t} />)
+    openRowMenu(screen.getByRole('treeitem'))
+    fireEvent.click(screen.getByRole('menuitem', { name: '结算会话' }))
+    expect(onSettle).toHaveBeenCalledWith(activeTwo.id)
+  })
+
+  it('hides settle and snooze on blocked-on-you rows (pending interaction stays visible)', () => {
+    const node: SessionNode = {
+      id: sid('s1'), workspace: 'Project', title: 'Blocked', pendingInteraction: 'approval',
+      running: false, runningSubagentCount: 0, completed: false, updatedAt: 0,
+    }
+    render(<SessionNodeItem node={node} currentId={undefined} now={0} onOpen={vi.fn()}
+      onRename={vi.fn()} onFork={vi.fn()} onArchive={vi.fn()}
+      onSettle={vi.fn()} onUnsettle={vi.fn()} onSnooze={vi.fn()} onWake={vi.fn()} t={t} />)
+    expect(screen.queryByRole('button', { name: '结算会话' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '稍后提醒会话' })).toBeNull()
+    openRowMenu(screen.getByRole('treeitem'))
+    expect(screen.queryByRole('menuitem', { name: '结算会话' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: '稍后提醒' })).toBeNull()
+    expect(screen.getByRole('menuitem', { name: '归档会话' })).toBeTruthy()
   })
 })

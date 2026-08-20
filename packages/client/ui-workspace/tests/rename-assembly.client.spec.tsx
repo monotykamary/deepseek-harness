@@ -12,7 +12,7 @@
  * workspace-browser.spec.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
 import type { ISession, SessionId, WorkspaceId } from '@monotykamary/dsh-client-runtime/client'
 import type { PropsRenderSlots } from '@monotykamary/dsh-client-ui-slots'
 import { SlotTestRuntime, usePinnedBrowserLanguages } from '@monotykamary/dsh-client-test-runtime'
@@ -82,7 +82,7 @@ describe('session rename through the assembled browser', () => {
 
     // The current session's group auto-expands; open the row's action menu.
     const row = (await view.findByText('旧标题')).closest('[role="treeitem"]')!
-    fireEvent.click(within(row as HTMLElement).getByLabelText('会话“旧标题”的操作'))
+    fireEvent.contextMenu(row as HTMLElement, { clientX: 10, clientY: 10 })
     fireEvent.click(view.getByRole('menuitem', { name: '重命名', hidden: true }))
 
     // The dialog seeds from the current title; submit a padded value.
@@ -129,7 +129,7 @@ describe('session rename through the assembled browser', () => {
     await runtime.flush()
 
     const row = (await view.findByText('旧标题')).closest('[role="treeitem"]')!
-    fireEvent.click(within(row as HTMLElement).getByLabelText('会话“旧标题”的操作'))
+    fireEvent.contextMenu(row as HTMLElement, { clientX: 10, clientY: 10 })
     fireEvent.click(view.getByRole('menuitem', { name: '重命名', hidden: true }))
     const input = await view.findByLabelText('会话名称')
     fireEvent.change(input, { target: { value: '新名' } })

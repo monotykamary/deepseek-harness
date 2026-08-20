@@ -5,8 +5,8 @@
 // trip over the real wire (workspace.rename RPC + durable registry), the
 // duplicate-name pre-check, the
 // flat "In one list" view with its persisted group-by preference, the session
-// hover card and row action menu, and the session archive round trip (row
-// menu → workspace.archiveSession RPC → durable global set → row hidden
+// hover card and right-click row menu, and the session archive round trip
+// (row menu → workspace.archiveSession RPC → durable global set → row hidden
 // across reload). Zero model calls: workspace.create/rename/archiveSession
 // are host RPCs with no model involvement, and the one session row the
 // flat/hover/menu/archive scenarios need comes from a seeded fixture (the
@@ -31,9 +31,8 @@ const SEED = fileURLToPath(new URL('./snapshots/seeded-history/seed.jsonl', impo
 const MODE = webSnapshotMode()
 const BROWSER_EXPECTED = join(SNAPSHOT_DIR, 'directory-browser.expected.md')
 const SEED_ID = 'workspace-management-web-e2e'
-// Both waits exceed ui-primitives' 200ms POINTER_GRACE_MS. Keep them above
+// The wait exceeds ui-primitives' 200ms POINTER_GRACE_MS. Keep it above
 // that value if the shared setting changes.
-const POINTER_TRANSIT_MS = 300
 const POINTER_HOLD_MS = 600
 
 describe('web e2e: workspace management (create / rename / flat view / hover affordances)', () => {
@@ -99,18 +98,6 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     }
   }
 
-  /**
-   * Reveal and click a row action, re-hovering if a projection update replaces
-   * the row before its hover-only button becomes visible.
-   */
-  async function clickHoverAction(row: Locator, name: string): Promise<void> {
-    const button = row.getByRole('button', { name })
-    await expect.poll(async () => {
-      await row.hover()
-      return await button.isVisible()
-    }, { timeout: 10_000 }).toBe(true)
-    await button.click()
-  }
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold({})
@@ -169,7 +156,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
   it('renames a workspace over the wire with a duplicate-name pre-check', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-rename'))
     const alphaRow = page.locator('[role="treeitem"]').filter({ hasText: 'alpha-ws' }).first()
-    await clickHoverAction(alphaRow, 'Workspace actions for alpha-ws')
+    await alphaRow.click({ button: 'right' })
     await page.getByRole('menuitem', { name: 'Rename' }).click()
     const dialog = page.getByRole('dialog', { name: 'Rename workspace' })
     await dialog.waitFor({ timeout: 10_000 })
@@ -255,7 +242,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     await seededRow.click()
     await expect.poll(() => seededRow.getAttribute('aria-selected'), { timeout: 10_000 }).toBe('true')
 
-    await clickHoverAction(groupRow, `Workspace actions for ${workspace.title}`)
+    await groupRow.click({ button: 'right' })
     await page.getByRole('menuitem', { name: 'Delete workspace' }).click()
     const dialog = page.getByRole('dialog', { name: 'Delete workspace' })
     await dialog.waitFor({ timeout: 10_000 })
@@ -267,10 +254,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     await expect.poll(() => dialog.count(), { timeout: 10_000 }).toBe(0)
 
     expect(scaffold.ctx.workspaceRegistry.get(workspace.id)).toBeUndefined()
-    await expect.poll(
-      () => page.getByRole('button', { name: `Workspace actions for ${workspace.title}` }).count(),
-      { timeout: 10_000 },
-    ).toBe(0)
+    await expect.poll(() => page.getByText(workspace.title, { exact: true }).count(), { timeout: 10_000 }).toBe(0)
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1)
     await expect.poll(
@@ -377,7 +361,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     if (oldWorkspace === undefined) throw new Error('old same-name Workspace was not registered')
 
     const oldRow = page.locator('[role="treeitem"]').filter({ hasText: title }).first()
-    await clickHoverAction(oldRow, `Workspace actions for ${title}`)
+    await oldRow.click({ button: 'right' })
     await page.getByRole('menuitem', { name: 'Delete workspace' }).click()
     await page.getByRole('dialog', { name: 'Delete workspace' })
       .getByRole('button', { name: 'Delete workspace' }).click()
@@ -556,32 +540,25 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
-  it('keeps an open row menu up while the pointer moves between trigger and list', async () => {
+  it('opens the Session row menu on right-click and closes it on outside click or Escape', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-row-menu'))
     const sessionRow = await seededSessionRow()
-    // The trigger becomes visible and pointer-active when its row hovers.
-    const trigger = sessionRow.locator('button[aria-label^="Session actions for "]')
-    const triggerName = await trigger.getAttribute('aria-label')
-    if (triggerName === null) throw new Error('seeded Session row has no actions label')
-    await clickHoverAction(sessionRow, triggerName)
+    // The row menu is a context menu now: right-click raises it at the pointer,
+    // and it stays up across pointer moves (no pointer-leave dismissal).
+    await sessionRow.click({ button: 'right' })
     const item = page.getByRole('menuitem', { name: 'Rename' })
     await item.waitFor({ timeout: 5_000 })
-    // Into the list, then back up to the trigger across the 4px gap below it:
-    // without the gap-crossing grace, that return trip fires the list's
-    // pointerleave and closes the menu — a hesitating pointer loses it.
-    // Order matters — clicking leaves the pointer ON the trigger, so entering
-    // the list has to come first for the return to be a real departure.
-    await item.hover()
-    await page.waitForTimeout(POINTER_TRANSIT_MS)
-    await trigger.hover()
-    await page.waitForTimeout(POINTER_HOLD_MS)
-    expect(await page.getByRole('menuitem', { name: 'Rename' }).count()).toBe(1)
-    // ...and back down into the list, which must still be there to enter.
     await item.hover()
     await page.waitForTimeout(POINTER_HOLD_MS)
     expect(await page.getByRole('menuitem', { name: 'Rename' }).count()).toBe(1)
-    // Pointer-leave dismissal still applies once the pointer genuinely leaves.
-    await page.getByRole('button', { name: 'Settings' }).hover()
+    // Escape closes without selecting (Menu onClose path).
+    await page.keyboard.press('Escape')
+    await expect.poll(() => page.getByRole('menuitem', { name: 'Rename' }).count(), { timeout: 5_000 }).toBe(0)
+    // Right-click again; an outside click on the search field dismisses it too
+    // (a Settings click would open the settings panel and block later tests).
+    await sessionRow.click({ button: 'right' })
+    await item.waitFor({ timeout: 5_000 })
+    await page.getByPlaceholder('Search').click()
     await expect.poll(() => page.getByRole('menuitem', { name: 'Rename' }).count(), { timeout: 5_000 }).toBe(0)
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
@@ -600,19 +577,19 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
       }
       return await ungroupedRow.getAttribute('aria-expanded')
     }, { timeout: 5_000 }).toBe('true')
-    // Anchor on session rows (the rows carrying a session actions button),
+    // Anchor on session rows (the rows carrying the hover settle affordance),
     // not a positional index, and assert the single-stray assumption loudly
     // so a fixture gaining a second stray fails here instead of archiving
     // the wrong row. CSS attribute match, not getByRole: the button is
     // visually hidden until its row hovers, so the structural query is stable.
     const sessionRows = ungroupedSection.locator('[role="treeitem"]')
-      .filter({ has: page.locator('button[aria-label^="Session actions for "]') })
+      .filter({ has: page.locator('button[aria-label="Settle session"]') })
     await expect.poll(() => sessionRows.count(), { timeout: 10_000 }).toBe(1)
     const sessionRow = sessionRows.first()
     const rowTitle = await sessionRow.locator('[class*="title"]').innerText()
-    // Row menu: hover reveals the actions button; Archive session commits
+    // Row menu: right-click raises the context menu; Archive session commits
     // without a confirmation dialog (non-destructive: log + accounting stay).
-    await clickHoverAction(sessionRow, `Session actions for ${rowTitle}`)
+    await sessionRow.click({ button: 'right' })
     await page.getByRole('menuitem', { name: 'Archive session' }).click()
     // The row disappears on the archive-set echo; with no other visible
     // stray, the whole Ungrouped bucket withdraws.
@@ -649,8 +626,10 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
       .filter(workspace => workspace.title === 'xx')
     expect(matchingWorkspaces.map(workspace => workspace.path).sort())
       .toEqual([firstPath, secondPath].sort())
+    // Both rows exist as distinct Workspace tree rows (the old ellipsis
+    // action button is gone; rows are the stable anchor now).
     await expect.poll(
-      () => page.locator('button[aria-label="Workspace actions for xx"]').count(),
+      () => page.locator('[role="treeitem"][aria-expanded]').filter({ hasText: 'xx' }).count(),
       { timeout: 10_000 },
     ).toBe(2)
     expect(tripwire.pageErrors).toEqual([])

@@ -210,6 +210,57 @@
   gap: 8px;
 }
 
+/* Snoozed row: the trailing seat shows the wake countdown in the business blue. */
+.snoozeCountdown {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  color: var(--dsw-alias-state-business-primary);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 120ms var(--ds-ease-in-out);
+}
+
+/* Woke pill: amber return-ticket that dismisses on click; stays visible on
+   hover because the wake affordance lives in the row menu and the pill's own
+   click is the dismiss gesture. */
+.wokePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--dsw-alias-state-warn-label);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+.wokePill:hover,
+.wokePill:focus-visible {
+  background: var(--dsw-specific-sidebar-control-fill);
+}
+
+/* Snooze popover preset row: label plus the trailing wake-time column. */
+.snoozeRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.snoozeWhen {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
 .slot {
   flex: none;
   width: 16px;
@@ -311,7 +362,10 @@
 .sessionRow.menuOpen .cardStatus,
 .sessionRow:hover .sessionTrailing > .cardTime,
 .sessionRow:focus-within .sessionTrailing > .cardTime,
-.sessionRow.menuOpen .sessionTrailing > .cardTime {
+.sessionRow.menuOpen .sessionTrailing > .cardTime,
+.sessionRow:hover .snoozeCountdown,
+.sessionRow:focus-within .snoozeCountdown,
+.sessionRow.menuOpen .snoozeCountdown {
   opacity: 0;
 }
 
@@ -417,6 +471,47 @@
 .iconButton:hover,
 .iconButton:focus-visible {
   background: var(--dsw-specific-sidebar-control-fill);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Hover-seat quick actions (snooze clock, un-settle, wake) follow the
+   settle label: no fill, just a brighter glyph — the row's own hover
+   background already marks the area, and a fill under the near-edge
+   glyphs would read as clipped. Sits after .iconButton so the override
+   wins at equal specificity. */
+.quickAction:hover,
+.quickAction:focus-visible {
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+}
+
+/* The labeled Settle quick action (T3-adapted): the snooze clock sits first,
+   then this text-bearing settle button in the same hover seat. The right
+   padding stays near zero so the label's last letter lands where the
+   trailing status/time text ends (the seat edge the actions overlay), and
+   the clock rides right with the narrower button — alignment by padding,
+   never margin (parent-owned spacing rule). No hover fill: the label
+   brightens instead, so the tight right padding never reads as a clipped
+   background (the same trick T3 uses to keep irregular padding invisible). */
+.settleAction {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  padding: 0 2px 0 6px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--dsw-specific-sidebar-icon);
+  font: inherit;
+  font-size: 12px;
+  line-height: 24px;
+}
+
+.settleAction:hover,
+.settleAction:focus-visible {
   color: var(--dsw-alias-label-primary);
 }
 

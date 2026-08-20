@@ -3,8 +3,8 @@ import type {
   SessionId, SessionListState, SessionSummary, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
 import {
-  deriveAutoSettledSessionIds, deriveFlat, deriveGroups, deriveSearchResults, workspaceLabel, relativeTime,
-  UNGROUPED_KEY, UNGROUPED_LABEL,
+  deriveAutoSettledSessionIds, deriveFlat, deriveGroups, deriveSearchResults, deriveShelfSets,
+  workspaceLabel, relativeTime, UNGROUPED_KEY, UNGROUPED_LABEL,
 } from '../src/client/tree.ts'
 import { createWorkspaceViewStore } from '../src/client/stores.ts'
 
@@ -530,5 +530,56 @@ describe('relativeTime', () => {
     expect(relativeTime(now - 2 * 86_400_000, now)).toEqual({ unit: 'days', n: 2 })
     expect(relativeTime(now - 60 * 86_400_000, now)).toEqual({ unit: 'months', n: 2 })
     expect(relativeTime(0, now)).toEqual({ unit: 'years', n: 1 })
+  })
+  describe('deriveShelfSets', () => {
+    const day = 86_400_000
+    const now = 10 * day
+    const stale = summary('stale', now - 4 * day)
+    const active = summary('active', now - day)
+
+    it('unions inactivity and explicit settles, minus keep-active pins', () => {
+      const state = list(stale, active)
+      const auto = deriveShelfSets(state, now, 3, undefined, undefined, undefined)
+      expect([...auto.settledIds]).toEqual([stale.id])
+      const explicit = deriveShelfSets(state, now, 3, ['active'], undefined, undefined)
+      expect([...explicit.settledIds].sort()).toEqual([stale.id, active.id].sort())
+      // Un-settling the auto-settled row pins it out of the shelf.
+      const pinned = deriveShelfSets(state, now, 3, undefined, ['stale'], undefined)
+      expect([...pinned.settledIds]).toEqual([])
+      // A stale pin suppresses even an explicit settle (defensive default; the
+      // UI never produces both — settling again clears the pin).
+      const both = deriveShelfSets(state, now, 3, ['stale'], ['stale'], undefined)
+      expect([...both.settledIds]).toEqual([])
+    })
+
+    it('separates still-snoozed rows from woke rows and wakes blocked-on-you work early', () => {
+      const snoozed = summary('snoozed', now - day)
+      const woke = summary('woke', now - day)
+      const blocked = summary('blocked', now - day)
+      const pending = { ...summary('pending-snoozed', now - day), pendingInteraction: 'question' as const }
+      const state = list(snoozed, woke, blocked, pending)
+      const shelf = deriveShelfSets(state, now, 3, undefined, undefined, {
+        snoozed: now + 3_600_000,
+        woke: now - 60_000,
+        blocked: now + 3_600_000,
+        'pending-snoozed': now + 3_600_000,
+        ghost: now + 3_600_000,
+      })
+      expect(shelf.snoozedUntil).toEqual({ snoozed: now + 3_600_000, blocked: now + 3_600_000 })
+      expect([...shelf.wokeIds]).toEqual([woke.id, pending.id])
+    })
+
+    it('keeps ghost ids out of every shelf set (visibility filtering stays downstream)', () => {
+      const blank = { ...summary('blank', now - 8 * day), blank: true }
+      const state = list(stale, blank)
+      const shelf = deriveShelfSets(state, now, 3, ['stale', 'blank', 'ghost'], undefined, {
+        blank: now + 60_000,
+        ghost: now + 60_000,
+      })
+      // Listed rows only: ghost ids never enter the sets. Blank rows stay
+      // listed (deriveFlat/deriveGroups apply sessionVisible downstream).
+      expect([...shelf.settledIds].sort()).toEqual([stale.id, blank.id].sort())
+      expect(shelf.snoozedUntil).toEqual({ blank: now + 60_000 })
+    })
   })
 })

@@ -138,6 +138,11 @@ function clickWorkspace(label: string): void {
   fireEvent.click(workspaceRow(label))
 }
 
+/** The row menu opens on right-click now (no ellipsis trigger). */
+function openWorkspaceMenu(label: string): void {
+  fireEvent.contextMenu(workspaceRow(label), { clientX: 10, clientY: 10 })
+}
+
 describe('WorkspaceBrowser', () => {
   it('collapses stale Sessions into a persisted settled shelf and reveals them on demand', () => {
     const day = 86_400_000
@@ -436,7 +441,7 @@ describe('WorkspaceBrowser', () => {
       archiveSession,
     })
     clickWorkspace('alpha')
-    fireEvent.click(screen.getByRole('button', { name: '会话“gone-s”的操作' }))
+    fireEvent.contextMenu(screen.getByText('gone-s').closest('[role="treeitem"]') as HTMLElement)
     fireEvent.click(screen.getByRole('menuitem', { name: '归档会话' }))
     expect(archiveSession).toHaveBeenCalledWith(sid('gone-s'))
 
@@ -459,7 +464,7 @@ describe('WorkspaceBrowser', () => {
         archiveSession,
       })
       clickWorkspace('alpha')
-      fireEvent.click(screen.getByRole('button', { name: '会话“alpha-s”的操作' }))
+      fireEvent.contextMenu(screen.getByText('alpha-s').closest('[role="treeitem"]') as HTMLElement)
       fireEvent.click(screen.getByRole('menuitem', { name: '归档会话' }))
       await Promise.resolve()
       await Promise.resolve()
@@ -509,7 +514,9 @@ describe('WorkspaceBrowser', () => {
     })
     // The loose session's group is UNGROUPED_KEY: expanded by the effect.
     expect(screen.getByText('loose')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: '工作区“未分组”的操作' })).toBeNull()
+    // The ungrouped bucket has no workspace actions: right-clicking it opens nothing.
+    fireEvent.contextMenu(workspaceRow('未分组'), { clientX: 10, clientY: 10 })
+    expect(screen.queryByRole('menu')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '在“未分组”中新建会话' }))
     expect(startSession).not.toHaveBeenCalled()
   })
@@ -1095,7 +1102,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha'), workspace('beta', [], 'Beta')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    openWorkspaceMenu('Alpha')
     fireEvent.click(screen.getByRole('menuitem', { name: '重命名' }))
     const input = screen.getByLabelText<HTMLInputElement>('工作区名称')
     expect(input.value).toBe('Alpha')
@@ -1124,7 +1131,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    openWorkspaceMenu('Alpha')
     fireEvent.click(screen.getByRole('menuitem', { name: '重命名' }))
     const input = screen.getByLabelText<HTMLInputElement>('工作区名称')
     // Enter with a blocked draft (unchanged) does nothing.
@@ -1148,7 +1155,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       renameWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    openWorkspaceMenu('Alpha')
     fireEvent.click(screen.getByRole('menuitem', { name: '重命名' }))
     fireEvent.change(screen.getByLabelText('工作区名称'), { target: { value: 'Other' } })
     fireEvent.click(screen.getByRole('button', { name: '重命名' }))
@@ -1162,7 +1169,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', ['session'], 'Alpha')])),
       deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    openWorkspaceMenu('Alpha')
     fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
     const dialog = screen.getByRole('dialog', { name: '删除工作区' })
     expect(dialog.textContent).toContain('将把“Alpha”从工作区列表中移除')
@@ -1197,7 +1204,7 @@ describe('WorkspaceBrowser', () => {
       useWorkspaces: hook(workspaceState([workspace('alpha', [], 'Alpha')])),
       deleteWorkspace,
     })
-    fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+    openWorkspaceMenu('Alpha')
     fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
     fireEvent.click(screen.getByRole('button', { name: '删除工作区' }))
     await waitFor(() => { expect(screen.getByRole('alert').textContent).toBe('storage unavailable') })
@@ -1215,7 +1222,7 @@ describe('WorkspaceBrowser', () => {
       deleteWorkspace,
     })
     const open = () => {
-      fireEvent.click(screen.getByRole('button', { name: '工作区“Alpha”的操作' }))
+      openWorkspaceMenu('Alpha')
       fireEvent.click(screen.getByRole('menuitem', { name: '删除工作区' }))
     }
     open()
@@ -1237,5 +1244,115 @@ describe('WorkspaceBrowser', () => {
     fireEvent.change(screen.getByPlaceholderText('搜索'), { target: { value: 'needle' } })
     const row = screen.getByText('Needle A').closest('[role="treeitem"]') as HTMLElement
     expect(row.hasAttribute('draggable')).toBe(false)
+  })
+
+  it('settles a Session from the hover quick action into the shelf, durably across remount', () => {
+    const b = mount({
+      useSessions: hook(sessionState([summary('manual-s', 1)])),
+      useWorkspaces: hook(workspaceState([workspace('alpha', ['manual-s'])])),
+    })
+    act(() => { b.store.actions.setGroupBy('flat') })
+    fireEvent.click(screen.getByRole('button', { name: '结算会话' }))
+    // The row recedes into the settled shelf; the store records the override.
+    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['manual-s'])
+    expect(screen.queryByText('manual-s')).toBeNull()
+    expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
+    b.view.unmount()
+    // The override persists: a fresh mount shelves the Session without the minute clock.
+    mount({
+      useSessions: hook(sessionState([summary('manual-s', 1)])),
+      useWorkspaces: hook(workspaceState([workspace('alpha', ['manual-s'])])),
+    })
+    expect(screen.queryByText('manual-s')).toBeNull()
+    expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
+  })
+
+  it('un-settles an auto-settled row back into the active list and pins it there', () => {
+    const day = 86_400_000
+    const now = Date.now()
+    const stale = summary('stale-s', now - 4 * day)
+    const b = mount({
+      useSessions: hook(sessionState([stale])),
+      useSettlement: settlement(3),
+      useWorkspaces: hook(workspaceState([workspace('alpha', ['stale-s'])])),
+    })
+    act(() => { b.store.actions.setGroupBy('flat') })
+    // Auto-settled: hidden behind the shelf until it is expanded.
+    expect(screen.queryByText('stale-s')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '已结（1）' }))
+    const row = screen.getByText('stale-s').closest('[role="treeitem"]') as HTMLElement
+    fireEvent.contextMenu(row, { clientX: 10, clientY: 10 })
+    fireEvent.click(screen.getByRole('menuitem', { name: '取消结算' }))
+    // The keep-active pin suppresses auto-settlement on the next projection.
+    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual(['stale-s'])
+    expect(screen.getByText('stale-s')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '已结（1）' })).toBeNull()
+  })
+
+  it('snoozes a Session into its own shelf, wakes it at the deadline, and dismisses the pill', () => {
+    vi.useFakeTimers()
+    try {
+      const now = new Date('2026-08-19T12:00:00.000Z').getTime()
+      vi.setSystemTime(now)
+      const b = mount({
+        useSessions: hook(sessionState([summary('nap-s', 1)])),
+        useWorkspaces: hook(workspaceState([workspace('alpha', ['nap-s'])])),
+      })
+      act(() => { b.store.actions.setGroupBy('flat') })
+      // Snooze five minutes ahead through the context menu's preset submenu.
+      fireEvent.contextMenu(screen.getByText('nap-s').closest('[role="treeitem"]') as HTMLElement)
+      fireEvent.mouseEnter(screen.getByRole('menuitem', { name: '稍后提醒' }))
+      act(() => { b.store.actions.snoozeSession('nap-s', now + 300_000) })
+      fireEvent.keyDown(document, { key: 'Escape' })
+      // Hidden from the active list; the collapsed Snoozed shelf counts it.
+      expect(screen.queryByText('nap-s')).toBeNull()
+      const snoozedToggle = screen.getByRole('button', { name: '稍后（1）' })
+      fireEvent.click(snoozedToggle)
+      expect(screen.getByText('5分钟')).toBeTruthy()
+
+      // The wake deadline fires the exact re-render: the row returns with Woke.
+      act(() => { vi.advanceTimersByTime(300_000) })
+      expect(screen.getByText('nap-s')).toBeTruthy()
+      const pill = screen.getByRole('button', { name: '关闭唤醒提示' })
+      expect(pill.textContent).toContain('已唤醒')
+      fireEvent.click(pill)
+      expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({})
+      expect(screen.queryByText('已唤醒')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('settles and snoozes on a rehydrated store that predates the shelf override fields', () => {
+    // v6 blobs have no shelf fields: the mutators must initialize lazily.
+    localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({
+      workspaceScope: null, groupBy: 'flat', orderBy: 'updated', groupExpansion: {},
+      settledShelfExpanded: false, sessionOrderByAccount: {}, sessionUpdatedAtByAccount: {},
+    }))
+    const b = mount({
+      useSessions: hook(sessionState([summary('old-s', 1)])),
+      useWorkspaces: hook(workspaceState([workspace('alpha', ['old-s'])])),
+    })
+    fireEvent.click(screen.getByRole('button', { name: '结算会话' }))
+    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['old-s'])
+    // Idempotent: a second settle skips the duplicate push.
+    act(() => { b.store.actions.settleSession('old-s') })
+    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['old-s'])
+    // Un-settle filters the explicit list and pins the row.
+    act(() => { b.store.actions.unsettleSession('old-s') })
+    // Idempotent: a second un-settle skips the duplicate pin.
+    act(() => { b.store.actions.unsettleSession('old-s') })
+    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual(['old-s'])
+    // Settling again filters the pin out and re-homes the row.
+    act(() => { b.store.actions.settleSession('old-s') })
+    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
+    // Snoozing filters both settle sets and hides the row until the wake.
+    act(() => { b.store.actions.unsettleSession('old-s') })
+    act(() => { b.store.actions.snoozeSession('old-s', Date.now() + 60_000) })
+    expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({ 'old-s': expect.any(Number) })
+    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual([])
+    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
+    act(() => { b.store.actions.wakeSession('old-s') })
+    expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({})
   })
 })
