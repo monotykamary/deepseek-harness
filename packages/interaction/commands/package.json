@@ -54,8 +54,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-brand": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
     "@monotykamary/dsh-scope": "workspace:^",
     "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-typert-protocol": "workspace:^",
@@ -66,8 +68,10 @@
   },
   "devDependencies": {
     "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-brand": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
     "@monotykamary/dsh-scope": "workspace:^",
     "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-typert-protocol": "workspace:^",

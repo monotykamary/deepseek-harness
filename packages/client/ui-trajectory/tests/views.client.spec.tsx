@@ -11,7 +11,7 @@ import { Context } from '@monotykamary/cordis'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createElement, type ComponentProps, type FC, type ReactNode } from 'react'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import {
   ConversationEventRegistry, ConversationViewRegistry, createSnapshotStore,

@@ -12,7 +12,7 @@ The fork was 111 commits behind upstream deepseek-ai/deepseek-harness (through r
 
 Merge upstream/master into master, adapting conflicts to the fork's stance:
 
-- Where the fork side of a conflict was only the rescope rename, take upstream's content and re-apply `@deepseek-ai` → `@monotykamary`. The rename is mechanical (the rescope commit is a 1:1 substitution; GitHub URLs stay unchanged).
+- Where the fork side of a conflict was only the rescope rename, take upstream's content and re-apply `@monotykamary` → `@monotykamary`. The rename is mechanical (the rescope commit is a 1:1 substitution; GitHub URLs stay unchanged).
 - Adopt upstream's superseding fixes wholesale: the controlled-prompt PROMPT_COMMAND self-healing, the ReplayEnvelope replay-state redesign (which subsumes the fork's earlier max-tokens replay-drop fix), and the stdin_read no-marker fallback. Delete fork tests that encoded the superseded replay design.
 - Merge fork features by hand where both sides changed the file: api-proxy.ts keeps the SSO identity.mayAccess partition checks (reconstructed via merge-file after an over-broad conflict resolution), docs-pages.yml keeps DOCS_REPOSITORY_REF but not the removed DSH_TELEMETRY_DISABLED seam.
 - Reconcile the lockfile with the merged package manifests (node-pty 1.2.0-beta.15), re-record translation-pairing hashes, and let the gates regenerate catalogs.

@@ -50,20 +50,17 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dependencies": {
-    "react": "^18.2.0"
-  },
   "peerDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-tool-workflow": "workspace:^",
     "@monotykamary/dsh-workflow": "workspace:^",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
@@ -77,6 +74,10 @@
     "@monotykamary/dsh-tool-workflow": "workspace:^",
     "@monotykamary/dsh-workflow": "workspace:^",
     "@types/react": "~18.3.1",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "react": "^18.2.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
   }
 }

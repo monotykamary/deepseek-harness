@@ -45,17 +45,14 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "react": "^18.2.0"
-  },
   "peerDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
@@ -66,12 +63,16 @@
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "react": "^18.2.0"
   },
   "files": [
     "lib/index.js",
     "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
-  ]
+  ],
+  "dependencies": {
+    "react": "^18.2.0"
+  }
 }

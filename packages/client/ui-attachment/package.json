@@ -22,14 +22,30 @@
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
     },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@monotykamary/dsh-client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
   "license": "MIT",
   "dependencies": {
+    "clsx": "^2.0.0",
     "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "clsx": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -37,15 +53,26 @@
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
-    "@types/react-dom": "~18.3.0"
+    "@types/react-dom": "~18.3.0",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@monotykamary/dsh-attachment": "workspace:^"
   },
   "files": [
     "lib/index.js",
     "lib/invariant.js",
+    "lib/client.js",
     "lib/types/**/*.d.ts"
   ],
   "peerDependencies": {
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-invariants": "workspace:^"
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^"
   }
 }

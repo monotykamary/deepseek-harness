@@ -46,6 +46,9 @@
   "dependencies": {
     "@monotykamary/dsh-cmdline": "workspace:^",
     "@monotykamary/dsh-code-runtime-worker-thread": "workspace:^",
+    "@monotykamary/dsh-storage": "workspace:^",
+    "@monotykamary/dsh-storage-domain": "workspace:^",
+    "@monotykamary/dsh-storage-json": "workspace:^",
     "@monotykamary/schemastery": "workspace:^",
     "commander": "^15.0.0"
   },

@@ -109,7 +109,13 @@ export function applyEntryPatches(
 
     const target = entryMap.get(id)
     if (!target) {
-      warn('patch: entry %C not found', id)
+      // A pure disable of an absent row is the "disable if present" idiom:
+      // one patch list serves several compositions, and a row that exists on
+      // another surface must be off here without making the absence a
+      // diagnostic. Any other patch for an absent row is a real mistake.
+      const pureDisable = Object.keys(overrides).every(key => key === 'disabled')
+        && Boolean(overrides.disabled)
+      if (!pureDisable) warn('patch: entry %C not found', id)
       continue
     }
 

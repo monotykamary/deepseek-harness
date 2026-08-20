@@ -14,6 +14,7 @@ const t: SidebarRootComponentProps['t'] = key => (en as Record<string, string>)[
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllEnvs()
   vi.useRealTimers()
 })
 
@@ -31,6 +32,8 @@ function mountShell({
   let regionOwner: SidebarSectionOwnerProps | undefined
   let settingsOwner: SidebarSettingsOwnerProps | undefined
   let footerActionOwner: SidebarFooterActionOwnerProps | undefined
+  const brandMark = <span data-testid="custom-brand-mark">M</span>
+  const brandName = <span data-testid="custom-brand-name">Custom Brand</span>
   let current = { collapsed, width }
   const root = () => (
     <SidebarRoot
@@ -43,6 +46,8 @@ function mountShell({
         key: string,
         owner: SidebarFooterActionOwnerProps | SidebarSectionOwnerProps | SidebarSettingsOwnerProps,
       ) => {
+        if (key === 'sidebar.brand.mark') return brandMark
+        if (key === 'sidebar.brand.name') return brandName
         if (key === 'sidebar.settings') {
           settingsOwner = owner
           return <div data-testid="settings-seat" data-wide={owner.wide} />
@@ -82,9 +87,13 @@ function mountShell({
 describe('SidebarRoot shell', () => {
   it('routes the New Session row and column toggle while the brand remains identity-only', () => {
     const b = mountShell()
-    const starter = screen.getByRole('button', { name: 'New session' })
-    fireEvent.click(starter)
-    expect(b.startSession).toHaveBeenCalledOnce()
+    expect(screen.getByTestId('custom-brand-mark')).toBeTruthy()
+    expect(screen.getByTestId('custom-brand-name')).toBeTruthy()
+    // Expanded, both the wordmark and the capsule start a session.
+    const starters = screen.getAllByRole('button', { name: 'New session' })
+    expect(starters).toHaveLength(2)
+    for (const button of starters) fireEvent.click(button)
+    expect(b.startSession).toHaveBeenCalledTimes(2)
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(b.toggleSidebar).toHaveBeenCalledOnce()
   })

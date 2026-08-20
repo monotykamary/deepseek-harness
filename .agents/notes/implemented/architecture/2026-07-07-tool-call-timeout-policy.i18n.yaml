@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-07-tool-call-timeout-policy.md
-2026-07-07-tool-call-timeout-policy.md: f59de1cfe63f080d98e73df06ecedca6913f8328
-2026-07-07-tool-call-timeout-policy.zh.md: 76de7462c73b695e81c31c289aed8b86788aab6f
+2026-07-07-tool-call-timeout-policy.md: 90806a76c5299fb32eb321f2cf354f68aff86dc5
+2026-07-07-tool-call-timeout-policy.zh.md: 7bc1210ca9246aca84fde48f8ce63f82dfac74c8

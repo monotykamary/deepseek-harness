@@ -12,6 +12,7 @@ import type { HostObservable } from '@monotykamary/dsh-client-ui-slots'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 // Type-only: pulls the settingsScope service Context merge.
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
+import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from './contract/slots.ts'
@@ -50,7 +51,7 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'connection', 'remote', 'settingsScope',
+  'slots', 'sessions', 'workspaces', 'locale', 'connection', 'settingsScope',
 ]
 
 /**
@@ -61,6 +62,8 @@ export const inject = [
  */
 export function apply(ctx: ClientContext): void {
   const settlement = ctx.settingsScope.bind<WorkspaceSettings>({ namespace: WORKSPACE_SETTINGS_NAMESPACE })
+  const connection = ctx.get('connection') as ConnectionHandle
+  const hostDescription = connection.hostDescription
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace: dictionaries')
 
   const searchSessions: WorkspaceBrowserInjected['searchSessions'] = async (query, signal) => {
@@ -109,7 +112,7 @@ export function apply(ctx: ClientContext): void {
       await ctx.workspaces.insertSessionBefore(workspaceId, sessionId, beforeSessionId)
     },
     createWorkspace: input => ctx.workspaces.create(input),
-    hooks: { directoryFlow: browserFlowSource, settlement },
+    hooks: { directoryFlow: browserFlowSource, settlement, hostDescription },
   })
   const pickerInjected = (): WorkspacePickerInjected => ({
     createWorkspace: input => ctx.workspaces.create(input),

@@ -45,10 +45,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-client-ui-theme": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {

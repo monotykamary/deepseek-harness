@@ -42,6 +42,7 @@
     "@monotykamary/cordis": "workspace:^"
   },
   "dependencies": {
+    "@monotykamary/dsh-pwsh-local": "workspace:^",
     "@monotykamary/schemastery": "workspace:^"
   },
   "devDependencies": {

@@ -50,12 +50,14 @@
     "@monotykamary/dsh-api-remotes": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-commands": "workspace:^",
     "@monotykamary/dsh-goal": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-typert-protocol": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
@@ -73,7 +75,9 @@
     "@types/react": "~18.3.1",
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-typert-protocol": "workspace:^"
   },
   "files": [
     "lib/index.js",

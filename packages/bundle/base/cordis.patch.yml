@@ -147,13 +147,22 @@
         mode: !!js process.env.DSH_PERMISSION_MODE ?? 'workspace-write'
         workspaceRoot: !!js process.cwd()
 
-    # One exact-Agent terminal registry and shell backend serve model tools,
-    # browser attachments, and other Consumers across every preset.
+    # One exact-Agent terminal registry and per-platform shell backends serve
+    # model tools, browser attachments, and other Consumers across every
+    # preset. Exactly one backend mounts per host: the bash stack gates off
+    # win32 and its pwsh twin gates off POSIX.
     - id: terminals
       name: '@monotykamary/dsh-terminal'
 
     - id: terminal-bash
       name: '@monotykamary/dsh-terminal-bash'
+      disabled: !!js process.platform === 'win32'
+
+    - id: terminal-pwsh
+      name: '@monotykamary/dsh-terminal-bash'
+      disabled: !!js process.platform !== 'win32'
+      config:
+        shellDialect: pwsh
 
     - id: bash-sandbox
       name: '@monotykamary/dsh-bash-sandbox'

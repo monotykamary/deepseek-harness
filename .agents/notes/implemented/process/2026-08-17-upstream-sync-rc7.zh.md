@@ -12,7 +12,7 @@ Status: implemented
 
 将 upstream/master 合并进 master，按 fork 立场适配冲突：
 
-- 冲突中 fork 一侧仅为 rescope 改名的，取上游内容并重新应用 `@deepseek-ai` → `@monotykamary`。该改名是机械替换（rescope 提交为 1:1 替换；GitHub URL 保持不变）。
+- 冲突中 fork 一侧仅为 rescope 改名的，取上游内容并重新应用 `@monotykamary` → `@monotykamary`。该改名是机械替换（rescope 提交为 1:1 替换；GitHub URL 保持不变）。
 - 整体采纳上游的替代性修复：受控 PROMPT_COMMAND 自愈、ReplayEnvelope 重放状态重构（涵盖 fork 早先的 max-tokens 重放丢弃修复）、无结束标记的 stdin_read 回退。删除编码了被替代设计（扁平重放状态）的 fork 测试。
 - 双方都改动的文件手工合并 fork 特性：api-proxy.ts 保留 SSO identity.mayAccess 会话分区检查（在过宽的冲突解法后经 merge-file 重建）；docs-pages.yml 保留 DOCS_REPOSITORY_REF 但不再引入已移除的 DSH_TELEMETRY_DISABLED 开关。
 - 用合并后的包清单重建锁文件（node-pty 1.2.0-beta.15），重新记录翻译配对哈希，并由门禁重新生成目录。

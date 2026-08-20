@@ -1,6 +1,6 @@
-import { clientLibrary } from '../tsdown.client.ts'
+import { staticLinked } from '../tsdown.client.ts'
 
-export default clientLibrary(
+export default staticLinked(
   '@monotykamary/dsh-client-ui-slots',
   ['lib/types/index.js', 'lib/types/invariant.js'],
 )

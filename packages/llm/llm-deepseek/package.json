@@ -32,6 +32,7 @@
   ],
   "license": "MIT",
   "peerDependencies": {
+    "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-credentials": "workspace:^",
     "@monotykamary/dsh-launch-environment": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
@@ -46,6 +47,7 @@
     "@monotykamary/schemastery": "workspace:^"
   },
   "devDependencies": {
+    "@monotykamary/dsh-attachment": "workspace:^",
     "@monotykamary/dsh-credentials": "workspace:^",
     "@monotykamary/dsh-launch-environment": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",

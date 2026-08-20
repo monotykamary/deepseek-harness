@@ -47,26 +47,30 @@
     "@monotykamary/dsh-api-remotes": "workspace:^",
     "@monotykamary/dsh-client-connection": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-settings": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-api-remotes": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-test-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-settings": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "@monotykamary/dsh-client-connection": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "dependencies": {
-    "@monotykamary/dsh-settings": "workspace:^",
-    "@monotykamary/schemastery": "workspace:^"
+    "@monotykamary/schemastery": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "files": [
     "lib/index.js",

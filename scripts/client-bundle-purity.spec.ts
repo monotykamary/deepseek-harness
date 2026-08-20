@@ -4,7 +4,7 @@
  */
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
-import { CLIENT_EXTERNALS, clientBundle } from '../packages/client/tsdown.client.ts'
+import { clientBundle, requestedExternals } from '../packages/client/tsdown.client.ts'
 
 type ResolveId = (source: string) => null | { id: string; external: boolean }
 
@@ -14,7 +14,10 @@ interface CssModulePlugin {
   load?: (this: { addWatchFile: (id: string) => void }, id: string) => Promise<unknown>
 }
 
-function clientConfigs(id = '@monotykamary/dsh-client-test') {
+/** A representative dynamic bundle using the shared client baseline. */
+const REQUESTING_PACKAGE = '@monotykamary/dsh-client-ui-conversation'
+
+function clientConfigs(id = REQUESTING_PACKAGE) {
   return clientBundle(id, ['lib/types/index.js', 'lib/types/invariant.js'])(
     { env: { DSH_BUILD_FACE: 'client' } },
   ).filter(config => config.platform === 'browser')
@@ -36,10 +39,10 @@ function clientSourceMapPath(packagePath: string): string {
   return fileURLToPath(new URL(`../packages/${packagePath}/lib/client.js.map`, import.meta.url))
 }
 
-function purityResolveId(): ResolveId {
+function purityResolveId(id = REQUESTING_PACKAGE): ResolveId {
   // libEntry is spelled at every call site (no default) so the
   // package-invariants text check can see the invariant entry per package.
-  const configs = clientConfigs()
+  const configs = clientConfigs(id)
   const plugins = (configs[0] as { plugins: { name: string; resolveId?: unknown }[] }).plugins
   const gate = plugins.find(p => p.name === 'dsh-client-bundle-purity')
   if (gate?.resolveId === undefined) throw new Error('purity plugin missing from client config')
@@ -59,15 +62,16 @@ function cssModulePlugin(): CssModulePlugin {
 describe('client bundle purity gate', () => {
   const resolveId = purityResolveId()
 
-  it('leaves platform table entries and non-scoped specifiers alone', () => {
+  it('leaves default externals and non-scoped specifiers alone', () => {
     expect(resolveId('@monotykamary/dsh-client-ui-slots')).toBeNull()
-    expect(resolveId('@monotykamary/dsh-client-web-react')).toBeNull()
     expect(resolveId('@monotykamary/dsh-client-ui-primitives')).toBeNull()
+    expect(resolveId('@monotykamary/dsh-client-runtime/client')).toBeNull()
     expect(resolveId('react')).toBeNull()
     expect(resolveId('zod')).toBeNull()
   })
 
-  it('rejects retired table entries (web-react/store left the 8-entry seed)', () => {
+  it('rejects the retired web-react platform package', () => {
+    expect(() => resolveId('@monotykamary/dsh-client-web-react')).toThrow(/purity/)
     expect(() => resolveId('@monotykamary/dsh-client-web-react/store')).toThrow(/purity/)
   })
 
@@ -89,17 +93,49 @@ describe('client bundle purity gate', () => {
     expect(() => resolveId('@monotykamary/dsh-client-web')).toThrow(/purity/)
   })
 
-  it('throws on cross-plugin value imports — bare plugin names and /client subpaths alike (the rewrite arm is gone)', () => {
+  it('throws on cross-plugin value imports — bare plugin names and /client subpaths alike', () => {
     expect(() => resolveId('@monotykamary/dsh-client-connection')).toThrow(/purity/)
     expect(() => resolveId('@monotykamary/dsh-client-runtime')).toThrow(/purity/)
     expect(() => resolveId('@monotykamary/dsh-client-ui-layout/client')).toThrow(/purity/)
   })
 
-  it('carries exactly one documented temporary exemption: runtime/client (store engine pending rehoming)', () => {
+  it('admits the parser-preloaded runtime for every dynamic bundle', () => {
     expect(resolveId('@monotykamary/dsh-client-runtime/client')).toBeNull()
-    const clientChannels = CLIENT_EXTERNALS.filter(
-      entry => entry.startsWith('@monotykamary/') && entry.endsWith('/client'))
-    expect(clientChannels).toEqual(['@monotykamary/dsh-client-runtime/client'])
+    const withoutRequest = purityResolveId('@monotykamary/dsh-client-ui-goal')
+    expect(withoutRequest('@monotykamary/dsh-client-runtime/client')).toBeNull()
+  })
+
+  it('externalizes the baseline independently of each package manifest', () => {
+    const requesting = clientConfigs()[0]?.deps as { neverBundle: (specifier: string) => boolean }
+    const plain = clientConfigs('@monotykamary/dsh-client-connection')[0]?.deps as {
+      neverBundle: (specifier: string) => boolean
+    }
+
+    expect(requesting.neverBundle('react')).toBe(true)
+    expect(requesting.neverBundle('zod')).toBe(false)
+    expect(plain.neverBundle('react')).toBe(true)
+    expect(plain.neverBundle('@monotykamary/dsh-client-runtime/client')).toBe(true)
+  })
+})
+
+describe('client bundle module requests', () => {
+  it('requests what the declaration lists', () => {
+    const requests = requestedExternals('@monotykamary/dsh-client-fixture', {
+      external: ['react', 'react/jsx-runtime', '@monotykamary/dsh-client-ui-slots'],
+    })
+
+    expect([...requests].sort()).toEqual([
+      '@monotykamary/dsh-client-ui-slots', 'react', 'react/jsx-runtime',
+    ])
+  })
+
+  it('requests nothing when the declaration is absent', () => {
+    expect(requestedExternals('@monotykamary/dsh-client-fixture', {}).size).toBe(0)
+  })
+
+  it('rejects a malformed declaration instead of reading past it', () => {
+    expect(() => requestedExternals('@monotykamary/dsh-client-fixture', { external: 'react' }))
+      .toThrow(/dsh\.client\.external must be a string array/)
   })
 })
 

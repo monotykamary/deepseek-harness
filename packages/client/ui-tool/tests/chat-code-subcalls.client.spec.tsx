@@ -20,7 +20,7 @@ import type {
   ConversationSnapshot, RunningToolCall, SessionId, SessionListState,
   ToolCallBlock, ToolResultNode, WorkspaceListState,
 } from '@monotykamary/dsh-client-runtime/client'
-import { createSlotRenderer } from '@monotykamary/dsh-client-web-react'
+import { createSlotRenderer } from '@monotykamary/dsh-client-test-runtime'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import type { PropsRenderSlots } from '@monotykamary/dsh-client-ui-slots'
 import { apply as applyConversation, inject as injectConversation } from '@monotykamary/dsh-client-ui-conversation/client'
@@ -116,6 +116,7 @@ async function bench(snapshot: ConversationSnapshot) {
     phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined,
   })
   const scoped = { send: vi.fn(async () => {}), cancel: vi.fn(async () => {}) }
+  const layout = { openDetails: vi.fn(), closeDetails: vi.fn() }
   const workbench = { open: vi.fn(), close: vi.fn(), show: vi.fn(), registerPresentation: vi.fn(() => () => {}) }
   // Provide-channel contributions land in this bundle the way the runtime
   // materializes them; the renderer host serves it through provideInfo.
@@ -158,7 +159,12 @@ async function bench(snapshot: ConversationSnapshot) {
   }
   ctx.provide('workspaces', workspaces)
   ctx.provide('workbench', workbench)
-  ctx.provide('connection', { api: { settings: {} }, isLoopback: false } as never)
+  ctx.provide('layout', layout)
+  ctx.provide('connection', {
+    api: { settings: {} },
+    isLoopback: false,
+    hostDescription: { getSnapshot: () => undefined, subscribe: () => () => {} },
+  } as never)
   // ui-theme's Appearance row binds a durable scope through these two.
   ctx.provide('remote', { $on: () => () => {} } as never)
   ctx.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)

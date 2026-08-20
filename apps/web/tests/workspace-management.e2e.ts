@@ -51,8 +51,9 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     const dialog = page.getByRole('dialog', { name: 'Select Workspace Directory' })
     await dialog.waitFor({ timeout: 10_000 })
     await dialog.getByRole('button', { name: 'Edit path' }).click()
-    await dialog.getByLabel('Edit path').fill(path)
-    await dialog.getByLabel('Edit path').press('Enter')
+    const pathInput = dialog.locator('input[aria-label="Edit path"]')
+    await pathInput.fill(path)
+    await pathInput.press('Enter')
     return dialog
   }
 
@@ -384,7 +385,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     // the shipped flat preference through the same persisted store and
     // verifies both the rendering and the reload round-trip.
     await page.evaluate(() => {
-      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}')
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}') as Record<string, unknown>
       localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'flat' }))
     })
     const warningStart = tripwire.warnings.length
@@ -404,7 +405,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 15_000 }).toBe(0)
     // Restore the grouped baseline for inter-spec hygiene.
     await page.evaluate(() => {
-      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}')
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}') as Record<string, unknown>
       localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'workspace' }))
     })
     await page.reload({ waitUntil: 'load' })

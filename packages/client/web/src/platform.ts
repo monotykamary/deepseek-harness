@@ -8,10 +8,12 @@
 export const PLATFORM_MODULES = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', '@monotykamary/cordis',
   '@monotykamary/dsh-client-ui-slots',
-  '@monotykamary/dsh-client-web-react',
   '@monotykamary/dsh-client-ui-primitives',
-  '@monotykamary/dsh-client-ui-attachment',
-  '@monotykamary/dsh-client-schema-form',
+] as const
+
+/** Client-bundle specifiers whose factories the parser preloads before the shell starts. */
+export const PRELOADED_CLIENT_EXTERNALS = [
+  '@monotykamary/dsh-client-runtime/client',
 ] as const
 
 /** One platform module specifier (a seed-table key). */

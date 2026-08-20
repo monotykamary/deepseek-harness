@@ -756,7 +756,6 @@ export function render(): string {
   )
     ? collectClaudeDistribution()
     : undefined
-
   const nonPermissiveDev = devDeps.filter(dep => !isPermissive(dep.license))
   // A copyleft license reaching a shipped surface is a distribution decision,
   // not a rendering detail; the notices cannot quietly absorb it.

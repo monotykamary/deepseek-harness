@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { createSnapshotStore } from '@monotykamary/dsh-client-runtime/client'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import type { RunningToolCall, SessionId, SessionListState, ToolResultNode } from '@monotykamary/dsh-client-runtime/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'

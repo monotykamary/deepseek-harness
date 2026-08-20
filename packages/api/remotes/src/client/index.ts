@@ -8,6 +8,8 @@ import pluginInventoryRemote from '@monotykamary/dsh-host-plugin-inventory/remot
 import workspaceFilesRemote from '@monotykamary/dsh-host-workspace-files/remote'
 import messageFeedbackRemote from '@monotykamary/dsh-message-feedback/remote'
 import type { TypertClientRemote } from '@monotykamary/dsh-typert-protocol'
+import fileReferencesRemote from '@monotykamary/dsh-file-reference/remote'
+import sessionReferencesRemote from '@monotykamary/dsh-session-reference/remote'
 
 export type { TypertClientRemote as ClientRemote } from '@monotykamary/dsh-typert-protocol'
 export type { PluginInventorySnapshot } from '@monotykamary/dsh-host-plugin-inventory/types'
@@ -21,6 +23,8 @@ export type {} from '@monotykamary/dsh-goal/remote'
 export type {} from '@monotykamary/dsh-host-plugin-inventory/remote'
 export type {} from '@monotykamary/dsh-host-workspace-files/remote'
 export type {} from '@monotykamary/dsh-message-feedback/remote'
+export type {} from '@monotykamary/dsh-file-reference/remote'
+export type {} from '@monotykamary/dsh-session-reference/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
 // compilation face `TypertRemoteEvent` is `never` and every `$on` call fails.
 export type { ApiRemoteForwardedEvent } from '../types.ts'
@@ -93,6 +97,10 @@ export type {
 // reason: a Client contribution names what it sends without importing a Host
 // package, and this assembly is where both planes legitimately meet.
 export type { JsonValue } from '@monotykamary/dsh-session/types'
+// Reference-discovery result vocabulary for the fileReferences and
+// sessionReferenceResolver namespaces.
+export type { FileReferenceCandidate } from '@monotykamary/dsh-file-reference/types'
+export type { SessionReferenceMentionCandidate } from '@monotykamary/dsh-session-reference/types'
 
 declare module '@monotykamary/cordis' {
   interface Context {
@@ -114,6 +122,8 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   try {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, workspaceFilesRemote, messageFeedbackRemote,
+      commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
+      pluginInventoryRemote, messageFeedbackRemote, sessionReferencesRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

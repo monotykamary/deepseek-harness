@@ -59,6 +59,7 @@
     "@monotykamary/dsh-tool-ask-user": "workspace:^",
     "@monotykamary/dsh-tool-bash": "workspace:^",
     "@monotykamary/dsh-tool-bash-persistent": "workspace:^",
+    "@monotykamary/dsh-tool-pwsh-persistent": "workspace:^",
     "@monotykamary/dsh-tool-cordis": "workspace:^",
     "@monotykamary/dsh-tool-fs": "workspace:^",
     "@monotykamary/dsh-tool-fs-search": "workspace:^",
@@ -78,11 +79,11 @@
     "@monotykamary/dsh-workflow-worker-thread": "workspace:^",
     "@monotykamary/dsh-agent-instructions": "workspace:^",
     "commander": "^15.0.0",
-    "dsh-fabric": "^0.1.0",
-    "dsh-fovea": "^0.2.0",
     "@monotykamary/cordis": "workspace:^",
     "js-yaml": "^4.2.0",
-    "node-addon-require-builtin": "^0.1.4"
+    "node-addon-require-builtin": "^0.1.4",
+    "dsh-fabric": "^0.1.0",
+    "dsh-fovea": "^0.2.0"
   },
   "devDependencies": {
     "@monotykamary/dsh-agent": "workspace:^",

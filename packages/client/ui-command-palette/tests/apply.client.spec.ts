@@ -19,6 +19,7 @@ async function bench() {
   ctx.provide('sessions', { open, search, searchResultLimit: 20 } as never)
   ctx.provide('workspaces', { startSession, connectWorkspace } as never)
   const locale = new LocaleRuntime(ctx)
+  locale.setLocale('zh')
   ctx.provide('locale', locale)
   return { ctx, slots: ctx.get('slots') as SlotRegistry, open, startSession, connectWorkspace, search, locale }
 }

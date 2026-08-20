@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest'
 import { SlotRegistry, type SessionId } from '@monotykamary/dsh-client-runtime/client'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import { TestRemote } from '@monotykamary/dsh-client-test-runtime'
+import { apply as settingsApply, inject as settingsInject } from '@monotykamary/dsh-client-ui-settings/client'
 import type { CommandDecoration } from '@monotykamary/dsh-client-ui-commands/client'
 import type { PermissionSelect } from '@monotykamary/dsh-permission-presets/client'
 import {
@@ -58,6 +59,7 @@ async function bench() {
       },
     },
   } as never)
+  await ctx.plugin({ inject: [...settingsInject], apply: settingsApply }).await()
   let decoration: CommandDecoration | undefined
   ctx.provide('commandUi', {
     decorate(c: CommandDecoration) {

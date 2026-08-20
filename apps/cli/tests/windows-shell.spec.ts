@@ -88,7 +88,7 @@ describe('the shipped shell composition (real bundle layers)', () => {
       message => warnings.push(message),
     )
     const byId = new Map(rows.map(row => [row.id, row]))
-    for (const id of ['bash-sandbox', 'tool-bash', 'pwsh-sandbox', 'tool-pwsh']) {
+    for (const id of ['bash-sandbox', 'tool-bash', 'pwsh-sandbox', 'tool-pwsh', 'terminals', 'terminal-bash', 'terminal-pwsh']) {
       expect(byId.has(id), `row ${id}`).toBe(true)
     }
     // No web overlay: the tool rows keep their own gating too.
@@ -96,6 +96,14 @@ describe('the shipped shell composition (real bundle layers)', () => {
     expect(disabledOn(byId.get('tool-bash')!, 'linux'), 'tool-bash on linux').toBe(false)
     expect(disabledOn(byId.get('tool-pwsh')!, 'win32'), 'tool-pwsh on win32').toBe(false)
     expect(disabledOn(byId.get('tool-pwsh')!, 'linux'), 'tool-pwsh on linux').toBe(true)
+    // The host terminal backends gate the same way: the bash backend mounts on
+    // POSIX only, its pwsh twin (shellDialect pwsh) on win32 only, so exactly
+    // one shell stack serves the shared registry per host.
+    expect(disabledOn(byId.get('terminal-bash')!, 'win32'), 'terminal-bash on win32').toBe(true)
+    expect(disabledOn(byId.get('terminal-bash')!, 'linux'), 'terminal-bash on linux').toBe(false)
+    expect(disabledOn(byId.get('terminal-pwsh')!, 'win32'), 'terminal-pwsh on win32').toBe(false)
+    expect(disabledOn(byId.get('terminal-pwsh')!, 'linux'), 'terminal-pwsh on linux').toBe(true)
+    expect(byId.get('terminal-pwsh')?.config).toMatchObject({ shellDialect: 'pwsh' })
     expect(warnings).toEqual([])
   })
 })
@@ -122,7 +130,7 @@ describe('shipped agent presets gate both shell tools by platform', () => {
     }
   })
 
-  it('minimal mounts no shell tool row at all (its shell is the PTY stack)', () => {
+  it('minimal mounts no shell tool row and gates its persistent shell stack by platform', () => {
     const entries: unknown = yaml.load(
       readFileSync(join(presetRoot, 'minimal', 'agent.cordis.yml'), 'utf8'),
       { schema: entryListSchema },
@@ -133,5 +141,21 @@ describe('shipped agent presets gate both shell tools by platform', () => {
         typeof entry === 'object' && entry !== null && (entry as Record<string, unknown>).id === id
       )), `${id} must be absent from minimal`).toBe(false)
     }
+    const byId = new Map(entries
+      .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
+      .map(entry => [entry.id, entry]))
+    // The preset contributes only the model-facing persistent operations; the
+    // base bundle owns the shared registry and its per-platform backends.
+    expect(byId.has('persistent-shell'), 'no entry-local terminal realm in minimal').toBe(false)
+    for (const id of ['terminal-bash', 'terminal-pwsh']) {
+      expect(byId.has(id), `${id} must be absent from minimal`).toBe(false)
+    }
+    // The bash stack (persistent-bash) mounts on POSIX only; the pwsh twin
+    // (persistent-pwsh) mounts on win32 only — exactly one persistent shell
+    // per host, backed by the host registry's matching backend.
+    expect(disabledOn(byId.get('persistent-bash')!, 'win32'), 'persistent-bash on win32').toBe(true)
+    expect(disabledOn(byId.get('persistent-bash')!, 'linux'), 'persistent-bash on linux').toBe(false)
+    expect(disabledOn(byId.get('persistent-pwsh')!, 'win32'), 'persistent-pwsh on win32').toBe(false)
+    expect(disabledOn(byId.get('persistent-pwsh')!, 'linux'), 'persistent-pwsh on linux').toBe(true)
   })
 })

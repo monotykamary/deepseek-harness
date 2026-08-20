@@ -1,0 +1,45 @@
+# Keyless replay counterpart to persistent-pwsh.cordis.yml.
+- id: llm-replay
+  name: '@monotykamary/dsh-llm-replay'
+  config:
+    providers:
+      - id: deepseek-official
+        name: DeepSeek
+        models:
+          - id: deepseek-v4-pro
+
+- id: terminal
+  name: '@monotykamary/dsh-terminal'
+
+- id: sandbox-policy
+  name: '@monotykamary/dsh-sandbox-policy'
+  config:
+    mode: danger-full-access
+    workspaceRoot: !!js process.cwd()
+
+- id: subprocess
+  name: '@monotykamary/dsh-subprocess-local'
+
+- id: terminal-pwsh
+  name: '@monotykamary/dsh-terminal-bash'
+  config:
+    shellDialect: pwsh
+    timeoutMs: 30000
+
+- id: acp-agent
+  name: '@monotykamary/dsh-acp-demo'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+    persistenceRoot: !!js process.env.DSH_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+    persistenceCompression: none
+    workspaceContext: false
+    skills:
+      enabled: false
+    toolBash: false
+    toolJobs: false
+    goals: false
+    persona: You are a concise snapshot agent working in {{cwd}}.
+
+- id: tool-pwsh-persistent
+  name: '@monotykamary/dsh-tool-pwsh-persistent'

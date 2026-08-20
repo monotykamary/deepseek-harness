@@ -21,10 +21,13 @@
       "path": "../ui-slots"
     },
     {
-      "path": "../ui-attachment"
+      "path": "../ui-primitives"
     },
     {
-      "path": "../ui-primitives"
+      "path": "../ui-renderer"
+    },
+    {
+      "path": "../ui-attachment"
     },
     {
       "path": "../schema-form"

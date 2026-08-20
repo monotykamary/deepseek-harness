@@ -32,6 +32,7 @@
   "dsh": {
     "client": {
       "inject": [
+        "@monotykamary/dsh-client-connection",
         "@monotykamary/dsh-client-runtime",
         "@monotykamary/dsh-client-locale",
         "@monotykamary/dsh-client-ui-conversation"
@@ -50,12 +51,13 @@
   "peerDependencies": {
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-api-remotes": "workspace:^",
+    "@monotykamary/dsh-client-connection": "workspace:^",
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "@monotykamary/dsh-invariants": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
@@ -68,12 +70,12 @@
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "@monotykamary/dsh-client-web-react": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@testing-library/react": "^16.1.0",
     "@types/react": "~18.3.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@monotykamary/dsh-client-web-react": "workspace:^"
   },
   "files": [
     "lib/index.js",

@@ -272,6 +272,9 @@ importers:
       '@monotykamary/dsh-tool-pwsh':
         specifier: workspace:^
         version: link:../../packages/shell/tool-pwsh
+      '@monotykamary/dsh-tool-pwsh-persistent':
+        specifier: workspace:^
+        version: link:../../packages/shell/tool-pwsh-persistent
       '@monotykamary/dsh-tool-ralph':
         specifier: workspace:^
         version: link:../../packages/workflow/tool-ralph
@@ -499,6 +502,12 @@ importers:
       '@monotykamary/dsh-e2b':
         specifier: workspace:*
         version: link:../packages/e2b/e2b
+      '@monotykamary/dsh-experimental-agent-team':
+        specifier: workspace:*
+        version: link:../packages/experimental/agent-team
+      '@monotykamary/dsh-experimental-tool-agent-team':
+        specifier: workspace:*
+        version: link:../packages/experimental/tool-agent-team
       '@monotykamary/dsh-fs-e2b':
         specifier: workspace:*
         version: link:../packages/e2b/fs-e2b
@@ -703,6 +712,9 @@ importers:
       '@monotykamary/dsh-tool-pwsh':
         specifier: workspace:*
         version: link:../packages/shell/tool-pwsh
+      '@monotykamary/dsh-tool-pwsh-persistent':
+        specifier: workspace:*
+        version: link:../packages/shell/tool-pwsh-persistent
       '@monotykamary/dsh-tool-ralph':
         specifier: workspace:*
         version: link:../packages/workflow/tool-ralph
@@ -875,6 +887,9 @@ importers:
       '@monotykamary/dsh-credentials':
         specifier: workspace:^
         version: link:../../credentials/credentials
+      '@monotykamary/dsh-file-reference':
+        specifier: workspace:^
+        version: link:../../context/file-reference
       '@monotykamary/dsh-goal':
         specifier: workspace:^
         version: link:../../goal/goal
@@ -899,6 +914,9 @@ importers:
       '@monotykamary/dsh-session-persistence':
         specifier: workspace:^
         version: link:../../session/session-persistence
+      '@monotykamary/dsh-session-reference':
+        specifier: workspace:^
+        version: link:../../context/session-reference
       '@monotykamary/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
@@ -1250,6 +1268,15 @@ importers:
       '@monotykamary/dsh-code-runtime-worker-thread':
         specifier: workspace:^
         version: link:../../code-runtime/code-runtime-worker-thread
+      '@monotykamary/dsh-storage':
+        specifier: workspace:^
+        version: link:../../storage/storage
+      '@monotykamary/dsh-storage-domain':
+        specifier: workspace:^
+        version: link:../../storage/storage-domain
+      '@monotykamary/dsh-storage-json':
+        specifier: workspace:^
+        version: link:../../storage/storage-json
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -1308,6 +1335,12 @@ importers:
       '@monotykamary/dsh-client-ui-agent-preset':
         specifier: workspace:^
         version: link:../../client/ui-agent-preset
+      '@monotykamary/dsh-client-ui-attachment':
+        specifier: workspace:^
+        version: link:../../client/ui-attachment
+      '@monotykamary/dsh-client-ui-brand-official':
+        specifier: workspace:^
+        version: link:../../client/ui-brand-official
       '@monotykamary/dsh-client-ui-command-palette':
         specifier: workspace:^
         version: link:../../client/ui-command-palette
@@ -1356,6 +1389,12 @@ importers:
       '@monotykamary/dsh-client-ui-plan':
         specifier: workspace:^
         version: link:../../client/ui-plan
+      '@monotykamary/dsh-client-ui-reference':
+        specifier: workspace:^
+        version: link:../../client/ui-reference
+      '@monotykamary/dsh-client-ui-renderer':
+        specifier: workspace:^
+        version: link:../../client/ui-renderer
       '@monotykamary/dsh-client-ui-session-title':
         specifier: workspace:^
         version: link:../../client/ui-session-title
@@ -1419,6 +1458,12 @@ importers:
       '@monotykamary/dsh-cordis-host-runner':
         specifier: workspace:^
         version: link:../../extensions/cordis-host-runner
+      '@monotykamary/dsh-file-reference':
+        specifier: workspace:^
+        version: link:../../context/file-reference
+      '@monotykamary/dsh-file-reference-local':
+        specifier: workspace:^
+        version: link:../../context/file-reference-local
       '@monotykamary/dsh-host-apiproxy':
         specifier: workspace:^
         version: link:../../host/apiproxy
@@ -1443,6 +1488,9 @@ importers:
       '@monotykamary/dsh-host-workspace-files':
         specifier: workspace:^
         version: link:../../host/workspace-files
+      '@monotykamary/dsh-launch-environment':
+        specifier: workspace:^
+        version: link:../../util/launch-environment
       '@monotykamary/dsh-message-feedback':
         specifier: workspace:^
         version: link:../../feedback/message-feedback
@@ -1452,6 +1500,9 @@ importers:
       '@monotykamary/dsh-session-projection-cache':
         specifier: workspace:^
         version: link:../../session/session-projection-cache
+      '@monotykamary/dsh-session-reference':
+        specifier: workspace:^
+        version: link:../../context/session-reference
       '@monotykamary/dsh-session-stats':
         specifier: workspace:^
         version: link:../../session/session-stats
@@ -1464,6 +1515,9 @@ importers:
       '@monotykamary/dsh-storage-json':
         specifier: workspace:^
         version: link:../../storage/storage-json
+      '@monotykamary/dsh-subprocess':
+        specifier: workspace:^
+        version: link:../../subprocess/subprocess
       '@monotykamary/dsh-terminal-web':
         specifier: workspace:^
         version: link:../../terminal/terminal-web
@@ -1482,6 +1536,9 @@ importers:
       commander:
         specifier: ^15.0.0
         version: 15.0.0
+      open:
+        specifier: ^11.0.0
+        version: 11.0.1
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -1563,9 +1620,6 @@ importers:
 
   packages/client/locale:
     dependencies:
-      '@monotykamary/dsh-client-connection':
-        specifier: workspace:^
-        version: link:../connection
       '@monotykamary/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
@@ -1579,9 +1633,15 @@ importers:
       '@monotykamary/dsh-api-remotes':
         specifier: workspace:^
         version: link:../../api/remotes
+      '@monotykamary/dsh-client-connection':
+        specifier: workspace:^
+        version: link:../connection
       '@monotykamary/dsh-client-runtime':
         specifier: workspace:^
         version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
       '@monotykamary/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
@@ -1765,6 +1825,15 @@ importers:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-ui-conversation':
+        specifier: workspace:^
+        version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -1774,6 +1843,39 @@ importers:
       '@types/react-dom':
         specifier: ~18.3.0
         version: 18.3.7(@types/react@18.3.31)
+
+  packages/client/ui-brand-official:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-ui-conversation':
+        specifier: workspace:^
+        version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-sidebar':
+        specifier: workspace:^
+        version: link:../ui-sidebar
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@testing-library/react':
+        specifier: ^16.1.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
 
   packages/client/ui-command-palette:
     dependencies:
@@ -1909,9 +2011,6 @@ importers:
       '@monotykamary/dsh-client-test-runtime':
         specifier: workspace:^
         version: link:../../test-support/client-runtime
-      '@monotykamary/dsh-client-ui-attachment':
-        specifier: workspace:^
-        version: link:../ui-attachment
       '@monotykamary/dsh-client-ui-input-trigger':
         specifier: workspace:^
         version: link:../ui-input-trigger
@@ -2163,6 +2262,12 @@ importers:
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
       '@testing-library/react':
         specifier: ^16.1.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2200,6 +2305,9 @@ importers:
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
+      '@monotykamary/dsh-file-reference':
+        specifier: workspace:^
+        version: link:../../context/file-reference
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -2319,6 +2427,9 @@ importers:
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
+      '@types/react-dom':
+        specifier: ~18.3.0
+        version: 18.3.7(@types/react@18.3.31)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -2327,6 +2438,10 @@ importers:
         version: 18.3.1(react@18.3.1)
 
   packages/client/ui-model-selection:
+    dependencies:
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -2367,9 +2482,6 @@ importers:
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -2546,6 +2658,73 @@ importers:
         specifier: ~18.3.0
         version: 18.3.7(@types/react@18.3.31)
 
+  packages/client/ui-reference:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-api-remotes':
+        specifier: workspace:^
+        version: link:../../api/remotes
+      '@monotykamary/dsh-client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-ui-input-trigger':
+        specifier: workspace:^
+        version: link:../ui-input-trigger
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-file-reference':
+        specifier: workspace:^
+        version: link:../../context/file-reference
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-session-reference':
+        specifier: workspace:^
+        version: link:../../context/session-reference
+      '@monotykamary/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
+
+  packages/client/ui-renderer:
+    dependencies:
+      use-sync-external-store:
+        specifier: 1.2.0
+        version: 1.2.0(react@18.3.1)
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@monotykamary/dsh-client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ~18.3.0
+        version: 18.3.7(@types/react@18.3.31)
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+
   packages/client/ui-session-title:
     devDependencies:
       '@monotykamary/cordis':
@@ -2593,9 +2772,9 @@ importers:
 
   packages/client/ui-settings:
     dependencies:
-      '@monotykamary/dsh-client-connection':
-        specifier: workspace:^
-        version: link:../connection
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -2603,6 +2782,9 @@ importers:
       '@monotykamary/dsh-api-remotes':
         specifier: workspace:^
         version: link:../../api/remotes
+      '@monotykamary/dsh-client-connection':
+        specifier: workspace:^
+        version: link:../connection
       '@monotykamary/dsh-client-runtime':
         specifier: workspace:^
         version: link:../runtime
@@ -3058,9 +3240,6 @@ importers:
 
   packages/client/ui-theme:
     dependencies:
-      '@monotykamary/dsh-client-connection':
-        specifier: workspace:^
-        version: link:../connection
       '@monotykamary/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
@@ -3077,6 +3256,9 @@ importers:
       '@monotykamary/dsh-api-remotes':
         specifier: workspace:^
         version: link:../../api/remotes
+      '@monotykamary/dsh-client-connection':
+        specifier: workspace:^
+        version: link:../connection
       '@monotykamary/dsh-client-locale':
         specifier: workspace:^
         version: link:../locale
@@ -3446,6 +3628,9 @@ importers:
       '@monotykamary/dsh-client-test-runtime':
         specifier: workspace:^
         version: link:../../test-support/client-runtime
+      '@monotykamary/dsh-client-ui-renderer':
+        specifier: workspace:^
+        version: link:../ui-renderer
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -3482,6 +3667,15 @@ importers:
         version: 18.3.31
 
   packages/code-runtime/code-runtime:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+
+  packages/code-runtime/code-runtime-python:
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -3695,11 +3889,58 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/context/file-reference:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
+
+  packages/context/file-reference-local:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-file-reference':
+        specifier: workspace:^
+        version: link:../file-reference
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-system-prompt':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@monotykamary/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+
   packages/context/session-reference:
     dependencies:
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -3725,6 +3966,9 @@ importers:
       '@monotykamary/dsh-session-query':
         specifier: workspace:^
         version: link:../../session-query/session-query
+      '@monotykamary/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
 
   packages/context/time-context:
     dependencies:
@@ -4275,6 +4519,110 @@ importers:
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+
+  packages/experimental/agent-team:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-agent-loop':
+        specifier: workspace:^
+        version: link:../../core/agent-loop
+      '@monotykamary/dsh-agent-loop-testkit':
+        specifier: workspace:^
+        version: link:../../test-support/agent-loop-testkit
+      '@monotykamary/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-session-persistence':
+        specifier: workspace:^
+        version: link:../../session/session-persistence
+      '@monotykamary/dsh-session-persistence-jsonl':
+        specifier: workspace:^
+        version: link:../../session/session-persistence-jsonl
+      '@monotykamary/dsh-session-persistence-sqlite':
+        specifier: workspace:^
+        version: link:../../session/session-persistence-sqlite
+      '@monotykamary/dsh-subagent':
+        specifier: workspace:^
+        version: link:../../subagent/subagent
+      '@monotykamary/dsh-subagent-fork-in-process':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-fork-in-process
+      '@monotykamary/dsh-subagent-spawn-in-process':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-spawn-in-process
+
+  packages/experimental/tool-agent-team:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-agent-loop':
+        specifier: workspace:^
+        version: link:../../core/agent-loop
+      '@monotykamary/dsh-agent-loop-testkit':
+        specifier: workspace:^
+        version: link:../../test-support/agent-loop-testkit
+      '@monotykamary/dsh-experimental-agent-team':
+        specifier: workspace:^
+        version: link:../agent-team
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-scope':
+        specifier: workspace:^
+        version: link:../../core/scope
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-session-persistence-jsonl':
+        specifier: workspace:^
+        version: link:../../session/session-persistence-jsonl
+      '@monotykamary/dsh-subagent':
+        specifier: workspace:^
+        version: link:../../subagent/subagent
+      '@monotykamary/dsh-subagent-fork-in-process':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-fork-in-process
+      '@monotykamary/dsh-subagent-spawn-in-process':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-spawn-in-process
+      '@monotykamary/dsh-system-prompt':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@monotykamary/dsh-tool-subagent-control':
+        specifier: workspace:^
+        version: link:../../subagent/tool-subagent-control
+      '@monotykamary/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
 
   packages/extensions/cordis-client-runner:
     devDependencies:
@@ -5366,12 +5714,18 @@ importers:
       '@monotykamary/dsh-agent':
         specifier: workspace:^
         version: link:../../core/agent
+      '@monotykamary/dsh-attachment':
+        specifier: workspace:^
+        version: link:../../attachment/attachment
       '@monotykamary/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
       '@monotykamary/dsh-scope':
         specifier: workspace:^
         version: link:../../core/scope
@@ -5621,6 +5975,9 @@ importers:
       '@monotykamary/dsh-anonymous-user-id':
         specifier: workspace:^
         version: link:../../identity/anonymous-user-id
+      '@monotykamary/dsh-attachment':
+        specifier: workspace:^
+        version: link:../../attachment/attachment
       '@monotykamary/dsh-credentials':
         specifier: workspace:^
         version: link:../../credentials/credentials
@@ -6482,15 +6839,27 @@ importers:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@monotykamary/cordis-plugin-include':
+        specifier: workspace:^
+        version: link:../../../vendor/include
+      '@monotykamary/cordis-plugin-loader':
+        specifier: workspace:^
+        version: link:../../../vendor/loader
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
       '@monotykamary/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
       '@monotykamary/dsh-session-persistence':
         specifier: workspace:^
         version: link:../session-persistence
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/session/session-projection:
     dependencies:
@@ -7135,6 +7504,61 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-approval
 
+  packages/shell/tool-pwsh-persistent:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/cordis-plugin-include':
+        specifier: workspace:^
+        version: link:../../../vendor/include
+      '@monotykamary/cordis-plugin-loader':
+        specifier: workspace:^
+        version: link:../../../vendor/loader
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@monotykamary/dsh-pwsh-local':
+        specifier: workspace:^
+        version: link:../pwsh-local
+      '@monotykamary/dsh-sandbox':
+        specifier: workspace:^
+        version: link:../../sandbox/sandbox
+      '@monotykamary/dsh-sandbox-policy':
+        specifier: workspace:^
+        version: link:../../sandbox/sandbox-policy
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-subprocess-local':
+        specifier: workspace:^
+        version: link:../../subprocess/subprocess-local
+      '@monotykamary/dsh-system-prompt':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@monotykamary/dsh-terminal':
+        specifier: workspace:^
+        version: link:../../terminal/terminal
+      '@monotykamary/dsh-terminal-bash':
+        specifier: workspace:^
+        version: link:../../terminal/terminal-bash
+      '@monotykamary/dsh-timeout':
+        specifier: workspace:^
+        version: link:../../util/timeout
+      '@monotykamary/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+
   packages/skill/skill:
     dependencies:
       '@monotykamary/schemastery':
@@ -7477,9 +7901,15 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 0.93.0
         version: 0.93.0(zod@4.4.3)
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.4.3)
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -7514,9 +7944,15 @@ importers:
 
   packages/subagent/subagent-codex:
     dependencies:
+      '@monotykamary/dsh-sdk-protocol':
+        specifier: workspace:^
+        version: link:../../sdk/protocol
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
+      '@openai/codex':
+        specifier: 0.147.0
+        version: 0.147.0
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -7536,9 +7972,6 @@ importers:
       '@monotykamary/dsh-loader-smoke':
         specifier: workspace:^
         version: link:../../test-support/loader-smoke
-      '@monotykamary/dsh-sdk-protocol':
-        specifier: workspace:^
-        version: link:../../sdk/protocol
       '@monotykamary/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -7554,9 +7987,6 @@ importers:
       '@monotykamary/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
-      '@openai/codex':
-        specifier: 0.147.0
-        version: 0.147.0
 
   packages/subagent/subagent-dsh-sdk:
     dependencies:
@@ -7898,6 +8328,9 @@ importers:
 
   packages/subprocess/subprocess-local:
     dependencies:
+      koffi:
+        specifier: ^3.1.0
+        version: 3.1.1
       node-pty:
         specifier: 1.2.0-beta.15
         version: 1.2.0-beta.15(patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0)
@@ -7938,6 +8371,9 @@ importers:
 
   packages/terminal/terminal-bash:
     dependencies:
+      '@monotykamary/dsh-pwsh-local':
+        specifier: workspace:^
+        version: link:../../shell/pwsh-local
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -8129,6 +8565,9 @@ importers:
       '@monotykamary/dsh-client-runtime':
         specifier: workspace:^
         version: link:../../client/runtime
+      '@monotykamary/dsh-client-ui-renderer':
+        specifier: workspace:^
+        version: link:../../client/ui-renderer
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../../client/ui-slots
@@ -8777,6 +9216,9 @@ importers:
       '@monotykamary/dsh-agent-spine-demo':
         specifier: workspace:^
         version: link:../../packages/examples/agent-spine-demo
+      '@monotykamary/dsh-agent-tool-presentation':
+        specifier: workspace:^
+        version: link:../../packages/core/agent-tool-presentation
       '@monotykamary/dsh-anonymous-user-id':
         specifier: workspace:^
         version: link:../../packages/identity/anonymous-user-id
@@ -8798,6 +9240,9 @@ importers:
       '@monotykamary/dsh-code-runtime-worker-thread':
         specifier: workspace:^
         version: link:../../packages/code-runtime/code-runtime-worker-thread
+      '@monotykamary/dsh-command-compact':
+        specifier: workspace:^
+        version: link:../../packages/compaction/command-compact
       '@monotykamary/dsh-command-goal':
         specifier: workspace:^
         version: link:../../packages/goal/command-goal
@@ -8873,15 +9318,24 @@ importers:
       '@monotykamary/dsh-llm-retry':
         specifier: workspace:^
         version: link:../../packages/llm/llm-retry
+      '@monotykamary/dsh-mcp-client':
+        specifier: workspace:^
+        version: link:../../packages/mcp/mcp-client
       '@monotykamary/dsh-output-retention':
         specifier: workspace:^
         version: link:../../packages/util/output-retention
       '@monotykamary/dsh-permission-presets':
         specifier: workspace:^
         version: link:../../packages/interaction/permission-presets
+      '@monotykamary/dsh-persona':
+        specifier: workspace:^
+        version: link:../../packages/preset/persona
       '@monotykamary/dsh-plan-mode':
         specifier: workspace:^
         version: link:../../packages/plan/plan-mode
+      '@monotykamary/dsh-pwsh-local':
+        specifier: workspace:^
+        version: link:../../packages/shell/pwsh-local
       '@monotykamary/dsh-repeat-tool-reminder':
         specifier: workspace:^
         version: link:../../packages/guard/repeat-tool-reminder
@@ -8951,6 +9405,9 @@ importers:
       '@monotykamary/dsh-skill-filesystem':
         specifier: workspace:^
         version: link:../../packages/skill/skill-filesystem
+      '@monotykamary/dsh-spill':
+        specifier: workspace:^
+        version: link:../../packages/spill/spill
       '@monotykamary/dsh-subagent':
         specifier: workspace:^
         version: link:../../packages/subagent/subagent
@@ -9005,12 +9462,18 @@ importers:
       '@monotykamary/dsh-tool-fs':
         specifier: workspace:^
         version: link:../../packages/fs/tool-fs
+      '@monotykamary/dsh-tool-fs-search':
+        specifier: workspace:^
+        version: link:../../packages/fs/tool-fs-search
       '@monotykamary/dsh-tool-goal':
         specifier: workspace:^
         version: link:../../packages/goal/tool-goal
       '@monotykamary/dsh-tool-jobs':
         specifier: workspace:^
         version: link:../../packages/jobs/tool-jobs
+      '@monotykamary/dsh-tool-ralph':
+        specifier: workspace:^
+        version: link:../../packages/workflow/tool-ralph
       '@monotykamary/dsh-tool-skill':
         specifier: workspace:^
         version: link:../../packages/skill/tool-skill
@@ -12417,6 +12880,10 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
+  bundle-name@4.1.0:
+    resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
+    engines: {node: '>=18'}
+
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -12732,6 +13199,18 @@ packages:
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
+
+  default-browser-id@5.0.1:
+    resolution: {integrity: sha512-x1VCxdX4t+8wVfd1so/9w+vQ4vx7lKd2Qp5tDRutErwmR85OgmfX7RlLRMWafRMY7hbEiXIbudNrjOAPa/hL8Q==}
+    engines: {node: '>=18'}
+
+  default-browser@5.5.1:
+    resolution: {integrity: sha512-m1pAzaJgZ/gssEqlOhJkPJp8Xly7QyW6xcrkUa2KKcDeDSEMP7X8xipU3snUcfisTQx0w1AGae+9UtJSfVnXGw==}
+    engines: {node: '>=18'}
+
+  define-lazy-prop@3.0.0:
+    resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
+    engines: {node: '>=12'}
 
   defu@6.1.7:
     resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
@@ -13349,6 +13828,11 @@ packages:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
     engines: {node: '>= 0.10'}
 
+  is-docker@3.0.0:
+    resolution: {integrity: sha512-eljcgEDlEns/7AXFosB5K/2nCM4P7FQPkGc/DWLy5rmFEWvZayGrik1d9/QIY5nJ4f9YsVvBkA6kJpHn9rISdQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    hasBin: true
+
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -13360,6 +13844,15 @@ packages:
   is-glob@4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
+
+  is-in-ssh@1.0.0:
+    resolution: {integrity: sha512-jYa6Q9rH90kR1vKB6NM7qqd1mge3Fx4Dhw5TVlK1MUBqhEOuCagrEHMevNuCcbECmXZ0ThXkRm+Ymr51HwEPAw==}
+    engines: {node: '>=20'}
+
+  is-inside-container@1.0.0:
+    resolution: {integrity: sha512-KIYLCCJghfHZxqjYBE7rEy0OBuTd5xCHS7tHVgvCLkx7StIoaxwNW3hCALgEUjFfeRk+MG/Qxmp/vtETEF3tRA==}
+    engines: {node: '>=14.16'}
+    hasBin: true
 
   is-plain-obj@4.1.0:
     resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
@@ -13382,6 +13875,10 @@ packages:
   is-what@5.5.0:
     resolution: {integrity: sha512-oG7cgbmg5kLYae2N5IVd3jm2s+vldjxJzK1pcu9LfpGuQ93MQSzo0okvRna+7y5ifrD+20FE8FvjusyGaz14fw==}
     engines: {node: '>=18'}
+
+  is-wsl@3.1.1:
+    resolution: {integrity: sha512-e6rvdUCiQCAuumZslxRJWR/Doq4VpPR82kqclvcS0efgt430SlGIk05vdCN58+VrzgtIcfNODjozVielycD4Sw==}
+    engines: {node: '>=16'}
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
@@ -14103,6 +14600,10 @@ packages:
   oniguruma-to-es@4.3.6:
     resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
 
+  open@11.0.1:
+    resolution: {integrity: sha512-NzwMUB6C1D0+Kd+9iMS/H4k+Ck3cTX6Ckyfr/gAGlmvSE1LUQZnEZvWBi4PYmMwH/S5SMeTXnE+9uAz8uF+pWw==}
+    engines: {node: '>=20'}
+
   openai@6.26.0:
     resolution: {integrity: sha512-zd23dbWTjiJ6sSAX6s0HrCZi41JwTA1bQVs0wLQPZ2/5o2gxOJA5wh7yOAUgwYybfhDXyhwlpeQf7Mlgx8EOCA==}
     hasBin: true
@@ -14253,6 +14754,14 @@ packages:
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
+
+  powershell-utils@0.1.0:
+    resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
+    engines: {node: '>=20'}
+
+  powershell-utils@0.2.0:
+    resolution: {integrity: sha512-ZlsFlG7MtSFCoc5xreOvBAozCJ6Pf06opgJjh9ONEv418xpZSAzNjstD36C6+JwOnfSqOW/9uDkqKjezTdxZhw==}
+    engines: {node: '>=20'}
 
   preact@10.29.7:
     resolution: {integrity: sha512-DCHYrK/B10yUD3ZjLfhZ3WIE/9Vf9VFUODcRE2dRomTYDpJk6z6L9wecSfhfE6M9ZTHUdyQkoC46arIDhEV84Q==}
@@ -14429,6 +14938,10 @@ packages:
   router@2.2.0:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
+
+  run-applescript@7.1.0:
+    resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
+    engines: {node: '>=18'}
 
   rw@1.3.3:
     resolution: {integrity: sha512-PdhdWy89SiZogBLaw42zdeqtRJ//zFd2PgQavcICDUgJT5oW10QCRKbJ6bg4r0/UY2M6BWd5tkxuGFRvCkgfHQ==}
@@ -15122,6 +15635,10 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  wsl-utils@1.0.0:
+    resolution: {integrity: sha512-Hl0ZOAs672vg+06kfujwRhoS6/jehvULrlFkuF2dRu6pHgA8U06h3xqNIqNNU1LTXPcedxByAR4GS6pwQK0mgA==}
+    engines: {node: '>=20'}
 
   xml-name-validator@5.0.0:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
@@ -18059,6 +18576,10 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
+  bundle-name@4.1.0:
+    dependencies:
+      run-applescript: 7.1.0
+
   bytes@3.1.2: {}
 
   cac@7.0.0: {}
@@ -18365,6 +18886,15 @@ snapshots:
       character-entities: 2.0.2
 
   deep-is@0.1.4: {}
+
+  default-browser-id@5.0.1: {}
+
+  default-browser@5.5.1:
+    dependencies:
+      bundle-name: 4.1.0
+      default-browser-id: 5.0.1
+
+  define-lazy-prop@3.0.0: {}
 
   defu@6.1.7: {}
 
@@ -19151,6 +19681,8 @@ snapshots:
 
   ipaddr.js@1.9.1: {}
 
+  is-docker@3.0.0: {}
+
   is-extglob@2.1.1: {}
 
   is-fullwidth-code-point@3.0.0: {}
@@ -19158,6 +19690,12 @@ snapshots:
   is-glob@4.0.3:
     dependencies:
       is-extglob: 2.1.1
+
+  is-in-ssh@1.0.0: {}
+
+  is-inside-container@1.0.0:
+    dependencies:
+      is-docker: 3.0.0
 
   is-plain-obj@4.1.0: {}
 
@@ -19170,6 +19708,10 @@ snapshots:
   is-unicode-supported@2.1.0: {}
 
   is-what@5.5.0: {}
+
+  is-wsl@3.1.1:
+    dependencies:
+      is-inside-container: 1.0.0
 
   isarray@1.0.0: {}
 
@@ -20044,6 +20586,15 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
+  open@11.0.1:
+    dependencies:
+      default-browser: 5.5.1
+      define-lazy-prop: 3.0.0
+      is-in-ssh: 1.0.0
+      is-inside-container: 1.0.0
+      powershell-utils: 0.2.0
+      wsl-utils: 1.0.0
+
   openai@6.26.0(ws@8.21.0)(zod@4.4.3):
     optionalDependencies:
       ws: 8.21.0
@@ -20226,6 +20777,10 @@ snapshots:
       nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  powershell-utils@0.1.0: {}
+
+  powershell-utils@0.2.0: {}
 
   preact@10.29.7: {}
 
@@ -20465,6 +21020,8 @@ snapshots:
       path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
+
+  run-applescript@7.1.0: {}
 
   rw@1.3.3: {}
 
@@ -21210,6 +21767,11 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.21.0: {}
+
+  wsl-utils@1.0.0:
+    dependencies:
+      is-wsl: 3.1.1
+      powershell-utils: 0.1.0
 
   xml-name-validator@5.0.0: {}
 

@@ -50,7 +50,7 @@ async function settleComposerGeometry(page: Page): Promise<void> {
   const seat = (): Promise<string> => page.locator('[data-queue-dock], [data-composer-card]')
     .evaluateAll(nodes => nodes.map((node) => {
       const rect = node.getBoundingClientRect()
-      return rect.x + ':' + rect.width
+      return String(rect.x) + ':' + String(rect.width)
     }).join('|'))
   let previous = ''
   for (let attempt = 0; attempt < 20; attempt += 1) {

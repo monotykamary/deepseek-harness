@@ -7,15 +7,10 @@
 import { Context } from '@monotykamary/cordis'
 import { describe, expect, it } from 'vitest'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
-import { usePinnedBrowserLanguages } from '@monotykamary/dsh-client-test-runtime'
 import { createScope, scopeOf, SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import type { SessionId } from '@monotykamary/dsh-client-runtime/client'
 import { apply, inject, InputTriggerService } from '@monotykamary/dsh-client-ui-input-trigger/client'
 import type { MenuViewInjected } from '@monotykamary/dsh-client-ui-input-trigger/client'
-
-// The service reads its initial locale from the browser; these specs assert
-// the shipped Chinese copy, so they state the browser they assume.
-usePinnedBrowserLanguages('zh-CN')
 
 const sid = (k: string): SessionId => k as SessionId
 
@@ -37,6 +32,10 @@ async function bench() {
     scopeOf: (c: Context) => scopeOf(c),
   })
   const locale = new LocaleRuntime(ctx)
+  // These specs assert the shipped Chinese copy. There is no jsdom `window`
+  // in this lane, so browser-language detection never runs and the locale
+  // comes from FALLBACK_LOCALE (en): state the asserted locale explicitly.
+  locale.setLocale('zh')
   ctx.provide('locale', locale)
   return { ctx, slots, locale }
 }

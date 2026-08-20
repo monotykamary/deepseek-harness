@@ -23,7 +23,7 @@
   - img
   - text: Context injection @monotykamary/dsh-system-prompt
 - group:
-  - status: Retried model request (1/2) · {{duration}}
+  - status: Retried model request (1/5) · {{duration}}
 - button "Think The user is asking for a one-sentence description of event sourcing. This is a straightforward knowledge question that doesn't require any skill loading or tool calls.":
   - img
   - img

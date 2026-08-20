@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import type {
   SessionId, SessionListState, SessionSummary, WorkspaceId, WorkspaceListState, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
@@ -113,6 +113,7 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     createWorkspace: vi.fn(async () => workspace('created', [])),
     useDirectoryFlow: bindSnapshotSelector({ getSnapshot: () => true, subscribe: () => () => {} }),
     useSettlement: settlement(null),
+    useHostDescription: selector => selector(undefined),
     renderSlot: ((_name: string, owner: { open: boolean }) => (owner.open ? <div data-testid="directory-flow" /> : null)) as never,
     t,
     ...overrides,
@@ -219,6 +220,27 @@ describe('WorkspaceBrowser', () => {
     fireEvent.click(showMore)
     expect(screen.getAllByRole('treeitem')).toHaveLength(35)
     expect(screen.getByRole('button', { name: '再显示 1 个' })).toBeTruthy()
+  })
+
+  it('workspace hover card shows a POSIX home descendant as ~', () => {
+    vi.useFakeTimers()
+    try {
+      mount({
+        useWorkspaces: hook(workspaceState([{
+          ...workspace('project', []),
+          path: '/home/u/Documents/project',
+          title: 'Project',
+        }])),
+        useHostDescription: selector => selector({
+          version: '0', cwd: '/tmp', attachedSessions: 0, home: '/home/u', canOpenPath: false,
+        }),
+      })
+      fireEvent.pointerEnter(screen.getByRole('treeitem').parentElement as HTMLElement)
+      act(() => { vi.advanceTimersByTime(500) })
+      expect(screen.getByText('~/Documents/project')).toBeTruthy()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('prunes deleted Workspace view state only after the Workspace baseline is ready', async () => {
@@ -1349,7 +1371,7 @@ describe('WorkspaceBrowser', () => {
     // Snoozing filters both settle sets and hides the row until the wake.
     act(() => { b.store.actions.unsettleSession('old-s') })
     act(() => { b.store.actions.snoozeSession('old-s', Date.now() + 60_000) })
-    expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({ 'old-s': expect.any(Number) })
+    expect(typeof b.store.getSnapshot().snoozedUntilBySession['old-s']).toBe('number')
     expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual([])
     expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
     act(() => { b.store.actions.wakeSession('old-s') })

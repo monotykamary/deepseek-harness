@@ -34,24 +34,26 @@
   "peerDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "@monotykamary/dsh-client-web-react": "workspace:^",
+    "@monotykamary/dsh-client-ui-renderer": "workspace:^",
     "@monotykamary/dsh-host-apiproxy": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@monotykamary/dsh-client-web-react": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "@monotykamary/dsh-client-web-react": "workspace:^",
+    "@monotykamary/dsh-client-ui-renderer": "workspace:^",
     "@monotykamary/dsh-host-apiproxy": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
     "@types/react-dom": "~18.3.0",
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@monotykamary/dsh-client-web-react": "workspace:^"
   },
   "files": [
     "lib/index.js",

@@ -117,8 +117,8 @@ export function installAssembledBootEnv(): void {
  * Mount the assembled application on the fixture transport; the teardown
  * registered by installAssembledBootEnv disposes it.
  */
-export function mountAssembledApp(): void {
-  history.replaceState(null, '', '/?fixture')
+export function mountAssembledApp(query = '/?fixture'): void {
+  history.replaceState(null, '', query)
   const root = document.createElement('div')
   root.id = 'root'
   document.body.appendChild(root)

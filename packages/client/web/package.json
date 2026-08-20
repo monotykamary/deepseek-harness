@@ -26,6 +26,33 @@
     "./package.json": "./package.json"
   },
   "license": "MIT",
+  "devDependencies": {
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-client-modules": "workspace:^",
+    "@monotykamary/dsh-client-ui-renderer": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "@monotykamary/cordis": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^6.0.3",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-test-runtime": "workspace:^"
+  },
+  "peerDependencies": {
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/cordis-plugin-loader": "workspace:^"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/**/*.css",
+    "lib/types/**/*.d.ts"
+  ],
   "dependencies": {
     "@monotykamary/dsh-client-modules": "workspace:^",
     "@monotykamary/dsh-client-schema-form": "workspace:^",
@@ -36,25 +63,5 @@
     "@monotykamary/dsh-client-web-react": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@monotykamary/cordis-plugin-loader": "workspace:^",
-    "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-test-runtime": "workspace:^",
-    "@monotykamary/dsh-invariants": "workspace:^",
-    "@types/react": "~18.3.1",
-    "@types/react-dom": "~18.3.0",
-    "@monotykamary/cordis": "workspace:^",
-    "typescript": "^6.0.3"
-  },
-  "peerDependencies": {
-    "@monotykamary/cordis-plugin-loader": "workspace:^",
-    "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/cordis": "workspace:^"
-  },
-  "files": [
-    "lib/index.js",
-    "lib/invariant.js",
-    "lib/types/**/*.d.ts"
-  ]
+  }
 }

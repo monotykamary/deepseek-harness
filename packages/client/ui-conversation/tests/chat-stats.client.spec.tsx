@@ -8,7 +8,7 @@ import type {
   AssistantMessageNode, ConversationSnapshot, SessionId, ToolResultNode,
 } from '@monotykamary/dsh-client-runtime/client'
 import { EMPTY_CONVERSATION_VIEWS } from '@monotykamary/dsh-client-runtime/client'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { en as commonEn } from '@monotykamary/dsh-client-locale/src/locales/en.ts'
 import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'

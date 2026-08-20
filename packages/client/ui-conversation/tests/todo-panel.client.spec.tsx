@@ -6,7 +6,7 @@
  */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import { createSnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import type { TodoItem } from '@monotykamary/dsh-client-runtime/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'

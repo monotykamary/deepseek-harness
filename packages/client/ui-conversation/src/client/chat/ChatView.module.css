@@ -209,3 +209,6 @@
     rgb(0 0 0) var(--dsh-conversation-top-fade-height)
   );
 }
+/* Host open-path refusal: same dialog family as the workspace folder error. */
+.modalAction {
+  min-width: 72px;

@@ -31,9 +31,11 @@ beforeEach(() => { localStorage.clear() })
 /** Runtime with the locale face installed (the browser entry declares `locale:` — zh default backs the t seat). */
 async function createRuntime(): Promise<SlotTestRuntime> {
   const runtime = await SlotTestRuntime.create()
+  runtime.provide('connection', {
+    hostDescription: { getSnapshot: () => undefined, subscribe: () => () => {} },
+  })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
-  runtime.provide('connection', {})
   runtime.provide('remote', {})
   runtime.provide('settingsScope', {
     bind: () => ({
@@ -82,7 +84,7 @@ describe('session rename through the assembled browser', () => {
 
     // The current session's group auto-expands; open the row's action menu.
     const row = (await view.findByText('旧标题')).closest('[role="treeitem"]')!
-    fireEvent.contextMenu(row as HTMLElement, { clientX: 10, clientY: 10 })
+    fireEvent.contextMenu(row, { clientX: 10, clientY: 10 })
     fireEvent.click(view.getByRole('menuitem', { name: '重命名', hidden: true }))
 
     // The dialog seeds from the current title; submit a padded value.
@@ -129,7 +131,7 @@ describe('session rename through the assembled browser', () => {
     await runtime.flush()
 
     const row = (await view.findByText('旧标题')).closest('[role="treeitem"]')!
-    fireEvent.contextMenu(row as HTMLElement, { clientX: 10, clientY: 10 })
+    fireEvent.contextMenu(row, { clientX: 10, clientY: 10 })
     fireEvent.click(view.getByRole('menuitem', { name: '重命名', hidden: true }))
     const input = await view.findByLabelText('会话名称')
     fireEvent.change(input, { target: { value: '新名' } })

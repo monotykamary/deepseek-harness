@@ -257,12 +257,20 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // setup is still in flight — a signal, or a fast one-shot's appExit. Loader
   // presence and fiber state own liveness; the initial check skips a tree
   // that already exited, and the catch below re-checks for an exit that
-  // landed mid-setup. Watching is unconditional: a one-shot surface exits
+  // landed mid-setup. Watching is unconditional: a long-lived surface exits
   // through its bounded shutdown, which disposes the watchers before the
-  // loop drains.
+  // loop drains. The headless one-shot is the exception: its task runs and
+  // requests exit during boot, so mounting watchers here either throws (no
+  // --expose-internals) or keeps the loop alive past the exit request — the
+  // run must end when its single task does, not when the tree is torn down.
   if (!signalShutdown.signal.aborted
     && ctx.fiber.state === FiberState.ACTIVE
-    && ctx.get('loader') !== undefined) {
+    && ctx.get('loader') !== undefined
+    // The one-shot composition provides the headlessStartup service
+    // (headless-startup parses the task and publishes it during boot);
+    // long-lived surfaces (web, custom profiles) keep the live patch-layer
+    // reload contract.
+    && ctx.get('headlessStartup') === undefined) {
     try {
       // Config-only HMR for the live profile patch layer: the web bundle
       // disables the shared module-reload `hmr` row (its reload lifecycle is

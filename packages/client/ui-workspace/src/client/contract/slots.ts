@@ -22,7 +22,8 @@
  * and a hole has exactly one declaring entry — they carry the same owner
  * contract and the same occupant.
  */
-import type { HostObservable, PropsLocale, PropsRenderSlots, PropsRuntime, PropsStore, SnapshotSelectorHook } from '@monotykamary/dsh-client-ui-slots'
+import type { HostDescriptionSource } from '@monotykamary/dsh-client-connection/client'
+import type { HostObservable, PropsHooks, PropsLocale, PropsRenderSlots, PropsRuntime, PropsStore, SnapshotSelectorHook } from '@monotykamary/dsh-client-ui-slots'
 // Type-only: pull the owner SlotMap merges into programs that resolve the
 // runtime shares below.
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
@@ -81,10 +82,7 @@ export type DirectoryPickingInjected = {
 }
 
 /** Component-side view of the picking share: the bound occupancy selector hook. */
-export type DirectoryPickingHooks = {
-  /** Selector hook over this surface's directory-flow occupancy. */
-  useDirectoryFlow: SnapshotSelectorHook<boolean>
-}
+export type DirectoryPickingHooks = PropsHooks<DirectoryPickingInjected['hooks']>
 
 /**
  * Browser-private injected share (arrives via the register inject factory).
@@ -92,11 +90,13 @@ export type DirectoryPickingHooks = {
  * browsing region drives.
  */
 export type WorkspaceBrowserInjected = {
-  hooks: {
+  hooks: DirectoryPickingInjected['hooks'] & {
     /** True while the sidebar directory-flow hole is occupied. */
     directoryFlow: HostObservable<boolean>
     /** Host-resolved inactivity policy for the settled Session shelf. */
     settlement: SettingsScope<WorkspaceSettings>
+    /** Current generation's Host description, bound by the slot renderer. */
+    hostDescription: HostDescriptionSource
   }
   /**
    * Start a New Session in a Workspace: reuse-or-create its blank session and
@@ -157,6 +157,7 @@ export type WorkspaceBrowserProps =
     /** Selector hook over the resolved settled-session policy. */
     useSettlement: SnapshotSelectorHook<SettingsScopeSnapshot<WorkspaceSettings>>
   }
+  & PropsHooks<WorkspaceBrowserInjected['hooks']>
   & PropsLocale<'workspace'>
 
 /**

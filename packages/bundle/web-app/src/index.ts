@@ -5,11 +5,13 @@
  * the built frontend dist (workspace knowledge of this bundle, never user
  * config), mounts the `frontend-static` fallback owner over it, registers the
  * harness-source and web-surface prompt sections, the bash-visible web runtime
- * variable, and the URL line. App command-line values arrive through the
- * `webStartup` service expressions in the bundle patch.
+ * variable, the URL line, and the default-browser handoff. App command-line
+ * values arrive through the `webStartup` service expressions in the bundle
+ * patch.
  * @module @monotykamary/dsh-web-app
  */
 
+import { spawn, type ChildProcess } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -17,6 +19,8 @@ import type { Context } from '@monotykamary/cordis'
 import z from '@monotykamary/schemastery'
 import { addHarnessSourceSection } from '@monotykamary/dsh-app-boot'
 import * as FrontendStatic from '@monotykamary/dsh-host-frontend-static'
+import { launchEnvironmentOf } from '@monotykamary/dsh-launch-environment'
+import { scrubbedParentEnv } from '@monotykamary/dsh-subprocess'
 import type {} from '@monotykamary/cordis-plugin-loader'
 // Type-only: resolves `ctx.get('connection')` to the /api fence owner.
 import type {} from '@monotykamary/dsh-client-connection'
@@ -39,6 +43,8 @@ export const inject = ['webServer']
 
 /** Plugin config: composed deployment settings plus per-invocation command-line values. */
 export interface Config {
+  /** Permit default-browser handoff after the Loader tree settles; an SSH launch suppresses it. */
+  openBrowser: boolean
   /** Print the URL line on activation; a non-interactive layer can turn it off. */
   printUrl: boolean
   /**
@@ -57,6 +63,7 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
+  openBrowser: z.boolean().default(true),
   printUrl: z.boolean().default(true),
   surfaceContext: z.boolean().default(true),
   trustedHosts: z.array(String).default([]),
@@ -80,6 +87,46 @@ const DSH_WEB_URL = 'DSH_WEB_URL' as const
 const LOOPBACK_HOST = '127.0.0.1'
 /** The webserver schema's all-interfaces bind literal. */
 const ALL_INTERFACES_HOST = '0.0.0.0'
+
+/** Whether this process was launched through SSH, including a forwarded-port session. */
+function launchedThroughSsh(ctx: Context): boolean {
+  const environment = launchEnvironmentOf(ctx)
+  return ['SSH_CONNECTION', 'SSH_TTY'].some((name) => {
+    const value = environment.getFrom(name, ['process'])?.value
+    return value !== undefined && value !== ''
+  })
+}
+
+const BROWSER_OPENER_MODULE = import.meta.resolve('open')
+
+const BROWSER_OPENER_PROGRAM = `
+try {
+  const { default: open } = await import(${JSON.stringify(BROWSER_OPENER_MODULE)})
+  const launcher = await open(process.argv[1])
+  if (process.platform === 'win32') {
+    // open resolves at PowerShell spawn; keep it referenced until that launcher hands the URL to Windows.
+    const code = launcher.exitCode ?? await new Promise((resolve, reject) => {
+      function onError(error) {
+        launcher.off('close', onClose)
+        reject(error)
+      }
+      function onClose(code) {
+        launcher.off('error', onError)
+        resolve(code)
+      }
+      launcher.ref()
+      launcher.once('error', onError)
+      launcher.once('close', onClose)
+    })
+    if (code !== 0) throw new Error('browser operating-system launcher exited with code ' + String(code))
+  }
+  process.exitCode = 0
+} catch (error) {
+  // The parent turns this exit into the manual-URL warning.
+  console.error(error)
+  process.exitCode = 1
+}
+`
 
 /**
  * Resolve one LAN-trust snapshot from the active server bind.
@@ -132,6 +179,50 @@ function resolveDistIndex(): string {
   }
 }
 
+/** Start the maintained platform opener without forwarding Harness credentials. */
+function spawnBrowserLauncher(url: string): ChildProcess {
+  return spawn(process.execPath, [
+    '--input-type=module',
+    '--eval', BROWSER_OPENER_PROGRAM,
+    '--', url,
+  ], {
+    env: scrubbedParentEnv(),
+    stdio: ['ignore', 'inherit', 'pipe'],
+  })
+}
+/** Hand one URL to the operating system's default browser. */
+async function openBrowser(url: string): Promise<void> {
+  const launcher = spawnBrowserLauncher(url)
+  let launcherStderr = ''
+  launcher.stderr?.setEncoding('utf8')
+  launcher.stderr?.on('data', (chunk: string) => { launcherStderr += chunk })
+  await new Promise<void>((resolve, reject) => {
+    function onError(error: Error): void {
+      launcher.off('close', onClose)
+      reject(error)
+    }
+    function onClose(code: number | null): void {
+      launcher.off('error', onError)
+      if (code !== 0) {
+        const firstLine = launcherStderr.trim().split(/\r?\n/u)[0]
+        const reason = firstLine === undefined || firstLine === ''
+          ? `browser launcher exited with code ${String(code)}`
+          : firstLine.replace(/^(?:[A-Za-z]*Error):\s*/u, '')
+        reject(new Error(reason))
+        return
+      }
+      if (launcherStderr !== '') process.stderr.write(launcherStderr)
+      resolve()
+    }
+    launcher.once('error', onError)
+    launcher.once('close', onClose)
+  })
+}
+/** Test hooks for the built dist and native browser handoff; production never mutates them. */
+/**
+ * Test hooks: hosts with no built frontend dist substitute the dist resolver;
+ * surface tests substitute the prober. Production never touches these.
+ */
 /**
  * Test hooks: hosts with no built frontend dist substitute the dist resolver;
  * surface tests substitute the prober. Production never touches these.
@@ -139,11 +230,12 @@ function resolveDistIndex(): string {
 export const internals: {
   resolveDistIndex: () => string
   resolveSurfaces: (port: number, tailnet: boolean, portless: boolean) => Promise<SurfaceResolution>
+  openBrowser: (url: string) => Promise<void>
 } = {
   resolveDistIndex,
   resolveSurfaces: resolveRemoteSurfaces,
+  openBrowser,
 }
-
 /**
  * Resolve the enabled remote surfaces once per boot and publish their
  * authorities into the /api fence. The add runs only after resolution
@@ -174,7 +266,6 @@ async function settleSurfaces(ctx: Context, config: Config): Promise<SurfaceReso
   }
   return resolution
 }
-
 /**
  * Print the readiness URL line: the loopback URL first (supervisors parse
  * it), then the LAN snapshot and the derived remote surfaces.
@@ -194,12 +285,15 @@ function printUrl(ctx: Context, runtime: WebRuntimeValues, resolution: SurfaceRe
 
 /**
  * Mount the Web runtime: dist serving, surface prompt, the bash runtime
- * variable, and the URL line.
+ * variable, the URL line, and the default-browser handoff.
  * @param ctx - plugin context carrying the webServer service.
  * @param config - validated {@link Config}.
  */
 export function apply(ctx: Context, config: Config): void {
   const runtime = resolveLanTrust(ctx.webServer.host, config.trustedHosts)
+  // The loopback URL belongs to this host. Under SSH, the operator reaches it
+  // through a local forwarding address that this process cannot derive.
+  const handoffBrowser = config.openBrowser && !launchedThroughSsh(ctx)
   // Release dependent rows only after bind-dependent trust has been sampled once.
   ctx.provide(WEB_RUNTIME_SERVICE, runtime)
   ctx.plugin(FrontendStatic, { distIndex: internals.resolveDistIndex() })
@@ -222,29 +316,40 @@ export function apply(ctx: Context, config: Config): void {
       })
     })
   }
-  // Derived remote surfaces resolve once after the Loader tree settles, when
+  if (config.printUrl || handoffBrowser || config.tailnet || config.portless) {
   // the bound port and the connection fence owner both exist. The URL line is
   // a readiness signal: supervisors (and the keyless CLI smoke) RPC as soon as
   // they observe it, so it must not print while sibling rows (the /api route
   // owner) are still mounting. With both surface flags off the resolution
   // settles at once, so no probe delays the line.
-  const settled = ctx.get('loader')?.await()
-  const afterSettlement = async (): Promise<void> => {
-    // The tree can be disposed while the boot was in flight (early SIGTERM);
-    // a URL line for a dead server would only mislead, and reading the
-    // torn-down port would turn a clean shutdown into a crash.
-    if (ctx.get('webServer') === undefined) return
-    const resolution = await settleSurfaces(ctx, config)
-    for (const warning of resolution.warnings) ctx.logger.warn(warning)
-    if (config.printUrl) printUrl(ctx, runtime, resolution)
-  }
-  // This row's own activation can precede a sibling failure. The app owns
-  // readiness by waiting for its Loader tree, or runs at once in a
-  // hand-built context without Loader.
-  if (settled === undefined) void afterSettlement()
-  else {
-    void settled.then(afterSettlement, () => {
-      // Loader reports a failed boot; this row only stays quiet.
-    })
+    const settled = ctx.get('loader')?.await()
+    const afterSettlement = async (): Promise<void> => {
+      // The tree can be disposed while the boot was in flight (early SIGTERM);
+      // a URL line for a dead server would only mislead, and reading the
+      // torn-down port would turn a clean shutdown into a crash.
+      if (ctx.get('webServer') === undefined) return
+      const webUrl = localWebUrl(ctx)
+      const resolution = await settleSurfaces(ctx, config)
+      for (const warning of resolution.warnings) ctx.logger.warn(warning)
+      if (config.printUrl) {
+        printUrl(ctx, runtime, resolution)
+      }
+      if (handoffBrowser) {
+        console.log('dsh web: opening the default browser; pass --no-open to disable')
+        void internals.openBrowser(webUrl).catch((error: unknown) => {
+          const reason = error instanceof Error ? error.message : String(error)
+          console.error(`web-app: could not open the default browser because ${reason}; visit ${webUrl} manually`)
+        })
+      }
+    }
+    // This row's own activation can precede a sibling failure. The app owns
+    // readiness by waiting for its Loader tree, or runs at once in a
+    // hand-built context without Loader.
+    if (settled === undefined) void afterSettlement()
+    else {
+      void settled.then(afterSettlement, () => {
+        // Loader reports a failed boot; this row only stays quiet.
+      })
+    }
   }
 }

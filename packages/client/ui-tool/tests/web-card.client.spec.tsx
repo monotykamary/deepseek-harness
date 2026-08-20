@@ -17,7 +17,7 @@ import type {
   ConversationSnapshot, RunningToolCall, SessionId, SessionListState, ToolResultNode, WorkspaceListState,
 } from '@monotykamary/dsh-client-runtime/client'
 import type { ToolResultView } from '@monotykamary/dsh-api-remotes/client'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import type { SelectionTarget } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { ToolCallOwnerProps } from '@monotykamary/dsh-client-ui-tool/client'
 import { IconGlobeOutline14 } from '@monotykamary/dsh-client-ui-primitives'

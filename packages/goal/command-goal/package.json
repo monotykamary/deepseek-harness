@@ -35,6 +35,7 @@
     "@monotykamary/dsh-commands": "workspace:^",
     "@monotykamary/dsh-goal": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
     "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {

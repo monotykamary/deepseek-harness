@@ -15,7 +15,7 @@ interface CssPlugin {
   load?: (this: { addWatchFile(id: string): void }, id: string) => Promise<string | null>
 }
 
-function cssPlugin(): CssPlugin {
+function cssPlugin(name: 'dsh-css-inline' | 'dsh-css-global-inline' | 'dsh-css-text-inline'): CssPlugin {
   const configs = clientBundle(
     '@monotykamary/dsh-client-test',
     ['lib/types/index.js', 'lib/types/invariant.js'],
@@ -23,8 +23,8 @@ function cssPlugin(): CssPlugin {
   const client = configs.find(config => config.platform === 'browser')
   if (client === undefined) throw new Error('client config missing')
   const plugins = (client as { plugins: CssPlugin[] }).plugins
-  const plugin = plugins.find(candidate => candidate.name === 'dsh-css-inline')
-  if (plugin === undefined) throw new Error('CSS plugin missing from client config')
+  const plugin = plugins.find(candidate => candidate.name === name)
+  if (plugin === undefined) throw new Error(`${name} missing from client config`)
   return plugin
 }
 
@@ -35,7 +35,7 @@ describe('client bundle CSS', () => {
       const stylesheet = join(root, 'Fixture.module.css')
       const importer = join(root, 'index.ts')
       await writeFile(stylesheet, '.root { color: red; }\n')
-      const plugin = cssPlugin()
+      const plugin = cssPlugin('dsh-css-inline')
       const virtualId = plugin.resolveId?.('./Fixture.module.css', importer)
       if (typeof virtualId !== 'string' || plugin.load === undefined) {
         throw new Error('CSS Modules plugin hooks are incomplete')
@@ -53,7 +53,7 @@ describe('client bundle CSS', () => {
 
   it('resolves fontsource CSS and inlines watched WOFF2 assets', async () => {
     const importer = fileURLToPath(new URL('../packages/client/ui-terminal/src/client/index.ts', import.meta.url))
-    const plugin = cssPlugin()
+    const plugin = cssPlugin('dsh-css-inline')
     const virtualId = plugin.resolveId?.('@fontsource/fira-code/latin-400.css', importer)
     if (typeof virtualId !== 'string' || plugin.load === undefined) {
       throw new Error('fontsource CSS plugin hooks are incomplete')
@@ -74,7 +74,7 @@ describe('client bundle CSS', () => {
       const stylesheet = join(root, 'Fixture.global.css')
       const importer = join(root, 'index.ts')
       await writeFile(stylesheet, '.xterm { color: red; }\n')
-      const plugin = cssPlugin()
+      const plugin = cssPlugin('dsh-css-global-inline')
       const virtualId = plugin.resolveId?.('./Fixture.global.css', importer)
       if (typeof virtualId !== 'string' || plugin.load === undefined) {
         throw new Error('global CSS plugin hooks are incomplete')
@@ -86,6 +86,54 @@ describe('client bundle CSS', () => {
       expect(watched).toEqual([stylesheet])
       expect(output).toContain('.xterm')
       expect(output).toContain('export default {}')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('client bundle global CSS', () => {
+  it('compiles a side-effect stylesheet into a watched style injector', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-client-global-css-watch-'))
+    try {
+      const stylesheet = join(root, 'base.css')
+      const importer = join(root, 'index.ts')
+      await writeFile(stylesheet, 'body { color: red; }\n')
+      const plugin = cssPlugin('dsh-css-global-inline')
+      const virtualId = plugin.resolveId?.('./base.css', importer)
+      if (typeof virtualId !== 'string' || plugin.load === undefined) {
+        throw new Error('global CSS plugin hooks are incomplete')
+      }
+      const watched: string[] = []
+
+      const output = await plugin.load.call({ addWatchFile: id => watched.push(id) }, virtualId)
+
+      expect(watched).toEqual([stylesheet])
+      expect(output).toContain('data-plugin-css')
+      expect(output).toContain('body{color:red}')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('compiles inline stylesheets as watched text without a module side effect', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-client-inline-css-watch-'))
+    try {
+      const stylesheet = join(root, 'base.css')
+      const importer = join(root, 'index.ts')
+      await writeFile(stylesheet, 'body { color: red; }\n')
+      const plugin = cssPlugin('dsh-css-text-inline')
+      const virtualId = plugin.resolveId?.('./base.css?inline', importer)
+      if (typeof virtualId !== 'string' || plugin.load === undefined) {
+        throw new Error('inline CSS plugin hooks are incomplete')
+      }
+      const watched: string[] = []
+
+      const output = await plugin.load.call({ addWatchFile: id => watched.push(id) }, virtualId)
+
+      expect(watched).toEqual([stylesheet])
+      expect(output).toContain('export default "body{color:red}"')
+      expect(output).not.toContain('data-plugin-css')
     } finally {
       await rm(root, { recursive: true, force: true })
     }

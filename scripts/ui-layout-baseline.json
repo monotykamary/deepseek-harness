@@ -72,7 +72,7 @@
     "zindexes": 2
   },
   "packages/client/ui-conversation/src/client/skeleton/InputBar.module.css": {
-    "margins": 2,
+    "margins": 3,
     "zindexes": 0
   },
   "packages/client/ui-conversation/src/client/skeleton/TodoPanel.module.css": {
@@ -92,7 +92,7 @@
     "zindexes": 0
   },
   "packages/client/ui-input-trigger/src/client/MenuView.module.css": {
-    "margins": 0,
+    "margins": 1,
     "zindexes": 1
   },
   "packages/client/ui-jobs/src/client/JobListAction.module.css": {
@@ -102,6 +102,10 @@
   "packages/client/ui-layout/src/client/AppFrame.module.css": {
     "margins": 1,
     "zindexes": 2
+  },
+  "packages/client/ui-message-feedback/src/client/MessageFeedbackActions.module.css": {
+    "margins": 0,
+    "zindexes": 1
   },
   "packages/client/ui-model-selection/src/client/ModelSelect.module.css": {
     "margins": 2,
@@ -188,7 +192,7 @@
     "zindexes": 0
   },
   "packages/client/ui-settings-models/src/client/ModelsSection.module.css": {
-    "margins": 11,
+    "margins": 12,
     "zindexes": 0
   },
   "packages/client/ui-settings-models/src/client/OnboardingModal.module.css": {

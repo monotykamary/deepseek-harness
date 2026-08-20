@@ -135,6 +135,31 @@ describe('renderConfigDump', () => {
     expect(dump).not.toContain('b.yml\n- id: g')
   })
 
+  it('skips a pure disable of an absent row silently as the "disable if present" idiom', () => {
+    const dir = tmp()
+    const base = writeBase(dir)
+    const overlay = join(dir, 'overlay.yml')
+    writeFileSync(overlay, [
+      '- id: only-on-another-surface',
+      '  disabled: true',
+      '- id: shared',
+      '  config:',
+      '    value: patched',
+      '',
+    ].join('\n'))
+    const warnings: string[] = []
+    const dump = renderConfigDump(
+      NAME, base,
+      [{ label: 'overlay.yml', patches: loadOverlayPatches(NAME, overlay) }],
+      line => void warnings.push(line),
+    )
+    // One bundle patch list serves several compositions; a row that exists on
+    // another surface is disabled here without turning absence into a warning.
+    expect(warnings).toEqual([])
+    const parsed = yaml.load(dump, { schema: entryListSchema }) as { config?: { value?: string } }[]
+    expect(parsed[0]?.config?.value).toBe('patched')
+  })
+
   it('reports a patch whose target row is absent through warn with its layer label and keeps composing', () => {
     const dir = tmp()
     const base = writeBase(dir)
