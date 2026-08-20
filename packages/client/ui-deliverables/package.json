@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-deliverables",
   "description": "Produced-files turn tail, file references, and loaded mutation Changes surface for Web",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "publishConfig": {
     "access": "public"
   },

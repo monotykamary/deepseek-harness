@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-terminal",
   "description": "High-throughput xterm.js terminals for the Web workbench and bottom panel",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "publishConfig": {
     "access": "public"
   },

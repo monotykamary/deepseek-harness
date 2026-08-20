@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-workbench",
   "description": "Tabbed right-panel workbench and surface registry for the Web client",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "publishConfig": {
     "access": "public"
   },
