@@ -77,6 +77,12 @@ async function bootWeb(
     // and the URL prompt line — surface glue, not anything that decides an
     // agent's capabilities, which is all this file asserts.
     { id: 'web-runtime', disabled: true },
+    // SSO identity injects `webServer` and the browser terminal row injects
+    // `connection` (both disabled above) — the same surface-glue category,
+    // so they must be disabled alongside their injected services or the
+    // activation audit below reports them pending forever.
+    { id: 'web-identity', disabled: true },
+    { id: 'terminal-web', disabled: true },
     // A deployment-level skill on the host registry's GLOBAL layer — the same
     // registration shape a repository plugin's skill root uses. The layered
     // skills test below proves it reaches preset-composed agents.
