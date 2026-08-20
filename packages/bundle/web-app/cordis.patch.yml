@@ -32,13 +32,12 @@
     path: ':memory:'
     openAt: never
 
-- id: tools
-  config:
-    # TEMPORARY workaround: DSH_TOOLS_MODE (native|code|both) opts a whole dsh
-    # process into Code Mode while per-session tool-presentation selection is being
-    # designed; unset keeps the schema default (native). Remove the env seam
-    # once the web UI owns the choice per session.
-    mode: !!js process.env.DSH_TOOLS_MODE
+# DSH_TOOLS_MODE (native|code|both) opts a whole dsh process into Code Mode
+# while per-session tool-presentation selection is being designed; unset keeps
+# the schema default (native). The dsh launcher applies the selection ABOVE
+# every bundle layer (apps/cli/src/profile-boot.ts), so a custom-flavor bundle
+# restating the tools row cannot silently drop it; remove that launcher seam
+# once the web UI owns the choice per session.
 
 # ── web-only host rows, the transport layer, and the browser roster ─────────
 

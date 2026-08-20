@@ -14,10 +14,9 @@
 - id: hmr
   disabled: true
 
-- id: tools
-  config:
-    # Keep the same temporary process-wide Code Mode opt-in as the Web surface.
-    mode: !!js process.env.DSH_TOOLS_MODE
+# The process-wide Code Mode opt-in (DSH_TOOLS_MODE) is applied by the dsh
+# launcher above every bundle layer (apps/cli/src/profile-boot.ts), like the
+# Web surface.
 
 - insert:
     # Code Mode is a core execution capability, not a Web component.

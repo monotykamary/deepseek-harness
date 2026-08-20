@@ -128,6 +128,22 @@ function composeProfile(
   const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
   const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
   const bundlePatches = profile.layers.flatMap(layer => layer.patches)
+  // The process-wide Code Mode opt-in (DSH_TOOLS_MODE) is a launcher
+  // deployment choice, applied ABOVE every bundle layer: an id-targeted patch
+  // replaces the row's whole `config`, so a custom flavor that restates the
+  // `tools` row without repeating `mode` would silently revert a code-mode
+  // process to native. Merge into that layer's config rather than replacing
+  // it, so the flavor keeps its own tuning (e.g. maxParallelSubCalls). Unset
+  // leaves the row untouched (the schema default is `native`).
+  const toolMode = process.env.DSH_TOOLS_MODE
+  if (toolMode !== undefined) {
+    const lastTools = [...bundlePatches].reverse()
+      .find(patch => patch.id === 'tools' && !Array.isArray(patch.insert))
+    const toolsConfig = lastTools?.config !== undefined && typeof lastTools.config === 'object'
+      ? { ...lastTools.config as Record<string, unknown> }
+      : {}
+    bundlePatches.push({ id: 'tools', config: { ...toolsConfig, mode: toolMode } })
+  }
   const rows = new Map<string, EntryOptions>()
   for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)

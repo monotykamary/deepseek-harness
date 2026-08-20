@@ -33,6 +33,20 @@ export function runDumpConfig(profile: string, defaultOnly: boolean, patches: re
     label: layer.packageName,
     patches: layer.patches,
   }))
+  // Mirror the launcher's process-wide Code Mode opt-in (profile-boot.ts),
+  // applied above every bundle layer and merged into the last bundle's tools
+  // config, so the dump shows what a boot mounts.
+  if (process.env.DSH_TOOLS_MODE !== undefined) {
+    const lastBundleTools = loaded.layers.flatMap(layer => layer.patches)
+      .reverse().find(patch => patch.id === 'tools' && !Array.isArray(patch.insert))
+    const toolsConfig = lastBundleTools?.config !== undefined && typeof lastBundleTools.config === 'object'
+      ? { ...lastBundleTools.config as Record<string, unknown> }
+      : {}
+    layers.push({
+      label: 'dsh launcher (DSH_TOOLS_MODE)',
+      patches: [{ id: 'tools', config: { ...toolsConfig, mode: process.env.DSH_TOOLS_MODE } }],
+    })
+  }
   if (!defaultOnly) {
     if (existsSync(loaded.patchPath)) {
       layers.push({ label: loaded.patchPath, patches: loaded.patches })
