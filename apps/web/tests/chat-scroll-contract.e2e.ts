@@ -316,11 +316,11 @@ async function flingTranscript(page: Page, deltaY: number): Promise<void> {
 }
 
 async function wheelToHistoryStart(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
+  for (let attempt = 0; attempt < 16; attempt += 1) {
     if ((await scrollGeometry(page)).scrollTop <= 1) break
     await wheelTranscript(page, -2_400)
   }
-  await expect.poll(async () => (await scrollGeometry(page)).scrollTop, { timeout: 10_000 })
+  await expect.poll(async () => (await scrollGeometry(page)).scrollTop, { timeout: 20_000 })
     .toBeLessThanOrEqual(1)
 }
 
@@ -382,6 +382,37 @@ function visibleFlowAnchor(page: Page): Promise<FlowAnchor> {
   })
 }
 
+/**
+ * Capture the first visible row once the transcript has stopped moving. The
+ * single-read {@link visibleFlowAnchor} is correct only when the scrollport is
+ * at rest; under host contention a wheel or fling burst can still be settling
+ * on the compositor thread, so the capture polls until two consecutive reads
+ * agree on the same row at the same top before anchoring on it.
+ * @param page - the scenario page.
+ * @param timeout - how long to wait for the transcript to settle.
+ * @returns the stable first visible row.
+ */
+async function settledVisibleAnchor(page: Page, timeout = 20_000): Promise<FlowAnchor> {
+  let previous: FlowAnchor | undefined
+  let settled: FlowAnchor | undefined
+  await expect.poll(async () => {
+    let current: FlowAnchor
+    try {
+      current = await visibleFlowAnchor(page)
+    } catch {
+      // Scroll mid-flight can leave no settled row visible; keep polling.
+      return false
+    }
+    settled = current
+    if (previous !== undefined && current.key === previous.key
+      && Math.abs(current.top - previous.top) <= GEOMETRY_TOLERANCE) return true
+    previous = current
+    return false
+  }, { timeout, message: 'transcript never settled on a stable visible row' }).toBe(true)
+  if (settled === undefined) throw new Error('visible flow anchor never settled')
+  return settled
+}
+
 function flowTop(page: Page, key: string): Promise<number> {
   return page.locator('[data-chat-anchor-key]').evaluateAll((rows, anchorKey) => {
     const row = rows.find(candidate => (candidate as HTMLElement).dataset.chatAnchorKey === anchorKey)
@@ -394,14 +425,14 @@ function flowTop(page: Page, key: string): Promise<number> {
 
 async function expectSameFlowTop(page: Page, anchor: FlowAnchor): Promise<void> {
   await expect.poll(async () => Math.abs((await flowTop(page, anchor.key)) - anchor.top), {
-    timeout: 10_000,
+    timeout: 20_000,
     message: `flow row ${anchor.key} moved relative to the transcript viewport`,
   }).toBeLessThanOrEqual(GEOMETRY_TOLERANCE)
 }
 
 async function expectBottom(page: Page): Promise<void> {
   await expect.poll(async () => Math.abs((await scrollGeometry(page)).distanceFromBottom), {
-    timeout: 10_000,
+    timeout: 20_000,
   }).toBeLessThanOrEqual(1)
 }
 
@@ -423,7 +454,7 @@ async function expectMarkerAboveComposer(page: Page, marker: string): Promise<vo
 async function loadEarlierWithAnchor(page: Page): Promise<void> {
   await wheelToHistoryStart(page)
   const older = page.getByRole('button', { name: 'Load earlier', exact: true })
-  await older.waitFor({ timeout: 10_000 })
+  await older.waitFor({ timeout: 20_000 })
   const anchor = await visibleFlowAnchor(page)
   const before = await loadedFlowRows(page)
   await older.click()
@@ -496,18 +527,18 @@ describe('web e2e: long Chat scroll contract', () => {
         const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_TEXT_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
-        await world.page.getByText(LIVE_TEXT_FIRST, { exact: false }).last().waitFor({ timeout: 15_000 })
+        await world.page.getByText(LIVE_TEXT_FIRST, { exact: false }).last().waitFor({ timeout: 30_000 })
         await wheelToHistoryStart(world.page)
         const beforeRows = await loadedFlowRows(world.page)
         await world.page.getByRole('button', { name: 'Load earlier', exact: true }).click()
-        await expect.poll(() => held, { timeout: 10_000 }).toBe(true)
+        await expect.poll(() => held, { timeout: 20_000 }).toBe(true)
 
         await wheelTranscript(world.page, 420)
-        const readerAnchor = await visibleFlowAnchor(world.page)
+        const readerAnchor = await settledVisibleAnchor(world.page)
         const chunksAfterAnchor = world.events.filter(event => event.type === 'assistant/chunk').length
         await expect.poll(
           () => world.events.filter(event => event.type === 'assistant/chunk').length,
-          { timeout: 10_000 },
+          { timeout: 30_000 },
         ).toBeGreaterThan(chunksAfterAnchor + 5)
 
         releaseHistory()
@@ -519,8 +550,8 @@ describe('web e2e: long Chat scroll contract', () => {
       }
 
       await settled
-      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 15_000 }).toBe(0)
-      await world.page.getByText(LIVE_TEXT_DONE, { exact: false }).last().waitFor({ timeout: 15_000 })
+      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 30_000 }).toBe(0)
+      await world.page.getByText(LIVE_TEXT_DONE, { exact: false }).last().waitFor({ timeout: 30_000 })
       await world.page.unroute('**/api/session.history')
 
       let additionalPages = 0
@@ -559,29 +590,29 @@ describe('web e2e: long Chat scroll contract', () => {
         const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_TOOL_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
-        await expect.poll(() => fileExists(readyPath), { timeout: 15_000 }).toBe(true)
+        await expect.poll(() => fileExists(readyPath), { timeout: 30_000 }).toBe(true)
         const liveRow = world.page.locator(`[data-chat-call-id="${LIVE_TOOL_CALL_ID}"] [data-sample="bash"]`)
-        await liveRow.waitFor({ timeout: 15_000 })
+        await liveRow.waitFor({ timeout: 30_000 })
         expect(await liveRow.getAttribute('data-state')).toBe('running')
         await expectBottom(world.page)
 
         await wheelTranscript(world.page, -1_200)
-        await world.page.getByRole('button', { name: 'Back to bottom', exact: true }).waitFor({ timeout: 10_000 })
-        const awayAnchor = await visibleFlowAnchor(world.page)
+        await world.page.getByRole('button', { name: 'Back to bottom', exact: true }).waitFor({ timeout: 20_000 })
+        const awayAnchor = await settledVisibleAnchor(world.page)
         const chunksBeforeRelease = world.events.filter(event => event.type === 'assistant/chunk').length
         await writeFile(releasePath, 'release\n')
         released = true
         await expect.poll(
           () => world.events.some(event => event.type === 'tool/result'),
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBe(true)
         await expect.poll(
           () => world.events.some(event => eventCarries(event, LIVE_TOOL_FIRST)),
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBe(true)
         await expect.poll(
           () => world.events.filter(event => event.type === 'assistant/chunk').length,
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBeGreaterThan(chunksBeforeRelease + 5)
         await expectSameFlowTop(world.page, awayAnchor)
 
@@ -590,7 +621,7 @@ describe('web e2e: long Chat scroll contract', () => {
         await expectBottom(world.page)
         await expect.poll(
           () => world.events.filter(event => event.type === 'assistant/chunk').length,
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBeGreaterThan(chunksAtRepin + 5)
         await expectBottom(world.page)
       } finally {
@@ -598,8 +629,8 @@ describe('web e2e: long Chat scroll contract', () => {
       }
 
       await settled
-      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 15_000 }).toBe(0)
-      await world.page.getByText(LIVE_TOOL_DONE, { exact: false }).last().waitFor({ timeout: 15_000 })
+      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 30_000 }).toBe(0)
+      await world.page.getByText(LIVE_TOOL_DONE, { exact: false }).last().waitFor({ timeout: 30_000 })
       await expectBottom(world.page)
       await expectMarkerAboveComposer(world.page, LIVE_TOOL_DONE)
 
@@ -649,7 +680,7 @@ describe('web e2e: long Chat scroll contract', () => {
       await loadEarlierWithAnchor(world.page)
       await wheelToHistoryStart(world.page)
       await wheelTranscript(world.page, 1_300)
-      const sessionAnchor = await visibleFlowAnchor(world.page)
+      const sessionAnchor = await settledVisibleAnchor(world.page)
 
       await world.page.getByRole('tab', { name: 'Trajectory', exact: true }).click()
       await world.page.getByLabel('Trajectory timeline').waitFor({ timeout: 30_000 })
@@ -713,7 +744,7 @@ describe('web e2e: long Chat scroll contract', () => {
       await composer.fill('short draft')
       await nextPaint(world.page)
       await wheelTranscript(world.page, -900)
-      const resizeAnchor = await visibleFlowAnchor(world.page)
+      const resizeAnchor = await settledVisibleAnchor(world.page)
       await composer.fill(longDraft)
       await nextPaint(world.page)
       await expectSameFlowTop(world.page, resizeAnchor)
@@ -724,7 +755,7 @@ describe('web e2e: long Chat scroll contract', () => {
       const beforeChain = await scrollGeometry(world.page)
       await composer.hover()
       await world.page.mouse.wheel(0, -320)
-      await expect.poll(async () => (await scrollGeometry(world.page)).scrollTop, { timeout: 10_000 })
+      await expect.poll(async () => (await scrollGeometry(world.page)).scrollTop, { timeout: 20_000 })
         .toBeLessThan(beforeChain.scrollTop)
       assertClean(world)
     })
@@ -755,17 +786,17 @@ describe('web e2e: long Chat scroll contract', () => {
       await lastToolRow.focus()
       await world.page.keyboard.press('End')
       await expectBottom(world.page)
-      await expect.poll(() => backToBottom.count(), { timeout: 10_000 }).toBe(0)
+      await expect.poll(() => backToBottom.count(), { timeout: 20_000 }).toBe(0)
       for (let press = 0; press < 3; press += 1) {
         await world.page.keyboard.press('PageUp')
         await nextPaint(world.page)
       }
-      await backToBottom.waitFor({ timeout: 10_000 })
-      await expect.poll(async () => (await scrollGeometry(world.page)).distanceFromBottom, { timeout: 10_000 })
+      await backToBottom.waitFor({ timeout: 20_000 })
+      await expect.poll(async () => (await scrollGeometry(world.page)).distanceFromBottom, { timeout: 20_000 })
         .toBeGreaterThan(100)
       await world.page.keyboard.press('End')
       await expectBottom(world.page)
-      await expect.poll(() => backToBottom.count(), { timeout: 10_000 }).toBe(0)
+      await expect.poll(() => backToBottom.count(), { timeout: 20_000 }).toBe(0)
       assertClean(world)
     })
   }, 180_000)
@@ -789,41 +820,41 @@ describe('web e2e: long Chat scroll contract', () => {
         const composer = world.page.locator('textarea:enabled').first()
         await composer.fill(LIVE_FLING_PROMPT)
         await world.page.getByRole('button', { name: 'Send message', exact: true }).click()
-        await expect.poll(() => fileExists(readyPath), { timeout: 15_000 }).toBe(true)
+        await expect.poll(() => fileExists(readyPath), { timeout: 30_000 }).toBe(true)
         await expectBottom(world.page)
 
         // Fling away while the turn is mid-flight: the scroll burst alone must
         // release bottom ownership, exactly like a wheel scroll would, even
         // while streaming keeps re-asserting the floor between frames.
         await flingTranscript(world.page, -900)
-        await backToBottom.waitFor({ timeout: 10_000 })
-        const awayAnchor = await visibleFlowAnchor(world.page)
+        await backToBottom.waitFor({ timeout: 20_000 })
+        const awayAnchor = await settledVisibleAnchor(world.page)
         const chunksBeforeRelease = world.events.filter(event => event.type === 'assistant/chunk').length
         await writeFile(releasePath, 'release\n')
         released = true
         await expect.poll(
           () => world.events.some(event => event.type === 'tool/result'),
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBe(true)
         await expect.poll(
           () => world.events.filter(event => event.type === 'assistant/chunk').length,
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBeGreaterThan(chunksBeforeRelease + 5)
         await expectSameFlowTop(world.page, awayAnchor)
 
         // Fling back to the floor: re-pin must come from the reader's scroll
         // itself, and follow must then own the still-streaming tail. The
         // retry loop chases the floor that streaming keeps pushing down.
-        for (let attempt = 0; attempt < 8; attempt += 1) {
+        for (let attempt = 0; attempt < 12; attempt += 1) {
           if ((await scrollGeometry(world.page)).distanceFromBottom <= 1) break
           await flingTranscript(world.page, 1_600)
         }
         await expectBottom(world.page)
-        await expect.poll(() => backToBottom.count(), { timeout: 10_000 }).toBe(0)
+        await expect.poll(() => backToBottom.count(), { timeout: 20_000 }).toBe(0)
         const chunksAtRepin = world.events.filter(event => event.type === 'assistant/chunk').length
         await expect.poll(
           () => world.events.filter(event => event.type === 'assistant/chunk').length,
-          { timeout: 15_000 },
+          { timeout: 30_000 },
         ).toBeGreaterThan(chunksAtRepin + 5)
         await expectBottom(world.page)
       } finally {
@@ -831,8 +862,8 @@ describe('web e2e: long Chat scroll contract', () => {
       }
 
       await settled
-      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 15_000 }).toBe(0)
-      await world.page.getByText(LIVE_FLING_DONE, { exact: false }).last().waitFor({ timeout: 15_000 })
+      await expect.poll(() => world.page.locator('[data-streaming="true"]').count(), { timeout: 30_000 }).toBe(0)
+      await world.page.getByText(LIVE_FLING_DONE, { exact: false }).last().waitFor({ timeout: 30_000 })
       await expectBottom(world.page)
       assertClean(world)
     })

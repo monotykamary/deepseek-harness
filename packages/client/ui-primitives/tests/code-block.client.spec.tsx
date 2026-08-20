@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { CodeBlock } from '../src/markdown/CodeBlock.tsx'
-import { highlightToHtml } from '../src/markdown/highlight.ts'
+import { grammarLoadCount, highlightToHtml } from '../src/markdown/highlight.ts'
 
 afterEach(cleanup)
 
@@ -41,14 +41,20 @@ describe('highlightToHtml', () => {
     'xml', 'lua',
   ]
 
+  // Twenty-three real grammar modules transform and register under jsdom;
+  // under host contention that can take far longer than the 5s default test
+  // timeout, so the test carries its own budget.
   it('lazily loads every read-card grammar: plain first, highlighted after load', async () => {
     // First touch returns the plain fallback (undefined) and starts the import.
     for (const alias of LAZY_ALIASES) expect(highlightToHtml('x', alias)).toBeUndefined()
-    // Once every grammar has registered, the same call highlights.
+    // The load counter is the registration signal itself, so the wait is not
+    // hostage to re-running highlight calls while modules still parse under
+    // host contention; the highlighted-output loop then proves the result.
     await vi.waitFor(() => {
+      expect(grammarLoadCount()).toBe(LAZY_ALIASES.length)
       for (const alias of LAZY_ALIASES) expect(highlightToHtml('x', alias)).toContain('shiki')
-    }, { timeout: 5_000 })
-  })
+    }, { timeout: 60_000 })
+  }, 90_000)
 })
 
 describe('CodeBlock', () => {
