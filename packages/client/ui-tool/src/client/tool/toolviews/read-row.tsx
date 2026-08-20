@@ -1,5 +1,5 @@
 // Read toolview registrant: the keyed toolview hole for the read tool. The row
-// composes the shared ToolRow (chrome, running sweep, whole-row expand) and
+// composes the shared ToolRow (chrome, running text shimmer, whole-row expand) and
 // feeds it the file's line-numbered, syntax-highlighted content as ToolRow's
 // `read` card material, so it renders through ReadBlock in the collapsed-by-
 // default expanded body — the same unified interaction every other card row

@@ -103,7 +103,7 @@ export interface ToolRowProps {
 
 /** Leading-slot state substitution: the tool icon yields to the terminal state
  *  semantic (error = red, interrupted = amber halo). Running keeps the icon —
- *  the row sweep (CSS on data-state) carries the in-flight signal. */
+ *  the running text shimmer (CSS on data-state) carries the in-flight signal. */
 function leadingFor(state: ToolRowState, icon: ReactNode): ReactNode {
   switch (state) {
     case 'error': return <StateDot state="error" />
@@ -112,7 +112,7 @@ function leadingFor(state: ToolRowState, icon: ReactNode): ReactNode {
   }
 }
 
-/** Visually hidden run-state label: the StateDot and the CSS sweep are both
+/** Visually hidden run-state label: the StateDot and the CSS text shimmer are both
  *  aria-hidden / colour-only, so assistive technology needs this text to know a
  *  row is running, failed, or interrupted. null in the ok state (the icon and
  *  summary already describe a settled row). */
@@ -159,7 +159,7 @@ export function ToolRow({
   const card = terminalBody ?? diffBody ?? readBody ?? searchBody ?? webBody
   const expandable = body !== null || outputText !== null || card !== null
   const open = expanded && expandable
-  // The run-state label AT needs: the StateDot and the running sweep are both
+  // The run-state label AT needs: the StateDot and the running text shimmer are both
   // aria-hidden / colour-only, so a stopped or running row is otherwise silent.
   const status = stateStatus(state, t)
   // An error row's collapsed summary IS the failure: the first error line in

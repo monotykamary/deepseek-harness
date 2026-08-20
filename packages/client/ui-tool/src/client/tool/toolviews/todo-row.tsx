@@ -1,7 +1,7 @@
 // todo_write toolview: plan-flavored summary row replacing the generic
 // "Tool call" card, registered into the keyed 'tool.call.toolview'
 // hole like the bash sample (a product registration, not a sample). The row
-// composes ToolRow (chrome, running sweep, whole-row expand) and swaps in a
+// composes ToolRow (chrome, running text shimmer, whole-row expand) and swaps in a
 // summary of the written list (counts + active items) from the call args, with
 // the parallel-active count riding ToolRow's non-shrinking summary suffix so a
 // narrow row never clips it; the durable list itself renders in the TodoPanel

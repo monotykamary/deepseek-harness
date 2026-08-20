@@ -1,7 +1,7 @@
 // ask_user_question toolview: question-flavored summary row replacing the
 // generic "Tool call" card, registered into the keyed
 // 'tool.call.toolview' hole like todo-row. The row composes ToolRow
-// (chrome, running sweep, whole-row expand) and swaps in the interaction
+// (chrome, running text shimmer, whole-row expand) and swaps in the interaction
 // outcome — `waiting` while pending, answered-count once settled, `cancelled`
 // when the user dismissed the whole set — because the questions themselves
 // render in the composer takeover.

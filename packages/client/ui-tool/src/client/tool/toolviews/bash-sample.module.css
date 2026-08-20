@@ -85,35 +85,71 @@
 }
 
 .root {
-  position: relative; /* sweep-glare overlay anchor */
-  overflow: hidden;
   display: flex;
   align-items: center;
   height: 24px;
   min-width: 0;
 }
 
-/* Running sweep glare — same deepsuite ShimmerText pattern as ToolRow. */
-.root[data-state='running']::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 300px;
-  background: linear-gradient(
+/* Running signal lives in the row text only — same text-clipped
+   high-contrast neutral deepsuite ShimmerText pattern as ToolRow; the icon
+   and background stay untouched. */
+.root[data-state='running'] .title {
+  background-image: linear-gradient(
     90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%,
-    transparent 100%
+    var(--dsw-alias-label-secondary) 0%,
+    var(--dsw-alias-label-secondary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-secondary) 65%,
+    var(--dsw-alias-label-secondary) 100%
   );
-  animation: dsh-bash-row-sweep 2.6s ease-out infinite;
-  pointer-events: none;
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-bash-row-text-shimmer 1.4s linear infinite;
 }
 
-@keyframes dsh-bash-row-sweep {
-  0% { left: -300px; }
-  90%, 100% { left: 100%; }
+.root[data-state='running'] .summary {
+  background-image: linear-gradient(
+    90deg,
+    var(--dsw-alias-label-tertiary) 0%,
+    var(--dsw-alias-label-tertiary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-tertiary) 65%,
+    var(--dsw-alias-label-tertiary) 100%
+  );
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-bash-row-text-shimmer 1.4s linear infinite;
+}
+
+@keyframes dsh-bash-row-text-shimmer {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-state='running'] .title {
+    background: none;
+    color: var(--dsw-alias-label-secondary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
+
+  .root[data-state='running'] .summary {
+    background: none;
+    color: var(--dsw-alias-label-tertiary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
 }
 
 .leading {

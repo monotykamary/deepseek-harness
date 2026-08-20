@@ -2,7 +2,7 @@
 // `web_fetch` tools. Registered under BOTH, since both declare the one `web`
 // render intent and render through the one WebBlock family; the row
 // discriminates on the toolName only to pick its icon and title. The row
-// composes the shared ToolRow (chrome, running sweep, whole-row expand) and
+// composes the shared ToolRow (chrome, running text shimmer, whole-row expand) and
 // feeds it the completed retrieval as ToolRow's `web` card material, so it
 // renders through WebBlock in the collapsed-by-default expanded body — the same
 // unified interaction every other card row has. Until the call settles there is

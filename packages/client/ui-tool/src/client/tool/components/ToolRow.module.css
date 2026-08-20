@@ -6,35 +6,71 @@
   flex-direction: column;
 }
 
-.row {
-  position: relative; /* sweep-glare overlay anchor */
-  overflow: hidden;
-}
-
-/* Running sweep (deepsuite ShimmerText pattern): a fixed-width glare band —
-   theme background at 60% — glides over the row content from off-left to
-   off-right, washing glyphs and icon toward the background as it passes.
-   ease-out with a 10% end hold gives each pass a beat before the next. */
-.root[data-state='running'] .row::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 300px;
-  background: linear-gradient(
+/* Running signal lives in the row text only (deepsuite ShimmerText pattern,
+   text-clipped): a high-contrast neutral band passes through the glyphs —
+   the text peaks at label-primary between its resting colors — while the
+   icon, separator, and background stay untouched. Reduced-motion restores
+   resting colors. */
+.root[data-state='running'] .title,
+.root[data-state='running'] .fileLink {
+  background-image: linear-gradient(
     90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%,
-    transparent 100%
+    var(--dsw-alias-label-secondary) 0%,
+    var(--dsw-alias-label-secondary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-secondary) 65%,
+    var(--dsw-alias-label-secondary) 100%
   );
-  animation: dsh-tool-row-sweep 2.6s ease-out infinite;
-  pointer-events: none;
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-tool-row-text-shimmer 1.4s linear infinite;
 }
 
-@keyframes dsh-tool-row-sweep {
-  0% { left: -300px; }
-  90%, 100% { left: 100%; }
+.root[data-state='running'] .summary,
+.root[data-state='running'] .summarySuffix {
+  background-image: linear-gradient(
+    90deg,
+    var(--dsw-alias-label-tertiary) 0%,
+    var(--dsw-alias-label-tertiary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-tertiary) 65%,
+    var(--dsw-alias-label-tertiary) 100%
+  );
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-tool-row-text-shimmer 1.4s linear infinite;
+}
+
+@keyframes dsh-tool-row-text-shimmer {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-state='running'] .title,
+  .root[data-state='running'] .fileLink {
+    background: none;
+    color: var(--dsw-alias-label-secondary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
+
+  .root[data-state='running'] .summary,
+  .root[data-state='running'] .summarySuffix {
+    background: none;
+    color: var(--dsw-alias-label-tertiary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
 }
 
 .leading {
@@ -296,8 +332,8 @@
 }
 
 /* Visually hidden run-state label for assistive technology: the StateDot and
-   the running sweep are aria-hidden / colour-only, so the text carries the
-   running/failed/interrupted state to a screen reader. */
+   the running text shimmer are aria-hidden / colour-only, so the text carries
+   the running/failed/interrupted state to a screen reader. */
 .visuallyHidden {
   position: absolute;
   width: 1px;

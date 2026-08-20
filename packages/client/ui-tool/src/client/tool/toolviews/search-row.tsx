@@ -2,7 +2,7 @@
 // tools. One SearchRow component registered under both, since both declare the
 // same `card: 'search'` render intent and render as one visual object; the
 // derived model's `kind` decides the card shape (grouped matches or a path
-// list). The row composes the shared ToolRow (chrome, running sweep, whole-row
+// list). The row composes the shared ToolRow (chrome, running text shimmer, whole-row
 // expand) and feeds it the completed search as ToolRow's `search` card
 // material, so it renders through SearchBlock in the collapsed-by-default
 // expanded body — with a capped search's recovery footer below the card. A

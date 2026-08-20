@@ -6,8 +6,6 @@
 }
 
 .row {
-  position: relative;
-  overflow: hidden;
   display: flex;
   align-items: center;
   height: 24px;
@@ -18,24 +16,65 @@
   cursor: pointer;
 }
 
-.card[data-state='running'] .row::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 300px;
-  background: linear-gradient(
+/* Running signal lives in the row text only — same text-clipped
+   high-contrast neutral deepsuite ShimmerText pattern as ToolRow/Bash; the
+   icon and background stay untouched. */
+.card[data-state='running'] .row .title {
+  background-image: linear-gradient(
     90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%,
-    transparent 100%
+    var(--dsw-alias-label-secondary) 0%,
+    var(--dsw-alias-label-secondary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-secondary) 65%,
+    var(--dsw-alias-label-secondary) 100%
   );
-  animation: dsh-skill-row-sweep 2.6s ease-out infinite;
-  pointer-events: none;
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-skill-row-text-shimmer 1.4s linear infinite;
 }
 
-@keyframes dsh-skill-row-sweep {
-  0% { left: -300px; }
-  90%, 100% { left: 100%; }
+.card[data-state='running'] .row .summary {
+  background-image: linear-gradient(
+    90deg,
+    var(--dsw-alias-label-tertiary) 0%,
+    var(--dsw-alias-label-tertiary) 35%,
+    var(--dsw-alias-label-primary) 50%,
+    var(--dsw-alias-label-tertiary) 65%,
+    var(--dsw-alias-label-tertiary) 100%
+  );
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-skill-row-text-shimmer 1.4s linear infinite;
+}
+
+@keyframes dsh-skill-row-text-shimmer {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card[data-state='running'] .row .title {
+    background: none;
+    color: var(--dsw-alias-label-secondary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
+
+  .card[data-state='running'] .row .summary {
+    background: none;
+    color: var(--dsw-alias-label-tertiary);
+    -webkit-text-fill-color: initial;
+    animation: none;
+  }
 }
 
 .leading {
@@ -199,11 +238,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card[data-state='running'] .row::after {
-    animation: none;
-    display: none;
-  }
-
   .iconIdle,
   .chevronHover,
   .inspectButton {

@@ -33,7 +33,7 @@ function leadingFor(state: ToolRowState) {
   switch (state) {
     case 'error': return <StateDot state="error" />
     case 'stopped': return <StateDot state="warning" />
-    // Running keeps the icon — the row sweep carries the in-flight signal.
+    // Running keeps the icon — the text shimmer carries the in-flight signal.
     default: return <IconApiOutline14 size={14} />
   }
 }
