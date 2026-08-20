@@ -1371,7 +1371,7 @@ describe('WorkspaceBrowser', () => {
     // Snoozing filters both settle sets and hides the row until the wake.
     act(() => { b.store.actions.unsettleSession('old-s') })
     act(() => { b.store.actions.snoozeSession('old-s', Date.now() + 60_000) })
-    expect(typeof b.store.getSnapshot().snoozedUntilBySession['old-s']).toBe('number')
+    expect(typeof b.store.getSnapshot().snoozedUntilBySession?.['old-s']).toBe('number')
     expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual([])
     expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
     act(() => { b.store.actions.wakeSession('old-s') })
