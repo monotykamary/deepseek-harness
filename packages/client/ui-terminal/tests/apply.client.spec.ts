@@ -11,6 +11,7 @@ import { apply as applyNode } from '../src/index.ts'
 import { NS } from '../src/client/locales.ts'
 import { BottomTerminalToggle } from '../src/client/BottomTerminalToggle.tsx'
 import { BottomTerminal, WorkbenchTerminal } from '../src/client/TerminalPanel.tsx'
+import { DEFAULT_TERMINAL_PREFERENCES } from '../src/client/preferences.ts'
 import type { BottomTerminalToggleInjected, TerminalInjected } from '../src/client/contract.ts'
 
 usePinnedBrowserLanguages('zh-CN')
@@ -42,9 +43,15 @@ async function bench() {
     readonly toggleBottom = vi.fn()
     constructor(serviceCtx: Context) { super(serviceCtx, 'layout') }
   }
+  // Minimal theme stand-in: the plugin reads getTheme() once and follows
+  // the theme/change event, so the bench drives the source through ctx.emit.
+  const theme = {
+    getTheme: () => ({ active: { colorScheme: 'dark' as const } }),
+  }
   const workbench = new WorkbenchService(ctx)
   const layout = new LayoutService(ctx)
-  return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, workbench, layout }
+  ctx.provide('theme', theme)
+  return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, workbench, layout, theme }
 }
 
 function declare(slots: SlotRegistry): () => void {
@@ -61,7 +68,7 @@ function declare(slots: SlotRegistry): () => void {
 describe('ui-terminal browser plugin', () => {
   it('keeps the Host half empty and declares only services it reads', () => {
     applyNode()
-    expect(inject).toEqual(['slots', 'locale', 'workbench', 'layout'])
+    expect(inject).toEqual(['slots', 'locale', 'workbench', 'layout', 'theme'])
   })
 
   it('registers both terminal placements, presentation, preferences, and header toggle', async () => {
@@ -89,6 +96,8 @@ describe('ui-terminal browser plugin', () => {
     const rightInjected = (surface.inject as unknown as (sessionId: string) => TerminalInjected)('session')
     const bottomInjected = (bottom.inject as unknown as (sessionId: string) => TerminalInjected)('session')
     expect(rightInjected.hooks.preferences).toBe(bottomInjected.hooks.preferences)
+    expect(rightInjected.hooks.colorScheme).toBe(bottomInjected.hooks.colorScheme)
+    expect(rightInjected.hooks.colorScheme.getSnapshot()).toBe('dark')
     expect(rightInjected.socketFactory).toBeTypeOf('function')
     const socket = {}
     vi.stubGlobal('WebSocket', vi.fn(function WebSocketStub() { return socket }))
@@ -101,11 +110,19 @@ describe('ui-terminal browser plugin', () => {
     expect(b.workbench.ensureCount).toHaveBeenCalledWith('terminal', 3)
     const listener = vi.fn()
     rightInjected.hooks.preferences.subscribe(listener)
-    rightInjected.updatePreferences({ theme: 'light', ligatures: false })
-    expect(rightInjected.hooks.preferences.getSnapshot()).toMatchObject({ theme: 'light', ligatures: false })
+    rightInjected.updatePreferences({ ligatures: false })
+    expect(rightInjected.hooks.preferences.getSnapshot()).toMatchObject({ ligatures: false })
     expect(listener).toHaveBeenCalledOnce()
     bottomInjected.resetPreferences()
-    expect(bottomInjected.hooks.preferences.getSnapshot().theme).toBe('harness')
+    expect(bottomInjected.hooks.preferences.getSnapshot()).toEqual(DEFAULT_TERMINAL_PREFERENCES)
+
+    const schemeListener = vi.fn()
+    rightInjected.hooks.colorScheme.subscribe(schemeListener)
+    b.ctx.emit('theme/change', { active: { colorScheme: 'light' } } as never)
+    expect(rightInjected.hooks.colorScheme.getSnapshot()).toBe('light')
+    expect(schemeListener).toHaveBeenCalledOnce()
+    b.ctx.emit('theme/change', { active: { colorScheme: 'light' } } as never)
+    expect(schemeListener).toHaveBeenCalledOnce()
 
     const toggleInjected = (toggle.inject as unknown as () => BottomTerminalToggleInjected)()
     toggleInjected.toggleBottomTerminal()

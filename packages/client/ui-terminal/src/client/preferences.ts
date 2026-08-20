@@ -1,8 +1,8 @@
 /** Browser-local xterm appearance settings shared by every terminal placement. */
 
-/** Persisted terminal appearance preferences. */
+/** Persisted terminal appearance preferences. The palette is not one:
+   it follows the app appearance (light/dark/system), resolved in themes.ts. */
 export interface TerminalPreferences {
-  readonly theme: TerminalThemeId
   readonly font: TerminalFontId
   readonly customFontFamily: string
   readonly fontSize: number
@@ -12,8 +12,6 @@ export interface TerminalPreferences {
   readonly cursorBlink: boolean
 }
 
-/** Built-in terminal theme identity. */
-export type TerminalThemeId = 'harness' | 'tokyo-night' | 'catppuccin' | 'light'
 /** Built-in localterm font or user-resolved family identity. */
 export type TerminalFontId =
   | 'geist-mono'
@@ -60,7 +58,6 @@ const CUSTOM_FONT_MAX_CODE_UNITS = 120
 
 /** Default terminal appearance used before any browser-local override. */
 export const DEFAULT_TERMINAL_PREFERENCES: TerminalPreferences = {
-  theme: 'harness',
   font: 'geist-mono',
   customFontFamily: '',
   fontSize: 13,
@@ -74,10 +71,6 @@ function clamp(value: unknown, minimum: number, maximum: number, fallback: numbe
   return typeof value === 'number' && Number.isFinite(value)
     ? Math.min(maximum, Math.max(minimum, value))
     : fallback
-}
-
-function isTheme(value: unknown): value is TerminalThemeId {
-  return value === 'harness' || value === 'tokyo-night' || value === 'catppuccin' || value === 'light'
 }
 
 function isFont(value: unknown): value is TerminalFontId {
@@ -99,7 +92,6 @@ function parsePreferences(raw: string | null): TerminalPreferences {
   }
   const record = value as Record<string, unknown>
   return {
-    theme: isTheme(record.theme) ? record.theme : DEFAULT_TERMINAL_PREFERENCES.theme,
     font: isFont(record.font) ? record.font : DEFAULT_TERMINAL_PREFERENCES.font,
     customFontFamily: typeof record.customFontFamily === 'string'
       ? record.customFontFamily.slice(0, CUSTOM_FONT_MAX_CODE_UNITS)

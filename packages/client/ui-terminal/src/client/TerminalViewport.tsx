@@ -2,13 +2,14 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { awaitTerminalFontReady } from './font-readiness.ts'
 import type { TerminalPreferences } from './preferences.ts'
 import { XtermSurface } from './xterm-surface.ts'
-import { terminalTheme } from './themes.ts'
+import { terminalTheme, type TerminalColorScheme } from './themes.ts'
 import type { TerminalDimensions } from './xterm-surface.ts'
 import css from './TerminalViewport.module.css'
 
 /** Props for the stable xterm DOM viewport. */
 export interface TerminalViewportProps {
   readonly preferences: TerminalPreferences
+  readonly colorScheme: TerminalColorScheme
   readonly onReady: (surface: XtermSurface) => void
   readonly onInput: (input: string) => void
   readonly onResize: (dimensions: TerminalDimensions) => void
@@ -31,7 +32,7 @@ function heightTransitionOwner(container: HTMLElement): HTMLElement | undefined 
 
 /** Mount one xterm surface and refit it as its panel changes width or height. */
 export function TerminalViewport({
-  preferences, onReady, onInput, onResize, layoutHeight,
+  preferences, colorScheme, onReady, onInput, onResize, layoutHeight,
 }: TerminalViewportProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scrollbarTrackRef = useRef<HTMLDivElement | null>(null)
@@ -52,6 +53,7 @@ export function TerminalViewport({
     const surface = new XtermSurface(
       container,
       preferences,
+      colorScheme,
       (input) => { inputRef.current(input) },
       { track: scrollbarTrack, thumb: scrollbarThumb },
     )
@@ -103,7 +105,7 @@ export function TerminalViewport({
     /* v8 ignore next -- the layout effect owns the surface before passive effects run. */
     if (surface === null) return
     let cancelled = false
-    surface.apply(preferences)
+    surface.apply(preferences, colorScheme)
     const visible = layoutHeight === undefined || layoutHeight > 0
     if (visible) {
       const dimensions = surface.fit()
@@ -118,11 +120,11 @@ export function TerminalViewport({
       }
     })
     return () => { cancelled = true }
-  }, [preferences])
+  }, [preferences, colorScheme])
 
 
   /* v8 ignore next -- every validated terminal palette defines its background. */
-  const background = terminalTheme(preferences.theme).background ?? '#000000'
+  const background = terminalTheme(colorScheme).background ?? '#000000'
   return (
     <div
       className={css.viewport}

@@ -16,7 +16,7 @@ import { findLigatureRanges } from './performance/ligature-joiner.ts'
 import {
   terminalFontFamily, terminalFontName, type TerminalPreferences,
 } from './preferences.ts'
-import { terminalTheme } from './themes.ts'
+import { terminalTheme, type TerminalColorScheme } from './themes.ts'
 
 /** Visible terminal grid dimensions. */
 export interface TerminalDimensions {
@@ -51,10 +51,11 @@ export class XtermSurface {
   constructor(
     container: HTMLDivElement,
     preferences: TerminalPreferences,
+    colorScheme: TerminalColorScheme,
     onInput: (input: string) => void,
     scrollbar?: TerminalScrollbarElements,
   ) {
-    const theme = terminalTheme(preferences.theme)
+    const theme = terminalTheme(colorScheme)
     this.terminal = new XtermTerminal({
       allowProposedApi: true,
       cursorBlink: preferences.cursorBlink,
@@ -62,7 +63,7 @@ export class XtermSurface {
       fontFamily: terminalFontFamily(preferences),
       fontSize: preferences.fontSize,
       lineHeight: preferences.lineHeight,
-      minimumContrastRatio: preferences.theme === 'light' ? 4.5 : 1,
+      minimumContrastRatio: colorScheme === 'light' ? 4.5 : 1,
       scrollback: 10_000,
       scrollOnUserInput: true,
       macOptionIsMeta: true,
@@ -161,11 +162,12 @@ export class XtermSurface {
   /**
    * Apply appearance changes without replacing the terminal or its scrollback.
    * @param preferences - validated shared appearance snapshot.
+   * @param colorScheme - resolved app color scheme (palette follows appearance).
    */
-  apply(preferences: TerminalPreferences): void {
+  apply(preferences: TerminalPreferences, colorScheme: TerminalColorScheme): void {
     if (this.disposed) return
-    this.terminal.options.theme = terminalTheme(preferences.theme)
-    this.terminal.options.minimumContrastRatio = preferences.theme === 'light' ? 4.5 : 1
+    this.terminal.options.theme = terminalTheme(colorScheme)
+    this.terminal.options.minimumContrastRatio = colorScheme === 'light' ? 4.5 : 1
     this.terminal.options.fontFamily = terminalFontFamily(preferences)
     this.terminal.options.fontSize = preferences.fontSize
     this.terminal.options.lineHeight = preferences.lineHeight

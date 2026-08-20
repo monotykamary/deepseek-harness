@@ -3037,6 +3037,9 @@ importers:
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
+      '@monotykamary/dsh-client-ui-theme':
+        specifier: workspace:^
+        version: link:../ui-theme
       '@monotykamary/dsh-client-ui-workbench':
         specifier: workspace:^
         version: link:../ui-workbench

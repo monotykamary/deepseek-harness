@@ -36,6 +36,7 @@
         "@monotykamary/dsh-client-runtime",
         "@monotykamary/dsh-client-ui-conversation",
         "@monotykamary/dsh-client-ui-layout",
+        "@monotykamary/dsh-client-ui-theme",
         "@monotykamary/dsh-client-ui-workbench"
       ],
       "platform": "web"
@@ -74,6 +75,7 @@
     "@monotykamary/dsh-client-ui-layout": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-theme": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-terminal-web": "workspace:^",
@@ -88,6 +90,7 @@
     "@monotykamary/dsh-client-ui-layout": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-client-ui-theme": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-terminal-web": "workspace:^",

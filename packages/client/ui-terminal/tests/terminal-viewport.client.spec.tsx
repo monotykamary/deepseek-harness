@@ -26,6 +26,7 @@ vi.mock('../src/client/xterm-surface.ts', () => ({
     constructor(
       container: HTMLDivElement,
       _preferences: unknown,
+      _colorScheme: unknown,
       readonly input: (value: string) => void,
       scrollbar: { track: HTMLDivElement; thumb: HTMLDivElement },
     ) {
@@ -71,6 +72,7 @@ describe('TerminalViewport', () => {
     render(
       <TerminalViewport
         preferences={DEFAULT_TERMINAL_PREFERENCES}
+        colorScheme="dark"
         onReady={vi.fn()}
         onInput={vi.fn()}
         onResize={onResize}
@@ -90,6 +92,7 @@ describe('TerminalViewport', () => {
       <div data-testid="transition-owner" style={{ transitionProperty: 'height', transitionDuration: '0.3s' }}>
         <TerminalViewport
           preferences={DEFAULT_TERMINAL_PREFERENCES}
+          colorScheme="dark"
           onReady={onReady}
           onInput={vi.fn()}
           onResize={onResize}
@@ -117,6 +120,7 @@ describe('TerminalViewport', () => {
       <div data-testid="owner" style={{ transitionProperty: 'height', transitionDuration: '0.2s' }}>
         <TerminalViewport
           preferences={DEFAULT_TERMINAL_PREFERENCES}
+          colorScheme="dark"
           onReady={onReady}
           onInput={vi.fn()}
           onResize={onResize}
@@ -140,6 +144,7 @@ describe('TerminalViewport', () => {
     const view = render(
       <TerminalViewport
         preferences={DEFAULT_TERMINAL_PREFERENCES}
+        colorScheme="dark"
         onReady={onReady}
         onInput={vi.fn()}
         onResize={onResize}
@@ -163,6 +168,7 @@ describe('TerminalViewport', () => {
       <div data-testid="owner" style={{ height: '200px', transitionProperty: 'height', transitionDuration: '0.2s' }}>
         <TerminalViewport
           preferences={DEFAULT_TERMINAL_PREFERENCES}
+          colorScheme="dark"
           onReady={onReady}
           onInput={vi.fn()}
           onResize={vi.fn()}
@@ -184,6 +190,7 @@ describe('TerminalViewport', () => {
       <div style={{ transitionProperty: 'height', transitionDuration: '0s' }}>
         <TerminalViewport
           preferences={DEFAULT_TERMINAL_PREFERENCES}
+          colorScheme="dark"
           onReady={vi.fn()}
           onInput={vi.fn()}
           onResize={onResize}
@@ -204,6 +211,7 @@ describe('TerminalViewport', () => {
     const view = render(
       <TerminalViewport
         preferences={DEFAULT_TERMINAL_PREFERENCES}
+        colorScheme="dark"
         onReady={onReady}
         onInput={onInput}
         onResize={onResize}
@@ -221,7 +229,7 @@ describe('TerminalViewport', () => {
     expect(onReady).toHaveBeenCalledWith(surface)
     expect(onResize).toHaveBeenNthCalledWith(1, { cols: 80, rows: 24 })
     expect(onResize.mock.invocationCallOrder[0]!).toBeLessThan(onReady.mock.invocationCallOrder[0]!)
-    expect(surface.apply).toHaveBeenCalledWith(DEFAULT_TERMINAL_PREFERENCES)
+    expect(surface.apply).toHaveBeenCalledWith(DEFAULT_TERMINAL_PREFERENCES, 'dark')
     expect(onResize).toHaveBeenNthCalledWith(2, { cols: 81, rows: 25 })
     surface.input('echo\n')
     expect(onInput).toHaveBeenCalledWith('echo\n')
@@ -232,12 +240,12 @@ describe('TerminalViewport', () => {
     resizeCallback?.([], {} as ResizeObserver)
     expect(onResize).toHaveBeenLastCalledWith({ cols: 100, rows: 40 })
 
-    const next = { ...DEFAULT_TERMINAL_PREFERENCES, theme: 'light' as const, fontSize: 15 }
+    const next = { ...DEFAULT_TERMINAL_PREFERENCES, fontSize: 15 }
     mocks.fits.push(undefined)
     view.rerender(
-      <TerminalViewport preferences={next} onReady={onReady} onInput={onInput} onResize={onResize} />,
+      <TerminalViewport preferences={next} colorScheme="light" onReady={onReady} onInput={onInput} onResize={onResize} />,
     )
-    expect(surface.apply).toHaveBeenLastCalledWith(next)
+    expect(surface.apply).toHaveBeenLastCalledWith(next, 'light')
     expect(viewport.style.backgroundColor).toBe('rgb(250, 250, 250)')
 
     view.unmount()

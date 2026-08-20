@@ -15,13 +15,14 @@ import type { TerminalPreferences } from './preferences.ts'
 import { TerminalSettings } from './TerminalSettings.tsx'
 import { TerminalViewport } from './TerminalViewport.tsx'
 import type { TerminalDimensions, XtermSurface } from './xterm-surface.ts'
-import { terminalTheme } from './themes.ts'
+import { terminalTheme, type TerminalColorScheme } from './themes.ts'
 import css from './TerminalPanel.module.css'
 
 interface TerminalPanelProps {
   readonly sessionId: string
   readonly placement: BrowserTerminalPlacement
   readonly preferences: TerminalPreferences
+  readonly colorScheme: TerminalColorScheme
   readonly updatePreferences: (patch: Partial<TerminalPreferences>) => void
   readonly resetPreferences: () => void
   readonly socketFactory: TerminalWebSocketFactory
@@ -78,6 +79,7 @@ interface TerminalPaneProps {
   readonly sessionId: string
   readonly placement: BrowserTerminalPlacement
   readonly preferences: TerminalPreferences
+  readonly colorScheme: TerminalColorScheme
   readonly socketFactory: TerminalWebSocketFactory
   readonly layoutHeight?: number
   readonly active: boolean
@@ -88,7 +90,7 @@ interface TerminalPaneProps {
 }
 
 function TerminalPane({
-  item, sessionId, placement, preferences, socketFactory, layoutHeight, active,
+  item, sessionId, placement, preferences, colorScheme, socketFactory, layoutHeight, active,
   onActivate, onConnected, onEnded, t,
 }: TerminalPaneProps) {
   const [surface, setSurface] = useState<XtermSurface | null>(null)
@@ -181,6 +183,7 @@ function TerminalPane({
     <div className={css.pane} data-terminal-pane="" data-terminal-phase={phase} data-active={active || undefined} onMouseDown={onActivate}>
       <TerminalViewport
         preferences={preferences}
+        colorScheme={colorScheme}
         onReady={setSurface}
         onInput={onInput}
         onResize={onResize}
@@ -201,7 +204,7 @@ function TerminalPane({
 
 /** Interactive terminal groups, split panes, toolbar, settings, and fullscreen presentation. */
 export function TerminalPanel({
-  sessionId, placement, preferences, updatePreferences, resetPreferences, socketFactory,
+  sessionId, placement, preferences, colorScheme, updatePreferences, resetPreferences, socketFactory,
   workbenchPanelOrdinal, openWorkbenchPanel, ensureWorkbenchPanels, closePanel, layoutHeight, t,
 }: TerminalPanelProps) {
   const [groups, setGroups] = useState<readonly TerminalGroup[]>([])
@@ -396,7 +399,7 @@ export function TerminalPanel({
       <Modal open={settingsOpen} onClose={() => { setSettingsOpen(false) }} title={t('settings')} closeLabel={t('settings.close')} className={css.settingsDialog as string}>
         <TerminalSettings preferences={preferences} update={updatePreferences} reset={resetPreferences} t={t} />
       </Modal>
-      <div className={css.terminalBody} style={{ backgroundColor: terminalTheme(preferences.theme).background }}>
+      <div className={css.terminalBody} style={{ backgroundColor: terminalTheme(colorScheme).background }}>
         <div className={css.paneArea}>
           {activeGroup === undefined ? (listPending ? null : (
             <div className={css.emptyState}>
@@ -415,6 +418,7 @@ export function TerminalPanel({
                   sessionId={sessionId}
                   placement={placement}
                   preferences={preferences}
+                  colorScheme={colorScheme}
                   socketFactory={socketFactory}
                   {...layoutHeight === undefined ? {} : { layoutHeight }}
                   active={item.key === activeItem?.key}
@@ -519,17 +523,19 @@ export function TerminalPanel({
 
 /** Right-workbench terminal surface wrapper. */
 export function WorkbenchTerminal({
-  sessionId, workbenchPanelOrdinal, usePreferences, updatePreferences, resetPreferences,
+  sessionId, workbenchPanelOrdinal, usePreferences, useColorScheme, updatePreferences, resetPreferences,
   socketFactory, openWorkbenchPanel, ensureWorkbenchPanels, t,
 }: WorkbenchTerminalProps) {
   const preferences = usePreferences(value => value)
-  return <TerminalPanel sessionId={sessionId} placement="right" preferences={preferences} updatePreferences={updatePreferences} resetPreferences={resetPreferences} socketFactory={socketFactory} workbenchPanelOrdinal={workbenchPanelOrdinal ?? 1} openWorkbenchPanel={openWorkbenchPanel} ensureWorkbenchPanels={ensureWorkbenchPanels} t={t} />
+  const colorScheme = useColorScheme(value => value)
+  return <TerminalPanel sessionId={sessionId} placement="right" preferences={preferences} colorScheme={colorScheme} updatePreferences={updatePreferences} resetPreferences={resetPreferences} socketFactory={socketFactory} workbenchPanelOrdinal={workbenchPanelOrdinal ?? 1} openWorkbenchPanel={openWorkbenchPanel} ensureWorkbenchPanels={ensureWorkbenchPanels} t={t} />
 }
 
 /** Bottom-panel terminal surface wrapper. */
 export function BottomTerminal({
-  sessionId, closePanel, height, usePreferences, updatePreferences, resetPreferences, socketFactory, t,
+  sessionId, closePanel, height, usePreferences, useColorScheme, updatePreferences, resetPreferences, socketFactory, t,
 }: BottomTerminalProps) {
   const preferences = usePreferences(value => value)
-  return <TerminalPanel sessionId={sessionId} placement="bottom" preferences={preferences} updatePreferences={updatePreferences} resetPreferences={resetPreferences} socketFactory={socketFactory} closePanel={closePanel} layoutHeight={height} t={t} />
+  const colorScheme = useColorScheme(value => value)
+  return <TerminalPanel sessionId={sessionId} placement="bottom" preferences={preferences} colorScheme={colorScheme} updatePreferences={updatePreferences} resetPreferences={resetPreferences} socketFactory={socketFactory} closePanel={closePanel} layoutHeight={height} t={t} />
 }

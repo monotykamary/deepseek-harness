@@ -212,8 +212,7 @@ describe('web e2e: interactive terminals', () => {
     const settings = await settingsDialog
       .locator('[data-terminal-settings] label > span, [data-terminal-settings] > div > span')
       .allTextContents()
-    await settingsDialog.getByRole('button', { name: 'Theme: Harness', exact: true }).click()
-    await page.getByRole('menuitem', { name: 'Tokyo Night', exact: true }).click()
+    expect(await settingsDialog.getByRole('button', { name: /Theme/, exact: false }).count()).toBe(0)
     await settingsDialog.getByLabel('Ligatures').uncheck()
     await settingsDialog.getByRole('button', { name: 'Close terminal settings', exact: true }).click()
 

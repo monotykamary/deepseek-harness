@@ -8,7 +8,7 @@
 - floating action buttons stable on icon hover: true
 - bottom grouped fullscreen action: visible
 - bottom grouped actions clipped: false
-- settings: Theme → Harness → Font → Geist Mono → Font size → Line height → Ligatures → Color emoji → Cursor blink
+- settings: Font → Geist Mono → Font size → Line height → Ligatures → Color emoji → Cursor blink
 - reopened bottom panes: 1
 - preserved shell variable: "alive"
 - second browser shares PTY state: "alive"

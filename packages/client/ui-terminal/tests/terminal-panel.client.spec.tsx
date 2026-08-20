@@ -81,6 +81,7 @@ function mount(
     sessionId: 'session-1',
     placement: 'bottom' as const,
     preferences: DEFAULT_TERMINAL_PREFERENCES,
+    colorScheme: 'dark' as const,
     updatePreferences,
     resetPreferences,
     socketFactory: vi.fn(),
@@ -156,6 +157,7 @@ describe('terminal wrappers and controls', () => {
     const injected = {
       sessionId: 'session-1',
       usePreferences: (selector: (value: TerminalPreferences) => unknown) => selector(DEFAULT_TERMINAL_PREFERENCES),
+      useColorScheme: (selector: (value: 'light' | 'dark') => unknown) => selector('dark'),
       updatePreferences: vi.fn(),
       resetPreferences: vi.fn(),
       socketFactory: vi.fn(),
@@ -355,8 +357,7 @@ describe('TerminalPanel', () => {
     expandActions()
     fireEvent.click(screen.getByRole('button', { name: 'Terminal settings' }))
     expect(screen.getByRole('dialog', { name: 'Terminal settings' })).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Theme: Harness' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Light' }))
+    expect(screen.queryByRole('button', { name: /Theme/ })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Font: Geist Mono' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Custom…' }))
     fireEvent.change(screen.getByLabelText('Font size'), { target: { value: '16' } })
@@ -365,7 +366,7 @@ describe('TerminalPanel', () => {
     fireEvent.click(screen.getByLabelText('Color emoji'))
     fireEvent.click(screen.getByLabelText('Cursor blink'))
     expect(mounted.updatePreferences.mock.calls.map(call => call[0])).toEqual([
-      { theme: 'light' }, { font: 'custom' }, { fontSize: 16 }, { lineHeight: 1.4 },
+      { font: 'custom' }, { fontSize: 16 }, { lineHeight: 1.4 },
       { ligatures: false }, { muteEmojiColors: true }, { cursorBlink: false },
     ])
     fireEvent.click(screen.getByRole('button', { name: 'Restore defaults' }))

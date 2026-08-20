@@ -5,12 +5,15 @@ import type {
 import type { TerminalWebSocketFactory } from './connection.ts'
 import type { NS } from './locales.ts'
 import type { TerminalPreferences } from './preferences.ts'
+import type { TerminalColorScheme } from './themes.ts'
 
 /** Shared injected state and actions for both terminal placements. */
 export interface TerminalInjected {
   hooks: {
     /** Browser-local appearance settings shared by mounted terminal surfaces. */
     preferences: ObservableSnapshot<TerminalPreferences>
+    /** Resolved app color scheme (appearance light/dark/system), shared by every terminal surface. */
+    colorScheme: ObservableSnapshot<TerminalColorScheme>
   }
   /** Merge one validated appearance update. */
   updatePreferences: (patch: Partial<TerminalPreferences>) => void

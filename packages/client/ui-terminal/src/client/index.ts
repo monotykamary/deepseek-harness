@@ -23,18 +23,23 @@ import '@fontsource/space-mono/latin-700.css'
 import '@fontsource/ubuntu-mono/latin-400.css'
 import '@fontsource/ubuntu-mono/latin-700.css'
 import './xterm.global.css'
-import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
+import type { ClientContext, ObservableSnapshot } from '@monotykamary/dsh-client-runtime/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {} from '@monotykamary/dsh-client-ui-layout/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
+// Type-only: pulls the theme plugin's Context merge (ctx.theme); cross-plugin
+// collaboration goes through the service, never a value import.
+import type { ThemeSnapshot } from '@monotykamary/dsh-client-ui-theme/client'
 import { BottomTerminalToggle } from './BottomTerminalToggle.tsx'
 import { BottomTerminal, WorkbenchTerminal } from './TerminalPanel.tsx'
 import type { BottomTerminalToggleInjected, TerminalInjected } from './contract.ts'
 import { en, NS, zh, type TerminalKey } from './locales.ts'
 import { TerminalPreferenceStore } from './preferences.ts'
+import type { TerminalColorScheme } from './themes.ts'
 
-export type { TerminalPreferences, TerminalFontId, TerminalThemeId } from './preferences.ts'
+export type { TerminalPreferences, TerminalFontId } from './preferences.ts'
+export type { TerminalColorScheme } from './themes.ts'
 
 const TERMINAL_SURFACE_ID = 'terminal' as WorkbenchSurfaceId
 
@@ -45,19 +50,51 @@ declare module '@monotykamary/dsh-client-ui-slots' {
   }
 }
 
-/** Required services for slots, locale, workbench navigation, and layout panel actions. */
-export const inject = ['slots', 'locale', 'workbench', 'layout']
+/** Required services for slots, locale, workbench navigation, layout panel actions, and appearance. */
+export const inject = ['slots', 'locale', 'workbench', 'layout', 'theme']
+
+/**
+ * Live resolved app color scheme (light/dark/system folded to a palette
+ * choice) shared by every mounted terminal surface, so the terminal follows
+ * the app appearance instead of a user-chosen terminal theme.
+ */
+class TerminalColorSchemeSource implements ObservableSnapshot<TerminalColorScheme> {
+  private value: TerminalColorScheme
+  private readonly listeners = new Set<() => void>()
+
+  constructor(ctx: ClientContext) {
+    this.value = this.resolve(ctx.theme.getTheme())
+    ctx.effect(() => ctx.on('theme/change', (snapshot) => {
+      const next = this.resolve(snapshot)
+      if (next === this.value) return
+      this.value = next
+      for (const listener of this.listeners) listener()
+    }), 'ui-terminal: appearance color scheme sync')
+  }
+
+  private resolve(snapshot: ThemeSnapshot): TerminalColorScheme {
+    return snapshot.active.colorScheme
+  }
+
+  getSnapshot = (): TerminalColorScheme => this.value
+
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => { this.listeners.delete(listener) }
+  }
+}
 
 /** Register right-workbench and bottom-panel terminals with shared browser-local preferences. */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-terminal: dictionaries')
   const t = ctx.locale.bind(NS)
   const preferences = new TerminalPreferenceStore()
+  const colorScheme = new TerminalColorSchemeSource(ctx)
   const restoredWorkbenchSessions = new Set<string>()
   ctx.effect(() => () => { preferences.dispose() }, 'ui-terminal: preference subscriptions')
 
   const terminalInjected = (sessionId: string): TerminalInjected => ({
-    hooks: { preferences },
+    hooks: { preferences, colorScheme },
     updatePreferences: (patch) => { preferences.update(patch) },
     resetPreferences: () => { preferences.reset() },
     socketFactory: url => new WebSocket(url),

@@ -135,7 +135,7 @@ beforeEach(() => {
 describe('XtermSurface', () => {
   it('owns addons, input/output pacing, fit, appearance, ligatures, and idempotent disposal', async () => {
     const input = vi.fn()
-    const surface = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, input)
+    const surface = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, 'dark', input)
     const terminal = mocks.terminals[0]!
     const batcher = mocks.batchers[0]!
     expect(terminal.options).toMatchObject({
@@ -174,7 +174,7 @@ describe('XtermSurface', () => {
     expect(terminal.refresh).toHaveBeenCalledWith(0, 23)
 
     await vi.waitFor(() => { expect(terminal.joiner?.('ok no')).toEqual([[0, 2]]) })
-    surface.apply({ ...DEFAULT_TERMINAL_PREFERENCES, theme: 'light', ligatures: false, muteEmojiColors: true })
+    surface.apply({ ...DEFAULT_TERMINAL_PREFERENCES, ligatures: false, muteEmojiColors: true }, 'light')
     expect(terminal.options.minimumContrastRatio).toBe(4.5)
     expect(FakeWebglAddon.instances[0]?.setEmojiColorsMuted).toHaveBeenCalledWith(true)
     expect(terminal.deregisterCharacterJoiner).toHaveBeenCalledWith(7)
@@ -199,7 +199,7 @@ describe('XtermSurface', () => {
     surface.refreshFontMetrics()
     surface.focus()
     surface.showCursor()
-    surface.apply(DEFAULT_TERMINAL_PREFERENCES)
+    surface.apply(DEFAULT_TERMINAL_PREFERENCES, 'dark')
     expect(surface.fit()).toBeUndefined()
   })
 
@@ -214,7 +214,7 @@ describe('XtermSurface', () => {
     })
     thumb.setPointerCapture = vi.fn()
     const surface = new XtermSurface(
-      document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, vi.fn(), { track, thumb },
+      document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, 'dark', vi.fn(), { track, thumb },
     )
     const terminal = mocks.terminals[0]!
     const batcher = mocks.batchers[0]!
@@ -290,9 +290,9 @@ describe('XtermSurface', () => {
       configurable: true,
       value: { load: vi.fn(() => fontReady) },
     })
-    const first = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, vi.fn())
+    const first = new XtermSurface(document.createElement('div'), DEFAULT_TERMINAL_PREFERENCES, 'dark', vi.fn())
     const terminal = mocks.terminals[0]!
-    first.apply({ ...DEFAULT_TERMINAL_PREFERENCES, ligatures: false })
+    first.apply({ ...DEFAULT_TERMINAL_PREFERENCES, ligatures: false }, 'dark')
     resolveFont()
     await fontReady
     await Promise.resolve()
@@ -315,7 +315,8 @@ describe('XtermSurface', () => {
     mocks.throwWebgl = true
     const fallback = new XtermSurface(
       document.createElement('div'),
-      { ...DEFAULT_TERMINAL_PREFERENCES, theme: 'light' },
+      DEFAULT_TERMINAL_PREFERENCES,
+      'light',
       vi.fn(),
     )
     expect(mocks.batchers.at(-1)?.setInteractiveRenderingEnabled).not.toHaveBeenCalledWith(true)

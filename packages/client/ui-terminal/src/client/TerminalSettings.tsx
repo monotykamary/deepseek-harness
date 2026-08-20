@@ -5,9 +5,8 @@ import {
 import type { MenuItem } from '@monotykamary/dsh-client-ui-primitives'
 import {
   TERMINAL_FONTS,
-  type TerminalPreferences, type TerminalFontId, type TerminalThemeId,
+  type TerminalPreferences, type TerminalFontId,
 } from './preferences.ts'
-import { TERMINAL_THEMES } from './themes.ts'
 import type { WorkbenchTerminalProps } from './contract.ts'
 import css from './TerminalSettings.module.css'
 
@@ -71,12 +70,6 @@ function SettingsSelect<Id extends string>({
 export function TerminalSettings({ preferences, update, reset, t }: TerminalSettingsProps) {
   return (
     <div className={css.root} data-terminal-settings="">
-      <SettingsSelect
-        label={t('settings.theme')}
-        value={preferences.theme}
-        options={TERMINAL_THEMES}
-        onChange={(theme: TerminalThemeId) => { update({ theme }) }}
-      />
       <SettingsSelect
         label={t('settings.font')}
         value={preferences.font}
