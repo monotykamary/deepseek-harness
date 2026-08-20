@@ -45,6 +45,7 @@ async function loadComposition(): Promise<Context> {
     '    maxTitleBytes: 80',
     "- name: '@monotykamary/dsh-session-title-first-prompt-llm'",
     '  config:',
+    '    enabled: true',
     '    targetWords: 5',
     '    targetCjkCharacters: 10',
     '    maxInputBytes: 1000',

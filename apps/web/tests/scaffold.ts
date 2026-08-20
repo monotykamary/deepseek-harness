@@ -16,8 +16,9 @@
 // second yml): temp persistenceRoot; host-level skill roots confined to the
 // temp workspace while project skill discovery remains real; agent-instructions
 // disabled (recorded fixtures must not embed this repo's AGENTS.md);
-// session-title-llm disabled (its fire-and-forget title call would race the
-// loop for the session's replay cursor); webserver pinned to port 0 with the
+// session-title-llm ships off by default, so its fire-and-forget title call
+// cannot race the loop for the session's replay cursor; webserver pinned to
+// port 0 with the
 // built dist; ordinary keyless modes disable llm-deepseek and fill the open
 // llm seam post-boot with installLlmReplay on the settled root ctx
 // (the plugin-row path discards the ReplayHandle; the direct install keeps
@@ -410,7 +411,6 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     // value into session.cwd — chdir below anchors all three to the temp
     // workspace, keeping the composition untouched.
     { id: 'agent-instructions', disabled: true },
-    { id: 'session-title-llm', disabled: true },
     // No telemetry backend ships in the base bundle, so fixture sessions
     // cannot export anything; the /feedback acknowledgement therefore
     // discloses the shipped default "not configured" sentence.

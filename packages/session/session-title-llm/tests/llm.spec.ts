@@ -66,6 +66,7 @@ const SCRIPT: StreamChunk[] = [
 ]
 
 const CONFIG = {
+  enabled: false,
   targetWords: 5,
   targetCjkCharacters: 10,
   maxInputBytes: 1_000,

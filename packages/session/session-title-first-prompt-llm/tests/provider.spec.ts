@@ -18,6 +18,7 @@ class RecordingAdapter extends LlmAdapter {
 
 const TITLE_CONFIG = { fallbackMaxWords: 5, fallbackMaxBytes: 40, maxTitleBytes: 80 } as const
 const LLM_CONFIG = {
+  enabled: true,
   targetWords: 5,
   targetCjkCharacters: 10,
   maxInputBytes: 1_000,

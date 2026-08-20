@@ -226,6 +226,7 @@
       "@monotykamary/dsh-client-ui-settings-general": ["./packages/client/ui-settings-general/src"],
       "@monotykamary/dsh-client-ui-settings-models": ["./packages/client/ui-settings-models/src"],
       "@monotykamary/dsh-client-ui-settings-plugin-inventory": ["./packages/client/ui-settings-plugin-inventory/src"],
+      "@monotykamary/dsh-client-ui-session-title": ["./packages/client/ui-session-title/src"],
       "@monotykamary/dsh-client-locale": ["./packages/client/locale/src"],
       "@monotykamary/dsh-client-web": ["./packages/client/web/src"],
       // sdk/ folders are role-named without their npm-side sdk/jsonrpc prefixes,

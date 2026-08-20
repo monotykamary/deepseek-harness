@@ -1839,13 +1839,13 @@ Source: [`packages/session/session-title/src/index.ts:79`](../packages/session/s
 Requires: `sessionTitle` · `llm` · `sessions`
 
 ```ts config-catalog
-/** Required LLM policy; this plugin adds no defaults. */
+/** Required LLM policy; the automatic-title opt-in defaults to off. */
 export type Config = SessionTitleLlmConfig
 ```
 
 Depends on: [`SessionTitleLlmConfig`](../packages/session/session-title-llm/src/index.ts)
 
-Source: [`packages/session/session-title-all-prompts-llm/src/index.ts:15`](../packages/session/session-title-all-prompts-llm/src/index.ts)
+Source: [`packages/session/session-title-all-prompts-llm/src/index.ts:16`](../packages/session/session-title-all-prompts-llm/src/index.ts)
 
 <a id="monotykamarydsh-session-title-first-prompt-llm"></a>
 
@@ -1854,13 +1854,13 @@ Source: [`packages/session/session-title-all-prompts-llm/src/index.ts:15`](../pa
 Requires: `sessionTitle` · `llm` · `sessions`
 
 ```ts config-catalog
-/** Required LLM policy; this plugin adds no defaults. */
+/** Required LLM policy; the automatic-title opt-in defaults to off. */
 export type Config = SessionTitleLlmConfig
 ```
 
 Depends on: [`SessionTitleLlmConfig`](../packages/session/session-title-llm/src/index.ts)
 
-Source: [`packages/session/session-title-first-prompt-llm/src/index.ts:15`](../packages/session/session-title-first-prompt-llm/src/index.ts)
+Source: [`packages/session/session-title-first-prompt-llm/src/index.ts:16`](../packages/session/session-title-first-prompt-llm/src/index.ts)
 
 <a id="monotykamarydsh-settings-file"></a>
 
@@ -3205,6 +3205,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@monotykamary/dsh-client-ui-model-selection` ([`packages/client/ui-model-selection/src/index.ts`](../packages/client/ui-model-selection/src/index.ts))
 - `@monotykamary/dsh-client-ui-permission-presets` ([`packages/client/ui-permission-presets/src/index.ts`](../packages/client/ui-permission-presets/src/index.ts))
 - `@monotykamary/dsh-client-ui-plan` ([`packages/client/ui-plan/src/index.ts`](../packages/client/ui-plan/src/index.ts))
+- `@monotykamary/dsh-client-ui-session-title` ([`packages/client/ui-session-title/src/index.ts`](../packages/client/ui-session-title/src/index.ts))
 - `@monotykamary/dsh-client-ui-settings` ([`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts))
 - `@monotykamary/dsh-client-ui-settings-general` ([`packages/client/ui-settings-general/src/index.ts`](../packages/client/ui-settings-general/src/index.ts))
 - `@monotykamary/dsh-client-ui-settings-models` ([`packages/client/ui-settings-models/src/index.ts`](../packages/client/ui-settings-models/src/index.ts))

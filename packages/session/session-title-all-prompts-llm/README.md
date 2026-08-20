@@ -4,6 +4,8 @@ English | [中文](README.zh.md)
 
 Optional `ctx.sessionTitle` provider that summarizes every eligible human message through `ctx.llm`. It registers the `all-prompts` cadence and starts a new revision after each new human prompt, using seeded history as well as child-session prompts. A newer revision aborts and supersedes older work; even a provider that ignores cancellation cannot commit stale output.
 
+Automatic generation is off by default: the provider mounts only while the resolved `session-title-llm` settings section has `enabled: true` (the Web settings toggle), or when the composition entry sets it. Disabling or removing the plugin leaves the deterministic fallback in place.
+
 The plugin uses the complete required [shared LLM configuration](../session-title-llm/README.md#configuration). Omit both `provider` and `model` to inherit the exact route from each current logged main request, or set both to route title generation independently. If the final framed aggregate prompt exceeds `maxInputBytes`, the request fails instead of truncating history; automatic use warns and keeps the prior title.
 
 ## Model Experience

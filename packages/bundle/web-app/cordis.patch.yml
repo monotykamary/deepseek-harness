@@ -303,6 +303,11 @@
     - id: ui-plan
       name: '@monotykamary/dsh-client-ui-plan'
 
+    # Automatic LLM session titles: the General settings toggle over the
+    # host `session-title-llm` settings section (off by default).
+    - id: ui-session-title
+      name: '@monotykamary/dsh-client-ui-session-title'
+
     - id: ui-user-questions
       name: '@monotykamary/dsh-client-ui-user-questions'
 

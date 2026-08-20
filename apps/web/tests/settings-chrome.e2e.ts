@@ -393,6 +393,29 @@ describe('web e2e: settings modal and General preferences', () => {
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
 
+  it('toggles automatic LLM session titles through the persisted document', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-session-title'))
+    await page.getByRole('button', { name: '设置', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: '设置' })
+    await dialog.waitFor({ timeout: 10_000 })
+    const toggle = dialog.getByRole('button', { name: '自动生成会话标题' })
+    await toggle.waitFor({ timeout: 10_000 })
+    expect(await toggle.getAttribute('aria-pressed')).toBe('false')
+
+    // One gesture writes the host `session-title-llm` section; the provider
+    // stays inert here because no fixture session sends a message + header.
+    await toggle.click()
+    await expect.poll(() => toggle.getAttribute('aria-pressed'), { timeout: 5_000 }).toBe('true')
+    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'settings.yaml'), 'utf8'), { timeout: 5_000 })
+      .toMatch(/session-title-llm:\n\s+enabled: true/)
+
+    await toggle.click()
+    await expect.poll(() => toggle.getAttribute('aria-pressed'), { timeout: 5_000 }).toBe('false')
+    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'settings.yaml'), 'utf8'), { timeout: 5_000 })
+      .toMatch(/session-title-llm:\n\s+enabled: false/)
+    await page.keyboard.press('Escape')
+    expect(tripwire.pageErrors).toEqual([])
+  }, 60_000)
   it('persists the settings language across reload and a distinct port', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-language'))
     await page.getByRole('button', { name: '设置', exact: true }).click()

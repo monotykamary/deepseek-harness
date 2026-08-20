@@ -26,6 +26,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('first-prompt title provider with
       maxTitleBytes: 80,
     })
     await ctx.plugin(FirstMessageTitleProvider, {
+      enabled: true,
       targetWords: 5,
       targetCjkCharacters: 10,
       maxInputBytes: 4_096,

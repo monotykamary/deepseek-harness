@@ -9,6 +9,8 @@ import z from '@monotykamary/schemastery'
 import { createUserMessage, BlockAssembler, deepFreeze } from '@monotykamary/dsh-llm'
 import type { FinishReason, GenerateOptions, Message } from '@monotykamary/dsh-llm'
 import { deadline, MAX_TIMER_DELAY_MS } from '@monotykamary/dsh-timeout'
+import { installSettingsSection, settingsNamespace } from '@monotykamary/dsh-settings'
+import type { SettingsNamespace } from '@monotykamary/dsh-settings'
 import {
   normalizeSessionTitle,
   SessionTitleProviderId,
@@ -49,6 +51,8 @@ export const SESSION_TITLE_TIMEOUT_CODE = 'SESSION_TITLE_TIMEOUT'
 
 /** Required deployment policy for one model-backed title plugin. */
 export interface SessionTitleLlmConfig {
+  /** Whether automatic title generation is enabled; off by default. */
+  readonly enabled: boolean
   /** Target word count for non-CJK titles. */
   readonly targetWords: number
   /** Target character count for Chinese, Japanese, or Korean titles. */
@@ -68,8 +72,9 @@ export interface SessionTitleLlmConfig {
 /** Validated immutable model-provider policy. */
 export interface ResolvedSessionTitleLlmConfig extends SessionTitleLlmConfig {}
 
-/** Shared Loader field schemas with no library defaults. */
+/** Shared Loader field schemas; `enabled` alone carries a product default. */
 export const SessionTitleLlmConfigFields = {
+  enabled: z.boolean().default(false),
   targetWords: z.number().step(1).min(1).required(),
   targetCjkCharacters: z.number().step(1).min(1).required(),
   maxInputBytes: z.number().step(1).min(1).required(),
@@ -84,6 +89,7 @@ export const SessionTitleLlmConfigSchema: z<SessionTitleLlmConfig> = z.object(Se
 
 /** Complete configuration key set for direct construction validation. */
 const CONFIG_KEYS: ReadonlySet<string> = new Set([
+  'enabled',
   'targetWords',
   'targetCjkCharacters',
   'maxInputBytes',
@@ -149,6 +155,7 @@ export type SessionTitleLlmMessageSelector = (
  * @param id - stable plugin id recorded with generated titles.
  * @param automatic - provider-owned automatic generation cadence.
  * @param selectMessages - exact source-message selection for one revision.
+ * @returns the disposer, settling after in-flight title calls quiesce.
  */
 export function registerSessionTitleLlmProvider(
   ctx: Context,
@@ -156,15 +163,83 @@ export function registerSessionTitleLlmProvider(
   id: string,
   automatic: SessionTitleAutomaticMode,
   selectMessages: SessionTitleLlmMessageSelector,
-): void {
+): () => Promise<void> {
   const resolved = resolveSessionTitleLlmConfig(config)
   const titleProvider = SessionTitleProviderId(id)
-  ctx.sessionTitle.register({
+  return ctx.sessionTitle.register({
     id: titleProvider,
     automatic,
     async generate(request) {
       return generateSessionTitleWithLlm(ctx, resolved, request, selectMessages(request.messages), titleProvider)
     },
+  })
+}
+
+/** Settings namespace carrying the automatic-title opt-in for the composed title provider. */
+export const SESSION_TITLE_LLM_SETTINGS_NAMESPACE = settingsNamespace('session-title-llm')
+
+/**
+ * Register one model-backed provider under the user-settings opt-in: the
+ * provider mounts only while the resolved `session-title-llm` section has
+ * `enabled: true`. The composition entry governs when no settings provider
+ * exists; a mounted settings provider overrides it live, and each change
+ * mounts or unmounts the provider through the shared registration policy.
+ * @param ctx - context exposing the title, LLM, and settings services.
+ * @param namespace - the settings namespace owning the opt-in section.
+ * @param entry - untrusted composition policy; schemastery defaults applied.
+ * @param id - stable plugin id recorded with generated titles.
+ * @param automatic - provider-owned automatic generation cadence.
+ * @param selectMessages - exact source-message selection for one revision.
+ */
+export function registerSessionTitleLlmSettingsProvider(
+  ctx: Context,
+  namespace: SettingsNamespace,
+  entry: SessionTitleLlmConfig,
+  id: string,
+  automatic: SessionTitleAutomaticMode,
+  selectMessages: SessionTitleLlmMessageSelector,
+): void {
+  const resolvedEntry = resolveSessionTitleLlmConfig(entry)
+  let source: () => SessionTitleLlmConfig = () => resolvedEntry
+  let mounted: (() => Promise<void>) | undefined
+  let settling: Promise<void> | undefined
+
+  /**
+   * Mount or unmount the provider to match the current source. A disable
+   * settles only after in-flight title calls quiesce; a re-enable in that
+   * window re-judges once the old registration is actually released, because
+   * the title service rejects a new registration while one is closing.
+   */
+  const judge = (): void => {
+    const config = source()
+    if (!config.enabled) {
+      if (mounted === undefined) return
+      const disposer = mounted
+      mounted = undefined
+      settling = Promise.resolve(disposer()).then(
+        () => { settling = undefined },
+        (error: unknown) => {
+          settling = undefined
+          ctx.logger.warn('session-title provider "' + id + '" disposal failed: ' + String(error))
+        },
+      )
+      return
+    }
+    if (mounted !== undefined) return
+    if (settling !== undefined) {
+      void settling.then(() => {
+        if (mounted === undefined && source().enabled) judge()
+      })
+      return
+    }
+    mounted = registerSessionTitleLlmProvider(ctx, config, id, automatic, selectMessages)
+  }
+
+  // Judge the composition entry before any settings service mounts.
+  judge()
+  installSettingsSection(ctx, namespace, SessionTitleLlmConfigSchema, resolvedEntry, {
+    setSource: (current) => { source = current },
+    onChange: () => { judge() },
   })
 }
 

@@ -72,6 +72,7 @@
     "@monotykamary/dsh-client-ui-permission-presets": "workspace:^",
     "@monotykamary/dsh-client-ui-plan": "workspace:^",
     "@monotykamary/dsh-client-ui-settings-plugins": "workspace:^",
+    "@monotykamary/dsh-client-ui-session-title": "workspace:^",
     "@monotykamary/dsh-client-ui-user-questions": "workspace:^",
     "@monotykamary/dsh-client-ui-settings": "workspace:^",
     "@monotykamary/dsh-client-ui-settings-general": "workspace:^",

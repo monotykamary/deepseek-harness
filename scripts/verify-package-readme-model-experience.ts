@@ -52,6 +52,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/core/agent-tool-presentation': { kind: 'indirect', reason: 'The row only selects between the two projections dsh-tools owns; it registers no prompt, schema, or result of its own.' },
   'packages/code-runtime/code-runtime-worker-thread': { kind: 'indirect', reason: 'The worker backend delegates model rendering to Code Mode in dsh-tools.' },
   'packages/client/ui-agent-preset': { kind: 'indirect', reason: 'Browser-side settings row; the preset it selects owns every model-facing effect.' },
+  'packages/client/ui-session-title': { kind: 'indirect', reason: 'Browser-side settings row; the host title provider it opts in owns every model-facing effect.' },
   'packages/client/ui-terminal': { kind: 'none', reason: 'Browser-side human-to-PTY interface; registers nothing model-facing.' },
   'packages/terminal/terminal-web': { kind: 'none', reason: 'Browser transport for human-owned terminals; registers nothing model-facing.' },
   'packages/core/agent-default-model': { kind: 'indirect', reason: 'The service supplies a ModelSelection; request assembly and adapters own the model-visible request.' },

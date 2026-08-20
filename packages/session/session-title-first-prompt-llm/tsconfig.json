@@ -9,6 +9,7 @@
     { "path": "../../runtime-diagnostics/invariants" },
     { "path": "../../llm/llm" },
     { "path": "../session-title" },
-    { "path": "../session-title-llm" }
+    { "path": "../session-title-llm" },
+    { "path": "../../settings/settings" }
   ]
 }

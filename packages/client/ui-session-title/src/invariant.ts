@@ -1,30 +1,30 @@
 /**
- * Package-owned invariant companion for `@monotykamary/dsh-session-title-llm`.
- * @module @monotykamary/dsh-session-title-llm/invariant
+ * Package-owned invariant companion for `@monotykamary/dsh-client-ui-session-title`.
+ * @module @monotykamary/dsh-client-ui-session-title/invariant
  */
 
 /* jscpd:ignore-start */
 import type { Context } from '@monotykamary/cordis'
 import type { InvariantInstaller } from '@monotykamary/dsh-invariants'
 
-const PACKAGE_NAME = '@monotykamary/dsh-session-title-llm'
+const PACKAGE_NAME = '@monotykamary/dsh-client-ui-session-title'
 
 /** Cordis companion plugin name. */
-export const name = 'session-title-llm-invariant'
+export const name = 'client-ui-session-title-invariant'
 /** Service required before the companion can reserve package ownership. */
 export const inject = ['invariants']
 
 /**
- * No runtime invariant: each auxiliary request is validated and frozen before dispatch; the
- * settings-gated registration keeps its mount/unmount balance inside ctx.sessionTitle's own
- * registration effect, and both paths are exercised by the provider and llm specs.
+ * No runtime invariant: the row is a pure projection of the settings scope,
+ * and the host provider's mount/unmount balance lives inside the
+ * session-title service registration effect, covered by provider specs.
  */
 const install: InvariantInstaller = () => {}
 
 /**
  * Register this package's invariant companion.
  * @param ctx - Cordis context carrying the invariant service.
- * @returns the installed registration's disposer after setup succeeds.
+ * @returns The installed registration's disposer after setup succeeds.
  */
 export const apply = (ctx: Context): Promise<() => void> =>
   Promise.resolve(ctx.invariants.register(PACKAGE_NAME, install))

@@ -4,6 +4,8 @@
 
 可选的 `ctx.sessionTitle` 提供方，通过 `ctx.llm` 总结第一条符合条件的用户消息。它注册 `first-prompt` 节奏，只在全新非 fork 会话首次创建回退时自动运行，并将结果归因于该消息的确切 seq。自动失败会保留回退，之后只能通过 `ctx.sessionTitle.refresh()` 重试。
 
+自动生成默认关闭：只有当解析后的 `session-title-llm` 设置区段具有 `enabled: true`（Web 设置开关）或组合条目显式设置时才挂载该提供方。禁用或移除该插件时，确定性的回退标题仍然生效。
+
 该插件使用完整且必填的[共享 LLM（大语言模型）配置](../session-title-llm/README.md#configuration)。同时省略 `provider` 与 `model` 时，会继承当前已记录主请求的确切路由；也可以同时设置二者，使标题生成使用独立路由。
 
 ## 模型体验

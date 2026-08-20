@@ -46,6 +46,9 @@
     - id: session-title-llm
       name: '@monotykamary/dsh-session-title-first-prompt-llm'
       config:
+        # Off by default: automatic LLM titles are a user opt-in through the
+        # Web settings toggle (the `session-title-llm:` settings section).
+        enabled: false
         targetWords: 5
         targetCjkCharacters: 10
         maxInputBytes: 4096
