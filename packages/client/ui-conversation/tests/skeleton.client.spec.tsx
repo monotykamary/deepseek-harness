@@ -360,7 +360,7 @@ describe('ConversationRoot resident composer', () => {
     expect(seat?.contains(fallback)).toBe(true)
   })
 
-  it('hero phase: same textarea, hero chrome, no header, picker switches the workspace', () => {
+  it('hero phase: same textarea, hero chrome, always-visible header, picker switches the workspace', () => {
     const b = mount(
       conversationSnapshot({ composerPhase: 'blank', blank: true }),
       [
@@ -369,17 +369,24 @@ describe('ConversationRoot resident composer', () => {
       ],
     )
     // Hero chrome present, view ring absent; scroll host already wraps the
-    // resident composer so the blank → active flip does not remount it.
+    // resident composer so the blank → active flip does not remount it. The
+    // header shrinks to the panel utilities only (no title row or actions),
+    // so the bottom-panel and workbench toggles stay reachable before the
+    // first message.
     const host = b.view.container.querySelector('[data-conversation-scroll]')
     const header = b.view.container.querySelector('header')
     expect(host).not.toBeNull()
-    expect(header?.getAttribute('aria-hidden')).toBe('true')
+    expect(header?.getAttribute('aria-hidden')).toBeNull()
+    expect(header?.textContent).not.toContain('Child')
+    expect(b.slotCalls).not.toContain('conversation.session.header.actions')
+    expect(b.headerOwners).toContainEqual({
+      key: 'conversation.session.header.utilities', owner: { detailsOpen: false },
+    })
     expect(b.view.getByText('探索未至之境')).toBeTruthy()
     expect(b.view.getByText('预览版')).toBeTruthy()
     expect(b.view.queryByTestId('view-chat')).toBeNull()
     // The same machine-backed textarea is live in the hero, and the
-    // persistence mirror stays bound (ConversationSession mounts chrome-hidden
-    // for blank sessions): hero typing reaches the chat store.
+    // persistence mirror stays bound: hero typing reaches the chat store.
     const box = b.view.getByRole('textbox')
     expect(host?.contains(box)).toBe(true)
     fireEvent.change(box, { target: { value: 'draft in hero' } })

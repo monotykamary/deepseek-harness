@@ -149,11 +149,10 @@ export function AppFrame({
   renderSlot,
 }: AppFrameProps) {
   const panels = useStore(s => s)
-  const detailsSession = useSessions((s) => {
-    const current = s.current
-    return current !== undefined && s.byId[current]?.blank === false ? current : undefined
-  })
+  // Any current Session owns the details region — a blank New Session page
+  // included, so its workbench stays reachable before the first message.
   const currentSession = useSessions(s => s.current)
+  const detailsSession = currentSession
   const frameRef = useRef<HTMLDivElement | null>(null)
   const [frameSize, setFrameSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
   const viewport = frameSize.width

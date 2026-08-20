@@ -125,23 +125,28 @@ describe.skipIf(MODE === 'record')('web e2e: details panel follows the current S
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)
     expect(await page.getByText('Details', { exact: true }).isVisible()).toBe(false)
 
+    // The blank New Session page keeps the panel toggles reachable: the
+    // reduced header shows only the utilities, and both panels open there.
+    await page.getByRole('button', { name: 'Toggle bottom panel', exact: true }).waitFor({ timeout: 15_000 })
+    await page.getByRole('button', { name: 'Open right panel', exact: true }).click()
+    await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(360)
+    await page.getByRole('button', { name: 'Collapse right panel', exact: true }).click()
+    await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)
+    await page.getByRole('button', { name: 'Toggle bottom panel', exact: true }).click()
+    await expect.poll(() => appFrame(page).getAttribute('data-bottom-collapsed'), { timeout: 5_000 }).toBeNull()
+    await page.getByRole('button', { name: 'Toggle bottom panel', exact: true }).click()
+    await expect.poll(() => appFrame(page).getAttribute('data-bottom-collapsed'), { timeout: 5_000 }).toBe('true')
+
     const original = page.locator('[role=treeitem]').filter({ hasText: 'Reply with the single word' }).first()
     await original.click()
     await page.getByText('LIGHTHOUSE', { exact: true }).waitFor({ timeout: 15_000 })
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)
     expect(await page.getByText('Details', { exact: true }).isVisible()).toBe(false)
 
-    const ungroupedRow = page.locator('[role="treeitem"][aria-expanded]')
-      .filter({ hasText: 'Ungrouped' }).first()
-    const ungroupedSection = ungroupedRow.locator('..')
-    await expect.poll(async () => {
-      if (await ungroupedRow.getAttribute('aria-expanded') !== 'true') {
-        await ungroupedRow.click()
-        await page.waitForTimeout(50)
-      }
-      return await ungroupedRow.getAttribute('aria-expanded')
-    }, { timeout: 5_000 }).toBe('true')
-    const seeded = ungroupedSection.locator('[role="treeitem"]').nth(1)
+    // The seeded history session renders as the trailing session row (the
+    // T3 sidebar's default flat view has no Ungrouped bucket); opening it is
+    // another Session switch that keeps details closed.
+    const seeded = page.getByRole('tree', { name: 'Sessions' }).locator('[role="treeitem"]').last()
     await seeded.click()
     await page.getByText('DONE', { exact: true }).waitFor({ timeout: 15_000 })
     await expect.poll(() => detailsTrack(page), { timeout: 5_000 }).toBe(0)

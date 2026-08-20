@@ -196,12 +196,12 @@ describe('web e2e: lifecycle & chrome (workspace flow / reload / dark mode)', ()
 
   it.skipIf(MODE === 'record')('materialized a real Workspace and Session over the wire', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-lifecycle-materialize'))
-    // Browser: the sidebar tree now carries the auto-created workspace group
-    // with its one session, and the opened session is the selected row. The
-    // compact layout dropped group session counts, so the group row itself is
-    // the barrier.
+    // Browser: the sidebar tree now carries the materialized session row
+    // under its workspace meta ("workspace"), and the opened session is the
+    // selected row. The default flat view renders session rows without group
+    // rows, so the workspace text on the row itself is the barrier.
     await expect.poll(
-      () => page.locator('[role="treeitem"][aria-expanded]').filter({ hasText: 'workspace' }).count(),
+      () => page.locator('[role="treeitem"]').filter({ hasText: 'workspace' }).count(),
       { timeout: 15_000 },
     ).toBeGreaterThanOrEqual(1)
     await expect.poll(() => page.locator('[role="treeitem"][aria-selected="true"]').count(), { timeout: 10_000 }).toBe(1)

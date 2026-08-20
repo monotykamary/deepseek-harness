@@ -116,8 +116,9 @@
 }
 
 /* Drag handles are frame children (columns clip overflow): an 8px hit strip
-   centered on the column border via inline left, above column content. Details
-   adds a visible 12x32 pill at vertical center; sidebar keeps only the hit strip. */
+   centered on the column border via inline left, above column content. Both
+   vertical boundaries share one hover affordance: a 2x32 hairline bar at
+   vertical center (the bottom split's 32x2 bar rotated 90 degrees). */
 .handle {
   position: absolute;
   top: 0;
@@ -142,36 +143,29 @@
   }
 }
 
-.handle[data-side='details']::after {
+/* Hover affordance shared by both vertical boundaries: the hairline bar
+   hides until the pointer is over the owning column (data-side pairs the
+   handle with its column), the strip itself, or a drag — same opacity-only
+   fade as the bottom split's bar. */
+.handle::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 12px;
+  width: 2px;
   height: 32px;
-  border-radius: 10px;
-  box-sizing: border-box;
-  background: var(--dsw-alias-button-floating-fill);
-  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
-  /* Hover affordance: the details pill hides until the pointer is over its
-     column, the strip itself, or a drag. */
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l3);
   opacity: 0;
-  transition:
-    opacity var(--ds-transition-duration-slow) var(--ds-ease-in-out),
-    background var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+  transition: opacity var(--ds-transition-duration-slow) var(--ds-ease-in-out);
 }
 
+.sidebarCol:hover ~ .handle[data-side='sidebar']::after,
 .detailsCol:hover ~ .handle[data-side='details']::after,
-.handle[data-side='details']:hover::after,
-.handle[data-side='details'][data-dragging='true']::after {
+.handle:hover::after,
+.handle[data-dragging='true']::after {
   opacity: 1;
-}
-
-.handle[data-side='details']:hover::after,
-.handle[data-side='details'][data-dragging='true']::after {
-  background: var(--dsw-alias-button-floating-hover);
-  border-color: var(--dsw-alias-border-l3);
 }
 
 .overlayLayer {

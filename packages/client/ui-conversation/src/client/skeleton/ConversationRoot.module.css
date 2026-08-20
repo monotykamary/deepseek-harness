@@ -48,10 +48,20 @@
   pointer-events: none;
 }
 
-/* Blank hero/settling: keep the strict Session header mounted without taking
-   column space; the root-owned scrollport and composer remain below it. */
-.headerHidden {
+/* Blank hero: the header shrinks to the panel utilities only — title row,
+   actions, tabs, and the bottom divider wait for a real conversation. The
+   toggles keep the full chrome's top padding, so they sit exactly where the
+   expanded header would place them. */
+.headerReduced {
+  padding-bottom: 10px;
+}
+
+.headerReduced::after {
   display: none;
+}
+
+.headerReduced .titleRow {
+  justify-content: flex-end;
 }
 
 .titleRow {

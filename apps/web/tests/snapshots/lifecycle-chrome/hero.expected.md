@@ -4,23 +4,19 @@
   - img
   - text: New Session
 - searchbox "Search sessions"
-- img
-- text: All Workspaces
-- button "View options":
+- button "Filter sessions by workspace":
   - img
+  - text: All Folders
 - button "Add workspace":
   - img
-- tree "Sessions":
-  - treeitem "workspace Workspace actions for workspace New session in workspace" [expanded]:
-    - img
-    - text: workspace
-    - button "Workspace actions for workspace":
-      - img
-    - button "New session in workspace":
-      - img
+- tree "Sessions": No sessions yet
 - button "Settings":
   - img
   - text: Settings
+- banner:
+  - button "Toggle bottom panel"
+  - button "Open right panel":
+    - img
 - text: Into the Unknown Preview
 - button "Choose workspace":
   - img
@@ -39,6 +35,22 @@
   - text: DeepSeek-V4-Flash
   - img
 - button "Send message" [disabled]
-- text: Details
-- button "Close details"
-- text: Click a tool row in the message flow to view its details
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img
+- tablist "Workbench"
+- button "Close workbench":
+  - img
+- tabpanel:
+  - heading "Open a surface" [level=2]
+  - paragraph: Choose what to show in the right panel.
+  - button "Inspect": Inspect Inspect the selected tool call arguments and result
+  - button "Changes":
+    - img
+    - text: Changes Review loaded file changes in this Session
+  - button "Files":
+    - img
+    - text: Files Browse and edit workspace files
+  - button "Terminal":
+    - img
+    - text: Terminal Open an interactive persistent terminal

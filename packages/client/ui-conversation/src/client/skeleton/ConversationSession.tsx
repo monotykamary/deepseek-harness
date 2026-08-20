@@ -56,7 +56,8 @@ function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrum
 /**
  * Renders Session header chrome above the resident conversation scrollport.
  * @param props - Strict Session store, view ledger, navigation, render, and locale shares.
- * @returns the hidden blank-session header or visible title and tabs.
+ * @returns the title row and tabs, or the utilities-only reduced header on a
+ * blank hero so the panel toggles stay reachable before the first message.
  */
 export function ConversationSessionHeader({
   sessionId, useSession, useSessions, useStore, actions, detailsOpen,
@@ -69,14 +70,22 @@ export function ConversationSessionHeader({
   const ancestry = useSessions(s => deriveAncestry(s, sessionId), equalBreadcrumbs)
   const composerPhase = useSession(s => s.composerPhase)
   const blank = useSession(s => s.blank)
-  const hideChrome = blank && composerPhase === 'blank'
+
+  // Blank New Session pages shrink the header to the panel utilities only:
+  // the bottom-panel and workbench toggles stay reachable before the first
+  // message, while the title row, actions, tabs, and divider wait for a
+  // real conversation. The same header component serves both presentations.
+  const reduced = blank && composerPhase === 'blank'
 
   return (
-    <header
-      className={clsx(css.header, hideChrome && css.headerHidden)}
-      aria-hidden={hideChrome || undefined}
-    >
-      {!hideChrome && (
+    <header className={clsx(css.header, reduced && css.headerReduced)}>
+      {reduced ? (
+        <div className={css.titleRow}>
+          <div className={css.headerUtilities}>
+            {renderSlot('conversation.session.header.utilities', { detailsOpen })}
+          </div>
+        </div>
+      ) : (
         <>
           <div className={css.titleRow}>
             <div className={css.titleCluster}>

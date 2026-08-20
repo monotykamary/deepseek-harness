@@ -5,6 +5,12 @@
 - button "1 subagent":
   - text: 1 subagent
   - img
+- button "Open files":
+  - img
+  - text: Files
 - button "Session log":
   - text: Session log
+  - img
+- button "Toggle bottom panel"
+- button "Open right panel":
   - img

@@ -3,8 +3,11 @@
     - button "workspace" [disabled]
   - img
   - text: Standard mode
-  - button "Session log":
-    - text: Session log
+  - button "Open files":
+    - img
+    - text: Files
+  - button "Toggle bottom panel"
+  - button "Open right panel":
     - img
   - tablist:
     - tab "Chat" [selected]
@@ -22,3 +25,6 @@
   - text: DeepSeek-V4-Flash
   - img
 - button "Send message" [disabled]
+- textbox "Terminal input"
+- button "Show terminal actions":
+  - img

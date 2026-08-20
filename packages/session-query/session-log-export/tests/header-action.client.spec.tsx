@@ -19,13 +19,16 @@ function bindSessionExport(controller: SessionLogDownloadController) {
   }
 }
 
-function bench() {
+function bench(blank = false) {
   const controller = new SessionLogDownloadController(async () => new Response('zip'), vi.fn())
   const request = vi.fn((sessionId: SessionId) => controller.download(sessionId))
   const dismiss = vi.fn((sessionId: SessionId) => { controller.dismiss(sessionId) })
   const useSessionLogDownload = bindSessionExport(controller)
+  const snapshot = { blank }
+  const useSession = ((selector: (state: { blank: boolean }) => unknown) => selector(snapshot)) as never
   const props = {
     sessionId: SID,
+    useSession,
     useSessionLogDownload,
     request,
     dismiss,
@@ -47,14 +50,22 @@ describe('Session export Header action', () => {
     expect(await b.view.findByRole('dialog', { name: 'Session download started' })).toBeTruthy()
   })
 
+  it('stays hidden while the Session is blank (no durable log to export)', () => {
+    const b = bench(true)
+    expect(b.view.queryByRole('button', { name: 'Session log' })).toBeNull()
+  })
+
   it('disables the capsule while either entry path downloads this Session', async () => {
     const b = bench()
     let release!: (response: Response) => void
     const pending = new Promise<Response>((resolve) => { release = resolve })
     const controller = new SessionLogDownloadController(() => pending, vi.fn())
     const useSessionLogDownload = bindSessionExport(controller)
+    const snapshot = { blank: false }
+    const useSession = ((selector: (state: { blank: boolean }) => unknown) => selector(snapshot)) as never
     b.view.rerender(<SessionLogDownloadHeaderAction {...({
       sessionId: SID,
+      useSession,
       useSessionLogDownload,
       request: (sessionId: SessionId) => controller.download(sessionId),
       dismiss: (sessionId: SessionId) => { controller.dismiss(sessionId) },
