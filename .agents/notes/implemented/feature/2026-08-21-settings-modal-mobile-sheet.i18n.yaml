@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-21-settings-modal-mobile-sheet.md
+2026-08-21-settings-modal-mobile-sheet.md: e06d8636dadac86b0cd264663a718237906c2073
+2026-08-21-settings-modal-mobile-sheet.zh.md: d8633c9a311e89596f7bd864908e30525286165d
