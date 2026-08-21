@@ -22,8 +22,8 @@ export interface SessionNode {
   id: SessionId
   /** Workspace display label shown in the card header. */
   workspace: string
-  /** Agent preset shown as the card's stable execution-context label. */
-  agentPreset?: string
+  /** Git branch of the session's working tree, shown as the card's context label. */
+  branch?: string
   /** Stored display title. */
   title: string
   /** The runtime Session list reports an interaction awaiting this user. */
@@ -217,7 +217,7 @@ function sessionNode(
   return {
     id: s.id,
     workspace,
-    ...(s.agentPreset === undefined ? {} : { agentPreset: s.agentPreset }),
+    ...(s.branch === undefined ? {} : { branch: s.branch }),
     title: s.displayTitle,
     running: s.running,
     runningSubagentCount: descendants.get(s.id)?.runningCount ?? 0,
