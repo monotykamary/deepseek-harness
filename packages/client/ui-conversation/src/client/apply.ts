@@ -268,6 +268,20 @@ export function apply(ctx: Context): void {
     store: chatStore,
     inject: (): ConversationSessionHeaderInjected => ({
       views,
+      // The header sizes its disclosure tiers from the LIVE slot ledgers —
+      // optional bands only render while their slot has entries (a session
+      // without jobs never pays for a jobs band).
+      headerEntries: {
+        actions: () => slots.entriesOfSlot('conversation.session.header.actions').length,
+        utilities: () => slots.entriesOfSlot('conversation.session.header.utilities').length,
+        subscribe: (fn: () => void) => {
+          const unsubscribeA = slots.subscribe('conversation.session.header.actions', fn)
+          const unsubscribeB = slots.subscribe('conversation.session.header.utilities', fn)
+          return () => { unsubscribeA(); unsubscribeB() }
+        },
+        version: () => slots.getVersion('conversation.session.header.actions')
+          + slots.getVersion('conversation.session.header.utilities'),
+      },
       open: (id) => { sessions.open(id) },
     }),
   }, ConversationSessionHeader)

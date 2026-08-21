@@ -67,6 +67,8 @@
 - compact drawer opens: true
 - compact drawer dismisses: true
 - compact Chat horizontal overflow: 0px
+- mobile header disclosure tier: 1
+- mobile header row overflow: 0px
 
 ## Trajectory top fade clearance
 

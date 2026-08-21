@@ -1,12 +1,13 @@
 /** Strict per-session header/body content inserted into the resident conversation layout. */
 
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
 import type { SessionId, SessionListState, SessionSummary } from '@monotykamary/dsh-client-runtime/client'
 import type {
   ConversationSessionHeaderSlotProps, ConversationSessionSlotProps,
 } from '../contract/slots.ts'
 import type { ViewTab } from '../contract/views.ts'
+import { computeHeaderLayout } from './header-layout.ts'
 import css from './ConversationRoot.module.css'
 
 /** Full props composed from the strict session body contract. */
@@ -61,9 +62,10 @@ function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrum
  */
 export function ConversationSessionHeader({
   sessionId, useSession, useSessions, useStore, actions, detailsOpen,
-  renderSlot, views, open, t,
+  renderSlot, views, headerEntries, open, t,
 }: ConversationSessionHeaderProps) {
   useSyncExternalStore(views.subscribe, views.version)
+  useSyncExternalStore(headerEntries.subscribe, headerEntries.version)
   const tabs = views.list()
   const selectedId = useStore(s => s.view)
   const active = resolveActiveView(tabs, selectedId)
@@ -71,14 +73,70 @@ export function ConversationSessionHeader({
   const composerPhase = useSession(s => s.composerPhase)
   const blank = useSession(s => s.blank)
 
-  // Blank New Session pages shrink the header to the panel utilities only:
-  // the bottom-panel and workbench toggles stay reachable before the first
-  // message, while the title row, actions, tabs, and divider wait for a
-  // real conversation. The same header component serves both presentations.
+  // Blank New Session pages keep the panel utilities only: the bottom-panel
+  // and workbench toggles stay reachable before the first message, while the
+  // title row, actions, tabs, and divider wait for a real conversation.
   const reduced = blank && composerPhase === 'blank'
 
+  // The header measures the displayed box once per ResizeObserver tick and
+  // the disclosure solver picks tiers from it. Both plugin-composed bands
+  // are observed the same way: each reports its own measured width while
+  // rendered, and a band that hides keeps its last measurement, so the
+  // solver sees true content widths instead of per-entry estimates.
+  const headerRef = useRef<HTMLElement | null>(null)
+  const actionsRef = useRef<HTMLDivElement | null>(null)
+  const utilitiesRef = useRef<HTMLDivElement | null>(null)
+  const [layout, setLayout] = useState(() => ({ width: 0, actions: 0, utilities: 0 }))
+
+  const titleText = ancestry.length > 0 ? (ancestry.at(-1)?.displayTitle ?? '') : sessionId
+  const [configIndex, setConfigIndex] = useState(0)
+
+  const solved = computeHeaderLayout({
+    availableWidth: reduced ? 0 : layout.width,
+    titleText,
+    actionsBandWidth: reduced ? 0 : layout.actions,
+    utilitiesBandWidth: reduced ? 0 : layout.utilities,
+    tabLabels: tabs.map(viewTab => viewTab.label),
+    previousConfigIndex: configIndex,
+  })
+  const tier = solved.tier
+
+  useLayoutEffect(() => {
+    setConfigIndex(solved.configIndex)
+  }, [solved.configIndex])
+
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (el === null) return
+    const apply = (entry: ResizeObserverEntry): void => {
+      const box = entry.borderBoxSize[0]
+      const next = box === undefined ? entry.target.clientWidth : box.inlineSize
+      const target = entry.target
+      if (target === el) {
+        setLayout(prev => prev.width === next ? prev : { ...prev, width: next })
+      } else if (target === actionsRef.current) {
+        setLayout(prev => ({ ...prev, actions: next }))
+      } else if (target === utilitiesRef.current) {
+        setLayout(prev => ({ ...prev, utilities: next }))
+      }
+    }
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) apply(entry)
+    })
+    observer.observe(el)
+    if (actionsRef.current !== null) observer.observe(actionsRef.current)
+    if (utilitiesRef.current !== null) observer.observe(utilitiesRef.current)
+    // Re-observe to catch bands mounting or unmounting at a tier edge; the
+    // next render's measurement then feeds the solver's true band widths.
+    return () => { observer.disconnect() }
+  }, [solved.configIndex])
+
   return (
-    <header className={clsx(css.header, reduced && css.headerReduced)}>
+    <header
+      ref={headerRef}
+      className={clsx(css.header, reduced && css.headerReduced)}
+      data-header-tier={solved.configIndex || undefined}
+    >
       {reduced ? (
         <div className={css.titleRow}>
           <div className={css.headerUtilities}>
@@ -108,13 +166,17 @@ export function ConversationSessionHeader({
                 })}
                 {ancestry.length === 0 && <span className={css.crumbCurrent}>{sessionId}</span>}
               </nav>
-              <div className={css.headerActions}>
-                {renderSlot('conversation.session.header.actions', {})}
+              {tier.showActions && (
+                <div ref={actionsRef} className={css.headerActions}>
+                  {renderSlot('conversation.session.header.actions', {})}
+                </div>
+              )}
+            </div>
+            {tier.showUtilities && (
+              <div ref={utilitiesRef} className={css.headerUtilities}>
+                {renderSlot('conversation.session.header.utilities', { detailsOpen })}
               </div>
-            </div>
-            <div className={css.headerUtilities}>
-              {renderSlot('conversation.session.header.utilities', { detailsOpen })}
-            </div>
+            )}
           </div>
           {tabs.length > 1 && (
             <div className={css.tabs} role="tablist">

@@ -500,7 +500,14 @@ export interface ConversationSessionHeaderInjected {
     subscribe: (fn: () => void) => () => void
     version: () => number
   }
-  /** Select a real Session through the runtime navigation owner. */
+  /** Live entries of the session header's actions and utilities slots. */
+  headerEntries: {
+    actions: () => number
+    utilities: () => number
+    subscribe: (fn: () => void) => () => void
+    version: () => number
+  }
+  /** Open a real Session through the runtime navigation owner. */
   open: (sessionId: SessionId) => void
 }
 

@@ -68,6 +68,10 @@ interface ResponsiveMetrics {
   compactOpens: boolean
   compactDismisses: boolean
   compactChatOverflow: number
+  /** 390px: the session-header disclosure tier index (header-layout.ts). */
+  compactHeaderTier: number
+  /** 390px: widest header row's horizontal overflow (0 = none). */
+  compactHeaderRowOverflow: number
 }
 
 interface TrajectoryMetrics {
@@ -273,10 +277,30 @@ async function measureResponsiveDisclosure(page: Page): Promise<ResponsiveMetric
     if (!scroll) throw new Error('conversation scroll target is missing')
     return scroll.scrollWidth - scroll.clientWidth
   })
+  // The mobile header row must never overflow its box: the disclosure
+  // solver (ui-conversation header-layout) hides optional bands instead of
+  // letting the flex row spill or wrap.
+  const compactHeaderTier = await page.evaluate(() => {
+    const header = document.querySelector<HTMLElement>('header[data-header-tier]')
+    if (!header) throw new Error('conversation header is missing')
+    const tier = Number(header.dataset['header-tier'])
+    if (Number.isNaN(tier)) throw new Error('header tier is not numeric')
+    // The tab row renders below the title row; the binding constraint is
+    // each visible row's own width, so the widest row must fit.
+    const rows = [...header.children].filter(
+      child => child instanceof HTMLElement && child.offsetWidth > 0,
+    )
+    return {
+      tier,
+      rowOverflow: Math.max(0, ...rows.map(row => row.scrollWidth - row.clientWidth)),
+    }
+  })
   return {
     desktopTracks, tabletTracks, compactTracks,
     tabletReopens, tabletRecollapses, compactOpens, compactDismisses,
     compactChatOverflow,
+    compactHeaderTier: compactHeaderTier.tier,
+    compactHeaderRowOverflow: compactHeaderTier.rowOverflow,
   }
 }
 
@@ -370,6 +394,8 @@ function renderSkin(
     `- compact drawer opens: ${String(responsive.compactOpens)}`,
     `- compact drawer dismisses: ${String(responsive.compactDismisses)}`,
     `- compact Chat horizontal overflow: ${String(responsive.compactChatOverflow)}px`,
+    `- mobile header disclosure tier: ${String(responsive.compactHeaderTier)}`,
+    `- mobile header row overflow: ${String(responsive.compactHeaderRowOverflow)}px`,
     '',
     '## Trajectory top fade clearance',
     '',
@@ -426,6 +452,10 @@ describe('web e2e: T3-adapted conversation skin', () => {
     expect(drawer.border).toBe('0px none')
     expect(drawer.background).toBe('rgba(0, 0, 0, 0)')
     expect(responsive.compactChatOverflow).toBe(0)
+    // The mobile disclosure solver hides at least one band and no header row
+    // overflows its box: the flex title row must never push the crumb out.
+    expect(responsive.compactHeaderTier).toBeGreaterThan(0)
+    expect(responsive.compactHeaderRowOverflow).toBe(0)
     expect(trajectory.clearsFade).toBe(true)
 
     await compareOrRefreshGolden(

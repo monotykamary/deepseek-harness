@@ -1974,6 +1974,9 @@ importers:
 
   packages/client/ui-conversation:
     dependencies:
+      '@chenglou/pretext':
+        specifier: ^0.0.8
+        version: 0.0.8
       '@monotykamary/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
@@ -10131,6 +10134,9 @@ packages:
   '@bufbuild/protobuf@2.13.0':
     resolution: {integrity: sha512-acq7c49vxfm1ggJ95P70TX7ABDM0vxr1SYD3BB0o0jnBLB4OAqeHyKuN+cD3w80gXEDQ2zxHpR6CUeA+O/aU9g==}
 
+  '@chenglou/pretext@0.0.8':
+    resolution: {integrity: sha512-yqm2GMxnPI7VHcHwe84P8ZF0JK/2d2DMKPqMN+s95jQhwDMYYXKVFVJUMEaVWckQStdsjdLav/0Vu+d9YbtGxA==}
+
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
 
@@ -16326,6 +16332,8 @@ snapshots:
       css-tree: 3.2.1
 
   '@bufbuild/protobuf@2.13.0': {}
+
+  '@chenglou/pretext@0.0.8': {}
 
   '@chevrotain/types@11.1.2': {}
 
