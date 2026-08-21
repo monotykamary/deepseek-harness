@@ -138,6 +138,12 @@ function mount(
     subscribe: () => () => {},
     version: () => 1,
   }
+  const headerEntries = {
+    actions: () => 1,
+    utilities: () => 2,
+    subscribe: () => () => {},
+    version: () => 1,
+  }
   /** Owner share handed to the two composer tool-row seats, per render. */
   const seatOwners: { key: string; owner: unknown }[] = []
   const headerOwners: { key: string; owner: unknown }[] = []
@@ -167,6 +173,7 @@ function mount(
           actions={chat.actions}
           renderSlot={renderSlot as never}
           views={views}
+          headerEntries={headerEntries}
           open={open}
           detailsOpen={(owner as { detailsOpen: boolean }).detailsOpen}
           t={t}

@@ -89,6 +89,7 @@ External packages that a workspace package resolves at runtime. The tier covers 
 | [`@anthropic-ai/claude-agent-sdk`](https://github.com/anthropics/claude-agent-sdk-typescript) | SEE LICENSE IN README.md |
 | [`@anthropic-ai/sdk`](https://github.com/anthropics/anthropic-sdk-typescript) | MIT |
 | [`@babel/code-frame`](https://github.com/babel/babel) | MIT |
+| [`@chenglou/pretext`](https://github.com/chenglou/pretext) | MIT |
 | [`@earendil-works/pi-ai`](https://github.com/earendil-works/pi) | MIT |
 | [`@fontsource/anonymous-pro`](https://github.com/fontsource/font-files) | OFL-1.1 |
 | [`@fontsource/dm-mono`](https://github.com/fontsource/font-files) | OFL-1.1 |

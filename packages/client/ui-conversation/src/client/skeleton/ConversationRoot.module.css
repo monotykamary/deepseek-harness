@@ -152,6 +152,20 @@
   display: none;
 }
 
+/* Disclosure tiers (header-layout.ts): the solver hides optional bands as the
+   column narrows; the tiers ride a data-attribute so the chrome math and the
+   CSS stay in step without container queries. Tiers 1+ tighten the title-row
+   gap and header padding to reclaim content width before a band hides. */
+.header[data-header-tier='1'] .titleRow,
+.header[data-header-tier='2'] .titleRow {
+  gap: 10px;
+}
+.header[data-header-tier='1'],
+.header[data-header-tier='2'] {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 /* figma Tab_Group 34:11441: 35px strip, gap 36, pad-left 8, tabs bottom-aligned. */
 .tabs {
   position: relative;
