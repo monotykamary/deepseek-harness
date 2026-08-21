@@ -1,7 +1,7 @@
 import { useMemo, useRef, type CSSProperties, type KeyboardEvent } from 'react'
 import {
-  IconCodeOutline16, IconFolderClose16, IconFolderOpen16, IconLoadingOutline16,
-  IconRefreshOutline14, IconSearchOutline16, IconTriangleRightFill14, IconWarningOutline16, Tooltip,
+  CodeXml, Folder, FolderOpen, LoaderCircle,
+  RefreshCw, Search, Play, TriangleAlert, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { WorkspaceFileEntry, WorkspaceFileLocator } from '@monotykamary/dsh-api-remotes/client'
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
@@ -28,9 +28,9 @@ interface FilesTreeProps {
 
 function rowIcon(row: FileRow, open: boolean) {
   switch (row.entry.kind) {
-    case 'directory': return open ? <IconFolderOpen16 size={14} /> : <IconFolderClose16 size={14} />
-    case 'file': return <IconCodeOutline16 size={14} />
-    case 'other': return <IconWarningOutline16 size={14} />
+    case 'directory': return open ? <FolderOpen size={14} /> : <Folder size={14} />
+    case 'file': return <CodeXml size={14} />
+    case 'other': return <TriangleAlert size={14} />
   }
 }
 
@@ -109,11 +109,11 @@ export function FilesTree({
             disabled={rootCell?.phase === 'loading'}
             onClick={onRefresh}
           >
-            <IconRefreshOutline14 className={rootCell?.phase === 'loading' ? css.spinning : undefined} />
+            <RefreshCw size={14} className={rootCell?.phase === 'loading' ? css.spinning : undefined} />
           </button>
         </Tooltip>
         <label className={css.search}>
-          <IconSearchOutline16 size={14} />
+          <Search size={14} />
           <input
             type="search"
             value={query}
@@ -126,7 +126,7 @@ export function FilesTree({
       </div>
       {rootPending ? (
         <div className={css.state} aria-live="polite">
-          <IconLoadingOutline16 className={css.spinning} />
+          <LoaderCircle size={16} className={css.spinning} />
           <span>{t('tree.loading')}</span>
         </div>
       ) : rootFailed ? (
@@ -159,7 +159,7 @@ export function FilesTree({
               >
                 <span className={css.disclosure} aria-hidden>
                   {row.entry.kind === 'directory' && (
-                    <IconTriangleRightFill14 className={open ? css.disclosureOpen : undefined} size={10} />
+                    <Play fill="currentColor" className={open ? css.disclosureOpen : undefined} size={10} />
                   )}
                 </span>
                 <span className={css.fileIcon} aria-hidden>{rowIcon(row, open)}</span>
@@ -167,8 +167,8 @@ export function FilesTree({
                   <span className={css.name}>{row.entry.name}</span>
                   {searching && <span className={css.path}>{row.entry.locator.segments.slice(0, -1).join('/') || '/'}</span>}
                 </span>
-                {pending && <IconLoadingOutline16 className={css.spinning} size={12} aria-hidden />}
-                {failed && <IconWarningOutline16 size={12} aria-hidden />}
+                {pending && <LoaderCircle className={css.spinning} size={12} aria-hidden />}
+                {failed && <TriangleAlert size={12} aria-hidden />}
               </button>
             )
           })}

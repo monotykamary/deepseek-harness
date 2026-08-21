@@ -8,10 +8,9 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { ChevronDown } from 'lucide-react'
 import {
-  Button, IconCloseFill14, IconFolderClose16, IconPersonalizationOutline16,
-  IconPlusOutline16, IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
+  Button, ChevronDown, CircleX, Folder, SlidersHorizontal,
+  Plus, FolderPlus, Search, Menu, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   SessionId, SessionListState, SessionSearchResultItem, WorkspaceId, WorkspaceView,
@@ -218,15 +217,15 @@ function WorkspaceScopeMenu({
           {
             id: ALL_WORKSPACES_SCOPE_ID,
             label: t('section.allWorkspaces'),
-            icon: <IconFolderClose16 size={16} />,
+            icon: <Folder size={16} />,
           },
           ...workspaces.map(workspace => ({
             id: workspaceScopeItemId(workspace.workspaceId),
             label: workspace.title,
-            icon: <IconFolderClose16 size={16} />,
+            icon: <Folder size={16} />,
             action: {
               label: t('actions.workspace.aria', { name: workspace.title }),
-              icon: <IconPersonalizationOutline16 size={16} />,
+              icon: <SlidersHorizontal size={16} />,
             },
           })),
         ]}
@@ -260,7 +259,7 @@ function WorkspaceScopeMenu({
               setOpen(value => !value)
             }}
           >
-            <IconFolderClose16 size={16} />
+            <Folder size={16} />
             <span>{selectedWorkspace?.title ?? t('section.allWorkspaces')}</span>
             <ChevronDown className={css.scopeChevron} size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
@@ -512,7 +511,7 @@ function Shelves({
               className={css.settledMore}
               onClick={() => { setVisibleCount(count => count + SETTLED_PAGE_COUNT) }}
             >
-              <IconPlusOutline16 size={14} />
+              <Plus size={14} />
               <span>{t('settled.showMore', { n: Math.min(hiddenCount, SETTLED_PAGE_COUNT) })}</span>
             </button>
           )}
@@ -1384,7 +1383,7 @@ export function WorkspaceBrowser({
           <div className={css.fixedControls}>
             <div className={css.searchRow}>
               <span className={css.searchGlyph} aria-hidden="true">
-                <IconSearchOutline16 size={16} />
+                <Search size={16} />
               </span>
               <input
                 ref={searchInput}
@@ -1410,7 +1409,7 @@ export function WorkspaceBrowser({
                     searchInput.current?.focus()
                   }}
                 >
-                  <IconCloseFill14 />
+                  <CircleX size={14} />
                 </button>
               )}
             </div>
@@ -1440,7 +1439,7 @@ export function WorkspaceBrowser({
                       aria-label={t('workspace.add')}
                       onClick={() => { setWsPickerOpen(v => !v) }}
                     >
-                      <IconProjectAddOutline16 size={16} />
+                      <FolderPlus size={16} />
                     </button>
                   </Tooltip>
                 )}
@@ -1460,7 +1459,7 @@ export function WorkspaceBrowser({
                   expandSidebar()
                 }}
               >
-                <IconSearchOutline16 size={18} />
+                <Search size={18} />
               </button>
             </Tooltip>
             {directoryFlowAvailable && (
@@ -1472,7 +1471,7 @@ export function WorkspaceBrowser({
                   aria-label={t('workspace.add')}
                   onClick={() => { setWsPickerOpen(v => !v) }}
                 >
-                  <IconProjectAddOutline16 size={18} />
+                  <FolderPlus size={18} />
                 </button>
               </Tooltip>
             )}

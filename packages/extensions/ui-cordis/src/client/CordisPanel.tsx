@@ -3,8 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
-  IconCheckOutline16, IconCloseOutline16, IconCordisPluginOutline14, IconPlayOutline16,
-  IconStopFill16, IconTrashOutline16, Tooltip, useDismissOnOutsidePointer,
+  Check, X, Plug, Play,
+  Square, Trash2, Tooltip, useDismissOnOutsidePointer,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
@@ -96,8 +96,8 @@ function RowAction({ label, children, ...props }: {
 function DoubleCheckIcon() {
   return (
     <span className={css.doubleCheck} aria-hidden>
-      <IconCheckOutline16 size={12} />
-      <IconCheckOutline16 size={12} />
+      <Check size={12} />
+      <Check size={12} />
     </span>
   )
 }
@@ -281,7 +281,7 @@ export function CordisPanel({
                     setOpen(false)
                   }) }}
                 >
-                  <IconCheckOutline16 size={14} />
+                  <Check size={14} />
                 </RowAction>
                 <RowAction
                   label={t('action.approvePlugin')}
@@ -303,7 +303,7 @@ export function CordisPanel({
                     setOpen(false)
                   }) }}
                 >
-                  <IconCloseOutline16 size={14} />
+                  <X size={14} />
                 </RowAction>
               </>
             )}
@@ -321,7 +321,7 @@ export function CordisPanel({
                   hasClientHalf: selectedPackage?.hasClientHalf === true,
                 })) }}
               >
-                <IconPlayOutline16 size={14} />
+                <Play size={14} />
               </RowAction>
             )}
             {awaiting === undefined && listed !== undefined && listed.activeRun !== undefined
@@ -338,7 +338,7 @@ export function CordisPanel({
                   hasClientHalf: selectedPackage.hasClientHalf,
                 })) }}
               >
-                <IconPlayOutline16 size={14} />
+                <Play size={14} />
               </RowAction>
             )}
             {awaiting === undefined && listed !== undefined && listed.activeRun !== undefined && status === 'client-pending'
@@ -355,7 +355,7 @@ export function CordisPanel({
                   hasClientHalf: true,
                 })) }}
               >
-                <IconPlayOutline16 size={14} />
+                <Play size={14} />
               </RowAction>
             )}
             {awaiting === undefined && listed !== undefined && listed.activeRun !== undefined && (
@@ -365,7 +365,7 @@ export function CordisPanel({
                 disabled={busy}
                 onClick={() => { void runAction(pluginId, () => onStop(listed.agentId, pluginId)) }}
               >
-                <IconStopFill16 size={14} />
+                <Square fill="currentColor" size={14} />
               </RowAction>
             )}
             {awaiting === undefined && listed !== undefined && (
@@ -375,7 +375,7 @@ export function CordisPanel({
                 disabled={busy}
                 onClick={() => { void runAction(pluginId, () => onRemove(listed.agentId, pluginId)) }}
               >
-                <IconTrashOutline16 size={14} />
+                <Trash2 size={14} />
               </RowAction>
             )}
           </div>
@@ -477,7 +477,7 @@ export function CordisPanel({
           aria-expanded={open}
           onClick={() => { setOpen(value => !value) }}
         >
-          <IconCordisPluginOutline14 size={wide ? 16 : 18} />
+          <Plug size={wide ? 16 : 18} />
           {wide && (
             <>
               <span className={css.badgeLabel}>{t('panel.trigger')}</span>

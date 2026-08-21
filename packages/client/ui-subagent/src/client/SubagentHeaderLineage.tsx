@@ -7,7 +7,7 @@ import {
   type SessionSummary, type SubagentAddress, type SubagentCatalogSnapshot,
 } from '@monotykamary/dsh-client-runtime/client'
 import {
-  IconChevronDownOutline14, IconChevronRightOutline14, IconRefreshOutline14, IconSubagentSwitcherOutline16, StateDot,
+  ChevronDown, ChevronRight, RefreshCw, UsersRound, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import { NS } from './locales.ts'
@@ -175,7 +175,9 @@ function formatExactDuration(ms: number, t: TranslateNS<typeof NS>): string {
 
 const NO_DESCENDANTS = { count: 0, runningCount: 0 } as const
 
-const SubagentSwitcherIcon = IconSubagentSwitcherOutline16
+function SubagentSwitcherIcon() {
+  return <UsersRound size={16} />
+}
 
 /** Render the known direct-child shape while its authoritative catalog hydrates. */
 function CatalogLoadingRows({
@@ -239,7 +241,7 @@ function CatalogRows({
             className={css.refresh}
             onClick={() => { refresh(parentSessionId) }}
           >
-            <IconRefreshOutline14 />
+            <RefreshCw size={14} />
             {t('retry')}
           </button>
         </div>
@@ -347,7 +349,7 @@ function CatalogRows({
                     aria-label={t(isExpanded ? 'branch.collapse' : 'branch.expand', { label })}
                     onClick={toggle}
                   >
-                    <IconChevronRightOutline14 />
+                    <ChevronRight size={14} />
                   </button>
                 )}
               <div className={css.clickarea}>
@@ -750,7 +752,7 @@ function CatalogDropdown({
           )}
         {variant === 'switcher'
           ? <SubagentSwitcherIcon />
-          : <IconChevronDownOutline14 className={open ? css.triggerOpen : undefined} />}
+          : <ChevronDown size={14} className={open ? css.triggerOpen : undefined} />}
       </button>
       {open && createPortal((
         <div

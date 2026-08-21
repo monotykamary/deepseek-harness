@@ -11,8 +11,8 @@ import {
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import {
-  IconChevronLeftOutline14, IconFolderClose16, IconNewChatOutline16,
-  IconSearchOutline16, StateDot,
+  ChevronLeft, Folder, MessageSquarePlus,
+  Search, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { WorkspaceId, WorkspaceView } from '@monotykamary/dsh-client-runtime/client'
 import type { CommandPaletteProps } from './contract.ts'
@@ -60,8 +60,8 @@ function assertNever(value: never): never {
 
 function itemIcon(item: PaletteItem): ReactNode {
   switch (item.kind) {
-    case 'action': return <IconNewChatOutline16 size={16} />
-    case 'workspace': return <IconFolderClose16 size={16} />
+    case 'action': return <MessageSquarePlus size={16} />
+    case 'workspace': return <Folder size={16} />
     case 'session': {
       const state = statusState(item.session)
       return state === undefined
@@ -377,10 +377,10 @@ export function CommandPalette({
                 onClick={leaveWorkspaceMode}
                 onMouseDown={(event) => { event.preventDefault() }}
               >
-                <IconChevronLeftOutline14 />
+                <ChevronLeft size={14} />
               </button>
             )
-            : <span className={css.searchIcon} aria-hidden="true"><IconSearchOutline16 /></span>}
+            : <span className={css.searchIcon} aria-hidden="true"><Search size={16} /></span>}
           <input
             ref={inputRef}
             className={css.search}

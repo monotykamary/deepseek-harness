@@ -10,11 +10,10 @@
  */
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
-import { AlarmClock, AlarmClockOff, Check, Clock, Undo2 } from 'lucide-react'
 import {
-  HoverCard, IconArchiveOutline20, IconBranchOutline16,
-  IconEditOutline16, IconFolderClose16, IconFolderOpen16, IconPlusOutline16,
-  IconTrashOutline16, IconTriangleRightFill14, Menu, StateDot,
+  AlarmClock, AlarmClockOff, Archive, Check, Clock, GitBranch, HoverCard,
+  Pencil, Folder, FolderOpen, Plus, Undo2,
+  Trash2, Play, Menu, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MenuEntry, MenuItem, StateDotState } from '@monotykamary/dsh-client-ui-primitives'
 import { abbreviateHomePath } from '@monotykamary/dsh-client-runtime/client'
@@ -135,8 +134,8 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, home,
   const [menuRect, setMenuRect] = useState<DOMRect | null>(null)
   const menuOpen = menuRect !== null
   const workspaceMenuItems = [
-    { id: 'rename', label: t('rename'), icon: <IconEditOutline16 /> },
-    { id: 'delete', label: t('delete.workspace'), icon: <IconTrashOutline16 />, danger: true },
+    { id: 'rename', label: t('rename'), icon: <Pencil size={16} /> },
+    { id: 'delete', label: t('delete.workspace'), icon: <Trash2 size={16} />, danger: true },
   ]
   const ownRow = (
     <div
@@ -161,10 +160,10 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, home,
       onDragEnd={drag?.end}
     >
       <span className={clsx(css.slot, css.folder, active && css.folderActive)}>
-        {row.expanded ? <IconFolderOpen16 /> : <IconFolderClose16 />}
+        {row.expanded ? <FolderOpen size={16} /> : <Folder size={16} />}
       </span>
       <span className={clsx(css.slot, css.chevron)}>
-        <IconTriangleRightFill14 className={clsx(css.arrow, row.expanded && css.arrowOpen)} />
+        <Play size={14} fill="currentColor" className={clsx(css.arrow, row.expanded && css.arrowOpen)} />
       </span>
       <span className={css.projectText}>
         <span className={css.title}>{label}</span>
@@ -176,7 +175,7 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, home,
           aria-label={t('actions.newSession.aria', { name: label })}
           onClick={(e) => { e.stopPropagation(); onCreate() }}
         >
-          <IconPlusOutline16 />
+          <Plus size={16} />
         </button>
       </span>
       {actions !== undefined && (
@@ -501,8 +500,8 @@ export function SessionNodeItem({
   // touches the session log, so it is not styled as destructive and needs no
   // confirmation dialog.
   const sessionMenuItems: MenuEntry[] = [
-    { id: 'rename', label: t('rename'), icon: <IconEditOutline16 /> },
-    { id: 'fork', label: t('menu.fork'), icon: <IconBranchOutline16 /> },
+    { id: 'rename', label: t('rename'), icon: <Pencil size={16} /> },
+    { id: 'fork', label: t('menu.fork'), icon: <GitBranch size={16} /> },
     ...(parkable
       ? [
         {
@@ -521,7 +520,7 @@ export function SessionNodeItem({
           ? [{ id: 'settle', label: t('menu.settle'), icon: <Check size={14} /> }]
           : []),
     // 20-native glyph in the menu's 16px icon slot (Menu.module.css .itemIcon).
-    { id: 'archive', label: t('menu.archiveSession'), icon: <IconArchiveOutline20 size={16} /> },
+    { id: 'archive', label: t('menu.archiveSession'), icon: <Archive size={16} /> },
   ]
   const dispatchMenu = (id: string): void => {
     setMenuRect(null)
@@ -590,7 +589,7 @@ export function SessionNodeItem({
     >
       <div className={css.sessionTop}>
         <span className={css.workspaceMeta}>
-          <IconFolderClose16 className={css.workspaceIcon} />
+          <Folder size={16} className={css.workspaceIcon} />
           <span className={css.workspaceTitle}>{node.workspace}</span>
         </span>
         <span className={css.sessionTrailing}>
@@ -680,7 +679,7 @@ export function SessionNodeItem({
           ? <span />
           : (
             <span className={css.branch}>
-              <IconBranchOutline16 size={14} />
+              <GitBranch size={14} />
               <span>{node.branch}</span>
             </span>
           )}

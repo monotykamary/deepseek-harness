@@ -4,13 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { CSSProperties, ReactNode } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
-  IconChevronRightOutline14, IconCloseOutline16, IconCompactedOutline13, IconInformationOutline14,
-  IconSettingsOutline16,
-  IconSparkle16,
-  IconUserOutline16, IconWrenchOutline14,
-  JsonTree,
-  MarkdownText,
-  Tooltip,
+  ChevronRight, Info, Settings, Shrink, Sparkles, User, Wrench, X,
+  JsonTree, MarkdownText, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import { structuredPatch } from 'diff'
 import type {
@@ -45,18 +40,14 @@ const KIND_LABEL: Record<TrajectoryCellKind, string> = {
   subtool: 'SUBTOOL',
 }
 
-const ToolWrenchIcon = IconWrenchOutline14
-const InformationIcon = IconInformationOutline14
-const CompactedIcon = IconCompactedOutline13
-
 const KIND_ICON: Record<TrajectoryCellKind, ReactNode> = {
-  system: <IconSettingsOutline16 size={13} />,
-  user: <IconUserOutline16 size={13} />,
-  context: <InformationIcon />,
-  compacted: <CompactedIcon />,
-  message: <IconSparkle16 size={13} />,
-  tool: <ToolWrenchIcon />,
-  subtool: <ToolWrenchIcon />,
+  system: <Settings size={13} />,
+  user: <User size={13} />,
+  context: <Info size={14} data-role-icon="information" />,
+  compacted: <Shrink size={13} data-role-icon="compacted" />,
+  message: <Sparkles size={13} />,
+  tool: <Wrench size={13} data-role-icon="wrench" />,
+  subtool: <Wrench size={13} data-role-icon="wrench" />,
 }
 
 interface TableRecord {
@@ -1020,7 +1011,7 @@ function SourceBlocks({
                 <span className={css.sourceBlockLabel}>
                   {`Block #${index + 1} ${block.type}`}
                 </span>
-                <IconChevronRightOutline14 className={css.sourceBlockJumpIcon} size={12} />
+                <ChevronRight className={css.sourceBlockJumpIcon} size={12} />
               </button>
             )
             : (
@@ -1106,7 +1097,7 @@ function AssistantToolCalls({
               if (call.callId !== undefined) onOpenCall(call.callId)
             }}
           >
-            <IconWrenchOutline14 className={css.assistantToolCallIcon} size={12} />
+            <Wrench className={css.assistantToolCallIcon} size={12} />
             <span className={css.assistantToolCallText}>
               <span className={css.assistantToolCallName}>
                 {call.toolName ?? 'tool-call'}
@@ -1123,7 +1114,7 @@ function AssistantToolCalls({
 }
 
 function ToolGlyph() {
-  return <IconWrenchOutline14 className={css.toolCatalogIcon} size={12} />
+  return <Wrench className={css.toolCatalogIcon} size={12} />
 }
 
 function ToolCatalog({ tools }: { tools: ConversationPromptSnapshot['tools'] }) {
@@ -1133,7 +1124,7 @@ function ToolCatalog({ tools }: { tools: ConversationPromptSnapshot['tools'] }) 
       {tools.map((tool, index) => (
         <details className={css.toolCatalogItem} key={`${tool.name}:${index}`}>
           <summary className={css.toolCatalogSummary}>
-            <IconChevronRightOutline14 className={css.toolCatalogChevron} size={12} />
+            <ChevronRight className={css.toolCatalogChevron} size={12} />
             <ToolGlyph />
             <span className={css.toolCatalogName}>{tool.name}</span>
             <span className={css.toolCatalogDescription}>{tool.description}</span>
@@ -1299,7 +1290,7 @@ function MarkdownRecordContent({
             onClick={() => { onThinkingExpandedChange(!thinkingExpanded) }}
           >
             Thinking
-            <IconChevronRightOutline14 className={css.thinkingChevron} size={12} />
+            <ChevronRight className={css.thinkingChevron} size={12} />
           </button>
           {thinkingExpanded && (
             <MarkdownFragment
@@ -1582,7 +1573,7 @@ function OverviewSection({
           onClick={onOpen}
         >
           <span>{label}</span>
-          <IconChevronRightOutline14 className={css.overviewTitleIcon} size={12} />
+          <ChevronRight className={css.overviewTitleIcon} size={12} />
         </button>
       </h3>
       <div
@@ -2577,7 +2568,7 @@ export function TrajectoryTable({
               aria-label="Close details"
               onClick={clearInspectorSelection}
             >
-              <IconCloseOutline16 />
+              <X size={16} />
             </button>
           </div>
           <div className={css.detailTabs} role="tablist" aria-label="Event details">
@@ -2693,7 +2684,7 @@ export function TrajectoryTable({
                               ? 'Compacted'
                               : 'Assistant Message'}
                           </span>
-                          <IconChevronRightOutline14
+                          <ChevronRight
                             className={css.overviewHierarchyJumpIconTight}
                             size={11}
                           />
@@ -2817,7 +2808,7 @@ export function TrajectoryTable({
                           onClick={() => { activateTab('source') }}
                         >
                           <span>{messageSourceLabel(selected.cell.messageSource)}</span>
-                          <IconChevronRightOutline14
+                          <ChevronRight
                             className={css.overviewHierarchyJumpIconTight}
                             size={11}
                           />
@@ -2842,7 +2833,7 @@ export function TrajectoryTable({
                             }}
                           >
                             <span>Request #{selectedAssistantRequest ?? '—'}</span>
-                            <IconChevronRightOutline14
+                            <ChevronRight
                               className={css.overviewHierarchyJumpIconTight}
                               size={11}
                             />
@@ -2855,7 +2846,7 @@ export function TrajectoryTable({
                             onClick={() => { openRecordSummary(selectedParentMessage) }}
                           >
                             <span>Assistant Message</span>
-                            <IconChevronRightOutline14
+                            <ChevronRight
                               className={css.overviewHierarchyJumpIconTight}
                               size={11}
                             />
@@ -2868,7 +2859,7 @@ export function TrajectoryTable({
                             onClick={() => { openRecordSummary(selectedParentTool) }}
                           >
                             <span>Tool Call</span>
-                            <IconChevronRightOutline14
+                            <ChevronRight
                               className={css.overviewHierarchyJumpIconTight}
                               size={11}
                             />

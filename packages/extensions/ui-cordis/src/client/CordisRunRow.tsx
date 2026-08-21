@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import {
-  IconCodeOutline16, IconInspectOutline12, StateDot,
+  CodeXml, ScanSearch, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRenderSlots } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '@monotykamary/dsh-client-ui-tool/client'
@@ -98,7 +98,7 @@ export function CordisRunRow({
             ? <StateDot state="error" />
             : card.state === 'stopped'
               ? <StateDot state="warning" />
-              : <IconCodeOutline16 size={14} />}
+              : <CodeXml size={14} />}
         </span>
         <span className={css.title}>{t(card.mode === 'update' ? 'row.updateTitle' : 'row.runTitle')}</span>
         <span className={css.separator} aria-hidden />
@@ -106,7 +106,7 @@ export function CordisRunRow({
         <span className={css.status}>{status}</span>
         {inspect !== undefined && (
           <button type="button" className={css.inspect} aria-label="Inspect" onClick={inspect}>
-            <IconInspectOutline12 />
+            <ScanSearch size={12} />
           </button>
         )}
       </div>

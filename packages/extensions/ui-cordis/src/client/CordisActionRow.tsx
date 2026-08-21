@@ -1,7 +1,7 @@
 /** Localized cards for `cordis_stop` and `cordis_undefine`. */
 
 import {
-  IconInspectOutline12, IconStopFill16, IconTrashOutline16, StateDot,
+  ScanSearch, Square, Trash2, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '@monotykamary/dsh-client-ui-tool/client'
@@ -25,14 +25,14 @@ export function CordisActionRow({ callId, toolName, block, inspect, t }: CordisA
             ? <StateDot state="error" />
             : card.state === 'stopped'
               ? <StateDot state="warning" />
-              : remove ? <IconTrashOutline16 size={14} /> : <IconStopFill16 size={14} />}
+              : remove ? <Trash2 size={14} /> : <Square fill="currentColor" size={14} />}
         </span>
         <span className={css.title}>{t(remove ? 'row.removeTitle' : 'row.stopTitle')}</span>
         <span className={css.separator} aria-hidden />
         <span className={card.errorSummary === null ? css.summary : css.error}>{summary}</span>
         {inspect !== undefined && (
           <button type="button" className={css.inspect} aria-label="Inspect" onClick={inspect}>
-            <IconInspectOutline12 />
+            <ScanSearch size={12} />
           </button>
         )}
       </div>

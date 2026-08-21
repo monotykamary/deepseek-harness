@@ -12,7 +12,7 @@
 // model-facing text through ToolRow's Output section instead.
 
 import type { Context } from '@monotykamary/cordis'
-import { IconSearchOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { Search } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { searchCardModel } from '../models/search-card-model.ts'
@@ -44,7 +44,7 @@ export function SearchRow({ toolName, block, inspect, t }: SearchRowProps) {
       t={t}
       variant={model.variant}
       toolName={toolName}
-      icon={<IconSearchOutline16 size={14} />}
+      icon={<Search size={14} />}
       title={SEARCH_TITLES[toolName] ?? model.title}
       // The result view's replacement title outranks the args-derived summary,
       // matching the terminal card's description precedence.

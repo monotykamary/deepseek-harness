@@ -7,7 +7,7 @@
 // narrow row never clips it; the durable list itself renders in the TodoPanel
 // above the composer, so the row stays one line until expanded.
 
-import { IconChecklistOutline14 } from '@monotykamary/dsh-client-ui-primitives'
+import { ListChecks } from '@monotykamary/dsh-client-ui-primitives'
 import type { Context } from '@monotykamary/cordis'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
@@ -67,7 +67,7 @@ export function TodoRow({ toolName, block, inspect, t }: TodoRowProps) {
       t={t}
       variant={model.variant}
       toolName={toolName}
-      icon={<IconChecklistOutline14 />}
+      icon={<ListChecks size={14} />}
       title={t('todo.rowTitle')}
       summary={summary.text}
       summarySuffix={summary.extra > 0 ? `+${summary.extra}` : null}

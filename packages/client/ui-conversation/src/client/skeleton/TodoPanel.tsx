@@ -14,8 +14,8 @@ import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slot
 // free of host value imports, so no host Context merge enters this program.
 import type { TodoItem } from '@monotykamary/dsh-tool-todo/client'
 import {
-  IconChecklistOutline14, IconChevronDownOutline14, IconChevronUpOutline14,
-  IconCircleCheckOutline14, IconCircleDashedOutline14, IconLoadingOutline16,
+  ListChecks, ChevronDown, ChevronUp,
+  CircleCheck, CircleDashed, LoaderCircle,
 } from '@monotykamary/dsh-client-ui-primitives'
 import { NS } from '../locales.ts'
 import css from './TodoPanel.module.css'
@@ -34,15 +34,15 @@ function assertNever(value: never): never {
 }
 
 function CompletedGlyph() {
-  return <IconCircleCheckOutline14 className={css.glyphCompleted} />
+  return <CircleCheck size={14} className={css.glyphCompleted} />
 }
 
 function ProgressGlyph() {
-  return <IconLoadingOutline16 size={14} className={css.glyphProgress} />
+  return <LoaderCircle size={14} className={css.glyphProgress} />
 }
 
 function PendingGlyph() {
-  return <IconCircleDashedOutline14 className={css.glyphPending} />
+  return <CircleDashed size={14} className={css.glyphPending} />
 }
 
 function StatusGlyph({ status }: { status: TodoItem['status'] }) {
@@ -82,11 +82,11 @@ export function TodoPanel({ todos, t }: TodoPanelProps) {
           aria-expanded={!collapsed}
           onClick={() => { setCollapsed(v => !v) }}
         >
-          <span className={css.lead} aria-hidden><IconChecklistOutline14 /></span>
+          <span className={css.lead} aria-hidden><ListChecks size={14} /></span>
           <span className={css.title}>{t('todo.title')}</span>
           <span className={css.progress}>{progressLabel(todos, t)}</span>
           <span className={css.chevron} aria-hidden>
-            {collapsed ? <IconChevronUpOutline14 /> : <IconChevronDownOutline14 />}
+            {collapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
         </button>
         {!collapsed && (

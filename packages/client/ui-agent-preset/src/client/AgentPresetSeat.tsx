@@ -15,7 +15,7 @@
 import { useEffect, useState } from 'react'
 import type { SnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
-import { IconAgentPresetOutline16, IconChevronDownOutline14, Menu } from '@monotykamary/dsh-client-ui-primitives'
+import { Bot, ChevronDown, Menu } from '@monotykamary/dsh-client-ui-primitives'
 // Type-only: pulls the ui-conversation SlotMap merge (the hero seat).
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type { AgentPresetSeatState } from './seat-store.ts'
@@ -160,9 +160,9 @@ export function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, 
           disabled={state.busy}
           onClick={() => { setOpen(value => !value) }}
         >
-          <IconAgentPresetOutline16 className={introducing ? `${css.seatIcon} ${css.introIcon}` : css.seatIcon} />
+          <Bot size={16} className={introducing ? `${css.seatIcon} ${css.introIcon}` : css.seatIcon} />
           {shownLabel}
-          <IconChevronDownOutline14 className={css.chevron} />
+          <ChevronDown size={14} className={css.chevron} />
         </button>
       )}
     />

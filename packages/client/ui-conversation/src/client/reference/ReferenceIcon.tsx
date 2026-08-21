@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import {
-  IconBrowseOutline16, IconFolderClose16, IconSessionOutline16,
+  File, Folder, MessageSquareText,
 } from '@monotykamary/dsh-client-ui-primitives'
 
 /** Reference domains with distinct composer and transcript glyphs. */
@@ -21,8 +21,8 @@ export interface ReferenceIconProps {
 export function ReferenceIcon({ kind, size = 16, className }: ReferenceIconProps): ReactNode {
   switch (kind) {
     case 'session':
-      return <IconSessionOutline16 size={size} className={className} />
-    case 'file': return <IconBrowseOutline16 size={size} className={className} />
-    case 'folder': return <IconFolderClose16 size={size} className={className} />
+      return <MessageSquareText size={size} className={className} />
+    case 'file': return <File size={size} className={className} />
+    case 'folder': return <Folder size={size} className={className} />
   }
 }

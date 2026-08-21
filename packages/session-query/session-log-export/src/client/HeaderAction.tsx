@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { IconDownloadOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { Download } from '@monotykamary/dsh-client-ui-primitives'
 import { SessionLogDownloadDialog, type SessionLogDownloadDialogProps } from './Dialog.tsx'
 import css from './HeaderAction.module.css'
 
@@ -26,7 +26,7 @@ export function SessionLogDownloadHeaderAction(props: SessionLogDownloadDialogPr
         onClick={() => { void request(sessionId) }}
       >
         <span>Session log</span>
-        <IconDownloadOutline16 size={12} />
+        <Download size={12} />
       </button>
       <SessionLogDownloadDialog {...props} />
     </>

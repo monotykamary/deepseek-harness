@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconCloseOutline16, IconCodeOutline16, IconMaximizeOutline15,
-  IconMinimizeOutline15, IconPlusOutline16, IconRefreshOutline16, IconSettingsOutline16,
-  IconSplitHorizontalOutline14, IconSplitVerticalOutline14, IconTrashOutline16, Modal, Tooltip,
+  ChevronLeft, X, CodeXml, Maximize2,
+  Minimize2, Plus, RefreshCw, Settings,
+  Columns2, Rows2, Trash2, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   BrowserTerminalHandshake, BrowserTerminalPlacement, BrowserTerminalSnapshot,
@@ -51,12 +51,12 @@ interface TerminalGroup {
 
 function SplitIcon({ direction }: { readonly direction: SplitDirection }) {
   return direction === 'horizontal'
-    ? <IconSplitHorizontalOutline14 />
-    : <IconSplitVerticalOutline14 />
+    ? <Columns2 size={14} />
+    : <Rows2 size={14} />
 }
 
 function ExpandIcon({ expanded }: { readonly expanded: boolean }) {
-  return expanded ? <IconMinimizeOutline15 /> : <IconMaximizeOutline15 />
+  return expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />
 }
 
 interface TerminalPaneProps {
@@ -178,7 +178,7 @@ function TerminalPane({
         <div className={css.status} data-phase={phase}>
           <span>{error as string}</span>
           <button type="button" className={css.retry} onClick={() => { void connect() }}>
-            <IconRefreshOutline16 size={14} />
+            <RefreshCw size={14} />
             <span>{t('retry')}</span>
           </button>
         </div>
@@ -350,23 +350,23 @@ export function TerminalPanel({
       </Tooltip>
       <Tooltip label={t('new')} side="bottom">
         <button type="button" className={css.actionButton} aria-label={t('new')} onClick={newTerminal}>
-          <IconPlusOutline16 size={14} />
+          <Plus size={14} />
         </button>
       </Tooltip>
       <Tooltip label={t('kill')} side="bottom">
         <button type="button" className={css.actionButton} aria-label={t('kill')} disabled={activeItem === undefined} onClick={() => { remove((activeItem as TerminalItem).key) }}>
-          <IconTrashOutline16 size={14} />
+          <Trash2 size={14} />
         </button>
       </Tooltip>
       <Tooltip label={t('settings')} side="bottom">
         <button type="button" className={css.actionButton} aria-label={t('settings')} aria-expanded={settingsOpen} onClick={() => { setSettingsOpen(open => !open) }}>
-          <IconSettingsOutline16 size={14} />
+          <Settings size={14} />
         </button>
       </Tooltip>
       {closePanel !== undefined && (
         <Tooltip label={t('close')} side="bottom">
           <button type="button" className={css.actionButton} aria-label={t('close')} onClick={closePanel}>
-            <IconCloseOutline16 size={14} />
+            <X size={14} />
           </button>
         </Tooltip>
       )}
@@ -390,7 +390,7 @@ export function TerminalPanel({
             <div className={css.emptyState}>
               <span>{listError ?? t('empty')}</span>
               <button type="button" className={css.retry} onClick={listError === null ? addGroup : refresh}>
-                {listError === null ? <IconPlusOutline16 size={14} /> : <IconRefreshOutline16 size={14} />}
+                {listError === null ? <Plus size={14} /> : <RefreshCw size={14} />}
                 <span>{listError === null ? t('new') : t('retry')}</span>
               </button>
             </div>
@@ -436,7 +436,7 @@ export function TerminalPanel({
                   setActionsExpanded(value => !value)
                 }}
               >
-                <IconChevronLeftOutline14 className={css.actionChevron} />
+                <ChevronLeft size={14} className={css.actionChevron} />
               </button>
             </Tooltip>
             <div
@@ -486,11 +486,11 @@ export function TerminalPanel({
                         <div key={item.key} className={css.groupItemRow} data-terminal-group-row="" data-active={item.key === activeItem?.key || undefined}>
                           <button type="button" className={css.groupItem} onClick={() => { setActiveGroupId(group.id); setActiveItemKey(item.key) }}>
                             <span className={css.branch}>└</span>
-                            <IconCodeOutline16 size={13} />
+                            <CodeXml size={13} />
                             <span>{label}</span>
                           </button>
                           <button type="button" className={css.groupItemClose} aria-label={t('closePane', { name: label })} onClick={() => { remove(item.key) }}>
-                            <IconCloseOutline16 size={12} />
+                            <X size={12} />
                           </button>
                         </div>
                       )

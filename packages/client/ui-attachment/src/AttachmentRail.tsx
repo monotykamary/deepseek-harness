@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseFill14,
+  ChevronLeft, ChevronRight, CircleX,
 } from '@monotykamary/dsh-client-ui-primitives'
 import css from './AttachmentRail.module.css'
 
@@ -154,7 +154,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
           aria-label={labels.scrollLeft}
           onClick={() => { page(-1) }}
         >
-          <IconChevronLeftOutline14 />
+          <ChevronLeft size={14} />
         </button>
       )}
       <div
@@ -180,7 +180,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
               aria-label={item.removeLabel}
               onClick={() => { onRemove(item) }}
             >
-              <IconCloseFill14 size={12} />
+              <CircleX size={12} />
             </button>
           </div>
         ))}
@@ -192,7 +192,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
           aria-label={labels.scrollRight}
           onClick={() => { page(1) }}
         >
-          <IconChevronRightOutline14 />
+          <ChevronRight size={14} />
         </button>
       )}
     </div>

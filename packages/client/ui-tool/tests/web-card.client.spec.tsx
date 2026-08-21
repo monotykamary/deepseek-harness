@@ -20,7 +20,7 @@ import type { ToolResultView } from '@monotykamary/dsh-api-remotes/client'
 import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import type { SelectionTarget } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { ToolCallOwnerProps } from '@monotykamary/dsh-client-ui-tool/client'
-import { IconGlobeOutline14 } from '@monotykamary/dsh-client-ui-primitives'
+import { Globe } from '@monotykamary/dsh-client-ui-primitives'
 import { webCardModel } from '../src/client/tool/models/web-card-model.ts'
 import { createChatStore } from '@monotykamary/dsh-client-ui-conversation/src/client/stores.ts'
 import { GenericToolCard } from '../src/client/tool/toolviews/GenericToolCard.tsx'
@@ -141,7 +141,7 @@ describe('chat row web body', () => {
   }
 
   it('the WebRow collapses to the summary row, expanding to the full search card', () => {
-    const globe = render(<IconGlobeOutline14 />).container.querySelector('svg')!.outerHTML
+    const globe = render(<Globe size={14} />).container.querySelector('svg')!.outerHTML
     const view = render(<WebRow {...rowProps(settledSearch(), 'web_search')} />)
     // Collapsed: the summary row alone, no card in the DOM.
     expect(view.getByText('Search')).toBeTruthy()

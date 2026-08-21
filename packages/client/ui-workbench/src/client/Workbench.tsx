@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import {
-  IconCloseOutline16, IconCodeOutline16, IconFolderOpenOutline16, IconInspectOutline12,
-  IconListPenOutline16, IconPlusOutline16, Menu, Sheet, Tooltip,
+  X, CodeXml, FolderOpen, ScanSearch,
+  ListTodo, Plus, Menu, Sheet, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MenuItem } from '@monotykamary/dsh-client-ui-primitives'
 import type {
@@ -17,11 +17,11 @@ function assertNever(value: never): never {
 
 function SurfaceIcon({ icon }: { readonly icon: WorkbenchSurfaceIcon }) {
   switch (icon) {
-    case 'inspect': return <IconInspectOutline12 size={12} />
-    case 'changes': return <IconListPenOutline16 size={12} />
-    case 'files': return <IconFolderOpenOutline16 size={12} />
-    case 'terminal': return <IconCodeOutline16 size={12} />
-    case 'generic': return <IconCodeOutline16 size={12} />
+    case 'inspect': return <ScanSearch size={12} />
+    case 'changes': return <ListTodo size={12} />
+    case 'files': return <FolderOpen size={12} />
+    case 'terminal': return <CodeXml size={12} />
+    case 'generic': return <CodeXml size={12} />
     /* v8 ignore next -- closed WorkbenchSurfaceIcon union backstop. */
     default: return assertNever(icon)
   }
@@ -145,7 +145,7 @@ export function Workbench({
                     <SurfaceIcon icon={surface.icon} />
                   </span>
                   <span className={css.tabCloseGlyph} data-workbench-tab-close-glyph="">
-                    <IconCloseOutline16 size={12} />
+                    <X size={12} />
                   </span>
                 </button>
                 <button
@@ -184,7 +184,7 @@ export function Workbench({
                     aria-expanded={launcherOpen}
                     onClick={() => { setLauncherOpen(value => !value) }}
                   >
-                    <IconPlusOutline16 size={14} />
+                    <Plus size={14} />
                   </button>
                 </Tooltip>
               )}
@@ -200,7 +200,7 @@ export function Workbench({
         </div>
         <Tooltip label={t('close')} side="bottom">
           <button type="button" className={css.iconButton} aria-label={t('close')} onClick={closePanel}>
-            <IconCloseOutline16 />
+            <X size={16} />
           </button>
         </Tooltip>
       </div>}

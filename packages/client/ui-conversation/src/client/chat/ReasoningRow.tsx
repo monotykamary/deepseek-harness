@@ -1,6 +1,6 @@
 /** Assistant reasoning disclosure, independent of Tool-call presentation. */
 import { useEffect, useRef, useState } from 'react'
-import { DisclosureRow, IconThinkOutline14, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
+import { DisclosureRow, Brain, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { useThrottledVisualUpdate } from './use-throttled-visual-update.ts'
 import a11yCss from './accessibility.module.css'
@@ -45,7 +45,7 @@ export function ReasoningRow({ text, running, t }: { text: string; running: bool
         leadingClassName={css.leading}
         titleClassName={css.title}
         chevronClassName={css.chevron}
-        icon={<IconThinkOutline14 size={14} />}
+        icon={<Brain size={14} />}
         title={running ? <>{'Think'}<TextShimmer /></> : 'Think'}
         open={expanded}
         expandable

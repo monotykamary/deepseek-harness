@@ -10,7 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ChangeEvent, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconArrowUpOutline16, IconPlusOutline16, IconStopFill16, IconWarningOutline16, Toast, Tooltip,
+  ArrowUp, Plus, Square, TriangleAlert, Toast, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 // Type-only: the `plan` projection key merge (the TodoDock posture — the
 // composer reads a host-computed value; the domain owns the key).
@@ -683,7 +683,7 @@ export function InputBar({
         <Toast
           key={toast.seq}
           text={toast.text}
-          icon={<IconWarningOutline16 />}
+          icon={<TriangleAlert size={14} />}
           anchor={cardRef.current}
           onDone={dismissToast}
         />
@@ -780,7 +780,7 @@ export function InputBar({
                 onMouseDown={keepFocus}
                 onClick={onToggleCommandMenu}
               >
-                <IconPlusOutline16 size={14} />
+                <Plus size={14} />
               </button>
             </Tooltip>
             <div className={css.modes}>
@@ -803,7 +803,7 @@ export function InputBar({
                   onMouseDown={keepFocus}
                   onClick={stop}
                 >
-                  <IconStopFill16 />
+                  <Square size={16} fill="currentColor" />
                 </button>
               </Tooltip>
             )}
@@ -817,9 +817,9 @@ export function InputBar({
                 onClick={onPrimary}
               >
                 {primaryStops ? (
-                  <IconStopFill16 />
+                  <Square size={16} fill="currentColor" />
                 ) : (
-                  <IconArrowUpOutline16 />
+                  <ArrowUp size={16} />
                 )}
               </button>
             </Tooltip>

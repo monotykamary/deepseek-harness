@@ -6,7 +6,7 @@
 // when the user dismissed the whole set — because the questions themselves
 // render in the composer takeover.
 
-import { IconQuestionOutline14 } from '@monotykamary/dsh-client-ui-primitives'
+import { CircleHelp } from '@monotykamary/dsh-client-ui-primitives'
 import type { Context } from '@monotykamary/cordis'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
@@ -71,7 +71,7 @@ export function AskQuestionRow({ toolName, block, inspect, t }: AskQuestionRowPr
       t={t}
       variant={model.variant}
       toolName={toolName}
-      icon={<IconQuestionOutline14 />}
+      icon={<CircleHelp size={14} />}
       title={t('ask.rowTitle')}
       summary={summary}
       body={model.body}

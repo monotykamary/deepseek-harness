@@ -10,7 +10,7 @@
 // summary line alone.
 
 import type { Context } from '@monotykamary/cordis'
-import { IconBrowseOutline16, IconGlobeOutline14 } from '@monotykamary/dsh-client-ui-primitives'
+import { File, Globe } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { webCardModel } from '../models/web-card-model.ts'
@@ -36,7 +36,7 @@ export function WebRow({ toolName, block, inspect, t }: WebRowProps) {
   const model = toolRowModel(toolName, block)
   const web = webCardModel(block)
   // Web search uses a globe; local grep/glob keep the magnifier family.
-  const icon = toolName === 'web_fetch' ? <IconBrowseOutline16 size={14} /> : <IconGlobeOutline14 size={14} />
+  const icon = toolName === 'web_fetch' ? <File size={14} /> : <Globe size={14} />
   return (
     <ToolRow
       t={t}

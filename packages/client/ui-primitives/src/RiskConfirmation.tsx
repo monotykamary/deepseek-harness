@@ -3,7 +3,7 @@
  * must gate a sensitive action behind an explicit checkbox.
  */
 import { Button } from './Button.tsx'
-import { IconWarningOutline16 } from './icons/index.tsx'
+import { TriangleAlert } from './icons/index.tsx'
 import { Modal } from './Modal.tsx'
 import css from './RiskConfirmation.module.css'
 
@@ -62,7 +62,7 @@ export function RiskConfirmation({
       )}
     >
       <div className={css.warning}>
-        <IconWarningOutline16 size={18} className={css.warningIcon} />
+        <TriangleAlert size={18} className={css.warningIcon} />
         <p>{description}</p>
       </div>
       <label className={css.acknowledgement}>

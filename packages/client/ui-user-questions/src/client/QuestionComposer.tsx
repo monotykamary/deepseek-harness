@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconCheckOutline14, IconChevronDownOutline14, IconChevronLeftOutline14,
-  IconChevronRightOutline14, IconChevronUpOutline14, IconCloseOutline16,
-  IconEditOutline16, MarkdownText,
+  Button, Check, ChevronDown, ChevronLeft,
+  ChevronRight, ChevronUp, X,
+  Pencil, MarkdownText,
 } from '@monotykamary/dsh-client-ui-primitives'
 import {
   PendingQuestion, planReviewOf,
@@ -273,14 +273,14 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
               disabled={busy !== null}
               onClick={() => { setMinimized(current => !current) }}
             >
-              {minimized ? <IconChevronUpOutline14 /> : <IconChevronDownOutline14 />}
+              {minimized ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
             <button
               type="button" className={css.iconButton} aria-label={t('nav.cancel')}
               title={t('nav.cancel')}
               disabled={busy !== null} onClick={cancelFlow}
             >
-              <IconCloseOutline16 />
+              <X size={16} />
             </button>
           </div>
         </header>
@@ -313,7 +313,7 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
                       {question.multiSelect === true
                         ? (
                           <span className={clsx(css.checkbox, selected && css.checkboxChecked)} aria-hidden="true">
-                            {selected && <IconCheckOutline14 size={12} />}
+                            {selected && <Check size={12} />}
                           </span>
                         )
                         : <span className={css.number}>{optionIndex + 1}</span>}
@@ -341,12 +341,12 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
                             className={clsx(css.checkbox, draft.custom !== '' && css.checkboxChecked)}
                             aria-hidden="true"
                           >
-                            {draft.custom !== '' && <IconCheckOutline14 size={12} />}
+                            {draft.custom !== '' && <Check size={12} />}
                           </span>
                         )
                         : (
                           <span className={css.number} aria-hidden="true">
-                            <IconEditOutline16 size={12} />
+                            <Pencil size={12} />
                           </span>
                         )}
                       <AnswerField
@@ -381,7 +381,7 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
                   disabled={index === 0 || busy !== null}
                   onClick={() => { setIndex(index - 1); setError(null) }}
                 >
-                  <IconChevronLeftOutline14 />
+                  <ChevronLeft size={14} />
                 </button>
                 <span className={css.progress}>{index + 1} / {questions.length}</span>
                 <button
@@ -389,7 +389,7 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
                   disabled={index === questions.length - 1 || busy !== null}
                   onClick={() => { setIndex(index + 1); setError(null) }}
                 >
-                  <IconChevronRightOutline14 />
+                  <ChevronRight size={14} />
                 </button>
               </div>
               <div className={css.feedback} role="status">

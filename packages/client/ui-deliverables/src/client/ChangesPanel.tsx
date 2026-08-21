@@ -3,9 +3,9 @@ import {
   Button,
   DiffBlock,
   DisclosureRow,
-  IconChevronDownOutline14,
-  IconSquareMinusOutline16,
-  IconSquarePlusOutline16,
+  ChevronDown,
+  SquareMinus,
+  SquarePlus,
   type DiffHunk,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
@@ -100,7 +100,7 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
               className={css.toggleAll}
               aria-label={t(allCollapsed ? 'changes.expandAll' : 'changes.collapseAll')}
               onClick={toggleAll}
-              icon={allCollapsed ? <IconSquarePlusOutline16 /> : <IconSquareMinusOutline16 />}
+              icon={allCollapsed ? <SquarePlus size={14} /> : <SquareMinus size={14} />}
             />
           </div>
         )}
@@ -118,7 +118,7 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
                 rowClassName={css.changeRow}
                 titleClassName={css.changeTitle}
                 chevronClassName={css.changeChevron}
-                icon={<IconChevronDownOutline14 className={css.changeChevron} />}
+                icon={<ChevronDown size={14} className={css.changeChevron} />}
                 title={file.path}
                 open={open}
                 expandable

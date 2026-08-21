@@ -1,4 +1,4 @@
-import { IconPanelLeftOutline16, Tooltip } from '@monotykamary/dsh-client-ui-primitives'
+import { PanelLeft, Tooltip } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import css from './WorkbenchToggle.module.css'
 
@@ -28,7 +28,7 @@ export function WorkbenchToggle({ detailsOpen, setWorkbenchOpen, t }: WorkbenchT
         aria-expanded={detailsOpen}
         onClick={() => { setWorkbenchOpen(!detailsOpen) }}
       >
-        <IconPanelLeftOutline16 className={css.rightPanelIcon} size={16} />
+        <PanelLeft className={css.rightPanelIcon} size={16} />
       </button>
     </Tooltip>
   )

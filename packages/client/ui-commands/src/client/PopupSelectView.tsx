@@ -12,7 +12,7 @@
 import { useEffect, useRef } from 'react'
 import { useSyncExternalStore } from 'react'
 import clsx from 'clsx'
-import { IconCheckOutline16, RiskConfirmation, useAnchoredMaxHeight } from '@monotykamary/dsh-client-ui-primitives'
+import { Check, RiskConfirmation, useAnchoredMaxHeight } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import { filterOptions } from './popup.ts'
 import type { PopupSelectController } from './popup.ts'
@@ -150,7 +150,7 @@ export function PopupSelectView({ popup, t }: PopupSelectViewProps) {
                 >
                   <span className={css.label}>{option.label}</span>
                   {option.detail !== undefined && <span className={css.detail}>{option.detail}</span>}
-                  {option.active === true && <span className={css.check}><IconCheckOutline16 /></span>}
+                  {option.active === true && <span className={css.check}><Check size={16} /></span>}
                 </div>
               ))}
             </div>

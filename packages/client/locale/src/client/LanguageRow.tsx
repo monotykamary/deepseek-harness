@@ -6,7 +6,7 @@
  */
 import { useState } from 'react'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
-import { IconChevronDownOutline14, Menu } from '@monotykamary/dsh-client-ui-primitives'
+import { ChevronDown, Menu } from '@monotykamary/dsh-client-ui-primitives'
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
 import type { createLanguageRowStore } from './settings-store.ts'
 import css from './LanguageRow.module.css'
@@ -58,7 +58,7 @@ export function LanguageRow({ t, setLocale, useStore }: LanguageRowComponentProp
             onClick={() => { setOpen(v => !v) }}
           >
             {activeLabel}
-            <IconChevronDownOutline14 className={css.chevron} />
+            <ChevronDown size={14} className={css.chevron} />
           </button>
         )}
       />

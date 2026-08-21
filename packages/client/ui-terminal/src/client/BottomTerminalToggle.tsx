@@ -1,5 +1,4 @@
-import { PanelBottom } from 'lucide-react'
-import { Tooltip } from '@monotykamary/dsh-client-ui-primitives'
+import { PanelBottom, Tooltip } from '@monotykamary/dsh-client-ui-primitives'
 import type { BottomTerminalToggleProps } from './contract.ts'
 import css from './BottomTerminalToggle.module.css'
 

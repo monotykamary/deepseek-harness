@@ -7,7 +7,7 @@
  */
 import clsx from 'clsx'
 import {
-  IconDarkOutline16, IconFollowsystemOutline16, IconLightOutline16,
+  Moon, Monitor, Sun,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
 import type { ThemePreference } from '../theme-settings.ts'
@@ -28,11 +28,19 @@ export type AppearanceRowComponentProps =
   & PropsLocale<'settings.theme'> & AppearanceRowInjected
 
 /** Cube order and icons (figma 501:30015-30017: Light, Dark, System). */
-const CUBES: readonly { id: ThemePreference; labelKey: ThemeKey; Icon: typeof IconLightOutline16 }[] = [
-  { id: 'light', labelKey: 'appearance.light', Icon: IconLightOutline16 },
-  { id: 'dark', labelKey: 'appearance.dark', Icon: IconDarkOutline16 },
-  { id: 'system', labelKey: 'appearance.system', Icon: IconFollowsystemOutline16 },
+const CUBES: readonly { id: ThemePreference; labelKey: ThemeKey }[] = [
+  { id: 'light', labelKey: 'appearance.light' },
+  { id: 'dark', labelKey: 'appearance.dark' },
+  { id: 'system', labelKey: 'appearance.system' },
 ]
+
+function themeIcon(id: ThemePreference) {
+  switch (id) {
+    case 'light': return <Sun size={16} />
+    case 'dark': return <Moon size={16} />
+    case 'system': return <Monitor size={16} />
+  }
+}
 
 /**
  * Render the Appearance row.
@@ -45,7 +53,7 @@ export function AppearanceRow({ t, setTheme, useStore }: AppearanceRowComponentP
     <div className={css.group}>
       <div className={css.title}>{t('appearance.title')}</div>
       <div className={css.cubeRow}>
-        {CUBES.map(({ id, labelKey, Icon }) => (
+        {CUBES.map(({ id, labelKey }) => (
           <button
             key={id}
             type="button"
@@ -53,7 +61,7 @@ export function AppearanceRow({ t, setTheme, useStore }: AppearanceRowComponentP
             aria-pressed={preference === id}
             onClick={() => { setTheme(id) }}
           >
-            <Icon />
+            {themeIcon(id)}
             {t(labelKey)}
           </button>
         ))}

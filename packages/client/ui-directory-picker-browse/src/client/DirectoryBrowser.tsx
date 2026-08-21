@@ -37,8 +37,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconCheckOutline16, IconChevronRightOutline14, IconEditOutline16, IconFolderClose16, IconFolderOpen16,
-  IconPlusOutline16, Modal,
+  Button, Check, ChevronRight, Pencil, Folder, FolderOpen,
+  Plus, Modal,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { DirectoryEntry, DirectoryListing } from '@monotykamary/dsh-client-runtime/client'
 import { DirectoryBrowseError } from '@monotykamary/dsh-client-runtime/client'
@@ -242,10 +242,10 @@ function LevelColumn({ entries, selectedPath, busy, onPick, showHidden, filterPr
               onClick={() => { onPick(entry) }}
             >
               {selected
-                ? <IconFolderOpen16 size={16} className={css.rowIconSelected} />
-                : <IconFolderClose16 size={16} className={css.rowIcon} />}
+                ? <FolderOpen size={16} className={css.rowIconSelected} />
+                : <Folder size={16} className={css.rowIcon} />}
               <span className={css.rowName}>{entry.name}</span>
-              <IconChevronRightOutline14 size={12} className={css.rowChevron} />
+              <ChevronRight size={12} className={css.rowChevron} />
             </button>
           </span>
         )
@@ -814,7 +814,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
                   <span className={css.crumbTrail} role="navigation" ref={crumbTrailRef}>
                     {crumbs.map((crumb, index) => (
                       <span key={crumb.path} className={css.crumbSeat}>
-                        {index > 0 && <IconChevronRightOutline14 size={12} className={css.crumbChevron} />}
+                        {index > 0 && <ChevronRight size={12} className={css.crumbChevron} />}
                         <button
                           type="button"
                           className={css.crumb}
@@ -862,7 +862,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
                       setPathDraft(base.endsWith(sep) ? base : `${base}${sep}`)
                     }}
                   >
-                    <IconEditOutline16 size={14} className={css.crumbEditGlyph} />
+                    <Pencil size={14} className={css.crumbEditGlyph} />
                   </button>
                 </>
               )
@@ -954,7 +954,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
         <div className={css.footerBar}>
           <Button
             variant="outline"
-            icon={<IconPlusOutline16 size={14} />}
+            icon={<Plus size={14} />}
             disabled={parent === null || loading || parentInert || draftPending}
             onClick={() => {
               setFolderDraft('')
@@ -978,7 +978,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
             {t('browser.showHidden')}
             {/* Trailing check (Menu's selected vocabulary): the label never
               * shifts when the pressed state toggles. */}
-            {showHidden && <IconCheckOutline16 size={14} />}
+            {showHidden && <Check size={14} />}
           </button>
           <span className={css.footerGap} />
           <Button variant="outline" className={clsx(css.footerAction)} disabled={parentInert} onClick={onClose}>{t('browser.cancel')}</Button>

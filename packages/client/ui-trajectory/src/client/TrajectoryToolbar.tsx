@@ -2,7 +2,7 @@
 
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import {
-  IconClockOutline16, IconSearchOutline16, IconSquareMinusOutline16, IconSquarePlusOutline16,
+  Clock3, Search, SquareMinus, SquarePlus,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { NS } from './locales.ts'
 import css from './TrajectoryToolbar.module.css'
@@ -62,7 +62,7 @@ export function TrajectoryToolbar({
             title={actualDuration ? t('toolbar.useEqualWidth') : t('toolbar.useActualDuration')}
             onClick={() => { onActualDurationChange(!actualDuration) }}
           >
-            <IconClockOutline16 className={css.toggleIcon} />
+            <Clock3 size={16} className={css.toggleIcon} />
             {t('toolbar.duration')}
           </button>
           <button
@@ -87,7 +87,7 @@ export function TrajectoryToolbar({
             onClick={onToggleAllTurns}
           >
             <span className={css.actionIcon} aria-hidden="true">
-              {allTurnsCollapsed ? <IconSquarePlusOutline16 /> : <IconSquareMinusOutline16 />}
+              {allTurnsCollapsed ? <SquarePlus size={14} /> : <SquareMinus size={14} />}
             </span>
             {t('toolbar.turns')}
           </button>
@@ -100,13 +100,13 @@ export function TrajectoryToolbar({
             onClick={onToggleAllAssistants}
           >
             <span className={css.actionIcon} aria-hidden="true">
-              {allAssistantsCollapsed ? <IconSquarePlusOutline16 /> : <IconSquareMinusOutline16 />}
+              {allAssistantsCollapsed ? <SquarePlus size={14} /> : <SquareMinus size={14} />}
             </span>
             {t('toolbar.calls')}
           </button>
         </div>
         <div className={css.search}>
-          <IconSearchOutline16 size={11} className={css.searchIcon} />
+          <Search size={11} className={css.searchIcon} />
           <input
             type="search"
             className={css.searchInput}

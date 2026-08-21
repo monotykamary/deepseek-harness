@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  IconChevronDownOutline14, Menu,
+  ChevronDown, Menu,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MenuItem } from '@monotykamary/dsh-client-ui-primitives'
 import {
@@ -53,7 +53,7 @@ function SettingsSelect<Id extends string>({
             onClick={() => { setOpen(current => !current) }}
           >
             <span>{selected?.label}</span>
-            <IconChevronDownOutline14 size={12} />
+            <ChevronDown size={12} />
           </button>
         )}
         onSelect={(id) => {

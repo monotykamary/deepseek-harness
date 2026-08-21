@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from 'react'
 import {
-  CodeBlock, DisclosureRow, IconCodeOutline16, IconInspectOutline12, StateDot,
+  CodeBlock, DisclosureRow, CodeXml, ScanSearch, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '@monotykamary/dsh-client-ui-tool/client'
@@ -38,7 +38,7 @@ function leadingFor(state: CordisToolState): ReactNode {
   switch (state) {
     case 'error': return <StateDot state="error" />
     case 'stopped': return <StateDot state="warning" />
-    default: return <IconCodeOutline16 size={14} />
+    default: return <CodeXml size={14} />
   }
 }
 
@@ -160,7 +160,7 @@ export function CordisDefineRow({
           {card.pluginId !== null && <div className={css.panelHint}>{t('panel.hint')}</div>}
           {inspect !== undefined && (
             <button type="button" className={css.inspectButton} onClick={inspect}>
-              <IconInspectOutline12 />
+              <ScanSearch size={12} />
               Inspect
             </button>
           )}

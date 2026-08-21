@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { PropsRenderSlots, PropsRuntime, PropsStore } from '@monotykamary/dsh-client-ui-slots'
-import { IconPanelLeftOutline16, Sheet } from '@monotykamary/dsh-client-ui-primitives'
+import { PanelLeft, Sheet } from '@monotykamary/dsh-client-ui-primitives'
 import {
   computeColumns, DETAILS_DEFAULT, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT,
   SIDEBAR_DRAWER_VIEWPORT, SIDEBAR_DRAWER_WIDTH,
@@ -312,7 +312,7 @@ export function AppFrame({
             aria-expanded={drawerOpen}
             onClick={() => { setDrawerOpen(open => !open) }}
           >
-            <IconPanelLeftOutline16 size={18} />
+            <PanelLeft size={18} />
           </button>
         )}
       </div>

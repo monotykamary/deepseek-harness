@@ -14,17 +14,13 @@ describe('StateDot', () => {
     expect(dot.getAttribute('aria-hidden')).toBe('true')
   })
 
-  it('solid states are spans; ongoing is an svg pixel matrix', () => {
+  it('renders solid states as spans and ongoing as a Lucide loader', () => {
     const { container, rerender } = render(<StateDot state="done" />)
     expect(container.firstElementChild?.tagName).toBe('SPAN')
     rerender(<StateDot state="ongoing" />)
-    const matrix = container.firstElementChild as SVGSVGElement
-    expect(matrix.tagName).toBe('svg')
-    const cells = matrix.querySelectorAll('rect')
-    expect(cells).toHaveLength(8)
-    // Chase phase: every cell carries its own negative animation delay.
-    const delays = [...cells].map(cell => (cell).style.animationDelay)
-    expect(new Set(delays).size).toBe(8)
+    const loader = container.firstElementChild as SVGSVGElement
+    expect(loader.tagName).toBe('svg')
+    expect(loader.classList.contains('lucide-loader-circle')).toBe(true)
   })
 
   it('sizes via the size prop in both shapes', () => {

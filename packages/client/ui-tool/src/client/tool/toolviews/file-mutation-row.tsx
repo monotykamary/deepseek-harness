@@ -9,7 +9,7 @@
 // section, its first line in the collapsed summary.
 
 import type { Context } from '@monotykamary/cordis'
-import { IconEditOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { Pencil } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { diffCardModel } from '../models/diff-card-model.ts'
@@ -37,7 +37,7 @@ export function FileMutationRow({ toolName, block, cwd, home, openFile, inspect,
       t={t}
       variant={model.variant}
       toolName={toolName}
-      icon={<IconEditOutline16 size={14} />}
+      icon={<Pencil size={14} />}
       title={model.title}
       summary={model.summary}
       body={null}

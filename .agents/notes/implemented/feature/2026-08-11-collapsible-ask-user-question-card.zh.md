@@ -13,7 +13,7 @@ Status: implemented
 在提问卡片头部（现有的"放弃整组问题"按钮旁）增加收起/展开切换按钮。收起时隐藏选项主体和底部操作区，只保留一条头部（eyebrow、标题、两个图标按钮），用户仍能看到"有未答问题"的信号；展开后恢复完整卡片。
 
 - 状态存放在 `QuestionFlow` 的本地 state（`minimized`），因此收起/展开不会丢失草稿和当前题目索引——已选答案仍可直接提交。
-- 切换按钮使用 `IconChevronDownOutline14` / `IconChevronUpOutline14`，复用现有 24px 图标按钮网格；`aria-expanded` 反映卡片状态，文案在 `nav.minimize` / `nav.maximize` 之间切换（收起后按钮对读屏器显示为"展开"）。
+- 切换按钮使用 ui-primitives `ChevronDown`／`ChevronUp`，复用现有 24px 图标按钮网格；`aria-expanded` 反映卡片状态，文案在 `nav.minimize` / `nav.maximize` 之间切换（收起后按钮对读屏器显示为"展开"）。
 - 收起时选项主体和底部通过 `{!minimized && ...}` 卸载，a11y 树中不残留隐藏的可交互面。
 - 提交/取消进行中（`busy !== null`）时收起按钮禁用，与现有放弃按钮的守卫一致。
 - CSS：`.cardMinimized` 去掉 `max-height` 上限并隐藏 `.body` / `.footer`；`.header` 增加底部 padding，避免折叠后过于局促。

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type { JobView } from '@monotykamary/dsh-client-runtime/client'
-import { IconChevronDownOutline14, StateDot, useDismissOnOutsidePointer, type StateDotState } from '@monotykamary/dsh-client-ui-primitives'
+import { ChevronDown, StateDot, useDismissOnOutsidePointer, type StateDotState } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import { NS } from './locales.ts'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
@@ -150,7 +150,7 @@ export function JobListAction({ sessionId, useSessions, t }: JobListActionProps)
       >
         {liveCount > 0 ? <StateDot state="ongoing" className={css.triggerDot} /> : null}
         <span className={css.count}>{countLabel}</span>
-        <IconChevronDownOutline14 className={open ? css.triggerOpen : undefined} />
+        <ChevronDown size={14} className={open ? css.triggerOpen : undefined} />
       </button>
       {open
         ? (

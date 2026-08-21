@@ -11,7 +11,7 @@
 import { useEffect } from 'react'
 import type { SnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
-import { IconAgentPresetOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { Bot } from '@monotykamary/dsh-client-ui-primitives'
 // Type-only: pulls the ui-conversation SlotMap merge (the header actions).
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type { AgentPresetSettingsState } from './settings-store.ts'
@@ -57,7 +57,7 @@ export function AgentPresetLabel({
   const text = option === undefined ? undefined : presetDisplayText(option, t)
   return (
     <span className={css.label} title={text?.description ?? t('headerHint')}>
-      <IconAgentPresetOutline16 size={14} className={css.icon} />
+      <Bot size={14} className={css.icon} />
       {text?.name ?? preset}
     </span>
   )

@@ -17,7 +17,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { DiscoveredModelView, IApiClient } from '@monotykamary/dsh-api-remotes/client'
-import { Button, IconChevronRightOutline14, IconTrashOutline16, Modal } from '@monotykamary/dsh-client-ui-primitives'
+import { Button, ChevronRight, Trash2, Modal } from '@monotykamary/dsh-client-ui-primitives'
 import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import { messageOf } from './store.ts'
@@ -92,13 +92,13 @@ export interface ModelListEditorProps {
 function IconChevron({ open }: { open: boolean }): ReactNode {
   return (
     <span style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 120ms ease' }}>
-      <IconChevronRightOutline14 />
+      <ChevronRight size={14} />
     </span>
   )
 }
 
 function IconTrash(): ReactNode {
-  return <IconTrashOutline16 size={14} />
+  return <Trash2 size={14} />
 }
 
 /** The two token counts edited as K/M-suffixed text behind a row's disclosure. */

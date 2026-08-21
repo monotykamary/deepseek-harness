@@ -28,8 +28,8 @@ function declarations(selector: string): Map<string, string> | undefined {
 
 describe('AppFrame compact sidebar action', () => {
   it('uses the shared panel glyph instead of a local hamburger', () => {
-    expect(source).toContain('import { IconPanelLeftOutline16, Sheet }')
-    expect(source).toContain('<IconPanelLeftOutline16 size={18} />')
+    expect(source).toContain('import { PanelLeft, Sheet }')
+    expect(source).toContain('<PanelLeft size={18} />')
     expect(source).not.toContain('IconMenuOutline16')
     expect(existsSync(localIcons)).toBe(false)
   })

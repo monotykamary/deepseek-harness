@@ -6,7 +6,7 @@
 
 import { useState, type ReactNode } from 'react'
 import type { ChatViewSlotProps, CommandRowOwnerProps } from '../contract/slots.ts'
-import { DisclosureRow, IconApiOutline14, StateDot, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
+import { DisclosureRow, Braces, StateDot, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import a11yCss from './accessibility.module.css'
 import css from './GenericCommandCard.module.css'
 
@@ -19,7 +19,7 @@ function stateOf(outcome: CommandRowOwnerProps['node']['outcome']): CommandRowSt
 }
 
 function leadingFor(state: CommandRowState): ReactNode {
-  return state === 'error' ? <StateDot state="error" /> : <IconApiOutline14 size={14} />
+  return state === 'error' ? <StateDot state="error" /> : <Braces size={14} />
 }
 
 /** Card props: the owner payload plus the render site's locale seat (plain prop). */

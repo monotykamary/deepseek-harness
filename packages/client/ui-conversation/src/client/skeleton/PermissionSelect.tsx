@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import type { PermissionSelect as PermissionSelectValue } from '@monotykamary/dsh-permission-presets/client'
 import {
-  IconChevronDownOutline14, IconShieldAlertOutline16, IconShieldCheckOutline16,
-  IconShieldOutline16, Menu, RiskConfirmation,
+  ChevronDown, ShieldAlert, ShieldCheck,
+  Shield, Menu, RiskConfirmation,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MenuEntry } from '@monotykamary/dsh-client-ui-primitives'
 import type { ComposerBarProps } from '../contract/slots.ts'
@@ -13,9 +13,9 @@ import css from './PermissionSelect.module.css'
 const FULL_ACCESS = 'danger-full-access'
 
 const permissionGlyphs = {
-  'read-only': <IconShieldCheckOutline16 />,
-  'workspace-write': <IconShieldOutline16 />,
-  [FULL_ACCESS]: <IconShieldAlertOutline16 />,
+  'read-only': <ShieldCheck size={16} />,
+  'workspace-write': <Shield size={16} />,
+  [FULL_ACCESS]: <ShieldAlert size={16} />,
 } as Record<string, ReactNode>
 
 /** Glyph for a permission option value; host-configured names outside the design set get none. */
@@ -127,7 +127,7 @@ export function PermissionSelect({ value, locked, command, t }: PermissionSelect
             <span className={css.triggerLabel}>{current === undefined ? displayName(currentValue) : optionLabel(current)}</span>
             {/* Same glyph + open rotation as the sibling ModelSelect trigger. */}
             <span className={clsx(css.chevron, open && css.chevronOpen)} aria-hidden>
-              <IconChevronDownOutline14 />
+              <ChevronDown size={14} />
             </span>
           </button>
         }

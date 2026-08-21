@@ -7,7 +7,7 @@
 import { useId } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import {
-  FishLogo, IconChevronDownOutline14, IconFolderClose16, IconFolderOpen16,
+  FishLogo, ChevronDown, Folder, FolderOpen,
 } from '@monotykamary/dsh-client-ui-primitives'
 import { workspaceTitleOf } from '@monotykamary/dsh-client-runtime/client'
 import type { ConversationSlotProps } from '../contract/slots.ts'
@@ -56,10 +56,10 @@ export function WorkspaceChip({ buttonRef, label, menuOpen = false, onClick, t }
       onClick={onClick}
     >
       {label === undefined
-        ? <IconFolderClose16 className={css.folder} size={16} />
-        : <IconFolderOpen16 className={css.folder} size={16} />}
+        ? <Folder className={css.folder} size={16} />
+        : <FolderOpen className={css.folder} size={16} />}
       <span className={css.workspaceLabel}>{label ?? t('hero.chooseWorkspace')}</span>
-      <IconChevronDownOutline14 className={css.chevron} size={12} />
+      <ChevronDown className={css.chevron} size={12} />
     </button>
   )
 }

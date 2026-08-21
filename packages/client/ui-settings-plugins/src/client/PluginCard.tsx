@@ -16,7 +16,7 @@
 
 import { useState, type ReactNode } from 'react'
 import clsx from 'clsx'
-import { IconChevronDownOutline14 } from '@monotykamary/dsh-client-ui-primitives'
+import { ChevronDown } from '@monotykamary/dsh-client-ui-primitives'
 import type { CardShell } from './card-form.ts'
 import type { PluginsSettingsLocaleKey } from './locales.ts'
 import css from './PluginCard.module.css'
@@ -64,7 +64,7 @@ export function PluginCard(props: PluginCardProps) {
           <span className={css.description}>{props.t(props.descriptionKey)}</span>
         </span>
         {state.dirty ? <span className={css.pending}>{props.t('unsaved')}</span> : null}
-        <IconChevronDownOutline14 className={clsx(css.chevron, open && css.chevronOpen)} />
+        <ChevronDown size={14} className={clsx(css.chevron, open && css.chevronOpen)} />
       </button>
       {open
         ? (

@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IApiClient } from '@monotykamary/dsh-api-remotes/client'
-import { Button, IconPlusOutline16, Modal } from '@monotykamary/dsh-client-ui-primitives'
+import { Button, Plus, Modal } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace } from '@monotykamary/dsh-client-ui-slots'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { deriveKeyRef, messageOf, protocolChoices, providerUsable } from './store.ts'
@@ -479,7 +479,7 @@ function Loaded({ injected }: { injected: ModelsSectionFace }): ReactNode {
                   }}
                 >
                   {/* Same glyph as the composer's attach button. */}
-                  <IconPlusOutline16 size={14} />
+                  <Plus size={14} />
                   {t('add')}
                 </button>
                 <button
@@ -493,7 +493,7 @@ function Loaded({ injected }: { injected: ModelsSectionFace }): ReactNode {
                     setDeclaring(true)
                   }}
                 >
-                  <IconPlusOutline16 size={14} />
+                  <Plus size={14} />
                   {t('customAdd')}
                 </button>
               </div>

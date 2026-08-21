@@ -8,7 +8,7 @@
 // result-side only, so there is no running-state read card to draw.
 
 import type { Context } from '@monotykamary/cordis'
-import { IconBrowseOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { File } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallViewProps } from '../../contract/slots.ts'
 import { readCardModel } from '../models/read-card-model.ts'
@@ -32,7 +32,7 @@ export function ReadRow({ toolName, block, cwd, home, openFile, inspect, t }: Re
       t={t}
       variant={model.variant}
       toolName={toolName}
-      icon={<IconBrowseOutline16 size={14} />}
+      icon={<File size={14} />}
       title={model.title}
       summary={model.summary}
       body={null}

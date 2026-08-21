@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import type { SnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
-import { IconChevronDownOutline14, Menu } from '@monotykamary/dsh-client-ui-primitives'
+import { ChevronDown, Menu } from '@monotykamary/dsh-client-ui-primitives'
 import type { BusyEnterBehavior } from '../contract/composer-submission.ts'
 import type { ConversationKey } from '../locales.ts'
 import css from './EnterBehaviorRow.module.css'
@@ -67,7 +67,7 @@ export function EnterBehaviorRow({ useBusyEnter, setBusyEnter, t }: EnterBehavio
             onClick={() => { setOpen(value => !value) }}
           >
             {t(selectedLabel)}
-            <IconChevronDownOutline14 className={css.chevron} />
+            <ChevronDown size={14} className={css.chevron} />
           </button>
         )}
       />

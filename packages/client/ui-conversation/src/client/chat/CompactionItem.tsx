@@ -9,9 +9,9 @@
 import { memo, useState } from 'react'
 import type { CompactionSummaryNode } from '@monotykamary/dsh-client-runtime/client'
 import {
-  IconApiOutline14,
-  IconChevronDownOutline14,
-  IconChevronRightOutline14,
+  Braces,
+  ChevronDown,
+  ChevronRight,
   MarkdownText,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
@@ -59,13 +59,13 @@ export const CompactionItem = memo(function CompactionItem({
       >
         <span className={css.compactionLeading} aria-hidden>
           <span className={css.compactionContextIcon} data-compaction-icon="context">
-            <IconApiOutline14 />
+            <Braces size={14} />
           </span>
           <span
             className={css.compactionDisclosureIcon}
             data-compaction-disclosure={open ? 'expanded' : 'collapsed'}
           >
-            {open ? <IconChevronDownOutline14 /> : <IconChevronRightOutline14 />}
+            {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </span>
         </span>
         <span className={css.compactionTitle}>{title ?? t('message.compaction')}</span>

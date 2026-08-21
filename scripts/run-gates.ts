@@ -635,6 +635,7 @@ function hygieneLeafGates(options: { artifactNeeds?: string[] } = {}): Gate[] {
       label: 'optional dependency imports',
     }),
     pnpmScript('ui-layout', 'verify-ui-layout', { label: 'ui layout' }),
+    pnpmScript('web-icons', 'verify-web-icons', { label: 'web icons' }),
     pnpmScript('client-packages', 'verify-client-packages', { label: 'client packages' }),
   ]
 }

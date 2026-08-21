@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import clsx from 'clsx'
-import { IconChevronDownOutline14 } from './icons/index.tsx'
+import { ChevronDown } from './icons/index.tsx'
 import css from './DisclosureRow.module.css'
 
 /** Shared 24px disclosure chrome for compact flow rows. */
@@ -61,12 +61,12 @@ export function DisclosureRow({
     ? (
       <>
         <span className={css.iconIdle}>{icon}</span>
-        <IconChevronDownOutline14 className={clsx(chevronClassName, css.chevronHover)} />
+        <ChevronDown size={14} className={clsx(chevronClassName, css.chevronHover)} />
       </>
     )
     : icon
   const leading = open
-    ? <IconChevronDownOutline14 className={chevronClassName} />
+    ? <ChevronDown size={14} className={chevronClassName} />
     : collapsedLeading
 
   return (

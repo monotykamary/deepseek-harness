@@ -3,10 +3,10 @@
 // Ink rides currentColor; the badge text is knocked out in the inverted
 // label color so the plate stays legible in both themes.
 
-import type { IconProps } from './icons/props.ts'
+import type { LogoProps } from './icons/props.ts'
 
 /** Display options for the official brand wordmark. */
-export interface BrandWordmarkProps extends IconProps {
+export interface BrandWordmarkProps extends LogoProps {
   /** Whether to include the leading whale mark; defaults to true. */
   includeMark?: boolean | undefined
 }

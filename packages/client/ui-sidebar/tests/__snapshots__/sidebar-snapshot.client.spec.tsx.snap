@@ -65,11 +65,16 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
         type="button"
       >
         <svg
-          class="panelIcon"
-          data-content="35f95b0c"
+          aria-hidden="true"
+          class="lucide lucide-panel-left panelIcon"
+          data-content="1bd2ace7"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
@@ -81,10 +86,16 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
       type="button"
     >
       <svg
-        data-content="c0ce4dcc"
+        aria-hidden="true"
+        class="lucide lucide-message-square-plus"
+        data-content="9692f337"
         fill="none"
         height="14"
-        viewBox="0 0 16 16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
         width="14"
         xmlns="http://www.w3.org/2000/svg"
       />
@@ -191,11 +202,16 @@ exports[`sidebar shell snapshots > renders the expanded column (identity, action
         type="button"
       >
         <svg
-          class="panelIcon"
-          data-content="35f95b0c"
+          aria-hidden="true"
+          class="lucide lucide-panel-left panelIcon"
+          data-content="1bd2ace7"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
@@ -207,10 +223,16 @@ exports[`sidebar shell snapshots > renders the expanded column (identity, action
       type="button"
     >
       <svg
-        data-content="c0ce4dcc"
+        aria-hidden="true"
+        class="lucide lucide-message-square-plus"
+        data-content="9692f337"
         fill="none"
         height="14"
-        viewBox="0 0 16 16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
         width="14"
         xmlns="http://www.w3.org/2000/svg"
       />
@@ -317,11 +339,16 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
         type="button"
       >
         <svg
-          class="panelIcon"
-          data-content="35f95b0c"
+          aria-hidden="true"
+          class="lucide lucide-panel-left panelIcon"
+          data-content="1bd2ace7"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
@@ -333,10 +360,16 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
       type="button"
     >
       <svg
-        data-content="c0ce4dcc"
+        aria-hidden="true"
+        class="lucide lucide-message-square-plus"
+        data-content="9692f337"
         fill="none"
         height="14"
-        viewBox="0 0 16 16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
         width="14"
         xmlns="http://www.w3.org/2000/svg"
       />

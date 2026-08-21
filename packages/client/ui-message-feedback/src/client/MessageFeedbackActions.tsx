@@ -16,7 +16,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  IconDislikeOutline16, IconLikeOutline16, Tooltip, useAnchoredPosition,
+  ThumbsDown, ThumbsUp, Tooltip, useAnchoredPosition,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { MessageFeedbackRating } from '@monotykamary/dsh-message-feedback/types'
 import type { MessageFeedbackActionProps } from './slots.ts'
@@ -241,7 +241,7 @@ export function MessageFeedbackActions({ messageId, ensure, rate, toggle, clearN
           onPointerEnter={seed}
           onClick={() => { onRate('positive') }}
         >
-          <IconLikeOutline16 />
+          <ThumbsUp size={16} />
         </button>
       </Tooltip>
       <Tooltip label={dislikeLabel} side="bottom">
@@ -256,7 +256,7 @@ export function MessageFeedbackActions({ messageId, ensure, rate, toggle, clearN
           onPointerEnter={seed}
           onClick={() => { onRate('negative') }}
         >
-          <IconDislikeOutline16 />
+          <ThumbsDown size={16} />
         </button>
       </Tooltip>
       {rating !== undefined && (

@@ -3266,9 +3266,6 @@ importers:
       '@xterm/xterm':
         specifier: 6.1.0-beta.291
         version: 6.1.0-beta.291
-      lucide-react:
-        specifier: ^1.31.0
-        version: 1.31.0(react@18.3.1)
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -3614,9 +3611,6 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
-      lucide-react:
-        specifier: ^1.31.0
-        version: 1.31.0(react@18.3.1)
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^

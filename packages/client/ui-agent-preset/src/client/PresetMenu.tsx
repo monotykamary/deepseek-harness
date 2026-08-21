@@ -9,7 +9,7 @@
  * label marks it rather than presenting every preset as shipped and vetted.
  */
 
-import { IconChevronDownOutline14, Menu } from '@monotykamary/dsh-client-ui-primitives'
+import { ChevronDown, Menu } from '@monotykamary/dsh-client-ui-primitives'
 import type { AgentPresetOption } from './settings-store.ts'
 import { presetDisplayText, type AgentPresetSettingsKey } from './locales.ts'
 
@@ -76,7 +76,7 @@ export function PresetMenu({
           onClick={() => { onOpenChange(!open) }}
         >
           {label}
-          <IconChevronDownOutline14 className={chevronClassName} />
+          <ChevronDown size={14} className={chevronClassName} />
         </button>
       )}
     />

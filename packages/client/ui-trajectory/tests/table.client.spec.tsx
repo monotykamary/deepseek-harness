@@ -774,7 +774,7 @@ describe('TrajectoryTable', () => {
       '[data-role-kind="context"] svg.lucide-info',
     )).toBeTruthy()
     expect(view.container.querySelector(
-      '[data-role-kind="compacted"] svg.lucide-minimize-2',
+      '[data-role-kind="compacted"] svg.lucide-shrink',
     )).toBeTruthy()
   })
 

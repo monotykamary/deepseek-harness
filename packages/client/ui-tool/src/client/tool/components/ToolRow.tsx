@@ -19,7 +19,7 @@
 
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import clsx from 'clsx'
-import { CodeBlock, DiffBlock, DisclosureRow, IconInspectOutline12, ReadBlock, SearchBlock, StateDot, TerminalBlock, TextShimmer, WebBlock } from '@monotykamary/dsh-client-ui-primitives'
+import { CodeBlock, DiffBlock, DisclosureRow, ScanSearch, ReadBlock, SearchBlock, StateDot, TerminalBlock, TextShimmer, WebBlock } from '@monotykamary/dsh-client-ui-primitives'
 import type { WebBlockProps } from '@monotykamary/dsh-client-ui-primitives'
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import { CHAT_DIFF_MAX_LINES, type DiffCardModel } from '../models/diff-card-model.ts'
@@ -297,7 +297,7 @@ export function ToolRow({
               className={css.inspectButton}
               onClick={inspect}
             >
-              <IconInspectOutline12 />
+              <ScanSearch size={12} />
               Inspect
             </button>
           )}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ContextMessageNode } from '@monotykamary/dsh-client-runtime/client'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
-import { DisclosureRow, IconBrowseOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import { DisclosureRow, File } from '@monotykamary/dsh-client-ui-primitives'
 import { ReferenceIcon } from '../reference/ReferenceIcon.tsx'
 import { contextBody } from './ContextBody.tsx'
 import css from './ContextInjectionRow.module.css'
@@ -40,7 +40,7 @@ export function ContextInjectionRow({ content, source, provenance, form, t }: Co
       className={css.root}
       icon={provenance.role === 'recall'
         ? <span data-context-recall-icon><ReferenceIcon kind="session" /></span>
-        : <IconBrowseOutline16 size={14} />}
+        : <File size={14} />}
       chevronClassName={css.chevron}
       title={t(provenance.role === 'recall' ? 'message.contextRecall' : 'message.contextInjection')}
       collapsedContent={provenance.label === null ? undefined : (

@@ -1,8 +1,8 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import type { PluginInventorySnapshot } from '@monotykamary/dsh-api-remotes/client'
 import {
-  IconChevronDownOutline14,
-  IconSearchOutline16,
+  ChevronDown,
+  Search,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import type { PluginInventoryLocaleKey } from './locales.ts'
@@ -108,7 +108,7 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
       {state.status === 'ready' ? (
         <div className={css.catalog}>
           <label className={css.search}>
-            <IconSearchOutline16 aria-hidden="true" />
+            <Search size={16} aria-hidden="true" />
             <span className={css.visuallyHidden}>{t('search')}</span>
             <input
               type="search"
@@ -165,7 +165,7 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
                         <span className={css.configTag} data-enabled={entry.enabled ? 'true' : 'false'}>
                           {configuration}
                         </span>
-                        <IconChevronDownOutline14 className={css.chevron} size={12} aria-hidden="true" />
+                        <ChevronDown className={css.chevron} size={12} aria-hidden="true" />
                       </span>
                     </button>
                     {open ? (

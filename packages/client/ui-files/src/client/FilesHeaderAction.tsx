@@ -1,4 +1,4 @@
-import { IconFolderOpenOutline16, Tooltip } from '@monotykamary/dsh-client-ui-primitives'
+import { FolderOpen, Tooltip } from '@monotykamary/dsh-client-ui-primitives'
 import type { FilesHeaderActionProps } from './contract.ts'
 import css from './FilesHeaderAction.module.css'
 
@@ -7,7 +7,7 @@ export function FilesHeaderAction({ openFiles, t }: FilesHeaderActionProps) {
   return (
     <Tooltip label={t('open')} side="bottom">
       <button type="button" className={css.trigger} aria-label={t('open')} onClick={openFiles}>
-        <IconFolderOpenOutline16 size={14} />
+        <FolderOpen size={14} />
         <span>{t('tab')}</span>
       </button>
     </Tooltip>

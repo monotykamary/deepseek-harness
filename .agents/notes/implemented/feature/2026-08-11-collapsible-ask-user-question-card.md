@@ -13,7 +13,7 @@ English | [中文](2026-08-11-collapsible-ask-user-question-card.zh.md)
 Add a minimize/maximize toggle to the question card header, next to the existing dismiss action. Collapsing hides the option body and the footer actions, leaving a header strip (eyebrow, title, both icon buttons) so the user still sees that a question is pending; expanding restores the full card.
 
 - State lives in `QuestionFlow` local state (`minimized`), so drafts and the current question index survive collapse/expand — nothing is re-derived or reset, and the answers already picked remain submit-ready.
-- The toggle is a plain `IconChevronDownOutline14` / `IconChevronUpOutline14` pair on the existing 24px icon-button grid; `aria-expanded` reflects the card state and the label flips between `nav.minimize` / `nav.maximize` (the collapsed button reads "expand" for screen readers).
+- The toggle is a plain ui-primitives `ChevronDown` / `ChevronUp` pair on the existing 24px icon-button grid; `aria-expanded` reflects the card state and the label flips between `nav.minimize` / `nav.maximize` (the collapsed button reads "expand" for screen readers).
 - While minimized the option body and footer are unmounted (`{!minimized && ...}`), so no hidden interactive surface remains in the a11y tree.
 - The collapse button is disabled while a submit/cancel is in flight (`busy !== null`), matching the dismiss button's existing guard.
 - CSS: `.cardMinimized` drops the `max-height` cap and hides `.body` / `.footer`; `.header` gains bottom padding so the strip is not cramped.

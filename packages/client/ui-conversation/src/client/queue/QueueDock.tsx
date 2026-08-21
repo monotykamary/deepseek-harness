@@ -8,8 +8,8 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import type { SessionId } from '@monotykamary/dsh-client-runtime/client'
 import {
-  IconCheckOutline16, IconChevronDownOutline14, IconChevronUpOutline14, IconCloseOutline16,
-  IconEditOutline16, IconQueueOutline14, IconSendOutline14, IconTrashOutline16, Tooltip,
+  Check, ChevronDown, ChevronUp, X,
+  Pencil, ListPlus, Send, Trash2, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { QueueAction, QueueItemId } from '../contract/queue.ts'
 import { NS } from '../locales.ts'
@@ -87,10 +87,10 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
             disabled={interactionActive}
             onClick={() => { setCollapsed(value => !value) }}
           >
-            <span className={css.lead} aria-hidden><IconQueueOutline14 /></span>
+            <span className={css.lead} aria-hidden><ListPlus size={14} /></span>
             <span className={css.count}>{t('queue.count', { n: queue.length })}</span>
             <span className={css.chevron} aria-hidden>
-              {expanded ? <IconChevronDownOutline14 /> : <IconChevronUpOutline14 />}
+              {expanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </span>
           </button>
         )}
@@ -98,7 +98,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
           {listVisible && queue.map(row => (
             <li key={row.id} className={css.row}>
               {/* Single-item strip has no count header, so the row itself carries the queue glyph. */}
-              {queue.length === 1 && <span className={css.lead} aria-hidden><IconQueueOutline14 /></span>}
+              {queue.length === 1 && <span className={css.lead} aria-hidden><ListPlus size={14} /></span>}
               {editing?.id === row.id
                 ? (
                   <input
@@ -132,7 +132,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                           disabled={busy !== null || editing.text.trim() === ''}
                           onClick={() => { void saveEdit() }}
                         >
-                          <IconCheckOutline16 size={14} />
+                          <Check size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('queue.cancelEdit')} side="bottom" delayMs={500}>
@@ -143,7 +143,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                           disabled={busy !== null}
                           onClick={() => { setEditing(null) }}
                         >
-                          <IconCloseOutline16 size={14} />
+                          <X size={14} />
                         </button>
                       </Tooltip>
                     </>
@@ -163,7 +163,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                             if (row.text !== null) setEditing({ id: row.id, text: row.text })
                           }}
                         >
-                          <IconEditOutline16 size={14} />
+                          <Pencil size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('queue.remove')} side="bottom" delayMs={500}>
@@ -180,7 +180,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                             )
                           }}
                         >
-                          <IconTrashOutline16 size={14} />
+                          <Trash2 size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('queue.steer')} side="bottom" delayMs={500} disabled={!running}>
@@ -198,7 +198,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                             )
                           }}
                         >
-                          <IconSendOutline14 />
+                          <Send size={14} />
                         </button>
                       </Tooltip>
                     </>

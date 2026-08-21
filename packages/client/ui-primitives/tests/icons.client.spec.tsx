@@ -2,56 +2,31 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as primitives from '@monotykamary/dsh-client-ui-primitives'
-import {
-  IconApiOutline14, IconArchiveOutline20, IconFolderClose16, IconGoalOutline16, IconSendOutline16,
-} from '@monotykamary/dsh-client-ui-primitives'
+import { Archive, Braces, Folder, Send, Target } from '@monotykamary/dsh-client-ui-primitives'
 
 afterEach(cleanup)
 
-// Icon components all share the IconProps signature; the barrel also exports
-// non-icon atoms (different props shapes), so filter by prefix BEFORE typing.
-const icons = Object.fromEntries(
-  Object.entries(primitives).filter(([name]) => name.startsWith('Icon')),
-) as Record<string, (p: primitives.IconProps) => React.JSX.Element>
-const iconNames = Object.keys(icons)
-
-describe('Lucide icon adapters', () => {
-  it('exports the complete semantic icon adapter set', () => {
-    expect(iconNames.length).toBe(90)
+describe('Lucide icon exports', () => {
+  it('renders canonical Lucide SVGs', () => {
+    const { container } = render(
+      <><Archive size={16} /><Braces size={16} /><Folder size={16} /><Send size={16} /><Target size={16} /></>,
+    )
+    const icons = container.querySelectorAll('svg')
+    expect(icons).toHaveLength(5)
+    expect([...icons].every(icon => icon.classList.contains('lucide'))).toBe(true)
+    expect(container.innerHTML).toContain('currentColor')
   })
 
-  it.each(iconNames)('%s renders a Lucide svg with currentColor and no hardcoded palette', (name) => {
-    const Icon = icons[name]!
-    const { container } = render(<Icon />)
-    const svg = container.querySelector('svg')
-    expect(svg).not.toBeNull()
-    const markup = container.innerHTML
-    expect(markup).not.toMatch(/#[0-9a-fA-F]{3,8}"/)
-    expect(markup).toContain('currentColor')
-    expect(svg?.classList.contains('lucide')).toBe(true)
-  })
-
-  it('size and className props land on the root svg', () => {
-    const { container } = render(<IconSendOutline16 size={20} className="x" />)
+  it('passes Lucide size and class props to the root SVG', () => {
+    const { container } = render(<Send size={20} className="x" />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('20')
     expect(svg.getAttribute('height')).toBe('20')
     expect(svg.classList.contains('x')).toBe(true)
   })
 
-  it('each glyph defaults to its own drawn size, not one set-wide default', () => {
-    const api = render(<IconApiOutline14 />)
-    expect(api.container.querySelector('svg')!.getAttribute('width')).toBe('14')
-    const folder = render(<IconFolderClose16 />)
-    expect(folder.container.querySelector('svg')!.getAttribute('width')).toBe('16')
-    const archive = render(<IconArchiveOutline20 />)
-    expect(archive.container.querySelector('svg')!.getAttribute('width')).toBe('20')
-  })
-
-  it('renders reusable goal glyphs without document-global ids', () => {
-    const { container } = render(<><IconGoalOutline16 /><IconGoalOutline16 /></>)
-    expect(container.querySelector('[id]')).toBeNull()
-    expect(container.querySelector('[clip-path]')).toBeNull()
+  it('does not export the removed ic_ds component names', () => {
+    expect(Object.keys(primitives).some(name => /^Icon[A-Z]/u.test(name))).toBe(false)
   })
 })
 

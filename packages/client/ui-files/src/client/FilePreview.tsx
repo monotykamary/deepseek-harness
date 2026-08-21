@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconFullscreenOutline16, IconLoadingOutline16, IconRefreshOutline14, IconWrapTextOutline14,
+  ChevronLeft, Maximize2, LoaderCircle, RefreshCw, WrapText,
   SourceEditor, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
@@ -16,7 +16,7 @@ import css from './FilesPanel.module.css'
 
 const SAVE_DEBOUNCE_MS = 500
 
-const WrapTextIcon = IconWrapTextOutline14
+const WrapTextIcon = WrapText
 
 type SavePhase = 'idle' | 'pending' | 'saved' | 'conflict' | 'too-large' | 'not-file' | 'error'
 
@@ -173,7 +173,7 @@ export function FilePreview({
       <div className={css.subheader} data-surface-subheader="">
         <Tooltip label={t('preview.back')} side="bottom">
           <button type="button" className={css.iconButton} aria-label={t('preview.back')} onClick={onBack}>
-            <IconChevronLeftOutline14 />
+            <ChevronLeft size={14} />
           </button>
         </Tooltip>
         <div className={css.breadcrumb} title={locatorLabel(file)}>
@@ -205,7 +205,7 @@ export function FilePreview({
               aria-label={fullscreen ? t('editor.restore') : t('editor.fullscreen')}
               onClick={() => { setFullscreen(value => !value) }}
             >
-              <IconFullscreenOutline16 />
+              <Maximize2 size={16} />
             </button>
           </Tooltip>
         )}
@@ -217,13 +217,13 @@ export function FilePreview({
             disabled={loading}
             onClick={onRefresh}
           >
-            <IconRefreshOutline14 />
+            <RefreshCw size={14} />
           </button>
         </Tooltip>
       </div>
       {loading ? (
         <div className={css.state} aria-live="polite">
-          <IconLoadingOutline16 className={css.spinning} />
+          <LoaderCircle size={16} className={css.spinning} />
           <span>{t('preview.loading')}</span>
         </div>
       ) : preview.phase === 'error' ? (

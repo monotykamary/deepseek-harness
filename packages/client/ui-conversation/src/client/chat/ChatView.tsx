@@ -15,7 +15,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ConversationTimelineSnapshot } from '@monotykamary/dsh-client-runtime/client'
-import { Button, IconChevronDownOutline14, Modal, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
+import { Button, ChevronDown, Modal, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import type { ChatViewSlotProps, RenderMessageImages } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
@@ -473,7 +473,7 @@ export function ChatView({
                 if (local !== null) toBottom(scrollerOf(local))
               }}
             >
-              <IconChevronDownOutline14 />
+              <ChevronDown size={14} />
             </button>
           </div>
         )}
