@@ -17,7 +17,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { DiscoveredModelView, IApiClient } from '@monotykamary/dsh-api-remotes/client'
-import { Button, Modal } from '@monotykamary/dsh-client-ui-primitives'
+import { Button, IconChevronRightOutline14, IconTrashOutline16, Modal } from '@monotykamary/dsh-client-ui-primitives'
 import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import { messageOf } from './store.ts'
@@ -89,28 +89,16 @@ export interface ModelListEditorProps {
   disabled: boolean
 }
 
-/** Disclosure chevron; rotates to point down while its row is open. */
 function IconChevron({ open }: { open: boolean }): ReactNode {
   return (
-    <svg
-      width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden
-      style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 120ms ease' }}
-    >
-      <path d="M6 3.5L10.5 8L6 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <span style={{ transform: open ? 'rotate(90deg)' : undefined, transition: 'transform 120ms ease' }}>
+      <IconChevronRightOutline14 />
+    </span>
   )
 }
 
-/** Removal glyph for one model row. */
 function IconTrash(): ReactNode {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4M6.5 6.8v4.4M9.5 6.8v4.4"
-        stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <IconTrashOutline16 size={14} />
 }
 
 /** The two token counts edited as K/M-suffixed text behind a row's disclosure. */

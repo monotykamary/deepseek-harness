@@ -1,7 +1,9 @@
 /** Trajectory toolbar: timeline and ledger fold controls. */
 
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
-import { IconSearchOutline16 } from '@monotykamary/dsh-client-ui-primitives'
+import {
+  IconClockOutline16, IconSearchOutline16, IconSquareMinusOutline16, IconSquarePlusOutline16,
+} from '@monotykamary/dsh-client-ui-primitives'
 import type { NS } from './locales.ts'
 import css from './TrajectoryToolbar.module.css'
 
@@ -60,15 +62,7 @@ export function TrajectoryToolbar({
             title={actualDuration ? t('toolbar.useEqualWidth') : t('toolbar.useActualDuration')}
             onClick={() => { onActualDurationChange(!actualDuration) }}
           >
-            <svg
-              className={css.toggleIcon}
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="5.25" />
-              <path d="M8 4.75V8l2.25 1.5" />
-            </svg>
+            <IconClockOutline16 className={css.toggleIcon} />
             {t('toolbar.duration')}
           </button>
           <button
@@ -93,7 +87,7 @@ export function TrajectoryToolbar({
             onClick={onToggleAllTurns}
           >
             <span className={css.actionIcon} aria-hidden="true">
-              {allTurnsCollapsed ? '⊞' : '⊟'}
+              {allTurnsCollapsed ? <IconSquarePlusOutline16 /> : <IconSquareMinusOutline16 />}
             </span>
             {t('toolbar.turns')}
           </button>
@@ -106,7 +100,7 @@ export function TrajectoryToolbar({
             onClick={onToggleAllAssistants}
           >
             <span className={css.actionIcon} aria-hidden="true">
-              {allAssistantsCollapsed ? '⊞' : '⊟'}
+              {allAssistantsCollapsed ? <IconSquarePlusOutline16 /> : <IconSquareMinusOutline16 />}
             </span>
             {t('toolbar.calls')}
           </button>

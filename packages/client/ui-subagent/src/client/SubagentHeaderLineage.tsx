@@ -7,7 +7,7 @@ import {
   type SessionSummary, type SubagentAddress, type SubagentCatalogSnapshot,
 } from '@monotykamary/dsh-client-runtime/client'
 import {
-  IconChevronDownOutline14, IconChevronRightOutline14, IconRefreshOutline14, StateDot,
+  IconChevronDownOutline14, IconChevronRightOutline14, IconRefreshOutline14, IconSubagentSwitcherOutline16, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import { NS } from './locales.ts'
@@ -175,28 +175,7 @@ function formatExactDuration(ms: number, t: TranslateNS<typeof NS>): string {
 
 const NO_DESCENDANTS = { count: 0, runningCount: 0 } as const
 
-function SubagentSwitcherIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5.99951 12.7L8.95546 14.9478C9.40011 15.2859 9.62244 15.455 9.87526 15.488C9.95774 15.4988 10.0413 15.4988 10.1238 15.488C10.3766 15.455 10.5989 15.2859 11.0436 14.9478L13.9995 12.7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M13.9995 7.7417L11.0436 5.49387C10.5989 5.15574 10.3766 4.98668 10.1238 4.95362C10.0413 4.94283 9.95775 4.94283 9.87527 4.95362C9.62245 4.98668 9.40012 5.15574 8.95547 5.49387L5.99952 7.7417"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
-  )
-}
+const SubagentSwitcherIcon = IconSubagentSwitcherOutline16
 
 /** Render the known direct-child shape while its authoritative catalog hydrates. */
 function CatalogLoadingRows({

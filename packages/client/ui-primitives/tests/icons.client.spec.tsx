@@ -15,12 +15,12 @@ const icons = Object.fromEntries(
 ) as Record<string, (p: primitives.IconProps) => React.JSX.Element>
 const iconNames = Object.keys(icons)
 
-describe('ic_ds_ icon set', () => {
-  it('exports the full icon set (46 deepsuite + 20 figma extracts + four product glyphs outside those sets)', () => {
-    expect(iconNames.length).toBe(70)
+describe('Lucide icon adapters', () => {
+  it('exports the complete semantic icon adapter set', () => {
+    expect(iconNames.length).toBe(90)
   })
 
-  it.each(iconNames)('%s renders an svg with currentColor fills and no hardcoded palette', (name) => {
+  it.each(iconNames)('%s renders a Lucide svg with currentColor and no hardcoded palette', (name) => {
     const Icon = icons[name]!
     const { container } = render(<Icon />)
     const svg = container.querySelector('svg')
@@ -28,6 +28,7 @@ describe('ic_ds_ icon set', () => {
     const markup = container.innerHTML
     expect(markup).not.toMatch(/#[0-9a-fA-F]{3,8}"/)
     expect(markup).toContain('currentColor')
+    expect(svg?.classList.contains('lucide')).toBe(true)
   })
 
   it('size and className props land on the root svg', () => {

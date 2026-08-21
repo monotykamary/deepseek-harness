@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconCloseOutline16, IconCodeOutline16,
-  IconPlusOutline16, IconRefreshOutline16, IconSettingsOutline16, IconTrashOutline16, Modal, Tooltip,
+  IconChevronLeftOutline14, IconCloseOutline16, IconCodeOutline16, IconMaximizeOutline15,
+  IconMinimizeOutline15, IconPlusOutline16, IconRefreshOutline16, IconSettingsOutline16,
+  IconSplitHorizontalOutline14, IconSplitVerticalOutline14, IconTrashOutline16, Modal, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
   BrowserTerminalHandshake, BrowserTerminalPlacement, BrowserTerminalSnapshot,
@@ -49,29 +50,13 @@ interface TerminalGroup {
 }
 
 function SplitIcon({ direction }: { readonly direction: SplitDirection }) {
-  return direction === 'horizontal' ? (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="1.5" y="2" width="11" height="10" rx="1.5" stroke="currentColor" />
-      <path d="M7 2v10" stroke="currentColor" />
-    </svg>
-  ) : (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="1.5" y="2" width="11" height="10" rx="1.5" stroke="currentColor" />
-      <path d="M1.5 7h11" stroke="currentColor" />
-    </svg>
-  )
+  return direction === 'horizontal'
+    ? <IconSplitHorizontalOutline14 />
+    : <IconSplitVerticalOutline14 />
 }
 
 function ExpandIcon({ expanded }: { readonly expanded: boolean }) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      {expanded ? (
-        <path d="M6 2v4H2M10 14v-4h4M6 6 2 2m8 8 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-      ) : (
-        <path d="M6 10H2v4M10 6h4V2M6 10l-4 4m8-8 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-      )}
-    </svg>
-  )
+  return expanded ? <IconMinimizeOutline15 /> : <IconMaximizeOutline15 />
 }
 
 interface TerminalPaneProps {

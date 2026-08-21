@@ -738,10 +738,10 @@ describe('TrajectoryTable', () => {
     expect(recovered.style.getPropertyValue('--request-boundary-offset')).toBe('16px')
   })
 
-  it('shows the custom role tooltip only from the responsive icon', () => {
+  it('shows the role tooltip only from the responsive Lucide icon', () => {
     const view = render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
     const toolTag = view.container.querySelector<HTMLElement>('[data-role-kind="tool"]')
-    const toolIcon = toolTag?.querySelector<HTMLElement>('[data-role-icon="wrench"]')
+    const toolIcon = toolTag?.querySelector<HTMLElement>('svg.lucide-wrench')
 
     expect(toolTag).not.toBeNull()
     expect(toolTag?.getAttribute('title')).toBeNull()
@@ -771,10 +771,10 @@ describe('TrajectoryTable', () => {
     const view = render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
 
     expect(view.container.querySelector(
-      '[data-role-kind="context"] [data-role-icon="information"]',
+      '[data-role-kind="context"] svg.lucide-info',
     )).toBeTruthy()
     expect(view.container.querySelector(
-      '[data-role-kind="compacted"] [data-role-icon="compacted"]',
+      '[data-role-kind="compacted"] svg.lucide-minimize-2',
     )).toBeTruthy()
   })
 

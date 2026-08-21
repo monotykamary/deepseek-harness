@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconFullscreenOutline16, IconLoadingOutline16, IconRefreshOutline14,
+  IconChevronLeftOutline14, IconFullscreenOutline16, IconLoadingOutline16, IconRefreshOutline14, IconWrapTextOutline14,
   SourceEditor, Tooltip,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type {
@@ -16,13 +16,7 @@ import css from './FilesPanel.module.css'
 
 const SAVE_DEBOUNCE_MS = 500
 
-function WrapTextIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path d="M1.5 3h8a2.5 2.5 0 0 1 0 5H5.5M7.5 6 5.5 8l2 2M1.5 11h2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
+const WrapTextIcon = IconWrapTextOutline14
 
 type SavePhase = 'idle' | 'pending' | 'saved' | 'conflict' | 'too-large' | 'not-file' | 'error'
 

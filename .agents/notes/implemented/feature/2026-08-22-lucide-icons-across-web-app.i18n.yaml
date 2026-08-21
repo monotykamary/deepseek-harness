@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-22-lucide-icons-across-web-app.md
+2026-08-22-lucide-icons-across-web-app.md: f112383197d37890c9bbc1760da16a17a7fea8ac
+2026-08-22-lucide-icons-across-web-app.zh.md: c4468ca19e7b2b6787e41d4c7918450f259ad624
