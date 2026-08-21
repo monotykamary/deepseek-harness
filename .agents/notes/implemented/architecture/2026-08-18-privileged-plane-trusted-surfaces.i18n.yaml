@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-18-privileged-plane-trusted-surfaces.md
-2026-08-18-privileged-plane-trusted-surfaces.md: 51f160d98e1afe256c3017c1f9a10c12cf8082ef
-2026-08-18-privileged-plane-trusted-surfaces.zh.md: b2881a44fd4eb80cca17165604c0ae4050005051
+2026-08-18-privileged-plane-trusted-surfaces.md: 2b1f24b6b6d9f9877a388f1b2926c997a637398b
+2026-08-18-privileged-plane-trusted-surfaces.zh.md: 385fe69ec15f4030269feaffe92c30e2fa32681b

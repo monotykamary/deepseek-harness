@@ -48,6 +48,7 @@ async function bench(served?: string[]) {
   new TestRemote(ctx)
   ctx.provide('connection', {
     isLoopback: true,
+    isOperatorEligible: { getSnapshot: () => true, subscribe: () => () => {} },
     api: {
       settings: { describe: describeSettings },
       credentials: { describe: describeCredentials },

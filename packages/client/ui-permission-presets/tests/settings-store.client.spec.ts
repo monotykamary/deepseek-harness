@@ -7,6 +7,9 @@ import {
   PermissionPresetSettingsController, permissionDefaultOf,
 } from '../src/client/settings-store.ts'
 
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+const INELIGIBLE = { getSnapshot: () => false, subscribe: () => () => {} }
+
 const SCHEMA = {
   uid: 6,
   refs: {
@@ -42,7 +45,7 @@ function ok<T>(value: T) {
 /** The permission controller over a real mirror and one fake wire. */
 function permissionController(api: object) {
   const wire = { settings: api } as never
-  const mirror = new SettingsDescribeMirror(wire)
+  const mirror = new SettingsDescribeMirror(wire, ELIGIBLE)
   return { mirror, controller: new PermissionPresetSettingsController(mirror, wire, schema) }
 }
 
@@ -196,7 +199,7 @@ describe('permission settings store', () => {
         mutate,
       },
     } as never
-    const mirror = new SettingsDescribeMirror(wire)
+    const mirror = new SettingsDescribeMirror(wire, ELIGIBLE)
     const malformed = new PermissionPresetSettingsController(mirror, wire, {
       rehydrate: () => { throw 'schema disconnected' },
     } as never)
@@ -210,7 +213,7 @@ describe('permission settings store', () => {
     const describeCall = vi.fn()
     const mutate = vi.fn()
     const wire = { settings: { describe: describeCall, mutate } } as never
-    const mirror = new SettingsDescribeMirror(wire, 'memory')
+    const mirror = new SettingsDescribeMirror(wire, INELIGIBLE)
     const controller = new PermissionPresetSettingsController(mirror, wire, schema)
     await controller.load()
     expect(controller.store.getSnapshot().status).toBe('unavailable')

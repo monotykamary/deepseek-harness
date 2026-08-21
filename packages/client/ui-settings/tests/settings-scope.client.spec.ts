@@ -6,7 +6,7 @@ import { TestRemote } from '@monotykamary/dsh-client-test-runtime'
 import type { SettingsScope } from '@monotykamary/dsh-client-runtime/client'
 import { SettingsSchemaService } from '../src/client/schema.ts'
 import { SettingsScopeController, SettingsScopeBinder } from '../src/client/settings-scope.ts'
-import { SettingsDescribeMirror } from '../src/client/settings-mirror.ts'
+import { SettingsDescribeMirror, type EligibilitySource } from '../src/client/settings-mirror.ts'
 
 const settingsSchema = new SettingsSchemaService(new Context())
 
@@ -56,14 +56,34 @@ function deferred<T>() {
   return { promise, resolve, reject }
 }
 
+/** A static or flippable operator-eligible source for direct mirror construction. */
+function eligibleSource(initial = true): { source: EligibilitySource; set: (value: boolean) => void } {
+  let current = initial
+  const listeners = new Set<() => void>()
+  return {
+    source: {
+      getSnapshot: () => current,
+      subscribe: (listener) => {
+        listeners.add(listener)
+        return () => { listeners.delete(listener) }
+      },
+    },
+    set: (value) => {
+      if (current === value) return
+      current = value
+      for (const listener of [...listeners]) listener()
+    },
+  }
+}
+
 /** A host-mode mirror plus a controller derived from it, over one fake wire. */
 function derivedScope(
   api: { describe?: ReturnType<typeof vi.fn>; mutate?: ReturnType<typeof vi.fn> },
   spec: { namespace: string; decode?: (section: unknown) => UiTestSettings | undefined } = { namespace: 'ui-test' },
 ) {
   const wire = { settings: api } as never
-  const mirror = new SettingsDescribeMirror(wire)
-  const scope = new SettingsScopeController<UiTestSettings>(wire, spec, mirror, 'host', settingsSchema)
+  const mirror = new SettingsDescribeMirror(wire, eligibleSource().source)
+  const scope = new SettingsScopeController<UiTestSettings>(wire, spec, mirror, settingsSchema)
   return { mirror, scope }
 }
 
@@ -179,9 +199,9 @@ describe('SettingsScopeController', () => {
     const describeCall = vi.fn().mockResolvedValueOnce(described({ preference: 'system' }, 4))
     const mutate = vi.fn().mockResolvedValueOnce(ok(view({ preference: 'dark' }, 5)))
     const wire = { settings: { describe: describeCall, mutate } } as never
-    const mirror = new SettingsDescribeMirror(wire)
-    const writer = new SettingsScopeController<UiTestSettings>(wire, { namespace: 'ui-test' }, mirror, 'host', settingsSchema)
-    const sibling = new SettingsScopeController<UiTestSettings>(wire, { namespace: 'ui-test' }, mirror, 'host', settingsSchema)
+    const mirror = new SettingsDescribeMirror(wire, eligibleSource().source)
+    const writer = new SettingsScopeController<UiTestSettings>(wire, { namespace: 'ui-test' }, mirror, settingsSchema)
+    const sibling = new SettingsScopeController<UiTestSettings>(wire, { namespace: 'ui-test' }, mirror, settingsSchema)
     await mirror.load()
     await writer.set('preference', 'dark')
     expect(describeCall).toHaveBeenCalledTimes(1)
@@ -332,7 +352,7 @@ describe('SettingsScopeController', () => {
     } as never
     const wire = { settings: {} } as never
     const scope = new SettingsScopeController<UiTestSettings>(
-      wire, { namespace: 'ui-test' }, mirror, 'host', settingsSchema)
+      wire, { namespace: 'ui-test' }, mirror, settingsSchema)
     expect(scope.getSnapshot()).toMatchObject({ value: { preference: 'dark' }, revision: 1 })
 
     await scope.dispose()
@@ -345,13 +365,13 @@ describe('SettingsScopeController', () => {
     expect(scope.getSnapshot()).toMatchObject({ value: { preference: 'dark' }, revision: 1 })
   })
 
-  it('keeps a remote browser in memory mode without Host calls', async () => {
+  it('keeps an ineligible browser in memory mode without Host calls', async () => {
     const describeCall = vi.fn()
     const mutate = vi.fn()
     const wire = { settings: { describe: describeCall, mutate } } as never
-    const mirror = new SettingsDescribeMirror(wire, 'memory')
+    const mirror = new SettingsDescribeMirror(wire, eligibleSource(false).source)
     const scope = new SettingsScopeController<UiTestSettings>(
-      wire, { namespace: 'ui-test' }, mirror, 'memory', settingsSchema)
+      wire, { namespace: 'ui-test' }, mirror, settingsSchema)
     expect(scope.getSnapshot()).toEqual({
       status: 'unavailable', value: undefined, revision: undefined, writable: false, mode: 'memory',
     })
@@ -360,6 +380,21 @@ describe('SettingsScopeController', () => {
     await scope.dispose()
     expect(describeCall).not.toHaveBeenCalled()
     expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it('parks on unavailable while ineligible and recovers when the surface flips', async () => {
+    const describeCall = vi.fn().mockResolvedValue(described({ preference: 'dark' }, 3))
+    const { source, set } = eligibleSource(false)
+    const wire = { settings: { describe: describeCall } } as never
+    const mirror = new SettingsDescribeMirror(wire, source)
+    const scope = new SettingsScopeController<UiTestSettings>(
+      wire, { namespace: 'ui-test' }, mirror, settingsSchema)
+    expect(scope.getSnapshot()).toMatchObject({ status: 'unavailable', mode: 'memory' })
+    set(true)
+    await vi.waitFor(() => {
+      expect(scope.getSnapshot()).toMatchObject({ status: 'ready', mode: 'host' })
+    })
+    expect(describeCall).toHaveBeenCalledTimes(1)
   })
 
   it('carries the composition base and the user layer into the snapshot', async () => {
@@ -426,9 +461,9 @@ describe('SettingsScopeBinder.bind', () => {
   it('shares one mirror read across bound scopes and disposes each with its fiber', async () => {
     const describeCall = vi.fn().mockResolvedValue(described({ preference: 'dark' }, 1))
     const wire = { settings: { describe: describeCall } }
-    const mirror = new SettingsDescribeMirror(wire as never)
+    const mirror = new SettingsDescribeMirror(wire as never, eligibleSource().source)
     const ctx = new Context()
-    ctx.provide('connection', { api: wire, isLoopback: true } as never)
+    ctx.provide('connection', { api: wire } as never)
     let theme!: SettingsScope<UiTestSettings>
     let locale!: SettingsScope<UiTestSettings>
     new TestRemote(ctx)
@@ -452,12 +487,12 @@ describe('SettingsScopeBinder.bind', () => {
     expect(theme.getSnapshot()).toMatchObject({ revision: 1 })
   })
 
-  it('binds a remote browser in memory mode without starting a settings read', async () => {
+  it('binds an ineligible browser in memory mode without starting a settings read', async () => {
     const describeCall = vi.fn()
     const wire = { settings: { describe: describeCall } }
-    const mirror = new SettingsDescribeMirror(wire as never, 'memory')
+    const mirror = new SettingsDescribeMirror(wire as never, eligibleSource(false).source)
     const ctx = new Context()
-    ctx.provide('connection', { api: wire, isLoopback: false } as never)
+    ctx.provide('connection', { api: wire } as never)
     let scope!: SettingsScope<UiTestSettings>
     new TestRemote(ctx)
     await ctx.plugin(SettingsScopeBinder, { mirror, schema: settingsSchema }).await()

@@ -85,6 +85,8 @@ async function bench() {
   new TestRemote(ctx)
   const calls: string[] = []
   ctx.provide('connection', {
+    isLoopback: false,
+    isOperatorEligible: { getSnapshot: () => false, subscribe: () => () => {} },
     api: {
       agentPresets: {
         list: () => { calls.push('list'); return Promise.resolve(ROSTER) },

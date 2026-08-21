@@ -168,7 +168,7 @@ export class PermissionPresetSettingsController {
     if (this.disposed || this.saving) return
     const mirrored = this.describeFace.getSnapshot()
     if (mirrored.status === 'unavailable') {
-      // The terminal non-loopback state: settings RPCs are loopback-only, so
+      // The terminal ineligible state (not on the operator-eligible plane):
       // the row hides itself exactly like an unserved namespace.
       this.store.update((state) => {
         state.status = 'unavailable'

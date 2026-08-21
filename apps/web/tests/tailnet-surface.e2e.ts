@@ -25,6 +25,46 @@ let scaffold: WebScaffold | undefined
 let binDir: string | undefined
 let originalPath: string | undefined
 
+/** POST one host.describe envelope; returns the status and the parsed value when the carrier answered. */
+function postDescribe(authority: string): Promise<{ status: number; value: { operatorEligible?: boolean } | undefined }> {
+  const url = new URL(`${scaffold!.baseUrl}/api/host.describe`)
+  const body = JSON.stringify({
+    type: 'client-request',
+    rpcId: 'rpc-tailnet-describe',
+    method: 'host.describe',
+    payload: {},
+  })
+  return new Promise((resolve, reject) => {
+    const request = httpRequest({
+      host: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        host: authority,
+        origin: `https://${authority}`,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(body),
+      },
+    }, (response) => {
+      const chunks: Buffer[] = []
+      response.on('data', (chunk: Buffer) => { chunks.push(chunk) })
+      response.on('end', () => {
+        try {
+          const envelope = JSON.parse(Buffer.concat(chunks).toString()) as {
+            result?: { value?: { operatorEligible?: boolean } }
+          }
+          resolve({ status: response.statusCode ?? 0, value: envelope.result?.value })
+        } catch {
+          resolve({ status: response.statusCode ?? 0, value: undefined })
+        }
+      })
+    })
+    request.on('error', reject)
+    request.end(body)
+  })
+}
+
 /** POST one client-request envelope to the bound server under the given Host authority. */
 function postSessionList(authority: string): Promise<{ status: number; ok?: boolean }> {
   // node:http honors an explicit host header (fetch derives Host from the
@@ -112,5 +152,17 @@ describe('tailnet surface', () => {
     const refused = await postSessionList('evil.example')
     expect(refused.status).toBe(403)
     expect(refused.ok).toBeUndefined()
+  })
+
+  it('annotates host.describe as operator-eligible for the derived authority', async () => {
+    const describe = await postDescribe(DNS_NAME)
+    expect(describe.status).toBe(200)
+    expect(describe.value?.operatorEligible).toBe(true)
+    // The loopback answer carries the same verdict for the local surface.
+    const loopback = await postDescribe(`127.0.0.1:${new URL(scaffold!.baseUrl).port}`)
+    expect(loopback.status).toBe(200)
+    expect(loopback.value?.operatorEligible).toBe(true)
+    // An authority the fence did not derive never reaches the carrier.
+    expect((await postDescribe('evil.example')).status).toBe(403)
   })
 })

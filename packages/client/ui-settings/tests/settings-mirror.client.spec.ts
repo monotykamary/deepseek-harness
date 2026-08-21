@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { RpcResponse, SettingsNamespaceView } from '@monotykamary/dsh-api-remotes/client'
-import { SettingsDescribeMirror, type SettingsDescribeView } from '../src/client/settings-mirror.ts'
+import { SettingsDescribeMirror, type EligibilitySource, type SettingsDescribeView } from '../src/client/settings-mirror.ts'
 
 let rpc = 0
 
@@ -32,13 +32,33 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
+/** A static or flippable operator-eligible source for direct mirror construction. */
+function eligibleSource(initial = true): { source: EligibilitySource; set: (value: boolean) => void } {
+  let current = initial
+  const listeners = new Set<() => void>()
+  return {
+    source: {
+      getSnapshot: () => current,
+      subscribe: (listener) => {
+        listeners.add(listener)
+        return () => { listeners.delete(listener) }
+      },
+    },
+    set: (value) => {
+      if (current === value) return
+      current = value
+      for (const listener of [...listeners]) listener()
+    },
+  }
+}
+
 describe('SettingsDescribeMirror', () => {
   it('folds loads before the wire read into it, and mid-flight loads into one rerun', async () => {
     const gate = deferred<RpcResponse<SettingsDescribeView>>()
     const describeCall = vi.fn()
       .mockReturnValueOnce(gate.promise)
       .mockResolvedValue(described([view('theme', 1)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     const first = mirror.load()
     // Issued before the wire read goes out: covered by that read, no rerun.
     const early = mirror.load()
@@ -59,7 +79,7 @@ describe('SettingsDescribeMirror', () => {
       .mockResolvedValueOnce(described([view('theme', 2)]))
       .mockRejectedValueOnce(new Error('host gone'))
       .mockResolvedValueOnce(rejected('busy'))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.load()
     expect(mirror.getSnapshot()).toMatchObject({ status: 'ready', error: null })
     await mirror.load()
@@ -74,7 +94,7 @@ describe('SettingsDescribeMirror', () => {
     const describeCall = vi.fn()
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValueOnce(described([view('theme', 1)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.ensure()
     expect(mirror.getSnapshot()).toMatchObject({ status: 'idle', view: undefined, error: 'offline' })
     await mirror.ensure()
@@ -82,28 +102,84 @@ describe('SettingsDescribeMirror', () => {
     expect(describeCall).toHaveBeenCalledTimes(2)
   })
 
+  it('reports a non-Error read rejection verbatim', async () => {
+    const describeCall = vi.fn().mockRejectedValueOnce('offline-string')
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
+    await mirror.load()
+    expect(mirror.getSnapshot()).toMatchObject({ status: 'idle', view: undefined, error: 'offline-string' })
+  })
+
   it('treats ensure as a no-op once ready', async () => {
     const describeCall = vi.fn().mockResolvedValue(described([view('theme', 1)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.ensure()
     await mirror.ensure()
     await mirror.ensure()
     expect(describeCall).toHaveBeenCalledTimes(1)
   })
 
-  it('memory persistence is terminally unavailable and never touches the wire', async () => {
+  it('an ineligible page is terminally unavailable and never touches the wire', async () => {
     const describeCall = vi.fn()
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, 'memory')
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource(false).source)
     await mirror.ensure()
     await mirror.load()
     expect(mirror.getSnapshot()).toEqual({ status: 'unavailable', view: undefined, error: null })
     expect(describeCall).not.toHaveBeenCalled()
   })
 
+  it('a trusted surface flips the mirror on after its handshake and parks it again after', async () => {
+    const describeCall = vi.fn().mockResolvedValue(described([view('theme', 1)]))
+    const { source, set } = eligibleSource(false)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, source)
+    expect(mirror.getSnapshot().status).toBe('unavailable')
+    set(true)
+    await vi.waitFor(() => { expect(mirror.getSnapshot().status).toBe('ready') })
+    expect(describeCall).toHaveBeenCalledTimes(1)
+    // Leaving the plane pauses reads; the held view keeps serving.
+    set(false)
+    expect(mirror.getSnapshot()).toMatchObject({ status: 'ready', error: null })
+    await mirror.load()
+    expect(describeCall).toHaveBeenCalledTimes(1)
+    expect(mirror.namespace('theme')?.revision).toBe(1)
+    // A re-flip while already ready starts no second read.
+    set(true)
+    expect(mirror.getSnapshot().status).toBe('ready')
+    expect(describeCall).toHaveBeenCalledTimes(1)
+  })
+
+  it('parks an unanswered mirror on unavailable when the plane is left', async () => {
+    const describeCall = vi.fn()
+    const { source, set } = eligibleSource(true)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, source)
+    expect(mirror.getSnapshot().status).toBe('idle')
+    set(false)
+    expect(mirror.getSnapshot()).toEqual({ status: 'unavailable', view: undefined, error: null })
+    await mirror.ensure()
+    expect(describeCall).not.toHaveBeenCalled()
+  })
+
+  it('dispose stops following the eligibility source, even for a source that keeps notifying', async () => {
+    const describeCall = vi.fn().mockResolvedValue(described([view('theme', 1)]))
+    let listener: (() => void) | undefined
+    // A source that never honors the disposer: the mirror's own guard must
+    // absorb the straggler notification.
+    const misbehaving: EligibilitySource = {
+      getSnapshot: () => false,
+      subscribe: (notify) => { listener = notify; return () => {} },
+    }
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, misbehaving)
+    expect(mirror.getSnapshot().status).toBe('unavailable')
+    mirror.dispose()
+    listener?.()
+    await mirror.ensure()
+    expect(describeCall).not.toHaveBeenCalled()
+    expect(mirror.getSnapshot().status).toBe('unavailable')
+  })
+
   it('acceptView folds one write answer into the held view without a wire read', async () => {
     const describeCall = vi.fn()
       .mockResolvedValueOnce(described([view('theme', 1), view('locale', 4)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.load()
     const seen: number[] = []
     mirror.subscribe(() => { seen.push(mirror.namespace('theme')?.revision ?? -1) })
@@ -116,14 +192,14 @@ describe('SettingsDescribeMirror', () => {
 
   it('acceptView before any answer is a no-op instead of inventing a document', () => {
     const describeCall = vi.fn()
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     mirror.acceptView(view('theme', 1))
     expect(mirror.getSnapshot()).toEqual({ status: 'idle', view: undefined, error: null })
   })
 
   it('acceptView appends a namespace the held view has not seen yet', async () => {
     const describeCall = vi.fn().mockResolvedValueOnce(described([view('theme', 1)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.load()
     mirror.acceptView(view('fresh-ns', 0))
     expect(mirror.namespace('fresh-ns')).toBeDefined()
@@ -135,7 +211,7 @@ describe('SettingsDescribeMirror', () => {
     // a load() in the one-microtask gap after the rerun check marked a rerun
     // nobody read, and that refresh never reached the wire.
     const describeCall = vi.fn().mockResolvedValue(described([view('theme', 1)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     void mirror.load()
     await vi.waitFor(() => { expect(describeCall).toHaveBeenCalledTimes(1) })
     void mirror.load()
@@ -147,7 +223,7 @@ describe('SettingsDescribeMirror', () => {
   it('starts no second run for a load issued inside the loading publish', async () => {
     const gate = deferred<RpcResponse<SettingsDescribeView>>()
     const describeCall = vi.fn().mockReturnValue(gate.promise)
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     let reentered = false
     const unsubscribe = mirror.subscribe(() => {
       if (reentered) return
@@ -167,7 +243,7 @@ describe('SettingsDescribeMirror', () => {
 
   it('lets the first read cover a write folded inside the loading publish', async () => {
     const describeCall = vi.fn().mockResolvedValue(described([view('theme', 2)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     const unsubscribe = mirror.subscribe(() => {
       unsubscribe()
       mirror.acceptView(view('theme', 2))
@@ -186,7 +262,7 @@ describe('SettingsDescribeMirror', () => {
       .mockResolvedValueOnce(described([view('theme', 4), view('locale', 1)]))
       .mockReturnValueOnce(slow.promise)
       .mockResolvedValueOnce(described([view('theme', 5), view('locale', 2)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     await mirror.load()
     expect(describeCall).toHaveBeenCalledTimes(1)
     const stale = mirror.load()
@@ -204,7 +280,7 @@ describe('SettingsDescribeMirror', () => {
     const describeCall = vi.fn()
       .mockReturnValueOnce(slow.promise)
       .mockResolvedValueOnce(described([view('theme', 2)]))
-    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never)
+    const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, eligibleSource().source)
     const loading = mirror.load()
     await Promise.resolve()
     mirror.acceptView(view('theme', 2))

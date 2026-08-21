@@ -2618,6 +2618,9 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
     host: {
       describe: request => ok(request, {
         version: '0.0.0-fixture', cwd: '/tmp/fixture', attachedSessions, home: FIXTURE_HOME, canOpenPath: true,
+        // Fixture pages sit on the operator tier like a loopback browser; the
+        // real /api carrier annotates the same field per request.
+        operatorEligible: true,
       }),
       // Deterministic native pick: the keyless lanes drive the full
       // pick-then-adopt path without an OS chooser (design-mock content,

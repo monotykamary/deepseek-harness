@@ -560,4 +560,51 @@ describe('connection node half over a real HTTP server', () => {
       await dispose()
     }
   })
+
+  it('annotates host.describe with the per-request operator-eligibility verdict', async () => {
+    const ctx = new Context()
+    const routes: WebRoute[] = []
+    const upgrades: WebUpgradeRoute[] = []
+    ctx.provide('webServer', fakeHttpServer(routes, upgrades) as WebServer)
+    ctx.provide('apiProxy', {
+      host: {
+        describe: () => Promise.resolve({
+          rpcId: RpcId('rpc-annotation'),
+          result: {
+            ok: true as const,
+            value: { version: '0', cwd: '/w', attachedSessions: 0, home: '/h', canOpenPath: true },
+          },
+        }),
+      },
+    } as unknown as ApiProxy)
+    const fiber = ctx.plugin({ inject: [...inject], apply }, { trustedHosts: ['harness.example'] })
+    await fiber.await()
+    const route = routes[0]!
+    const describe = async (host: string): Promise<{ status: number; body: string }> => {
+      const { response, state } = fakeResponse()
+      const request = fakePost(
+        { host, origin: `https://${host}` },
+        `${API_PATH}/host.describe`,
+        { type: 'client-request', rpcId: 'rpc-annotation', method: 'host.describe', payload: {} },
+      )
+      await route.handler(request, response)
+      return { status: state.status ?? 0, body: typeof state.body === 'string' ? state.body : '' }
+    }
+    try {
+      // A declared trusted authority and loopback are operator-eligible; the
+      // verdict rides the same answer the browser handshake consumes.
+      const trusted = await describe('harness.example')
+      expect(trusted.status).toBe(200)
+      const trustedValue = JSON.parse(trusted.body) as { result: { value: { operatorEligible?: boolean } } }
+      expect(trustedValue.result.value.operatorEligible).toBe(true)
+      const loopback = await describe('127.0.0.1:3080')
+      expect(loopback.status).toBe(200)
+      const loopbackValue = JSON.parse(loopback.body) as { result: { value: { operatorEligible?: boolean } } }
+      expect(loopbackValue.result.value.operatorEligible).toBe(true)
+      // An undeclared authority stays refused at the outer fence.
+      expect((await describe('other.example')).status).toBe(403)
+    } finally {
+      await fiber.dispose()
+    }
+  })
 })

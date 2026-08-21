@@ -353,13 +353,13 @@ describe('ProducedFiles row', () => {
   const t = makeTranslate(zh)
   const capability = (
     canOpenPath: boolean | undefined,
-    isLoopback = true,
-  ): Pick<ProducedFilesProps, 'isLoopback' | 'openChanges' | 'useHostDescription'> => {
+    isOperatorEligible = true,
+  ): Pick<ProducedFilesProps, 'isOperatorEligible' | 'openChanges' | 'useHostDescription'> => {
     const description = canOpenPath === undefined
       ? undefined
       : { version: 'test', cwd: '/workspace', attachedSessions: 1, home: '/h', canOpenPath }
     return {
-      isLoopback,
+      isOperatorEligible,
       openChanges: vi.fn(),
       useHostDescription: selector => selector(description),
     }
@@ -566,6 +566,7 @@ describe('plugin registration', () => {
     ctx.provide('connection', {
       api: { settings: {} },
       isLoopback: false,
+      isOperatorEligible: { getSnapshot: () => false, subscribe: () => () => {} },
       hostDescription,
     } as never)
     // ui-theme's Appearance row binds a durable scope through these two.
@@ -578,7 +579,7 @@ describe('plugin registration', () => {
     const [entry] = ctx.slots.entries('conversation.chat.turnTail')
     expect(entry).toBeDefined()
     const injected = entry?.inject?.() as unknown as ProducedFilesInjected
-    expect(injected).toMatchObject({ isLoopback: false, hooks: { hostDescription } })
+    expect(injected).toMatchObject({ isOperatorEligible: false, hooks: { hostDescription } })
     injected.openChanges()
     expect(workbench.open).toHaveBeenCalledWith('changes')
     const changes = ctx.slots.entries('workbench.surface')[0]

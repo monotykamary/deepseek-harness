@@ -52,7 +52,7 @@ export function apply(ctx: ClientContext): void {
       select: selectProducedFiles,
       locale: NS,
       inject: () => ({
-        isLoopback: connection.isLoopback,
+        isOperatorEligible: connection.isOperatorEligible.getSnapshot(),
         openChanges: () => { ctx.workbench.open(CHANGES_SURFACE_ID) },
         hooks: { hostDescription: connection.hostDescription },
       }),

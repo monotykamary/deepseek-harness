@@ -5,6 +5,8 @@ import type {} from '@monotykamary/dsh-attachment'
 // Activates the webServer Context merge used below.
 import type { WebRoute } from '@monotykamary/dsh-host-webserver'
 import { toFetchHandler } from '@monotykamary/dsh-host-apiproxy'
+import { serverResponseSchema } from '@monotykamary/dsh-host-apiproxy/api'
+import type { ServerResponse } from '@monotykamary/dsh-host-apiproxy/api'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import { API_PATH, HOST_EVENTS_PATH, MUX_EVENTS_PATH } from './api-path.ts'
@@ -133,6 +135,37 @@ const PRIVILEGED_METHODS = new Set([
 ])
 
 /**
+ * Fold the request's operator-eligibility verdict into a successful
+ * host.describe answer. The raw api-proxy value has no request context; the
+ * browser carrier is the one place the fence verdict and the answer meet, so
+ * the browser can enable the privileged-plane UI on the surface it reached
+ * (loopback, a deployment-trusted authority, or the operator tier). Raw and
+ * in-process carriers leave the field absent.
+ * @param response - the api-proxy's host.describe response.
+ * @param operatorEligible - the fence verdict for the same request.
+ * @returns the response with the verdict merged into a successful value, or
+ * the original response when the envelope is unreadable or not a success.
+ */
+async function annotateOperatorEligibility(response: Response, operatorEligible: boolean): Promise<Response> {
+  let envelope: ServerResponse
+  try {
+    envelope = serverResponseSchema.parse(await response.json())
+  } catch (_unreadableDescribeEnvelope) {
+    // The api-proxy always answers this unary in the envelope; an unreadable
+    // body can only be a carrier-level failure, which must pass through untouched.
+    return response
+  }
+  if (!envelope.result.ok || typeof envelope.result.value !== 'object' || envelope.result.value === null) {
+    return response
+  }
+  const value = envelope.result.value as Record<string, unknown>
+  return Response.json({
+    ...envelope,
+    result: { ...envelope.result, value: { ...value, operatorEligible } },
+  }, { headers: response.headers })
+}
+
+/**
  * Mounts the API gateway under the browser transport prefix. Every request on
  * the prefix passes the browser-trust fence first (DNS-rebinding and
  * cross-site defense — [api-request-trust](./api-request-trust.ts));
@@ -157,17 +190,17 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
       const method = pathname.startsWith(`${API_PATH}/`)
         ? pathname.slice(API_PATH.length + 1)
         : undefined
-      // Privileged plane: the operator tier owns it — admitted by surface
-      // (loopback or a deployment trusted authority, the live list the
-      // ordinary fence reads) or by the operator bearer token. A partitioned
-      // user is refused even on loopback — the token is how the operator
-      // works in passkey mode.
-      if (method !== undefined && PRIVILEGED_METHODS.has(method)) {
-        const admission: Admission = ctx.get('identity')?.current()
-          ?? { owner: null, operator: false }
-        if (admission.owner !== null || (!admission.operator && !isTrustedApiRequest(request, connection.trustedAuthorities))) {
-          return new Response('forbidden', { status: 403 })
-        }
+      // Operator-eligible plane: the operator tier owns it — admitted by
+      // surface (loopback or a deployment trusted authority, the live list
+      // the ordinary fence reads) or by the operator bearer token. A
+      // partitioned user is refused even on loopback — the token is how the
+      // operator works in passkey mode.
+      const admission: Admission = ctx.get('identity')?.current()
+        ?? { owner: null, operator: false }
+      const operatorEligible = admission.owner === null
+        && (admission.operator || isTrustedApiRequest(request, connection.trustedAuthorities))
+      if (method !== undefined && PRIVILEGED_METHODS.has(method) && !operatorEligible) {
+        return new Response('forbidden', { status: 403 })
       }
       if (request.method === 'GET' && (pathname === MUX_EVENTS_PATH || pathname === HOST_EVENTS_PATH)) {
         return new Response('upgrade required', {
@@ -177,7 +210,11 @@ export function apply(ctx: Context, config?: ConnectionConfig): void {
       }
       const apiProxy = ctx.get('apiProxy')
       if (apiProxy === undefined) return new Response('not found', { status: 404 })
-      return toFetchHandler(apiProxy).fetch(request)
+      const response = await toFetchHandler(apiProxy).fetch(request)
+      if (method === 'host.describe' && response.ok) {
+        return annotateOperatorEligibility(response, operatorEligible)
+      }
+      return response
     },
   })
   const route: WebRoute = {

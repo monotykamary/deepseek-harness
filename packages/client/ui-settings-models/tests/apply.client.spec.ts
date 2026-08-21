@@ -29,6 +29,7 @@ async function bench(isLoopback = true, settings?: object, services: object = {}
   ctx.provide('connection', {
     api: settings === undefined ? services : { ...services, settings },
     isLoopback,
+    isOperatorEligible: { getSnapshot: () => isLoopback, subscribe: () => () => {} },
   } as never)
   await ctx.plugin({ inject: [...settingsInject], apply: settingsApply }).await()
   return { ctx, slots: ctx.get('slots') as SlotRegistry, locale }

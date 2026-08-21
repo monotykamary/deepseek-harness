@@ -8,12 +8,14 @@ import { CloseLabel, HeaderContent, TriggerContent } from '../src/client/chrome.
 import type { TriggerContentProps } from '../src/client/chrome.tsx'
 import { SettingsDocumentAction } from '../src/client/SettingsDocumentAction.tsx'
 import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src/client/settings-mirror.ts'
+
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
 import { SettingsDocumentStore } from '../src/client/settings-document-store.ts'
 
 /** Store over a real mirror derived from the same fake wire. */
 function derivedDocumentStore(api: object) {
   const wire = api as never
-  return new SettingsDocumentStore(wire, new SettingsDescribeMirror(wire))
+  return new SettingsDocumentStore(wire, new SettingsDescribeMirror(wire, ELIGIBLE))
 }
 import { en } from '../src/client/locales.ts'
 
@@ -105,7 +107,7 @@ describe('SettingsDocumentAction', () => {
         result: { ok: true as const, value: { writable: true, hasDocument: true, namespaces: [] } },
       })
     const wire = { settings: { describe, openDocument: vi.fn() } } as never
-    const mirror = new SettingsDescribeMirror(wire)
+    const mirror = new SettingsDescribeMirror(wire, ELIGIBLE)
     const controller = new SettingsDocumentStore(wire, mirror)
     const first = render(<SettingsDocumentAction
       {...kit}

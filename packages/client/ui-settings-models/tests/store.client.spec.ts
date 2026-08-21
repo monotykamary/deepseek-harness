@@ -5,6 +5,9 @@ import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src
 import { settingsSchema } from './settings-schema.client.ts'
 import { messageOf, ModelsSettingsStore } from '../src/client/store.ts'
 
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+const INELIGIBLE = { getSnapshot: () => false, subscribe: () => () => {} }
+
 let nextRpc = 0
 function ok<T>(value: T): RpcResponse<T> {
   return { rpcId: `r-${nextRpc++}` as never, result: { ok: true, value } }
@@ -69,7 +72,7 @@ function api(overrides: {
     },
   }
   const wire = face as never
-  return { face: wire, mirror: new SettingsDescribeMirror(wire), seenRefs }
+  return { face: wire, mirror: new SettingsDescribeMirror(wire, ELIGIBLE), seenRefs }
 }
 
 describe('ModelsSettingsStore', () => {
@@ -227,7 +230,7 @@ describe('edge joins', () => {
     const store = new ModelsSettingsStore(
       face,
       settingsSchema,
-      new SettingsDescribeMirror(face, 'memory'),
+      new SettingsDescribeMirror(face, INELIGIBLE),
     )
     await store.load()
     expect(store.store.getSnapshot()).toMatchObject({

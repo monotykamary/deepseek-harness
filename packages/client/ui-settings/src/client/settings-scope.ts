@@ -49,7 +49,7 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
   private tail: Promise<void> = Promise.resolve()
   private writeGeneration = 0
   private disposed = false
-  private readonly unsubscribe: (() => void) | undefined
+  private readonly unsubscribe: () => void
   /**
    * Revision answered by a superseded write still ahead of the mirror: the
    * mirror only folds the LATEST settlement in, so a queued successor takes
@@ -60,30 +60,28 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
   /**
    * @param api - settings wire face (writes only; reads ride the mirror).
    * @param spec - namespace identity and optional narrowing decoder.
-   * @param mirror - the shared describe mirror this scope derives from.
-   * @param persistence - remote browsers remain process-local because settings RPCs are loopback-only.
+   * @param mirror - the shared describe mirror this scope derives from; its
+   * ineligible state parks this scope on `unavailable` with writes inert,
+   * exactly like the former process-local mode.
    * @param schema - settings-owned schema operations.
    */
   constructor(
     private readonly api: SettingsFace,
     private readonly spec: SettingsScopeSpec<T>,
     private readonly mirror: SettingsDescribeMirror,
-    private readonly persistence: 'host' | 'memory',
     private readonly schema: SettingsSchemaService,
   ) {
     this.store = createSnapshotStore<SettingsScopeSnapshot<T>>({
-      status: persistence === 'host' ? 'loading' : 'unavailable',
+      status: 'loading',
       value: undefined,
       base: undefined,
       user: undefined,
       revision: undefined,
       writable: false,
-      mode: persistence,
+      mode: 'host',
     })
-    if (persistence === 'host') {
-      this.unsubscribe = mirror.subscribe(() => { this.derive() })
-      this.derive()
-    }
+    this.unsubscribe = mirror.subscribe(() => { this.derive() })
+    this.derive()
   }
 
   /** @returns the current sync snapshot (stable reference until the next change). */
@@ -170,7 +168,9 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
   }
 
   private enqueue(operation: () => Promise<void>): Promise<void> {
-    if (this.persistence === 'memory' || this.disposed) return Promise.resolve()
+    // The mirror's ineligible state parks the scope inert, exactly like the
+    // former process-local mode: no write crosses the wire.
+    if (this.disposed || this.mirror.getSnapshot().status === 'unavailable') return Promise.resolve()
     const task = this.tail.then(async () => {
       if (this.disposed) return
       await operation()
@@ -184,6 +184,18 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
   private derive(): void {
     if (this.disposed) return
     const mirrored = this.mirror.getSnapshot()
+    if (mirrored.status === 'unavailable') {
+      this.store.update((draft) => {
+        draft.status = 'unavailable'
+        draft.value = undefined
+        draft.base = undefined
+        draft.user = undefined
+        draft.revision = undefined
+        draft.writable = false
+        draft.mode = 'memory'
+      })
+      return
+    }
     if (mirrored.view === undefined) return
     const { writable } = mirrored.view
     const view = mirrored.view.namespaces.find(candidate => candidate.ns === this.spec.namespace)
@@ -200,6 +212,7 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
       draft.base = view.base
       draft.user = view.user
       draft.writable = writable
+      draft.mode = 'host'
       if (decoded === undefined) return
       draft.status = 'ready'
       draft.value = decoded
@@ -279,7 +292,6 @@ export class SettingsScopeBinder extends Service {
       connection.api,
       spec,
       this.mirror,
-      connection.isLoopback ? 'host' : 'memory',
       this.schema,
     )
     ctx.effect(() => {

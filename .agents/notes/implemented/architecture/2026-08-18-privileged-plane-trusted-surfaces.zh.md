@@ -26,3 +26,4 @@ Status: implemented
 - 配置了身份提供方会收窄表面：分区用户（属主非 `null`）处处被拒绝；运营者层级保留 loopback、每个可信表面与运营者 Bearer 令牌。
 - 表面解析与身份 SSO 笔记中“特权 /api 面保持 loopback 钉扎”的后果被取代；两者都交叉链接到本文。
 - 覆盖：node-half.host.spec 断言被声明的权威现在能到达每个特权方法而未声明的权威仍 403；identity-gate.host.spec 新增 legacy 层可信表面授予并保留分区用户拒绝。
+- 该平面的浏览器半边——设置传输及其消费者改而跟随握手的运营者可达性判定、不再看回环主机名分类器——记录于[客户端设置平面跟随运营者可达表面](../bug-fix/2026-08-21-client-settings-plane-operator-eligible.md)。

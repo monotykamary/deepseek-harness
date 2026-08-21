@@ -49,6 +49,7 @@ async function bench(isLoopback = true) {
   ctx.provide('connection', {
     api: { settings: { describe: settingsDescribe, openDocument: settingsOpenDocument } },
     isLoopback,
+    isOperatorEligible: { getSnapshot: () => isLoopback, subscribe: () => () => {} },
   } as never)
   new TestRemote(ctx)
   await ctx.plugin({ inject: [...settingsInject], apply: settingsApply }).await()
@@ -168,12 +169,17 @@ describe('ui-settings-general apply', () => {
     await vi.waitFor(() => { expect(b.settingsDescribe).toHaveBeenCalledTimes(2) })
   })
 
-  it('withholds the loopback-only document action off-loopback', async () => {
+  it('keeps the document action inert off the operator-eligible plane', async () => {
     const b = await bench(false)
     declare(b.slots)
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
-    expect(b.slots.entries('settings.action')).toEqual([])
+    // Registered on every surface; the mirror's ineligible state keeps its
+    // metadata read from ever crossing the wire.
+    const action = b.slots.entries('settings.action')[0]!
+    const actionInjected = (action.inject as unknown as () => SettingsDocumentActionInjected)()
+    await actionInjected.controller.load()
+    expect(actionInjected.controller.store.getSnapshot().status).toBe('loading')
     expect(b.settingsDescribe).not.toHaveBeenCalled()
     await fiber.dispose()
     for (const [name] of SEATS) expect(b.slots.entries(name)).toEqual([])

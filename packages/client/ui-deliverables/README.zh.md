@@ -33,4 +33,4 @@ Node 侧注册静态系统提示词段落 `ui:deliverable-file-references`。它
 - **Changes 覆盖已载入的 Session 窗口，而非仓库。**当前 client 窗口外的历史在载入前保持缺席；terminal 创建的文件没有结构化 diff；外部编辑或未提交 Git 状态不属于该 target。
 - **提及匹配只认精确路径或唯一 basename。**后缀式提及（`out/index.html` 写作 `index.html` 可解析；`deep/out/index.html` 写作 `out/index.html` 则不行）保持不可点击；等真实的收尾消息形态产生需求后再放宽匹配规则。
 - **终端命令间接创建的文件仍不在匹配词表内。**除非某个成功修改位置也记录了该路径，否则在行内代码中点名这类文件不会使其可点击。
-- **原生文件夹交接以 Host 桌面为目标。**经非 loopback 权威访问的浏览器会省略该操作，报告没有原生打开器的部署也一样。若 SSH 转发让远端 Host 看似处于本机 loopback，部署必须为网关设置 `nativeOpen: false`；无界面的 macOS／Windows Host、Windows interop 不可用的 WSL，或 display／opener 探测误报的 Linux 桌面也必须这样配置。识别操作者实际可见的桌面仍属于部署策略。
+- **原生文件夹交接以 Host 桌面为目标。**经不受信任权威访问的浏览器会省略该操作，报告没有原生打开器的部署也一样。若 SSH 转发让远端 Host 看似处于本机 loopback，部署必须为网关设置 `nativeOpen: false`；无界面的 macOS／Windows Host、Windows interop 不可用的 WSL，或 display／opener 探测误报的 Linux 桌面也必须这样配置。识别操作者实际可见的桌面仍属于部署策略。

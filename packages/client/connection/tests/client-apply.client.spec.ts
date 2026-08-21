@@ -68,6 +68,8 @@ describe('connection client apply', () => {
     const handle = await mount()
     expect(handle.api).toBeInstanceOf(WebApiClient)
     expect(handle.isLoopback).toBe(true)
+    // Loopback pages are operator-eligible from boot, before any handshake.
+    expect(handle.isOperatorEligible.getSnapshot()).toBe(true)
   })
 
   it('selects the fixture client under ?fixture (and with no location at all stays real)', async () => {
@@ -82,6 +84,29 @@ describe('connection client apply', () => {
   it('reports non-loopback page authority through the connection handle', async () => {
     ;(globalThis as Win).location = { hostname: '192.0.2.20', search: '' }
     expect((await mount()).isLoopback).toBe(false)
+    // No trusted surface verdict yet: not operator-eligible.
+    expect((await mount()).isOperatorEligible.getSnapshot()).toBe(false)
+  })
+
+  it('flips operator eligibility on when the handshake confirms a trusted surface', async () => {
+    ;(globalThis as Win).location = { hostname: 'dsh.localhost', search: '?fixture' }
+    const handle = await mount()
+    expect(handle.isLoopback).toBe(false)
+    expect(handle.isOperatorEligible.getSnapshot()).toBe(false)
+    const verdicts: boolean[] = []
+    const off = handle.isOperatorEligible.subscribe(() => {
+      verdicts.push(handle.isOperatorEligible.getSnapshot())
+    })
+    const loop = handle.start({ onConnected: () => {} })
+    try {
+      // The fixture reports the operator tier like the real /api carrier.
+      await vi.waitFor(() => { expect(handle.isOperatorEligible.getSnapshot()).toBe(true) })
+      expect(verdicts).toEqual([true])
+    } finally {
+      loop.stop()
+    }
+    expect(handle.isOperatorEligible.getSnapshot()).toBe(false)
+    off()
   })
 
   it('start() hands out one loop, rejects a second consumer, and stop() aborts the streams', async () => {

@@ -15,6 +15,8 @@ import {
 } from '../src/client/DeepSeekModelsEditor.tsx'
 import { apiKeyFailure } from '../src/client/apiKey.ts'
 import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src/client/settings-mirror.ts'
+
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
 import { deriveKeyRef, ModelsSettingsStore } from '../src/client/store.ts'
 import type { ProviderRow } from '../src/client/store.ts'
 import { en } from '../src/client/locales.ts'
@@ -187,7 +189,7 @@ type WireFace = ConstructorParameters<typeof ModelsSettingsStore>[0]
 
 async function mountFace(scripted: ReturnType<typeof scriptedFace>) {
   const { face, update, replace, mutate, set, unset } = scripted
-  const mirror = new SettingsDescribeMirror(face as never)
+  const mirror = new SettingsDescribeMirror(face as never, ELIGIBLE)
   const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, mirror)
   await controller.load()
   const injected: ModelsSectionProps = {
@@ -269,7 +271,11 @@ describe('ModelsSection', () => {
     face.credentials.describe.mockImplementation((payload: { refs: string[] }) => Promise.resolve(ok({
       credentials: Object.fromEntries(payload.refs.map(ref => [ref, { configured: false, writable: true }])),
     })))
-    const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face as never))
+    const controller = new ModelsSettingsStore(
+      face as unknown as WireFace,
+      settingsSchema,
+      new SettingsDescribeMirror(face as never, ELIGIBLE),
+    )
     await controller.load()
     render(<ModelsSection
       controller={controller}
@@ -292,7 +298,11 @@ describe('ModelsSection', () => {
     face.credentials.describe.mockImplementation((payload: { refs: string[] }) => Promise.resolve(ok({
       credentials: Object.fromEntries(payload.refs.map(ref => [ref, { configured: true, writable: true }])),
     })))
-    const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face as never))
+    const controller = new ModelsSettingsStore(
+      face as unknown as WireFace,
+      settingsSchema,
+      new SettingsDescribeMirror(face as never, ELIGIBLE),
+    )
     await controller.load()
     cleanup()
     render(<ModelsSection
@@ -1023,7 +1033,11 @@ describe('ModelsSection', () => {
     const unhandled = vi.fn()
     process.on('unhandledRejection', unhandled)
     try {
-      const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face as never))
+      const controller = new ModelsSettingsStore(
+        face as unknown as WireFace,
+        settingsSchema,
+        new SettingsDescribeMirror(face as never, ELIGIBLE),
+      )
       await controller.load()
       render(<ModelsSection
         controller={controller}
@@ -1162,7 +1176,7 @@ describe('ModelsSection', () => {
     const face = scriptedFace()
     face.face.llm.providers = vi.fn(() => Promise.resolve(fail('directory down', 'internal'))) as never
     const controller = new ModelsSettingsStore(
-      face.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face.face as never))
+      face.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face.face as never, ELIGIBLE))
     await controller.load()
     render(<ModelsSection
       controller={controller}
@@ -1183,7 +1197,11 @@ describe('ModelsSection', () => {
       hasDocument: false,
       namespaces: wireNamespaces(),
     })))
-    const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face as never))
+    const controller = new ModelsSettingsStore(
+      face as unknown as WireFace,
+      settingsSchema,
+      new SettingsDescribeMirror(face as never, ELIGIBLE),
+    )
     await controller.load()
     cleanup()
     render(<ModelsSection
@@ -1246,7 +1264,11 @@ describe('ModelsSection', () => {
 
   it('loads on first render of an idle controller', async () => {
     const { face } = scriptedFace()
-    const controller = new ModelsSettingsStore(face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(face as never))
+    const controller = new ModelsSettingsStore(
+      face as unknown as WireFace,
+      settingsSchema,
+      new SettingsDescribeMirror(face as never, ELIGIBLE),
+    )
     render(<ModelsSection
       controller={controller}
       useSnapshot={bindSnapshotSelector(controller.store)}

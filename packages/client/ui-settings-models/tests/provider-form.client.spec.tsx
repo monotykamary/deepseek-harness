@@ -10,6 +10,8 @@ import type { ModelsSectionInjected, ModelsSectionProps } from '../src/client/Mo
 import { CustomProviderCard } from '../src/client/CustomProviderCard.tsx'
 import { formatCapacity, parseCapacity } from '../src/client/DeepSeekModelsEditor.tsx'
 import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src/client/settings-mirror.ts'
+
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
 import { ModelsSettingsStore, deriveKeyRef, protocolChoices } from '../src/client/store.ts'
 import { en } from '../src/client/locales.ts'
 import { settingsSchema } from './settings-schema.client.ts'
@@ -142,7 +144,7 @@ function firstMutate(mutate: ReturnType<typeof vi.fn>): MutateCall {
 async function mountSection(options: Parameters<typeof scriptedFace>[0] = {}) {
   const scripted = scriptedFace(options)
   const controller = new ModelsSettingsStore(
-    scripted.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(scripted.face as never))
+    scripted.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(scripted.face as never, ELIGIBLE))
   await controller.load()
   const injected: ModelsSectionProps = {
     controller,
@@ -663,7 +665,7 @@ describe('provider rows', () => {
       }],
     }))) as never
     const controller = new ModelsSettingsStore(
-      scripted.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(scripted.face as never))
+      scripted.face as unknown as WireFace, settingsSchema, new SettingsDescribeMirror(scripted.face as never, ELIGIBLE))
     await controller.load()
     render(<ModelsSection
       controller={controller}

@@ -27,15 +27,28 @@ export interface SettingsDescribeView {
 /** Mirror state every derived settings surface renders from. */
 export interface SettingsMirrorSnapshot {
   /**
-   * `unavailable` is the terminal non-loopback state; `ready` persists across
-   * later failed refreshes (the held view keeps serving); `idle` means no
-   * answer is held and no read is running, so `ensure` will start one.
+   * `unavailable` is the terminal ineligible state (the page authority is not
+   * on the operator-eligible plane); `ready` persists across later failed
+   * refreshes (the held view keeps serving); `idle` means no answer is held
+   * and no read is running, so `ensure` will start one.
    */
   status: 'idle' | 'loading' | 'ready' | 'unavailable'
   /** The last good answer; undefined until the first success. */
   view: SettingsDescribeView | undefined
   /** The latest refresh failure message, cleared by the next success. */
   error: string | null
+}
+
+/** Observable operator-eligible plane verdict (loopback or a trusted surface). */
+export interface EligibilitySource {
+  /** @returns the current sync verdict (stable reference until the next change). */
+  getSnapshot(): boolean
+  /**
+   * Observe verdict replacements.
+   * @param listener - invoked after each snapshot change.
+   * @returns the disposer removing this listener.
+   */
+  subscribe(listener: () => void): () => void
 }
 
 /**
@@ -76,20 +89,53 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
   private inFlight: Promise<void> | undefined
   private rerun = false
   private generation = 0
+  private disposed = false
+  private readonly unsubEligible: () => void
 
   /**
    * @param api - settings wire face.
-   * @param persistence - remote browsers stay process-local because settings RPCs are loopback-only.
+   * @param eligible - operator-eligible plane source: loopback from boot, then
+   * the handshake's per-request verdict for deployment-trusted surfaces. Reads
+   * cross the wire only while the verdict holds; a trusted surface flips the
+   * mirror on after its first handshake.
    */
   constructor(
     private readonly api: SettingsFace,
-    private readonly persistence: 'host' | 'memory' = 'host',
+    private readonly eligible: EligibilitySource,
   ) {
     this.store = createSnapshotStore<SettingsMirrorSnapshot>({
-      status: persistence === 'host' ? 'idle' : 'unavailable',
+      status: eligible.getSnapshot() ? 'idle' : 'unavailable',
       view: undefined,
       error: null,
     })
+    this.unsubEligible = eligible.subscribe(() => { this.onEligibilityChange() })
+  }
+
+  /** Stop following the eligibility source; idempotent. */
+  dispose(): void {
+    this.disposed = true
+    this.unsubEligible()
+  }
+
+  /**
+   * Follow the operator-eligible verdict. Leaving it parks the mirror on
+   * `unavailable` when no answer is held (a held view keeps serving with
+   * reads paused); returning re-arms an idle mirror and starts one read.
+   */
+  private onEligibilityChange(): void {
+    if (this.disposed) return
+    if (this.eligible.getSnapshot()) {
+      const before = this.store.getSnapshot()
+      if (before.status === 'unavailable') {
+        this.store.set({ status: 'idle', view: undefined, error: null })
+        void this.load()
+      }
+      return
+    }
+    const before = this.store.getSnapshot()
+    if (before.view === undefined) {
+      this.store.set({ status: 'unavailable', view: undefined, error: null })
+    }
   }
 
   /** @returns the current sync snapshot (stable reference until the next change). */
@@ -112,7 +158,7 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
    * @returns settlement after this call's freshness is reflected.
    */
   load(): Promise<void> {
-    if (this.persistence === 'memory') return Promise.resolve()
+    if (this.disposed || !this.eligible.getSnapshot()) return Promise.resolve()
     if (this.inFlight !== undefined) {
       this.rerun = true
       return this.inFlight
@@ -130,7 +176,7 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
    * @returns settlement of the current or newly started read, if any.
    */
   ensure(): Promise<void> {
-    if (this.persistence === 'memory') return Promise.resolve()
+    if (this.disposed || !this.eligible.getSnapshot()) return Promise.resolve()
     if (this.inFlight !== undefined) return this.inFlight
     if (this.getSnapshot().status === 'idle') return this.load()
     return Promise.resolve()

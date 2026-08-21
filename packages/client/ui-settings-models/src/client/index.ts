@@ -83,8 +83,8 @@ export function apply(ctx: ClientContext): void {
     schema,
     t,
   })
-  // The scope's own memory mode is what keeps a remote browser process-local,
-  // so the store needs no isLoopback branch of its own.
+  // The scope's own unavailable mode is what keeps an ineligible browser
+  // process-local, so the store needs no eligibility branch of its own.
 
   // Pushed invalidations converge every open surface without polling. The
   // settingsScope injection makes ui-settings activate first, and remote

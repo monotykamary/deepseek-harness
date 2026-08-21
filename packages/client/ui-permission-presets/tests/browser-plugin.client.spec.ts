@@ -49,6 +49,8 @@ async function bench() {
     },
   } as never, () => null)
   ctx.provide('connection', {
+    isLoopback: false,
+    isOperatorEligible: { getSnapshot: () => false, subscribe: () => () => {} },
     api: {
       settings: {
         describe: () => Promise.resolve({

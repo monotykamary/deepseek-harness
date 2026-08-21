@@ -10,12 +10,14 @@ import { en } from '../src/client/locales.ts'
 import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { PermissionPresetSettingsController } from '../src/client/settings-store.ts'
 
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+
 const schema = new SettingsSchemaService(new Context())
 
 /** Controller over a real mirror derived from the same fake wire. */
 function derivedController(api: { settings: object }) {
   const wire = api as never
-  return new PermissionPresetSettingsController(new SettingsDescribeMirror(wire), wire, schema)
+  return new PermissionPresetSettingsController(new SettingsDescribeMirror(wire, ELIGIBLE), wire, schema)
 }
 
 afterEach(cleanup)

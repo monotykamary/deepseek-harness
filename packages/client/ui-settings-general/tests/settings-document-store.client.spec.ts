@@ -3,10 +3,12 @@ import type { RpcResponse } from '@monotykamary/dsh-api-remotes/client'
 import { SettingsDescribeMirror } from '@monotykamary/dsh-client-ui-settings/src/client/settings-mirror.ts'
 import { SettingsDocumentStore } from '../src/client/settings-document-store.ts'
 
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+
 /** Store over a real mirror derived from the same fake wire. */
 function derivedDocumentStore(api: object) {
   const wire = api as never
-  return new SettingsDocumentStore(wire, new SettingsDescribeMirror(wire))
+  return new SettingsDocumentStore(wire, new SettingsDescribeMirror(wire, ELIGIBLE))
 }
 
 function response(hasDocument = false): RpcResponse<{
@@ -122,7 +124,7 @@ describe('SettingsDocumentStore', () => {
         openDocument: vi.fn(),
       },
     } as never
-    const mirror = new SettingsDescribeMirror(wire)
+    const mirror = new SettingsDescribeMirror(wire, ELIGIBLE)
     const caught = new SettingsDocumentStore(wire, mirror)
     await caught.load()
     expect(caught.store.getSnapshot()).toMatchObject({ status: 'unavailable', error: 'offline' })

@@ -544,6 +544,8 @@ describe('WebSearchCardController', () => {
 })
 
 describe('ConfigurablePluginsTabController', () => {
+  const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+
   function settingsApi(namespaces: string[]) {
     const describe = vi.fn(() => Promise.resolve({
       rpcId: 's-1' as never,
@@ -558,7 +560,7 @@ describe('ConfigurablePluginsTabController', () => {
         },
       },
     }))
-    return { mirror: new SettingsDescribeMirror({ settings: { describe } } as never), describe }
+    return { mirror: new SettingsDescribeMirror({ settings: { describe } } as never, ELIGIBLE), describe }
   }
 
   /** Slot ledger stand-in: one stored entry per registered card key. */

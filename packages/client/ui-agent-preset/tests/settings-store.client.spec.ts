@@ -12,9 +12,11 @@ import {
   AGENT_PRESET_SETTINGS_NS, AgentPresetSettingsController, messageOf,
 } from '../src/client/settings-store.ts'
 
+const ELIGIBLE = { getSnapshot: () => true, subscribe: () => () => {} }
+
 /** Controller over a real mirror derived from the same fake wire. */
 function derivedController(api: IApiClient) {
-  return new AgentPresetSettingsController(api, new SettingsDescribeMirror(api))
+  return new AgentPresetSettingsController(api, new SettingsDescribeMirror(api, ELIGIBLE))
 }
 import { AgentPresetSeatController } from '../src/client/seat-store.ts'
 import type { SeatSessionSummary } from '../src/client/seat-store.ts'

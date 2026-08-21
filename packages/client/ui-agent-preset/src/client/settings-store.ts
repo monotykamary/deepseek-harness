@@ -168,7 +168,7 @@ export interface AgentPresetSettingsState {
   error: string | null
   /**
    * Whether this browser may persist the choice at all. `settings.describe` is
-   * loopback-only and reports a read-only provider as `writable: false`; the
+   * gated to the operator-eligible plane and reports a read-only provider as `writable: false`; the
    * row then shows the current default and disables the control rather than
    * offering a write the gateway will refuse.
    */
@@ -221,7 +221,7 @@ export class AgentPresetSettingsController {
       return
     }
     // The roster says what may be chosen; the shared mirror says whether this
-    // browser may write the choice down. A non-loopback browser's mirror never
+    // browser may write the choice down. An ineligible browser's mirror never
     // answers, so the row stays read-only rather than offering a control
     // whose write the Host would refuse.
     await this.describeFace.ensure()

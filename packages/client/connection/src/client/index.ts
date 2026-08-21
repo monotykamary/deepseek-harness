@@ -62,6 +62,14 @@ export interface ConnectionHandle {
   readonly api: IApiClient
   /** Whether the current page authority is loopback; non-browser contexts default to true. */
   readonly isLoopback: boolean
+  /**
+   * Whether the current page authority sits on the deployment's
+   * operator-eligible plane. Starts at the boot loopback fact and follows
+   * each connection handshake: a trusted surface (or the operator tier) flips
+   * it on once the host reports the per-request verdict, and a generation
+   * loss retracts it with the description.
+   */
+  readonly isOperatorEligible: { getSnapshot(): boolean; subscribe(listener: () => void): () => void }
   /** Generation-scoped Host facts, including the account home and native path-open capability. */
   readonly hostDescription: HostDescriptionSource
   /** Generic logical RPC channels over the same Connection transport. */
@@ -101,9 +109,17 @@ export function apply(ctx: Context): void {
       }
     }
   }
+  const loopback = pageLocation === undefined || isLoopbackHostname(pageLocation.hostname)
   const handle: ConnectionHandle = {
     api,
-    isLoopback: pageLocation === undefined || isLoopbackHostname(pageLocation.hostname),
+    isLoopback: loopback,
+    isOperatorEligible: {
+      getSnapshot: () => loopback || (description !== undefined && description.operatorEligible === true),
+      subscribe: (listener) => {
+        descriptionListeners.add(listener)
+        return () => { descriptionListeners.delete(listener) }
+      },
+    },
     hostDescription: {
       getSnapshot: () => description,
       subscribe: (listener) => {

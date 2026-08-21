@@ -29,7 +29,7 @@ export type {
 export type { SettingsScopeController, SettingsScopeBinder } from './settings-scope.ts'
 export type { SettingsSchemaService } from './schema.ts'
 export type { SchemaNode } from './schema.ts'
-export type { SettingsDescribeFace, SettingsDescribeView, SettingsMirrorSnapshot } from './settings-mirror.ts'
+export type { EligibilitySource, SettingsDescribeFace, SettingsDescribeView, SettingsMirrorSnapshot } from './settings-mirror.ts'
 
 /**
  * Required services: the wire handle for the mirror's reads and the forwarded
@@ -49,14 +49,15 @@ export const inject = ['connection', 'remote']
 export function apply(ctx: ClientContext): void {
   const schema = new SettingsSchemaService(ctx)
   const connection = ctx.get('connection') as ConnectionHandle
-  const mirror = new SettingsDescribeMirror(
-    connection.api,
-    connection.isLoopback ? 'host' : 'memory',
-  )
+  // The mirror follows the operator-eligible plane: loopback reads from boot,
+  // a deployment-trusted surface (portless/tailnet) flips on after the first
+  // handshake, and an untrusted browser stays process-local.
+  const mirror = new SettingsDescribeMirror(connection.api, connection.isOperatorEligible)
   ctx.effect(() => {
     const disposers = [
       (ctx.get('remote') as ClientContext['remote']).$on('settings/document-updated', () => { void mirror.load() }),
       ctx.on('connection/reset', () => { void mirror.load() }),
+      () => { mirror.dispose() },
     ]
     // The first connection also emits connection/reset, so startup normally
     // costs two reads (budgeted in startup-rpc-budget.e2e.ts). The in-flight
