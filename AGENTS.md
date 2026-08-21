@@ -84,6 +84,10 @@ pnpm run demo:acp       # ACP automation server (needs DEEPSEEK_API_KEY)
 
 When required `gh`, `pnpm`, build, test, or generator commands fail because the agent sandbox blocks credentials, network, IPC, file watching, or nested `sandbox-exec`, retry unchanged with the narrowest host escalation before diagnosing authentication or project failure. Require sandbox evidence; never bypass genuine test failures or the product sandbox under test.
 
+### Golden rule: check when done
+
+**Never run tests before the requested implementation is complete.** Do not run builds, lint, typechecks, snapshots, documentation gates, or other validation between edits or conversational turns. Once implementation is complete, run the smallest relevant end checks once; after a failure, finish the repair pass before rerunning, and inspect saved output instead of repeating unchanged commands.
+
 ### Run relevant checks locally
 
 Run checks before pushes via [dsh-pre-push-checks](.agents/skills/dsh-pre-push-checks/SKILL.md); report only commands run. After `gh stack sync`, validate immediately; do not merge before checks pass.
