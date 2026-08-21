@@ -60,6 +60,8 @@ flowchart LR
   cfg --> plugin_dsh_base_terminals
   plugin_dsh_base_terminal_bash["terminal-bash<br/>@monotykamary/dsh-terminal-bash"]
   cfg --> plugin_dsh_base_terminal_bash
+  plugin_dsh_base_terminal_pwsh["terminal-pwsh<br/>@monotykamary/dsh-terminal-bash"]
+  cfg --> plugin_dsh_base_terminal_pwsh
   plugin_dsh_base_bash_sandbox["bash-sandbox<br/>@monotykamary/dsh-bash-sandbox"]
   cfg --> plugin_dsh_base_bash_sandbox
   plugin_dsh_base_pwsh_sandbox["pwsh-sandbox<br/>@monotykamary/dsh-pwsh-sandbox"]
@@ -196,6 +198,7 @@ flowchart LR
 | `sandbox-policy` | `@monotykamary/dsh-sandbox-policy` |
 | `terminals` | `@monotykamary/dsh-terminal` |
 | `terminal-bash` | `@monotykamary/dsh-terminal-bash` |
+| `terminal-pwsh` | `@monotykamary/dsh-terminal-bash` |
 | `bash-sandbox` | `@monotykamary/dsh-bash-sandbox` |
 | `pwsh-sandbox` | `@monotykamary/dsh-pwsh-sandbox` |
 | `approval` | `@monotykamary/dsh-user-approval` |
