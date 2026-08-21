@@ -18,6 +18,7 @@
   overflow: hidden;
 }
 
+.leading {
   flex-shrink: 0;
 }
 

@@ -101,6 +101,7 @@
   overflow: hidden;
 }
 
+.leading {
   position: relative; /* .chevronHover overlay anchor */
   flex: none;
   width: 16px;
