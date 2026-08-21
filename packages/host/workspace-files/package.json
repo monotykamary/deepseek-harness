@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-host-workspace-files",
   "description": "Session-authorized workspace listing, bounded-read, and guarded-write Remote",
-  "version": "0.1.0-rc.10",
+  "version": "0.1.0-rc.11",
   "publishConfig": {
     "access": "public"
   },
