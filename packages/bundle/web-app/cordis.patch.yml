@@ -221,9 +221,6 @@
     - id: ui-command-palette
       name: '@monotykamary/dsh-client-ui-command-palette'
 
-    - id: ui-renderer
-      name: '@monotykamary/dsh-client-ui-renderer'
-
     - id: ui-sidebar
       name: '@monotykamary/dsh-client-ui-sidebar'
 
