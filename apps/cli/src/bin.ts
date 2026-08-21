@@ -17,7 +17,7 @@ import { parseDshArgs } from './args.ts'
 // one directory under apps/cli, so the checked-in manifest resolves with the
 // same relative hop from either artifact.
 /** This app's version, read from its checked-in package.json. */
-function readVersion(): string {
+export function readVersion(): string {
   const manifest = JSON.parse(
     readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'),
   ) as { version?: unknown }
@@ -45,6 +45,11 @@ switch (invocation.mode) {
   case 'dump-config': {
     const { runDumpConfig } = await import('./dump-config.ts')
     runDumpConfig(invocation.profile, invocation.defaultOnly, invocation.patches)
+    break
+  }
+  case 'distribution': {
+    const { runDistribution } = await import('./distribution.ts')
+    process.exitCode = await runDistribution(invocation.action, invocation.json, fileURLToPath(new URL('../package.json', import.meta.url)))
     break
   }
   default:

@@ -21,6 +21,8 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * the shipped composition always registers the seat).
      */
     'settings.trigger': { kind: 'single'; scope: 'root'; owner: SettingsTriggerOwnerProps }
+    /** Optional status content rendered after the Settings trigger label. */
+    'settings.trigger.badge': { kind: 'single'; scope: 'root'; owner: SettingsTriggerBadgeOwnerProps }
     /**
      * The panel title text seat. Content renders inside the nav heading row;
      * the dialog's accessible name points at that node via aria-labelledby.
@@ -104,6 +106,12 @@ export interface SettingsPluginsTabOwnerProps {
 export interface SettingsTriggerOwnerProps {
   /** Whether the sidebar renders wide content (false = 56px rail, icon only). */
   wide: boolean
+}
+
+/** Owner share of the Settings trigger badge seat. */
+export interface SettingsTriggerBadgeOwnerProps {
+  /** Marker field: badge owner props are intentionally empty. */
+  children?: never
 }
 
 /** Owner share of the header title seat (the shell supplies nothing). */

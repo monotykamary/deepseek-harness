@@ -1,0 +1,52 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.heading,
+.package,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heading > div,
+.failure {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.packages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.package,
+.command,
+.warning,
+.notice {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--dsr-bg-elevated, #f6f7f9);
+}
+
+.state[data-available='true'],
+.warning {
+  color: var(--dsr-text-warning, #a35b00);
+}
+
+.badge {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #e5484d;
+}

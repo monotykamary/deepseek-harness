@@ -120,7 +120,9 @@
     "@monotykamary/dsh-client-ui-session-title": "workspace:^",
     "@monotykamary/dsh-host-workspace-files": "workspace:^",
     "@monotykamary/dsh-terminal-web": "workspace:^",
-    "@monotykamary/dsh-web-identity": "workspace:^"
+    "@monotykamary/dsh-web-identity": "workspace:^",
+    "@monotykamary/dsh-distribution-update": "workspace:^",
+    "@monotykamary/dsh-client-ui-settings-updates": "workspace:^"
   },
   "peerDependencies": {
     "@monotykamary/cordis-plugin-loader": "workspace:^",

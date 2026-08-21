@@ -12,6 +12,9 @@
 | `dsh --profile headless "job"` | 运行一个全新的持久化会话，打印最终答案并退出。 |
 | `dsh web` | `--profile web` 的别名。 |
 | `dsh plugin --profile <name> <pnpm args>` | 通过在 profile 目录中转发给 pnpm 来管理该 profile 的插件。 |
+| `dsh version [--json]` | 报告已安装的 DSH、Fabric 与 Fovea 闭包。 |
+| `dsh update [--check] [--json]` | 检查版本，或把 npm 全局更新交给分离 Worker。 |
+| `dsh doctor [--json]` | 报告安装渠道、Node 版本、DSH home 与包版本。 |
 
 运行命令时所在的目录将作为默认 workspace 根目录。`web` 和 `headless` profile 在首次使用时会从随附模板自动初始化；其他任何 profile 都必须通过 `dsh plugin` 创建。
 
@@ -31,10 +34,10 @@ dsh --help                          # the launcher's own help
 
 ## Profile
 
-profile 目录包含一个 `package.json`，其中记录树外插件依赖，以及 profile manifest（元数据清单）`dsh.profile` 和其中按顺序排列的 `bundles` 列表；还包含一个 `cordis.patch.yml`，其中保存用户自己的 patch 层。
+profile 目录包含一个 `package.json`，其中记录树外插件依赖、由安装拥有的内置栈 `dsh.profile.template`，以及用户管理的 `dsh.profile.bundles`；还包含一个 `cordis.patch.yml`，其中保存用户自己的 patch 层。
 
 配置树以空根为起点，依次叠加以下配置层：
-- `dsh.profile.bundles` 中各组合包的 patch
+- `dsh.profile.template` 的当前安装层，然后是 `dsh.profile.bundles` 中各用户组合包的 patch
 - profile 自身的 `cordis.patch.yml`，然后是 home 级的 `$DSH_HOME/cordis.patch.yml`
 - `--patch` 指定的覆盖层
 

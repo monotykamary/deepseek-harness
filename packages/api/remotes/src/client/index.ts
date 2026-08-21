@@ -5,6 +5,7 @@ import commandsRemote from '@monotykamary/dsh-commands/remote'
 import goalsRemote from '@monotykamary/dsh-goal/remote'
 import dynamicRemote from '@monotykamary/dsh-cordis-host-runner/remote'
 import pluginInventoryRemote from '@monotykamary/dsh-host-plugin-inventory/remote'
+import distributionUpdateRemote from '@monotykamary/dsh-distribution-update/remote'
 import workspaceFilesRemote from '@monotykamary/dsh-host-workspace-files/remote'
 import messageFeedbackRemote from '@monotykamary/dsh-message-feedback/remote'
 import type { TypertClientRemote } from '@monotykamary/dsh-typert-protocol'
@@ -14,6 +15,9 @@ import sessionReferencesRemote from '@monotykamary/dsh-session-reference/remote'
 export type { TypertClientRemote as ClientRemote } from '@monotykamary/dsh-typert-protocol'
 export type { PluginInventorySnapshot } from '@monotykamary/dsh-host-plugin-inventory/types'
 export type {
+  DistributionPackageStatus, DistributionUpdateLaunch, DistributionUpdateSnapshot, InstallChannel,
+} from '@monotykamary/dsh-distribution-update/types'
+export type {
   WorkspaceDirectoryListing, WorkspaceFileEntry, WorkspaceFileKind, WorkspaceFileLocator, WorkspaceFilePreview,
   WorkspaceFileVersion, WorkspaceFileWriteRefusal, WorkspaceFileWriteResult, WorkspaceSavedFile,
   WorkspaceTextFilePreview, WorkspaceUnavailableFilePreview,
@@ -21,6 +25,7 @@ export type {
 export type {} from '@monotykamary/dsh-commands/remote'
 export type {} from '@monotykamary/dsh-goal/remote'
 export type {} from '@monotykamary/dsh-host-plugin-inventory/remote'
+export type {} from '@monotykamary/dsh-distribution-update/remote'
 export type {} from '@monotykamary/dsh-host-workspace-files/remote'
 export type {} from '@monotykamary/dsh-message-feedback/remote'
 export type {} from '@monotykamary/dsh-file-reference/remote'
@@ -121,8 +126,8 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   const disposers: Array<() => Promise<void>> = []
   try {
     for (const contribution of [
-      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, workspaceFilesRemote, messageFeedbackRemote,
-      fileReferencesRemote, sessionReferencesRemote,
+      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, distributionUpdateRemote,
+      workspaceFilesRemote, messageFeedbackRemote, fileReferencesRemote, sessionReferencesRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

@@ -69,6 +69,9 @@ describe('web e2e: startup auto-selection', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-first-workspace-stable-tree'))
     await page.locator(`${ROOT_PHASE}[data-phase="hero"]`).waitFor({ timeout: 15_000 })
     const headline = page.getByText('Into the Unknown', { exact: true })
+    await page.getByRole('heading', { name: 'A complete coding-agent workbench' }).waitFor()
+    expect(await page.getByText('Fovea code intelligence', { exact: true }).isVisible()).toBe(true)
+    expect(await page.getByText('Fabric execution', { exact: true }).isVisible()).toBe(true)
     const fishHitbox = headline.locator('xpath=preceding-sibling::span[1]')
     const fish = fishHitbox.locator('svg')
     expect(await fish.evaluate(node => getComputedStyle(node).color))
@@ -111,6 +114,7 @@ describe('web e2e: startup auto-selection', () => {
       textarea: true,
       textareaEnabled: true,
     })
+    expect(await page.getByRole('heading', { name: 'A complete coding-agent workbench' }).count()).toBe(0)
     expect(tripwire.pageErrors).toEqual([])
   }, 120_000)
 

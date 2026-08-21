@@ -179,6 +179,11 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      */
     'conversation.hero.workspace': { kind: 'single'; scope: 'root'; owner: EmptyWorkspaceOwnerProps }
     /**
+     * Optional product welcome content below the Hero headline. The owner
+     * distinguishes the no-session landing page from an ordinary blank draft.
+     */
+    'conversation.hero.welcome': { kind: 'single'; scope: 'root'; owner: HeroWelcomeOwnerProps }
+    /**
      * Brand mark leading the blank-session headline. Declared by this
      * package's `conversation` entry; the shell supplies a fish fallback.
      */
@@ -644,6 +649,12 @@ export interface ComposerChainProps {
   session: ConversationSnapshot | undefined
 }
 
+/** Presentation props supplied to the optional Hero welcome occupant. */
+export interface HeroWelcomeOwnerProps {
+  /** True only before a Workspace has connected a blank Session. */
+  landing: boolean
+}
+
 /** Presentation props supplied to the blank-session brand-mark occupant. */
 export interface HeroBrandMarkOwnerProps {
   /** Requested square edge in pixels. */
@@ -665,6 +676,7 @@ export type ConversationSlotProps =
     | 'conversation.input.dock' | 'conversation.composer.dock'
     | 'conversation.input.left' | 'conversation.input.right'
     | 'conversation.hero.brand.mark'
+    | 'conversation.hero.welcome'
     | 'conversation.hero.workspace'
     | 'conversation.hero.agentPreset'
   >

@@ -1,34 +1,77 @@
-# DeepSeek Harness
+<div align="center">
+
+# 🐟 DeepSeek Harness
+
+**一个插件原生的编程 Agent Harness，内置 Fabric 协作能力与 Fovea 仓库智能。**
+
+_一条命令即可本地运行；所有能力均可组合，经过测试的发行版始终一起更新。_
+
+[![CI](https://img.shields.io/github/actions/workflow/status/deepseek-ai/deepseek-harness/ci.yml?branch=master&style=for-the-badge&label=checks)](https://github.com/deepseek-ai/deepseek-harness/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/@monotykamary/dsh?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/@monotykamary/dsh) [![Node.js](https://img.shields.io/badge/Node.js-%5E22.19%20%7C%7C%20%3E%3D24-339933?style=for-the-badge&logo=node.js&logoColor=white)](package.json) [![license](https://img.shields.io/badge/license-MIT-f4c430?style=for-the-badge)](LICENSE)
 
 [English](README.md) | 中文
 
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
-
-它采用**一切皆插件**的架构，并由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper)。
-
-## 开发者预览
-
-DeepSeek Harness 目前处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
-
-<a id="run"></a>
+</div>
 
 ## 运行
 
-### 通过 `npm` 运行
-
-安装 `Node.js`，然后运行：
-
 ```sh
-npx @monotykamary/dsh web
+npx @monotykamary/dsh@latest web
 ```
 
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
+DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默认浏览器打开页面，通过 SSH 启动时则只打印宿主机 URL，传入 `--no-open` 可仅运行服务器。npm 包携带完整且经过测试的依赖闭包，包括 [dsh-fabric](https://github.com/monotykamary/dsh-fabric) 与 [dsh-fovea](https://github.com/monotykamary/dsh-fovea)；配置档不会固定它们的独立副本。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
 
-<a id="run-from-source"></a>
+## 为什么选择 DSH？
+
+| | 能力 | 作用 |
+| :-: | --- | --- |
+| 🧩 | **一切皆插件** | 通过 Cordis 组合替换模型、工具、持久化、策略、UI 与编排。 |
+| 🧠 | **内置 Fabric** | 确定性压缩、受检代码执行、持久协作与实时拓扑。 |
+| 🔭 | **内置 Fovea** | 渐进式仓库导航与影响分析，无需批量读取代码树。 |
+| 🛡️ | **执行时策略** | 文件系统、子进程、审批、超时与沙箱决策均由可执行能力约束。 |
+| 🔄 | **整体更新** | 设置与 CLI 同时报告 DSH、Fabric 和 Fovea，并保留安装渠道。 |
+| 🧱 | **配置档分层** | 内置模板持续更新，用户补丁与外部 Bundle 保持独立所有权。 |
+
+## 组合方式
+
+```mermaid
+flowchart LR
+  User[CLI or Web] --> Profile[Managed profile template]
+  Profile --> Core[DSH plugin spine]
+  Profile --> Fabric[Fabric]
+  Profile --> Fovea[Fovea]
+  Core --> Model[Model providers]
+  Core --> Tools[Policy-guarded tools]
+  Core --> Sessions[(Durable sessions)]
+  Fabric --> Mesh[(Durable mesh)]
+  Fovea --> Repo[Repository graph]
+```
+
+Cordis 管理插件生命周期与可逆副作用；会话日志保存模型可见的持久事实。配置档依次叠加当前安装拥有的模板、用户 Bundle、配置档补丁、主目录补丁与命令行覆盖。详见[架构文档](docs/architecture.zh.md)。
+
+## 安装
+
+### 免安装运行
+
+```sh
+npx @monotykamary/dsh@latest web
+```
+
+### 安装命令
+
+```sh
+npm install --global @monotykamary/dsh@latest
+dsh web
+```
+
+### Nix
+
+```sh
+nix run github:deepseek-ai/deepseek-harness
+```
+
+Flake 固定当前检出版本对应的 npm 发行版。打包部署应设置 `DSH_INSTALL_CHANNEL=nix`，让设置页报告由 Nix 管理的更新，而不是提供 npm 自更新。
 
 ### 从源码运行
-
-如需从仓库源码运行：
 
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
@@ -38,43 +81,43 @@ pnpm run build
 pnpm dsh web
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+## 更新与诊断
 
-## 社区与支持
+```sh
+dsh version
+dsh version --json
+dsh update --check
+dsh update
+dsh doctor --json
+```
 
-- 欢迎通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群：扫码添加企微小助手并填写入群问卷，完成后小助手会邀请你入群。
+Web 设置面板包含**更新**页面；任一托管包出现新版时，设置入口会显示标记。npm 全局安装可把安装工作交给分离进程；npx、Nix、源码与未知安装会显示其所属渠道的更新命令。DSH 不会静默替换自身，也不会重启正在运行的会话。
 
-<table>
-  <thead>
-    <tr>
-      <th align="center">企微小助手</th>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-assistant.png" alt="DeepSeek Harness 企微小助手二维码" width="180" height="180"></td>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
+## 配置档与插件
 
-## 参与贡献
+内置 `web` 与 `headless` 配置档从当前 DSH 安装解析模板，因此应用更新也会更新其经过测试的 Fabric/Fovea 层。`$DSH_HOME/profiles/<name>/package.json` 只保存模板标识与用户管理的 Bundle；`cordis.patch.yml` 仍是用户的覆盖层。
 
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
+```sh
+dsh --profile web --dump-config
+dsh plugin --profile web add <package>
+dsh plugin --profile web remove <package>
+```
 
-## 开发
+请为插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 主题。[扩展教程](docs/cookbook/extension-cookbook.zh.md)介绍包、工具、模型提供方、设置卡片与浏览器界面。
 
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
+## 文档与社区
 
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
+- [Web UI 指南](docs/user/guide/index.zh.md)
+- [架构](docs/architecture.zh.md)
+- [开发指南](docs/development.zh.md)
+- [参与贡献](CONTRIBUTING.zh.md)
+- [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions)
+- [Discord](https://discord.gg/Ycq5dCaS4)
+
+> [!WARNING]
+>
+> DSH 目前处于开发者预览阶段；首次稳定版本发布前可能出现不兼容变更。
 
 ## 许可证
 
-[MIT](LICENSE)
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+MIT © DeepSeek 贡献者。第三方许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

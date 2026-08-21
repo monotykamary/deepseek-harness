@@ -159,11 +159,11 @@ describe('loadProfile', () => {
     } catch {
       // Resolution failure is the plain-Node outcome for this empty anchor.
     }
-    expect(readProfileManifest('t', resolveProfileDir('web', home)).dsh?.profile?.bundles)
-      .toEqual([...PROFILE_TEMPLATES.web ?? []])
+    expect(readProfileManifest('t', resolveProfileDir('web', home)).dsh?.profile)
+      .toEqual({ template: 'web', bundles: [] })
   })
 
-  it('normalizes only the exact installation-owned headless bundle tuple', () => {
+  it('migrates a legacy headless tuple and preserves appended user bundles', () => {
     const anchor = stageInstallation({
       '@monotykamary/dsh-base': { patch: '[]\n' },
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
@@ -178,8 +178,8 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless',
     ])
     loadProfile('t', 'headless', anchor, home)
-    expect(readProfileManifest('t', stock).dsh?.profile?.bundles)
-      .toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'])
+    expect(readProfileManifest('t', stock).dsh?.profile)
+      .toEqual({ template: 'headless', bundles: [] })
 
     const customHome = tmp()
     const custom = resolveProfileDir('headless', customHome)
@@ -187,12 +187,12 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless', 'custom-bundle',
     ])
     loadProfile('t', 'headless', anchor, customHome)
-    expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
-      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless', 'custom-bundle',
-    ])
+    expect(readProfileManifest('t', custom).dsh?.profile).toEqual({
+      template: 'headless', bundles: ['custom-bundle'],
+    })
   })
 
-  it('normalizes only the exact installation-owned web bundle tuple', () => {
+  it('migrates a legacy web tuple and preserves appended user bundles', () => {
     const anchor = stageInstallation({
       '@monotykamary/dsh-base': { patch: '[]\n' },
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
@@ -204,16 +204,32 @@ describe('loadProfile', () => {
     const stock = resolveProfileDir('web', home)
     initProfile(stock, ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'])
     loadProfile('t', 'web', anchor, home)
-    expect(readProfileManifest('t', stock).dsh?.profile?.bundles)
-      .toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'])
+    expect(readProfileManifest('t', stock).dsh?.profile)
+      .toEqual({ template: 'web', bundles: [] })
 
     const customHome = tmp()
     const custom = resolveProfileDir('web', customHome)
     initProfile(custom, ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'custom-bundle'])
     loadProfile('t', 'web', anchor, customHome)
-    expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
-      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'custom-bundle',
-    ])
+    expect(readProfileManifest('t', custom).dsh?.profile).toEqual({
+      template: 'web', bundles: ['custom-bundle'],
+    })
+  })
+
+  it('rejects unknown templates and duplicate resolved layers', () => {
+    const anchor = stageInstallation({
+      '@monotykamary/dsh-base': { patch: '[]\n' },
+      '@monotykamary/dsh-web-app': { patch: '[]\n' },
+      'dsh-fabric': { patch: '[]\n' },
+      'dsh-fovea': { patch: '[]\n' },
+    })
+    const home = tmp()
+    const dir = resolveProfileDir('demo', home)
+    initProfile(dir, [])
+    writeProfileManifest(dir, { name: 'demo', dsh: { profile: { template: 'missing', bundles: [] } } })
+    expect(() => loadProfile('t', 'demo', anchor, home)).toThrow('unknown shipped template')
+    writeProfileManifest(dir, { name: 'demo', dsh: { profile: { template: 'web', bundles: ['dsh-fovea'] } } })
+    expect(() => loadProfile('t', 'demo', anchor, home)).toThrow('composes a bundle more than once')
   })
 
   it('fails loud when a listed bundle declares no dsh.bundle', () => {

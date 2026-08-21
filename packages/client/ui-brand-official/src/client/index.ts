@@ -2,16 +2,31 @@
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
+import type {} from '@monotykamary/dsh-client-locale/client'
 import { OfficialBrandMark, OfficialBrandName } from './Brand.tsx'
+import { Welcome } from './Welcome.tsx'
+import { en, zh, type WelcomeKey } from './locales.ts'
 
-/** Required service: the UI slot registry. */
-export const inject = ['slots']
+declare module '@monotykamary/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Official DeepSeek Harness welcome copy. */
+    officialBrand: WelcomeKey
+  }
+}
+
+const NS = 'officialBrand'
+
+/** Required services: the UI slot registry and locale runtime. */
+export const inject = ['slots', 'locale']
 
 /**
- * Fill every shipped brand slot as one declaration-aware registration set.
+ * Fill the shipped brand and welcome slots through declaration-aware registrations.
  * @param ctx - Client root context.
  */
 export function apply(ctx: ClientContext): void {
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-brand-official: dictionaries')
+  ctx.slots.inject('conversation.hero.welcome', () =>
+    ctx.slots.register({ name: 'conversation.hero.welcome', locale: NS }, Welcome))
   if (process.env.DSH_CLIENT_BUILD_PROFILE !== 'official') return
   ctx.slots.inject('sidebar.brand.mark', () =>
     ctx.slots.inject('sidebar.brand.name', () =>

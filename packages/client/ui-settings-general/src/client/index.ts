@@ -150,7 +150,10 @@ export function apply(ctx: ClientContext): void {
   }, SettingsRoot))
 
   ctx.slots.inject('settings.trigger', () =>
-    ctx.slots.register({ name: 'settings.trigger', locale: NS }, TriggerContent))
+    ctx.slots.register({
+      name: 'settings.trigger', locale: NS,
+      children: { 'settings.trigger.badge': { kind: 'single', scope: 'root' } },
+    }, TriggerContent))
   ctx.slots.inject('settings.header', () =>
     ctx.slots.register({ name: 'settings.header', locale: NS }, HeaderContent))
   ctx.slots.inject('settings.action', () => ctx.slots.register({

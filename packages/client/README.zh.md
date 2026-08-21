@@ -23,7 +23,7 @@ dsh web GUI 的浏览器侧：shell 启动、浏览器与宿主通信、共享 U
 | [`ui-files/`](ui-files/README.zh.md) | 在 Workbench 中浏览并编辑 Session 授权的工作区文件。 |
 | [`ui-terminal/`](ui-terminal/README.zh.md) | 在右侧 Workbench 与底部面板中承载 patched xterm.js 会话。 |
 | [`ui-sidebar/`](ui-sidebar/README.zh.md) | 展示工作区与会话导航。 |
-| [`ui-brand-official/`](ui-brand-official/README.zh.md) | 使用官方名称和标记填充通用浏览器品牌 slot。 |
+| [`ui-brand-official/`](ui-brand-official/README.zh.md) | 填充官方名称、标记与无会话欢迎界面。 |
 | [`ui-workspace/`](ui-workspace/README.zh.md) | 提供工作区选择与创建界面。 |
 | [`ui-conversation/`](ui-conversation/README.zh.md) | 展示当前对话及其输入界面。 |
 | [`ui-tool/`](ui-tool/README.zh.md) | 编排工具调用树和按工具键控的视图。 |

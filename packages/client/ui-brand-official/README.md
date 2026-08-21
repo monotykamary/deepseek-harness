@@ -2,9 +2,11 @@
 
 English | [中文](README.zh.md)
 
-This package fills `sidebar.brand.mark`, `sidebar.brand.name`, and `conversation.hero.brand.mark` only when `DSH_CLIENT_BUILD_PROFILE` is `official`. Other builds load the plugin but register no occupants, leaving the shell fallbacks visible.
+This package always fills `conversation.hero.welcome`. It fills `sidebar.brand.mark`, `sidebar.brand.name`, and `conversation.hero.brand.mark` only when `DSH_CLIENT_BUILD_PROFILE` is `official`; other builds retain the shell brand fallbacks.
 
-The three occupants install as one declaration-aware registration set through nested `slots.inject()` calls. The package therefore works whether its row activates before or after the sidebar and conversation declarers, withdraws all occupants when either declaration collapses, and leaves no partial brand mix during HMR. It retains no runtime state. The node half is an empty Loader seat, and the browser title remains a build-environment concern outside this package.
+The welcome and the transactional three-mark set install through declaration-aware `slots.inject()` calls. The package therefore works whether its row activates before or after the sidebar and conversation declarers, withdraws each contribution with its declaration, and leaves no partial mark mix during HMR. It retains no runtime state. The node half is an empty Loader seat, and the browser title remains a build-environment concern outside this package.
+
+The welcome occupant renders only on the true no-session landing page; connected blank Sessions retain the compact new-Session Hero. Its token-native cards explain the major additions around the upstream shell: T3-inspired Workspace and Session navigation, the persistent terminal and file workbench, Fovea code-graph navigation, and Fabric typed execution. The T3-derived UI attribution remains in [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md).
 
 ## Model Experience
 
@@ -17,4 +19,5 @@ None; this package neither assembles nor sends a provider request.
 ## Known Limitations and Deferred Work
 
 - **The package supplies one occupant set** — alternative presentation belongs in another Cordis package occupying the same slots.
+- **The welcome is informational** — it does not duplicate Workspace selection, Settings, or Workbench actions already available in the shell.
 - **The browser title is independent** — `DSH_CLIENT_TITLE` selects title text at build time rather than through a UI slot.

@@ -57,6 +57,14 @@ describe('parseDshArgs', () => {
       .toEqual({ mode: 'plugin', profile: 'tui', args: ['add', '--save-dev', 'x'] })
   })
 
+  it('routes distribution inventory, diagnostics, and updates', () => {
+    expect(parse(['version'])).toEqual({ mode: 'distribution', action: 'version', json: false })
+    expect(parse(['version', '--json'])).toEqual({ mode: 'distribution', action: 'version', json: true })
+    expect(parse(['doctor', '--json'])).toEqual({ mode: 'distribution', action: 'doctor', json: true })
+    expect(parse(['update', '--check'])).toEqual({ mode: 'distribution', action: 'check', json: false })
+    expect(parse(['update', '--json'])).toEqual({ mode: 'distribution', action: 'update', json: true })
+  })
+
   it('routes profile and web config dumps', () => {
     expect(parse(['--profile', 'web', '--dump-config']))
       .toEqual({ mode: 'dump-config', profile: 'web', defaultOnly: false, patches: [] })

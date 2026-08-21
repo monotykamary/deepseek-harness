@@ -44,8 +44,15 @@ interface PluginInvocation {
   args: string[]
 }
 
+/** Inspect or update the installed DSH distribution. */
+interface DistributionInvocation {
+  mode: 'distribution'
+  action: 'version' | 'doctor' | 'check' | 'update'
+  json: boolean
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | DistributionInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -69,6 +76,8 @@ Examples:
   dsh --profile tui --resume <session>       arguments after the launcher flags reach the app
   dsh --profile web --help                   the web app's own flags and help
   dsh plugin --profile tui add <package>     install a plugin into the tui profile
+  dsh update --check                          check DSH, Fabric, and Fovea versions
+  dsh doctor --json                           print installation diagnostics
 `
 
 /**
@@ -178,6 +187,25 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       if (options.profile === '') program.error('error: --profile needs a name')
       if (args.length === 0) program.error('error: plugin needs pnpm arguments to forward (e.g. add <package>)')
       resolved = { mode: 'plugin', profile: options.profile, args }
+    })
+
+  for (const command of ['version', 'doctor'] as const) {
+    program.command(command)
+      .description(command === 'version' ? 'show the complete installed distribution version' : 'show installation diagnostics')
+      .option('--json', 'write machine-readable JSON')
+      .action((options: { json?: boolean }) => {
+        rejectParentOptions(command)
+        resolved = { mode: 'distribution', action: command, json: options.json === true }
+      })
+  }
+
+  program.command('update')
+    .description('check for updates or start a channel-aware update')
+    .option('--check', 'check without installing')
+    .option('--json', 'write machine-readable JSON')
+    .action((options: { check?: boolean; json?: boolean }) => {
+      rejectParentOptions('update')
+      resolved = { mode: 'distribution', action: options.check === true ? 'check' : 'update', json: options.json === true }
     })
 
   try {

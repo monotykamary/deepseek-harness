@@ -3,13 +3,13 @@
  * `dsh --profile` launcher family.
  *
  * A profile is a directory under `$DSH_HOME/profiles/<name>` holding a
- * `package.json` (out-of-tree plugin dependencies plus the profile manifest
- * `dsh.profile` with its ordered `bundles` list) and a `cordis.patch.yml`
- * (the user's own patch layer, applied after every bundle layer). Bundles are
+ * `package.json` (out-of-tree plugin dependencies plus an optional shipped
+ * `dsh.profile.template` and ordered user-managed `bundles`) and a
+ * `cordis.patch.yml` (the user's own patch layer, applied after every bundle layer). Bundles are
  * npm packages whose manifest declares
  * `"dsh": { "bundle": { "patch": "./cordis.patch.yml" } }`; the tree is
- * composed by applying each bundle's patch list in `dsh.profile.bundles` order over
- * an empty entry list, then the profile's own patches, then any launcher
+ * composed by applying the selected template followed by `dsh.profile.bundles`
+ * over an empty entry list, then the profile's own patches, then any launcher
  * layers (`--patch` files and flag-derived patches).
  *
  * Module resolution is two-anchor by construction: a bundle name resolves
@@ -46,7 +46,9 @@ export interface DshBundleManifest {
 
 /** The profile half of the `dsh` manifest section: what a profile directory composes. */
 export interface DshProfileManifest {
-  /** Ordered bundle layer list (package names). */
+  /** Shipped profile template resolved from the running dsh installation. */
+  template?: string
+  /** Ordered user-managed bundle layers applied after the template. */
   bundles?: string[]
 }
 
@@ -87,7 +89,7 @@ export interface Profile {
   name: string
   /** Absolute profile directory. */
   dir: string
-  /** Bundle layers in `dsh.profile.bundles` order. */
+  /** Resolved template layers followed by user-managed bundle layers. */
   layers: ProfileLayer[]
   /** Absolute path of the profile's own patch file. */
   patchPath: string
@@ -124,10 +126,16 @@ export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
   headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'],
 }
 
-/** Installation-owned bundle tuples normalized to the shipped template. */
-const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly string[]> = {
-  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
-  headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless'],
+/** Legacy installation-owned tuples accepted during managed-profile migration. */
+const LEGACY_PROFILE_TUPLES: Record<string, readonly (readonly string[])[]> = {
+  web: [
+    ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
+    PROFILE_TEMPLATES.web ?? [],
+  ],
+  headless: [
+    ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless'],
+    PROFILE_TEMPLATES.headless ?? [],
+  ],
 }
 
 /** The bundle list a `dsh plugin` init uses for a name with no shipped template. */
@@ -156,9 +164,10 @@ autoInstallPeers: false
  * pnpm settings out-of-tree plugins need. Existing files are never touched,
  * so re-running is a no-op on an initialized profile.
  * @param dir - the profile directory from {@link resolveProfileDir}.
- * @param bundles - the initial `dsh.profile.bundles` layer list.
+ * @param bundles - the initial custom bundle list, or ignored template expansion input.
+ * @param template - shipped template identity; omission creates a custom profile.
  */
-export function initProfile(dir: string, bundles: readonly string[]): void {
+export function initProfile(dir: string, bundles: readonly string[], template?: string): void {
   mkdirSync(dir, { recursive: true })
   const manifestPath = join(dir, 'package.json')
   if (!existsSync(manifestPath)) {
@@ -166,7 +175,9 @@ export function initProfile(dir: string, bundles: readonly string[]): void {
       name: `dsh-profile-${basename(dir)}`,
       private: true,
       dependencies: {},
-      dsh: { profile: { bundles: [...bundles] } },
+      dsh: { profile: template === undefined
+        ? { bundles: [...bundles] }
+        : { template, bundles: [] } },
     }
     writeFileSync(manifestPath, JSON.stringify(manifest, undefined, 2) + '\n')
   }
@@ -294,26 +305,31 @@ export function writeProfileManifest(dir: string, manifest: ProfileManifest): vo
   writeFileSync(join(dir, 'package.json'), JSON.stringify(manifest, undefined, 2) + '\n')
 }
 
-/** Return whether two bundle lists have the same values in the same order. */
-function sameBundles(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index])
+/** Whether `values` begins with the complete ordered prefix. */
+function hasBundlePrefix(values: readonly string[], prefix: readonly string[]): boolean {
+  return prefix.length <= values.length && prefix.every((value, index) => values[index] === value)
 }
 
 /**
- * Normalize an exact installation-owned bundle tuple to its shipped template
- * while preserving every other manifest field. Any other list is user-owned.
+ * Migrate a recognized shipped tuple to explicit template ownership while
+ * preserving bundle layers appended by the user. A profile already carrying
+ * a template is left untouched.
  */
 function normalizeShippedProfile(name: string, dir: string, manifest: ProfileManifest): ProfileManifest {
-  const installationOwned = INSTALLATION_OWNED_PROFILE_TUPLES[name]
-  const current = PROFILE_TEMPLATES[name]
-  const bundles = manifest.dsh?.profile?.bundles
-  if (installationOwned === undefined || current === undefined || bundles === undefined
-    || !sameBundles(bundles, installationOwned)) return manifest
+  const profile = manifest.dsh?.profile
+  if (profile?.template !== undefined) return manifest
+  const bundles = profile?.bundles
+  const candidates = LEGACY_PROFILE_TUPLES[name]
+  if (bundles === undefined || candidates === undefined) return manifest
+  const owned = [...candidates]
+    .sort((left, right) => right.length - left.length)
+    .find(candidate => hasBundlePrefix(bundles, candidate))
+  if (owned === undefined) return manifest
   const normalized: ProfileManifest = {
     ...manifest,
     dsh: {
       ...manifest.dsh,
-      profile: { ...manifest.dsh?.profile, bundles: [...current] },
+      profile: { ...profile, template: name, bundles: bundles.slice(owned.length) },
     },
   }
   writeProfileManifest(dir, normalized)
@@ -364,8 +380,8 @@ export function resolveBundleDir(
 }
 
 /**
- * Load a profile: resolve every `dsh.profile.bundles` entry to its patch
- * layer and parse the profile's own patch file. A listed bundle without a
+ * Load a profile: expand its shipped template, resolve every following user
+ * bundle to its patch layer, and parse the profile's own patch file. A listed bundle without a
  * `dsh.bundle` manifest fails loud — naming a bundle-less package as a layer
  * is a misconfiguration, not "no patches".
  * @param binName - the diagnostic prefix on thrown errors.
@@ -389,11 +405,18 @@ export function loadProfile(
         `${binName}: profile ${JSON.stringify(name)} does not exist; create it with 'dsh plugin --profile ${name} add <package>'`,
       )
     }
-    initProfile(dir, template)
+    initProfile(dir, template, name)
   }
   const manifest = normalizeShippedProfile(name, dir, readProfileManifest(binName, dir))
-  // A hand-written profile manifest may omit the dsh section entirely.
-  const bundles = manifest.dsh?.profile?.bundles ?? []
+  const profile = manifest.dsh?.profile
+  const template = profile?.template
+  if (template !== undefined && PROFILE_TEMPLATES[template] === undefined) {
+    throw new Error(`${binName}: profile ${JSON.stringify(name)} names unknown shipped template ${JSON.stringify(template)}`)
+  }
+  const bundles = [...template === undefined ? [] : PROFILE_TEMPLATES[template] ?? [], ...profile?.bundles ?? []]
+  if (new Set(bundles).size !== bundles.length) {
+    throw new Error(`${binName}: profile ${JSON.stringify(name)} composes a bundle more than once`)
+  }
   const layers = bundles.map((packageName): ProfileLayer => {
     const packageDir = resolveBundleDir(binName, packageName, installAnchor, dir)
     const bundleManifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as ProfileManifest

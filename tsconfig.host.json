@@ -308,6 +308,7 @@
     { "path": "./packages/host/directory-picker-native" },
     { "path": "./packages/host/frontend-static" },
     { "path": "./packages/host/plugin-inventory" },
+    { "path": "./packages/distribution/update" },
     { "path": "./packages/host/workspace-files" },
     { "path": "./packages/host/webserver" },
     { "path": "./packages/sdk/client" },

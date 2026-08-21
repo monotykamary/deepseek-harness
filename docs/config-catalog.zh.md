@@ -593,6 +593,28 @@ export interface Config {
 
 来源：[`packages/credentials/credentials-local/src/index.ts:64`](../packages/credentials/credentials-local/src/index.ts)
 
+<a id="monotykamarydsh-distribution-update"></a>
+
+## `@monotykamary/dsh-distribution-update`
+
+```ts config-catalog
+/** Registry and scheduling policy for update checks. */
+export interface Config {
+  /** Absolute manifest path of the running `@monotykamary/dsh` app. */
+  appManifest: string
+  /** npm-compatible registry base URL used for the DSH latest-tag request. */
+  registryUrl?: string
+  /** Whether the Host checks the registry as soon as this service mounts. */
+  checkOnStartup?: boolean
+  /** Milliseconds between background registry checks. */
+  checkIntervalMs?: number
+  /** Milliseconds before one registry request is aborted. */
+  requestTimeoutMs?: number
+}
+```
+
+来源：[`packages/distribution/update/src/index.ts:25`](../packages/distribution/update/src/index.ts)
+
 <a id="monotykamarydsh-e2b"></a>
 
 ## `@monotykamary/dsh-e2b`
@@ -3411,6 +3433,7 @@ export interface Config {
 - `@monotykamary/dsh-client-ui-settings-models`（[`packages/client/ui-settings-models/src/index.ts`](../packages/client/ui-settings-models/src/index.ts)）
 - `@monotykamary/dsh-client-ui-settings-plugin-inventory`（[`packages/client/ui-settings-plugin-inventory/src/index.ts`](../packages/client/ui-settings-plugin-inventory/src/index.ts)）
 - `@monotykamary/dsh-client-ui-settings-plugins`（[`packages/client/ui-settings-plugins/src/index.ts`](../packages/client/ui-settings-plugins/src/index.ts)）
+- `@monotykamary/dsh-client-ui-settings-updates`（[`packages/client/ui-settings-updates/src/index.ts`](../packages/client/ui-settings-updates/src/index.ts)）
 - `@monotykamary/dsh-client-ui-sidebar`（[`packages/client/ui-sidebar/src/index.ts`](../packages/client/ui-sidebar/src/index.ts)）
 - `@monotykamary/dsh-client-ui-skill`（[`packages/client/ui-skill/src/index.ts`](../packages/client/ui-skill/src/index.ts)）
 - `@monotykamary/dsh-client-ui-subagent`（[`packages/client/ui-subagent/src/index.ts`](../packages/client/ui-subagent/src/index.ts)）

@@ -102,8 +102,10 @@ export function HeroGlow({ className }: { className?: string | undefined }) {
 export interface HeroShellProps {
   /** The owner's locale seat, passed down as a plain prop. */
   t: HeroTranslate
-  /** Authorized renderer for the hero brand-mark slot. */
+  /** Authorized renderer for the Hero extension slots. */
   renderSlot: ConversationSlotProps['renderSlot']
+  /** True on the no-session landing page; false for a connected blank draft. */
+  landing: boolean
   /** Overlay content after the stack (modals). */
   children?: ReactNode
 }
@@ -114,7 +116,7 @@ export interface HeroShellProps {
  * @param props - see {@link HeroShellProps}.
  * @returns the centered hero element tree.
  */
-export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
+export function HeroShell({ t, renderSlot, landing, children }: HeroShellProps) {
   return (
     <div className={css.root}>
       <div className={css.stack}>
@@ -129,6 +131,7 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
           <span className={css.previewBadge}>{t('hero.preview')}</span>
         </div>
         <div className={css.body}>
+          {renderSlot('conversation.hero.welcome', { landing })}
           {/* The resident composer (ConversationRoot's root-owned scrollport;
               the workspace row rides the stack above the card) is CSS-centered
               in that scroll body during hero — see

@@ -12,6 +12,9 @@
       "path": "../../runtime-diagnostics/invariants"
     },
     {
+      "path": "../locale"
+    },
+    {
       "path": "../runtime"
     },
     {

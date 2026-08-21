@@ -337,6 +337,18 @@ class DshFamily extends ReleaseFamily {
       const detail = members.map(member => `${member.directory}: ${member.version}`).join('\n')
       throw new Error(`dsh release members must share one version:\n${detail}`)
     }
+    const app = members.find(member => member.name === '@monotykamary/dsh')
+    if (app === undefined) throw new Error('dsh release family contains no @monotykamary/dsh app')
+    const distribution = (app.manifest.dsh as { distribution?: { companions?: Record<string, unknown> } } | undefined)
+      ?.distribution?.companions
+    const dependencies = app.manifest.dependencies as Record<string, unknown> | undefined
+    for (const companion of ['dsh-fabric', 'dsh-fovea']) {
+      const tested = distribution?.[companion]
+      const installed = dependencies?.[companion]
+      if (typeof tested !== 'string' || tested !== installed || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tested)) {
+        throw new Error(`@monotykamary/dsh must pin tested companion ${companion} to one exact matching version`)
+      }
+    }
   }
 
   /**

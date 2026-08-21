@@ -463,6 +463,9 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
       // CLI-driven !!js expression the shipped row reads.
       : [{ id: 'web-identity', config: { identity: { provider: 'header', ...options.identityHeader } } }],
     { id: 'settings', config: { dshHome: harnessHome } },
+    // The CLI normally replaces the shipped placeholder with its own manifest.
+    // This direct Loader harness performs the same installation-owned patch.
+    { id: 'distribution-update', config: { appManifest: INSTALL_ANCHOR } },
     { id: 'credentials', config: { dshHome: harnessHome } },
     // The shipped directory-picker row is the -auto chooser, which resolves
     // the interaction from the RUNNING host (display, SSH launch, bind). The

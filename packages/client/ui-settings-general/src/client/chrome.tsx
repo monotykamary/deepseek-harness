@@ -5,11 +5,12 @@
  * reads each entry's `label` option for aria text.
  */
 import { IconSettingsOutline14, IconSettingsOutline16 } from '@monotykamary/dsh-client-ui-primitives'
-import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
+import type { PropsLocale, PropsRenderSlots, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import css from './chrome.module.css'
 
 /** Trigger content props: the sidebar column state + the standard locale seat. */
 export type TriggerContentProps = PropsRuntime<'settings.trigger'> & PropsLocale<'settings'>
+  & PropsRenderSlots<'settings.trigger.badge'>
 
 /** Header content props: the standard locale seat only. */
 export type HeaderContentProps = PropsRuntime<'settings.header'> & PropsLocale<'settings'>
@@ -19,11 +20,12 @@ export type HeaderContentProps = PropsRuntime<'settings.header'> & PropsLocale<'
  * @param props - composed slot props.
  * @returns the trigger content fragment.
  */
-export function TriggerContent({ wide, t }: TriggerContentProps) {
+export function TriggerContent({ wide, t, renderSlot }: TriggerContentProps) {
   return (
     <>
       {wide ? <IconSettingsOutline16 size={16} /> : <IconSettingsOutline14 size={18} />}
       {wide && <span className={css.triggerLabel}>{t('trigger')}</span>}
+      {renderSlot('settings.trigger.badge', {})}
     </>
   )
 }

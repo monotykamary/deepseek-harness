@@ -16,7 +16,12 @@ import { compareVersions, nextVendorVersion, planShared, reachesPayload } from '
  * @returns The member.
  */
 function member(directory: string, name: string, manifest: Record<string, unknown> = {}): ReleaseMember {
-  return { directory, name, version: '0.0.1', manifest }
+  const resolved = name === '@monotykamary/dsh' ? {
+    dependencies: { 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' },
+    dsh: { distribution: { companions: { 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' } } },
+    ...manifest,
+  } : manifest
+  return { directory, name, version: '0.0.1', manifest: resolved }
 }
 
 const roots: string[] = []
@@ -86,6 +91,11 @@ describe('release families', () => {
 
     expect(() => { dsh.verifyVersions(members) }).toThrow(/must share one version/)
     expect(() => { dsh.verifyVersions([members[0]!]) }).not.toThrow()
+    const drifted = member('apps/cli', '@monotykamary/dsh', {
+      dependencies: { 'dsh-fabric': '^1.0.0', 'dsh-fovea': '2.0.0' },
+      dsh: { distribution: { companions: { 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' } } },
+    })
+    expect(() => { dsh.verifyVersions([drifted]) }).toThrow(/pin tested companion dsh-fabric/)
   })
 
   it('accepts independent vendored versions and rejects an unpublishable one', () => {

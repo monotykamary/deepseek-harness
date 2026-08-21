@@ -12,6 +12,9 @@ The `dsh` command is the product launcher for profiles: ordered stacks of plugin
 | `dsh --profile headless "job"` | Run one fresh persisted session, print the final answer, and exit. |
 | `dsh web` | Alias of `--profile web`. |
 | `dsh plugin --profile <name> <pnpm args>` | Manage a profile's plugins by forwarding to pnpm in the profile directory. |
+| `dsh version [--json]` | Report the installed DSH, Fabric, and Fovea closure. |
+| `dsh update [--check] [--json]` | Check versions or hand an npm-global update to a detached worker. |
+| `dsh doctor [--json]` | Report the installation channel, Node version, DSH home, and package versions. |
 
 The invoking directory is the default workspace root. The `web` and `headless` profiles auto-initialize on first use from shipped templates; any other profile must be created through `dsh plugin`.
 
@@ -29,7 +32,7 @@ dsh --help                          # the launcher's own help
 
 ## Profiles
 
-A profile directory holds a `package.json` (out-of-tree plugin dependencies plus the profile manifest `dsh.profile` with its ordered `bundles` list) and a `cordis.patch.yml` (the user's own patch layer).
+A profile directory holds a `package.json` (out-of-tree plugin dependencies plus `dsh.profile.template` for an installation-owned shipped stack and `dsh.profile.bundles` for user-managed layers) and a `cordis.patch.yml` (the user's own patch layer).
 
 The tree composes over an empty root:
 - each bundle's patch in `dsh.profile.bundles` order

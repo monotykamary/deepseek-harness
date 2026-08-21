@@ -23,7 +23,7 @@ The browser side of the dsh web GUI: shell boot, browser-host communication, sha
 | [`ui-files/`](ui-files/README.md) | Browses and edits Session-authorized workspace files in Workbench. |
 | [`ui-terminal/`](ui-terminal/README.md) | Hosts patched xterm.js sessions in the right Workbench and bottom panel. |
 | [`ui-sidebar/`](ui-sidebar/README.md) | Presents workspace and session navigation. |
-| [`ui-brand-official/`](ui-brand-official/README.md) | Fills the generic browser-brand slots with the official name and marks. |
+| [`ui-brand-official/`](ui-brand-official/README.md) | Fills the official name, marks, and no-session welcome surface. |
 | [`ui-workspace/`](ui-workspace/README.md) | Provides workspace selection and creation surfaces. |
 | [`ui-conversation/`](ui-conversation/README.md) | Presents the active conversation and its input surface. |
 | [`ui-tool/`](ui-tool/README.md) | Composes Tool call trees and keyed per-Tool views. |

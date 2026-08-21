@@ -99,6 +99,13 @@
     - id: plugin-inventory
       name: '@monotykamary/dsh-host-plugin-inventory'
 
+    # Cached registry checks and channel-aware detached updates. The launcher
+    # replaces appManifest with its installation anchor before composition.
+    - id: distribution-update
+      name: '@monotykamary/dsh-distribution-update'
+      config:
+        appManifest: package.json
+
     # Session-authorized file tree, bounded reads, and guarded edits over each Agent's selected fs provider.
     - id: workspace-files
       name: '@monotykamary/dsh-host-workspace-files'
@@ -235,6 +242,9 @@
 
     - id: ui-settings-plugin-inventory
       name: '@monotykamary/dsh-client-ui-settings-plugin-inventory'
+
+    - id: ui-settings-updates
+      name: '@monotykamary/dsh-client-ui-settings-updates'
 
     - id: ui-conversation
       name: '@monotykamary/dsh-client-ui-conversation'

@@ -144,6 +144,12 @@ function composeProfile(
       : {}
     bundlePatches.push({ id: 'tools', config: { ...toolsConfig, mode: toolMode } })
   }
+  // Distribution inventory must read the manifest belonging to this running
+  // launcher, not the profile directory that anchors Loader resolution.
+  if (bundlePatches.some(patch => patch.id === 'distribution-update' || (Array.isArray(patch.insert)
+    && patch.insert.some(row => row.id === 'distribution-update')))) {
+    bundlePatches.push({ id: 'distribution-update', config: { appManifest: INSTALL_ANCHOR } })
+  }
   const rows = new Map<string, EntryOptions>()
   for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)

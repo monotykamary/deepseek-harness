@@ -16,11 +16,11 @@ There is no privileged core to patch: you extend dsh by mounting a plugin beside
 
 A running `dsh` is a plugin tree composed at boot from ordered layers.
 
-A **profile** is a named composition stored in the Harness home. It lists the bundles it stacks, holds any out-of-tree plugins it installs, and keeps the user's own `cordis.patch.yml`. `web` and `headless` ship as templates, each layering the custom-flavor bundles `dsh-fabric` and `dsh-fovea` over the upstream composition.
+A **profile** is a named composition stored in the Harness home. A shipped profile records its installation-owned template identity plus user-added bundles, while a custom profile lists only its bundles; both keep the user's own `cordis.patch.yml`. `web` and `headless` ship as templates, each layering the exact Fabric and Fovea versions tested by the running `dsh` installation over the upstream composition.
 
 A **bundle** is a distribution format for Cordis config rows and the code they mount, so whatever it inserts stays patchable by the layers above it.
 
-Each declares itself in its own `package.json` under a `dsh` field: `dsh.profile` lists a profile's bundles, and `dsh.bundle` points at a bundle's patch file.
+Each declares itself in its own `package.json` under a `dsh` field: `dsh.profile.template` selects an installation-owned template, `dsh.profile.bundles` lists user-managed layers, and `dsh.bundle` points at a bundle's patch file.
 
 [`dsh-base`](../packages/bundle/base/README.md) is the first layer of every profile: model adapters, tools, persistence, sandbox and approval policy, settings, credentials, telemetry. [`dsh-web-app`](../packages/bundle/web-app/README.md) adds the browser application; [`dsh-headless`](../packages/bundle/headless/README.md) adds a one-shot runner with no server at all. The custom flavor adds two more layers: `dsh-fabric` (deterministic compaction, QuickJS code runtime, durable mesh, and live topology) and `dsh-fovea` (foveated repository intelligence), both shipped as installation dependencies of the `dsh` app.
 

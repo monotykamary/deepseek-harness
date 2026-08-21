@@ -31,13 +31,13 @@ const kit = { useSessions: unusedHook, useWorkspaces: unusedHook }
 
 describe('chrome content', () => {
   it('TriggerContent renders the icon with the label in the wide column', () => {
-    const { container } = render(<TriggerContent {...kit} wide t={t} />)
+    const { container } = render(<TriggerContent {...kit} wide t={t} renderSlot={() => null} />)
     expect(container.querySelector('svg')).toBeTruthy()
     expect(screen.getByText('Settings')).toBeTruthy()
   })
 
   it('TriggerContent drops the label in the rail state', () => {
-    const { container } = render(<TriggerContent {...kit} wide={false} t={t} />)
+    const { container } = render(<TriggerContent {...kit} wide={false} t={t} renderSlot={() => null} />)
     expect(container.querySelector('svg')).toBeTruthy()
     expect(screen.queryByText('Settings')).toBeNull()
   })

@@ -76,7 +76,8 @@
     "@monotykamary/dsh-settings": "workspace:^",
     "@monotykamary/dsh-typert-registry": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-host-workspace-files": "workspace:^"
+    "@monotykamary/dsh-host-workspace-files": "workspace:^",
+    "@monotykamary/dsh-distribution-update": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-agent": "workspace:^",
@@ -97,6 +98,7 @@
     "@monotykamary/dsh-settings": "workspace:^",
     "@monotykamary/dsh-typert-registry": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-host-workspace-files": "workspace:^"
+    "@monotykamary/dsh-host-workspace-files": "workspace:^",
+    "@monotykamary/dsh-distribution-update": "workspace:^"
   }
 }

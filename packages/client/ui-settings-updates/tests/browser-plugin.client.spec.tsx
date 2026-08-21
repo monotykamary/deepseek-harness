@@ -1,0 +1,70 @@
+// @vitest-environment jsdom
+import { Context, Service } from '@monotykamary/cordis'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
+import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
+import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
+import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
+import { apply, inject } from '../src/client/index.ts'
+import { apply as applyNode } from '../src/index.ts'
+import { UpdateBadge, UpdateSettings, type UpdateInjected } from '../src/client/UpdateSettings.tsx'
+
+afterEach(cleanup)
+
+const snapshot = {
+  channel: 'source' as const, checkedAt: 1, checking: false, error: null, updateAvailable: false,
+  packages: [], updateCommand: 'git pull --ff-only && pnpm install && pnpm run build',
+}
+const launch = { started: false, message: 'manual', statusPath: null }
+
+async function bench() {
+  const ctx = new Context()
+  await ctx.plugin(SlotRegistry).await()
+  const locale = new LocaleRuntime(ctx)
+  ctx.provide('locale', locale)
+  class RemoteService extends Service { constructor(serviceCtx: Context) { super(serviceCtx, 'remote') } }
+  new RemoteService(ctx)
+  const remote = {
+    snapshot: vi.fn(async () => ({ ok: true as const, value: snapshot })),
+    check: vi.fn(async () => ({ ok: true as const, value: snapshot })),
+    start: vi.fn(async () => ({ ok: true as const, value: launch })),
+  }
+  ctx.provide('remote.distributionUpdate', remote)
+  return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, remote }
+}
+
+function declare(slots: SlotRegistry): void {
+  slots.register({ name: 'root', children: {
+    'settings.section': { kind: 'list', scope: 'root' },
+    'settings.trigger.badge': { kind: 'single', scope: 'root' },
+  } } as never, () => null)
+}
+
+describe('ui-settings-updates browser plugin', () => {
+  it('provides a no-op node-half Loader seat', () => {
+    applyNode()
+  })
+
+  it('registers a localized section and trigger badge with lazy Remote operations', async () => {
+    expect(inject).toEqual(['slots', 'locale', 'remote', 'remote.distributionUpdate'])
+    const b = await bench()
+    declare(b.slots)
+    await b.ctx.plugin({ inject: [...inject], apply }).await()
+    const section = b.slots.entries('settings.section')[0]!
+    expect(section.component).toBe(UpdateSettings)
+    expect(section.options).toMatchObject({ id: 'updates', order: 40 })
+    expect(resolveSlotLabel(section.options.label)).toBe('Updates')
+    const badge = b.slots.entries('settings.trigger.badge')[0]!
+    expect(badge.component).toBe(UpdateBadge)
+    const badgeInjected = (badge.inject as unknown as () => Pick<UpdateInjected, 'check'>)()
+    await expect(badgeInjected.check()).resolves.toEqual(snapshot)
+    expect(b.remote.check).toHaveBeenCalledOnce()
+    const injected = (section.inject as unknown as () => UpdateInjected)()
+    await expect(injected.snapshot()).resolves.toEqual(snapshot)
+    await expect(injected.check()).resolves.toEqual(snapshot)
+    await expect(injected.start()).resolves.toEqual(launch)
+    b.remote.check.mockResolvedValueOnce({ ok: false as const, error: { code: 'OFFLINE', message: 'no registry' } } as never)
+    await expect(injected.check()).rejects.toThrow('OFFLINE: no registry')
+    await b.ctx.fiber.dispose()
+  })
+})
