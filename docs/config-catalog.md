@@ -333,9 +333,9 @@ export interface Config {
   maxImagesPerMessage?: number
   /** Maximum aggregate encoded image bytes accepted in one submitted message. */
   maxMessageImageBytes?: number
-  /** Maximum intrinsic width multiplied by height accepted for one image. */
+  /** Maximum intrinsic width multiplied by height for one stored image; larger inputs are downscaled at admission. */
   maxImagePixels?: number
-  /** Maximum intrinsic width and maximum intrinsic height accepted for one image. */
+  /** Maximum intrinsic width and maximum intrinsic height for one stored image; larger inputs are downscaled at admission. */
   maxImageDimension?: number
 }
 ```

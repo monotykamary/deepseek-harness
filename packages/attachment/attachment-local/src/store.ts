@@ -14,7 +14,7 @@ import type {
   SaveImageAttachment,
   StoredImageAttachment,
 } from '@monotykamary/dsh-attachment'
-import { detectImage, probeImage } from './image.ts'
+import { detectImage, fitImageToLimits, probeImage } from './image.ts'
 
 const ID_PATTERN = /^sha256:([a-f0-9]{64})$/
 const durableHomes = new Set<string>()
@@ -46,16 +46,18 @@ function ensureReference(ref: ImageAttachmentRef): string {
 async function inspectMetadata(
   data: Uint8Array,
   declaredMediaType: ImageAttachmentRef['mediaType'],
-  limits: ImageAttachmentLimits,
 ): Promise<Omit<ImageAttachmentRef, 'attachmentId' | 'name'>> {
   if (data.byteLength === 0) throw new AttachmentError('Image is empty.', 'INVALID_IMAGE')
-  const detected = await detectImage(data, { maxPixels: limits.maxImagePixels, maxDimension: limits.maxImageDimension })
+  const detected = await detectImage(data)
   if (detected.mediaType !== declaredMediaType) throw new AttachmentError('Declared image type does not match its bytes.', 'IMAGE_TYPE_MISMATCH')
   return { ...detected, bytes: data.byteLength }
 }
 
 /**
- * Run the full admission policy for one image without touching storage.
+ * Run the full admission policy for one image without touching storage. An
+ * image whose dimensions exceed the configured limits is still admissible:
+ * the save path resamples it into bounds, so validation only proves the input
+ * decodes completely and declares its real format.
  * @param input - encoded bytes and declared metadata.
  * @param limits - resolved storage policy.
  * @returns completion after the encoded raster has been fully decoded.
@@ -64,7 +66,7 @@ export async function validateImageFile(input: SaveImageAttachment, limits: Imag
   if (input.data.byteLength > limits.maxImageBytes) {
     throw new AttachmentError('Image exceeds the configured byte limit.', 'IMAGE_TOO_LARGE')
   }
-  await inspectMetadata(input.data, input.mediaType, limits)
+  await inspectMetadata(input.data, input.mediaType)
 }
 
 /**
@@ -128,6 +130,10 @@ async function ensureDurableHome(path: string): Promise<string> {
 
 /**
  * Save and verify immutable image bytes below a versioned attachment root.
+ * An image whose decoded dimensions exceed the configured bounds is stored
+ * resampled into them, so the durable object (and every later model request
+ * that rides on it) never exceeds what provider routes accept; the reference
+ * describes the stored raster exactly.
  * @param root - absolute `DSH_HOME/attachments/v1` root.
  * @param input - encoded bytes and declared metadata.
  * @param limits - resolved storage policy.
@@ -135,8 +141,15 @@ async function ensureDurableHome(path: string): Promise<string> {
  */
 export async function saveImageFile(root: string, input: SaveImageAttachment, limits: ImageAttachmentLimits): Promise<ImageAttachmentRef> {
   if (input.data.byteLength > limits.maxImageBytes) throw new AttachmentError('Image exceeds the configured byte limit.', 'IMAGE_TOO_LARGE')
-  const metadata = await inspectMetadata(input.data, input.mediaType, limits)
-  const sha256 = digest(input.data)
+  const fitted = await fitImageToLimits(input.data, {
+    maxPixels: limits.maxImagePixels,
+    maxDimension: limits.maxImageDimension,
+  })
+  if (fitted.detected.mediaType !== input.mediaType) {
+    throw new AttachmentError('Declared image type does not match its bytes.', 'IMAGE_TYPE_MISMATCH')
+  }
+  const metadata = { ...fitted.detected, bytes: fitted.data.byteLength }
+  const sha256 = digest(fitted.data)
   const bucket = join(root, 'objects', sha256.slice(0, 2))
   const staging = join(root, 'tmp')
   // Establish DSH_HOME itself against the filesystem root once per process.
@@ -150,7 +163,7 @@ export async function saveImageFile(root: string, input: SaveImageAttachment, li
   let handle
   try {
     handle = await open(temporary, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600)
-    await handle.writeFile(input.data)
+    await handle.writeFile(fitted.data)
     await handle.sync()
     await handle.close()
     handle = undefined

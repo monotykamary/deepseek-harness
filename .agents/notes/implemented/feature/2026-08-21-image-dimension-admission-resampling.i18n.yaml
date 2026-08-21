@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-21-image-dimension-admission-resampling.md
+2026-08-21-image-dimension-admission-resampling.md: 03af4c401e24bd4ab5f533459dacc66b0e25062c
+2026-08-21-image-dimension-admission-resampling.zh.md: 2796dd0a8950452b3c251144372b1a52f8e96af7

@@ -32,7 +32,7 @@ import {
 
 /** 1x1 red PNG (valid signature, IHDR, IDAT). */
 const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64')
-/** 3x3 red PNG used to trip a tiny configured pixel limit. */
+/** 3x3 red PNG used to exercise configured pixel and dimension limits. */
 const PNG_3X3 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEElEQVR4nGP4z8AAQQxYWACPjgj4kWPEuQAAAABJRU5ErkJggg==', 'base64')
 
 const testToolSignal = new AbortController().signal
@@ -386,22 +386,24 @@ describe('image admission failures', () => {
     expect(text(result)).toContain('exceeds')
   })
 
-  it('surfaces the pixel limit from the attachment admission', async () => {
+  it('downscales an image past the pixel limit into a fitting read', async () => {
     await writeFile(join(dir, 'big.png'), PNG_3X3)
     const ctx = await setup({ storeConfig: { maxImagePixels: 4 } })
     const result = await readImage(ctx, { file_path: 'big.png' }, agentOn('vision-model'))
-    expect(result.isError).toBe(true)
-    expect(text(result)).toContain('exceeds the 4-pixel decoded-size limit')
-    expect(text(result)).toContain('downscale the image and read the smaller copy')
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('image/png image, 2x2 px')
+    const image = result.content[1] as { attachment: ImageAttachmentRef }
+    expect(image.attachment).toMatchObject({ mediaType: 'image/png', width: 2, height: 2 })
   })
 
-  it('surfaces the per-side limit from attachment admission', async () => {
+  it('downscales an image past the per-side limit into a fitting read', async () => {
     await writeFile(join(dir, 'wide.png'), PNG_3X3)
     const ctx = await setup({ storeConfig: { maxImageDimension: 2 } })
     const result = await readImage(ctx, { file_path: 'wide.png' }, agentOn('vision-model'))
-    expect(result.isError).toBe(true)
-    expect(text(result)).toContain('at least one image side exceeds the 2px limit')
-    expect(text(result)).toContain('downscale the image and read the smaller copy')
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('image/png image, 2x2 px')
+    const image = result.content[1] as { attachment: ImageAttachmentRef }
+    expect(image.attachment).toMatchObject({ mediaType: 'image/png', width: 2, height: 2 })
   })
 
   it('passes storage faults and non-attachment failures through unchanged', async () => {

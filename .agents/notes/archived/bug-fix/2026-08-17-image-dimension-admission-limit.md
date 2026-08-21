@@ -1,6 +1,7 @@
 # Agent Note: Per-side image dimension admission limit
 
 Status: implemented
+Archived: 2026-08-21
 
 English | [中文](2026-08-17-image-dimension-admission-limit.zh.md)
 

@@ -16,14 +16,14 @@ export const DEFAULT_MAX_IMAGE_BYTES = 3.5 * 1024 * 1024
 export const DEFAULT_MAX_IMAGES_PER_MESSAGE = 20
 /** Default maximum aggregate image bytes in one prompt. */
 export const DEFAULT_MAX_MESSAGE_IMAGE_BYTES = 100 * 1024 * 1024
-/** Default maximum intrinsic pixels for one image. */
+/** Default maximum intrinsic pixels for one stored image. */
 export const DEFAULT_MAX_IMAGE_PIXELS = 40_000_000
 /**
- * Default maximum intrinsic width and height for one image. Deployed model
- * routes reject any request whose history carries an image with a side above
- * 2000px once the request holds many images, and an admitted image rides
- * every later request of its session, so admission refuses at the same line
- * to keep the durable history streamable.
+ * Default maximum intrinsic width and height for one stored image. Deployed
+ * model routes reject any request whose history carries an image with a side
+ * above 2000px once the request holds many images, and an admitted image
+ * rides every later request of its session, so admission resamples an
+ * oversized image into this bound before anything reaches durable history.
  */
 export const DEFAULT_MAX_IMAGE_DIMENSION = 2000
 
@@ -37,9 +37,9 @@ export interface Config {
   maxImagesPerMessage?: number
   /** Maximum aggregate encoded image bytes accepted in one submitted message. */
   maxMessageImageBytes?: number
-  /** Maximum intrinsic width multiplied by height accepted for one image. */
+  /** Maximum intrinsic width multiplied by height for one stored image; larger inputs are downscaled at admission. */
   maxImagePixels?: number
-  /** Maximum intrinsic width and maximum intrinsic height accepted for one image. */
+  /** Maximum intrinsic width and maximum intrinsic height for one stored image; larger inputs are downscaled at admission. */
   maxImageDimension?: number
 }
 

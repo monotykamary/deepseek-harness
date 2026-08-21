@@ -1,6 +1,7 @@
 # Agent Note: 图片单边尺寸准入上限
 
 Status: implemented
+Archived: 2026-08-21
 
 [English](2026-08-17-image-dimension-admission-limit.md) | 中文
 

@@ -246,12 +246,12 @@ const SCENARIOS: Scenario[] = [
     toolSchemasSource: 'read-image',
     configPath: IMAGE_TEXT_ROUTE_CONFIG,
   },
-  // Authored keyless replay of the oversized-image refusal: admission rejects
-  // the 2001x1 fixture at the default 2000px per-side limit, the model sees a
-  // recoverable tool error, and the turn still completes — the image never
-  // enters durable history.
+  // Authored keyless replay of admission resampling: the real read_image tool
+  // runs the 2001x1 fixture past the default 2000px per-side limit, the real
+  // attachment store stores the resampled 2000x1 raster, and the transcript
+  // pins that downscaled image block riding durable history.
   {
-    name: 'read-image-dimension',
+    name: 'read-image-downscale',
     hasModelTurn: true,
     recorded: false,
     headerClass: 'image',

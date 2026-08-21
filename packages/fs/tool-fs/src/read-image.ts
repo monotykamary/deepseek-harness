@@ -190,21 +190,9 @@ export function applyReadImageTool(ctx: Context): void {
         ref = await attachments.saveImage({ data, mediaType, name: basename(target.displayPath) })
       } catch (error: unknown) {
         if (!(error instanceof AttachmentError)) throw error
-        // Dimension refusals stay recoverable tool errors: an oversized image
-        // must never enter durable history, where it would ride every later
-        // model request past provider-side dimension rejections.
-        if (error.code === 'IMAGE_DIMENSION_TOO_LARGE') {
-          throw new Error(
-            `cannot read "${target.displayPath}": at least one image side exceeds the ${attachments.imageLimits.maxImageDimension}px limit; downscale the image and read the smaller copy`,
-            { cause: error },
-          )
-        }
-        if (error.code === 'IMAGE_TOO_MANY_PIXELS') {
-          throw new Error(
-            `cannot read "${target.displayPath}": the image exceeds the ${attachments.imageLimits.maxImagePixels}-pixel decoded-size limit; downscale the image and read the smaller copy`,
-            { cause: error },
-          )
-        }
+        // The local store resamples an oversized image into the configured
+        // dimension/pixel bounds before committing, so an admission failure
+        // here is a declared/actual format mismatch the model can repair.
         if (error.code !== 'IMAGE_TYPE_MISMATCH') throw error
         const extension = extname(target.displayPath).toLowerCase()
         throw new Error(

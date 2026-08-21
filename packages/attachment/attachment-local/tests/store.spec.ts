@@ -7,7 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import sharp from 'sharp'
 import type { ImageAttachmentLimits } from '@monotykamary/dsh-attachment'
-import { readImageFile, saveImageFile } from '../src/store.ts'
+import { readImageFile, saveImageFile, validateImageFile } from '../src/store.ts'
 
 const fsControl = vi.hoisted(() => ({
   readSignals: [] as AbortSignal[],
@@ -156,7 +156,7 @@ describe('local attachment store', () => {
     await expect(readImageFile(storageRoot, ref, controller.signal)).rejects.toBe(cancellation)
   })
 
-  it('rejects malformed bytes, mismatched declarations, byte limits, and decoded-pixel limits', async () => {
+  it('rejects malformed bytes, mismatched declarations, and byte limits', async () => {
     const storageRoot = await root()
     await expect(saveImageFile(storageRoot, {
       data: new Uint8Array(0), mediaType: 'image/png',
@@ -171,19 +171,44 @@ describe('local attachment store', () => {
       data: PNG, mediaType: 'image/png',
     }, { ...LIMITS, maxImageBytes: 1 })).rejects.toMatchObject({ code: 'IMAGE_TOO_LARGE' })
 
-    const wide = new Uint8Array(await sharp({
-      create: { width: 5, height: 5, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } },
-    }).png().toBuffer())
-    await expect(saveImageFile(storageRoot, {
-      data: wide, mediaType: 'image/png',
-    }, LIMITS)).rejects.toMatchObject({ code: 'IMAGE_TOO_MANY_PIXELS' })
-    await expect(saveImageFile(storageRoot, {
-      data: wide, mediaType: 'image/png',
-    }, { ...LIMITS, maxImagePixels: 25, maxImageDimension: 4 })).rejects.toMatchObject({ code: 'IMAGE_DIMENSION_TOO_LARGE' })
     const unnamed = await saveImageFile(storageRoot, {
       data: PNG, mediaType: 'image/png', name: '\u0000',
     }, LIMITS)
     expect(unnamed).not.toHaveProperty('name')
+  })
+
+  it('resamples an oversized image into the configured bounds before committing', async () => {
+    const storageRoot = await root()
+    const wide = new Uint8Array(await sharp({
+      create: { width: 5, height: 5, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } },
+    }).png().toBuffer())
+    const pixelBound = await saveImageFile(storageRoot, {
+      data: wide, mediaType: 'image/png',
+    }, LIMITS)
+    expect(pixelBound).toMatchObject({ mediaType: 'image/png', width: 4, height: 4 })
+    const sideBound = await saveImageFile(storageRoot, {
+      data: wide, mediaType: 'image/png',
+    }, { ...LIMITS, maxImagePixels: 25, maxImageDimension: 4 })
+    expect(sideBound).toMatchObject({ mediaType: 'image/png', width: 4, height: 4 })
+
+    const stored = await readImageFile(storageRoot, pixelBound)
+    await expect(sharp(Buffer.from(stored.data)).metadata())
+      .resolves.toMatchObject({ format: 'png', width: 4, height: 4 })
+  })
+
+  it('validates an oversized image as admissible for the resampling save path', async () => {
+    const wide = new Uint8Array(await sharp({
+      create: { width: 5, height: 5, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } },
+    }).png().toBuffer())
+    await expect(validateImageFile({
+      data: wide, mediaType: 'image/png',
+    }, { ...LIMITS, maxImagePixels: 25, maxImageDimension: 4 })).resolves.toBeUndefined()
+    await expect(validateImageFile({
+      data: new Uint8Array(0), mediaType: 'image/png',
+    }, LIMITS)).rejects.toMatchObject({ code: 'INVALID_IMAGE' })
+    await expect(validateImageFile({
+      data: PNG, mediaType: 'image/jpeg',
+    }, LIMITS)).rejects.toMatchObject({ code: 'IMAGE_TYPE_MISMATCH' })
   })
 
   it('fails closed when an object is missing, corrupted, or addressed by an invalid reference', async () => {
