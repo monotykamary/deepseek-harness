@@ -50,8 +50,11 @@
   width: 100%;
   max-width: var(--dsh-composer-card-max-width);
   padding-top: 10px;
-  /* T3's composer glass: an 80% neutral surface over the live canvas, with
-     palette-owned blur, saturation, outline, highlight, and restrained shadow. */
+  /* T3's composer glass keeps its translucent surface, outline, highlight,
+     and shadow without backdrop filtering. A filtered sticky subtree can stop
+     repainting on Linux Wayland GPU stacks, which also hides the draft backdrop
+     beneath the transparent textarea. See the compositor decision linked from
+     the package README. */
   border: 1px solid var(--dsw-specific-conversation-composer-outline);
   border-radius: 22px;
   background: color-mix(
@@ -59,10 +62,6 @@
     var(--dsw-specific-conversation-composer-surface) var(--dsw-specific-conversation-glass-opacity),
     transparent
   );
-  -webkit-backdrop-filter: blur(var(--dsw-specific-conversation-glass-blur))
-    saturate(var(--dsw-specific-conversation-glass-saturation));
-  backdrop-filter: blur(var(--dsw-specific-conversation-glass-blur))
-    saturate(var(--dsw-specific-conversation-glass-saturation));
   box-shadow: var(--dsw-specific-conversation-composer-shadow);
   font-size: 16px;
   line-height: 24px;

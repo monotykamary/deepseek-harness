@@ -55,8 +55,6 @@ const paletteRoles = [
   '--dsw-specific-conversation-composer-outline',
   '--dsw-specific-conversation-composer-highlight',
   '--dsw-specific-conversation-composer-shadow',
-  '--dsw-specific-conversation-glass-blur',
-  '--dsw-specific-conversation-glass-saturation',
 ]
 
 const sharedRoles = [
@@ -99,8 +97,8 @@ describe('T3-adapted conversation styles', () => {
     expect(card?.get('border-radius')).toBe('22px')
     expect(card?.get('background')).toContain('var(--dsw-specific-conversation-composer-surface)')
     expect(card?.get('background')).toContain('var(--dsw-specific-conversation-glass-opacity)')
-    expect(card?.get('-webkit-backdrop-filter')).toContain('var(--dsw-specific-conversation-glass-blur)')
-    expect(card?.get('backdrop-filter')).toContain('var(--dsw-specific-conversation-glass-saturation)')
+    expect(card?.has('-webkit-backdrop-filter')).toBe(false)
+    expect(card?.has('backdrop-filter')).toBe(false)
     expect(card?.get('box-shadow')).toBe('var(--dsw-specific-conversation-composer-shadow)')
   })
 

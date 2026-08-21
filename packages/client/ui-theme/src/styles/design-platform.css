@@ -250,9 +250,7 @@ body {
   --dsw-specific-conversation-composer-outline: rgba(0, 0, 0, 0.08);
   --dsw-specific-conversation-composer-highlight: transparent;
   --dsw-specific-conversation-composer-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.4);
-  --dsw-specific-conversation-glass-blur: 12px;
   --dsw-specific-conversation-glass-opacity: 80%;
-  --dsw-specific-conversation-glass-saturation: 1.14;
   /* Workbench roles adapt T3 Code's right-panel tab hierarchy. */
   --dsw-specific-workbench-canvas: rgb(252, 252, 252);
   --dsw-specific-workbench-tab-bar: rgb(255, 255, 255);
@@ -375,8 +373,6 @@ body[data-ds-dark-theme] {
   --dsw-specific-conversation-composer-outline: rgba(255, 255, 255, 0.05);
   --dsw-specific-conversation-composer-highlight: rgba(255, 255, 255, 0.03);
   --dsw-specific-conversation-composer-shadow: inset 0 1px var(--dsw-specific-conversation-composer-highlight);
-  --dsw-specific-conversation-glass-blur: 16px;
-  --dsw-specific-conversation-glass-saturation: 1.08;
   --dsw-specific-workbench-canvas: rgb(10, 10, 10);
   --dsw-specific-workbench-tab-bar: rgb(10, 10, 10);
   --dsw-specific-workbench-divider: rgb(25, 25, 25);

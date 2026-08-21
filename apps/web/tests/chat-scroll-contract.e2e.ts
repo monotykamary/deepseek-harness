@@ -729,6 +729,11 @@ describe('web e2e: long Chat scroll contract', () => {
       )
       await expectBottom(world.page)
       const composer = world.page.locator('textarea:enabled').first()
+      expect(await composer.evaluate((input) => {
+        const card = input.closest('[data-composer-card]')
+        if (!(card instanceof HTMLElement)) throw new Error('composer input has no card')
+        return getComputedStyle(card).backdropFilter
+      })).toBe('none')
       const longDraft = Array.from(
         { length: 18 },
         (_, index) => `composer resize line ${String(index + 1).padStart(2, '0')}`,

@@ -4,7 +4,7 @@
 
 会话领域：骨架（标题栏／标签页／编辑器／空状态）、聊天视图（分组步骤摘要流、流式尾部隔离与轮次状态）、编辑器 dock（与输入区一同 sticky 的会话统计行）、输入区 dock（队列行加 todo 计划条）、Workbench Inspect 贡献，以及按 scope 寻址的 ConversationController。工具展示属于 [`ui-tool`](../ui-tool/README.md)。
 
-渲染后的 chrome 改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`：会话作用域的 `#fcfcfc`／`#0a0a0a` 画布、位于 DSH 视图标签上方的 52px 标题节奏、12px transcript 间距、15/24 消息排版、最大宽度 80% 的中性用户气泡、细指针设备上的 hover／focus 操作，以及 22px 半透明编辑器。常驻 Hero、sticky 滚动持有者、共享宽度轴、编辑器 dock 与 keyed Chat Node slot 仍是 DSH 行为。时钟与上下文元数据会先收缩并省略，避免在紧凑栏中形成 Chat 最小宽度；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整的 T3 MIT 文本。
+渲染后的 chrome 改编自 T3 Code 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`：会话作用域的 `#fcfcfc`／`#0a0a0a` 画布、位于 DSH 视图标签上方的 52px 标题节奏、12px transcript 间距、15/24 消息排版、最大宽度 80% 的中性用户气泡、细指针设备上的 hover／focus 操作，以及 22px 半透明编辑器。编辑器特意不使用 backdrop filter，使 sticky 滚动及其透明文字草稿图层在各类桌面 compositor 上始终走普通重绘路径（[决策](../../../.agents/notes/implemented/bug-fix/2026-08-21-sticky-composer-avoids-backdrop-filtering.md)）。常驻 Hero、sticky 滚动持有者、共享宽度轴、编辑器 dock 与 keyed Chat Node slot 仍是 DSH 行为。时钟与上下文元数据会先收缩并省略，避免在紧凑栏中形成 Chat 最小宽度；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整的 T3 MIT 文本。
 
 压缩（compaction）在检查点自身的消息流位置渲染为一行折叠标记，不替换其上方的 transcript（文本记录）。自动压缩使用「上下文已压缩」标题。每个已加载对应 `compaction/summary` 事件的完成标记都会显示被替换条目数量和估算 token 数量，并可点击展开摘要。手动 `/compact` 开始时显示为运行中的 `compact` 行；成功结算后，其显式摘要事件引用会在保持同一 React key 的前提下把该命令折叠进检查点行。完成的检查点静止时保留上下文压缩（context compaction）图标，仅在悬停或键盘聚焦时将其替换为收起／展开指示图标。输入被拒绝、没有可压缩历史、取消和失败时仍使用通用命令行及处理器撰写的文本。配对绝不依赖相邻关系，因为压缩运行期间可能注入持久上下文。面向模型的带框检查点载荷绝不渲染；被引用的 `compaction/summary` 事件位于已加载窗口之外时，检查点仍然可见但不可展开。
 
