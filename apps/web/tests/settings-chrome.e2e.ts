@@ -131,6 +131,65 @@ describe('web e2e: settings modal and General preferences', () => {
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 
+  it('lays the settings sheet out for a phone viewport', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-mobile'))
+    // Below the compact drawer breakpoint (ui-layout 768px) the sidebar
+    // lives inside the portaled drawer, so the settings trigger is reached
+    // through it. The modal must then be a full-bleed sheet with a bottom
+    // chip strip instead of the centered 800px rail panel.
+    const originalViewport = page.viewportSize() ?? { width: 1680, height: 1000 }
+    try {
+      await page.setViewportSize({ width: 375, height: 812 })
+      await page.getByRole('button', { name: 'Open sidebar' }).click()
+      const sidebar = page.getByRole('dialog', { name: 'Sidebar' })
+      await sidebar.waitFor({ timeout: 10_000 })
+      await sidebar.getByRole('button', { name: '设置', exact: true }).click()
+      const dialog = page.getByRole('dialog', { name: '设置' })
+      await dialog.waitFor({ timeout: 10_000 })
+
+      const metrics = await dialog.evaluate((element) => {
+        const panel = element
+        const nav = element.querySelector('nav')
+        const options = element.querySelector('[class*="options"]')
+        if (nav === null || options === null) throw new Error('settings sheet nav or options region missing')
+        const panelRect = panel.getBoundingClientRect()
+        const navRect = nav.getBoundingClientRect()
+        return {
+          panelWidth: panelRect.width,
+          panelHeight: panelRect.height,
+          panelLeft: panelRect.left,
+          panelTop: panelRect.top,
+          // The compact nav rides the sheet foot: its box touches the panel's
+          // bottom edge, and the options column ends at (or above) it.
+          navTop: navRect.top,
+          navBottom: navRect.bottom,
+          panelBottom: panelRect.bottom,
+          optionsBottom: options.getBoundingClientRect().bottom,
+          // The sheet must not force horizontal page scroll.
+          documentWidth: document.documentElement.scrollWidth,
+          viewportWidth: window.innerWidth,
+        }
+      })
+      // Full-bleed sheet: no desktop 48px inset, fills the viewport exactly.
+      expect(metrics.panelLeft).toBe(0)
+      expect(metrics.panelTop).toBe(0)
+      expect(metrics.panelWidth).toBe(metrics.viewportWidth)
+      expect(metrics.panelHeight).toBe(812)
+      // The chip strip is the sheet's last region: nav bottom touches the
+      // panel bottom, and the options column never dips below the strip.
+      expect(metrics.navBottom).toBeCloseTo(metrics.panelBottom, 0)
+      expect(metrics.optionsBottom).toBeLessThanOrEqual(metrics.navTop)
+      expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.viewportWidth)
+      // The rail vocabulary survives in the strip: sections still switch.
+      await dialog.getByRole('button', { name: '模型' }).click()
+      await expect.poll(() => dialog.getByRole('button', { name: '模型' }).getAttribute('aria-current'), { timeout: 5_000 }).toBe('true')
+      await page.keyboard.press('Escape')
+      expect(tripwire.pageErrors).toEqual([])
+    } finally {
+      await page.setViewportSize(originalViewport)
+    }
+  }, 60_000)
+
   it('stores Permission as the default for future sessions without changing an existing session', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-permission'))
     const existing = scaffold.ctx.sessions.create(SessionId('settings-permission-before'))

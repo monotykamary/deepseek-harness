@@ -224,3 +224,101 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Compact viewports (phones): the modal becomes a full-bleed sheet aligned
+   with the drawer breakpoint (ui-layout SIDEBAR_DRAWER_VIEWPORT = 768). The
+   188px rail + content columns cannot share a phone-width box — the rail
+   alone leaves the section a ~70px slit — so the rail becomes a bottom chip
+   strip and the section takes the sheet. The desktop DOM is untouched: the
+   panel's column direction is reversed so the header stays on top while the
+   nav owns the sheet foot. The dialog keeps its aria-labelledby name: the
+   title node stays mounted, visually hidden like the close seat. */
+@media (max-width: 767px) {
+  .overlay {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  /* Sheet: full-height panel, corners off, safe-area pad on top. Height fills
+     the viewport so browser-chrome shrink never clips the sheet. */
+  .panel {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    flex-direction: column-reverse;
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
+  }
+
+  /* Bottom chip strip: horizontal scroll; the title is out of flow (clipped
+     like the close seat) so the accessible dialog name still resolves. */
+  .nav {
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    border-top: 1px solid var(--dsw-alias-border-l2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navTitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .navList {
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Chip: 36px pill; the desktop rail's active/hover fills carry across so
+     one section vocabulary reads on both breakpoints. */
+  .navCell {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 18px;
+  }
+
+  .navLabel {
+    flex: none;
+    width: auto;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Header row: compact 48px, close control vertically centered under the
+     safe-area pad. */
+  .header {
+    flex: none;
+    align-items: center;
+    height: 48px;
+    padding: 10px 10px 4px;
+  }
+
+  .options {
+    padding: 0 16px 24px;
+  }
+}
