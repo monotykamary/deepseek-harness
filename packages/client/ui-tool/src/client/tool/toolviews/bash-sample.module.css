@@ -91,68 +91,16 @@
   min-width: 0;
 }
 
-/* Running signal lives in the row text only — same text-clipped
-   high-contrast neutral deepsuite ShimmerText pattern as ToolRow; the icon
-   and background stay untouched. */
-.root[data-state='running'] .title {
-  background-image: linear-gradient(
-    90deg,
-    var(--dsw-alias-label-secondary) 0%,
-    var(--dsw-alias-label-secondary) 35%,
-    var(--dsw-alias-label-primary) 50%,
-    var(--dsw-alias-label-secondary) 65%,
-    var(--dsw-alias-label-secondary) 100%
-  );
-  background-position: 100% 0;
-  background-size: 250% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: dsh-bash-row-text-shimmer 1.4s linear infinite;
-}
-
+/* Running sweep anchors on the TextShimmer band: each text box gets a
+   relative clip so the band never escapes into row chrome; the resting color,
+   icon, and separator stay untouched. Reduced-motion drops the band at the
+   atom level, so these overflow rules are inert otherwise. */
+.root[data-state='running'] .title,
 .root[data-state='running'] .summary {
-  background-image: linear-gradient(
-    90deg,
-    var(--dsw-alias-label-tertiary) 0%,
-    var(--dsw-alias-label-tertiary) 35%,
-    var(--dsw-alias-label-primary) 50%,
-    var(--dsw-alias-label-tertiary) 65%,
-    var(--dsw-alias-label-tertiary) 100%
-  );
-  background-position: 100% 0;
-  background-size: 250% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: dsh-bash-row-text-shimmer 1.4s linear infinite;
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes dsh-bash-row-text-shimmer {
-  to {
-    background-position: 0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .root[data-state='running'] .title {
-    background: none;
-    color: var(--dsw-alias-label-secondary);
-    -webkit-text-fill-color: initial;
-    animation: none;
-  }
-
-  .root[data-state='running'] .summary {
-    background: none;
-    color: var(--dsw-alias-label-tertiary);
-    -webkit-text-fill-color: initial;
-    animation: none;
-  }
-}
-
-.leading {
   position: relative; /* .chevronHover overlay anchor */
   flex: none;
   width: 16px;

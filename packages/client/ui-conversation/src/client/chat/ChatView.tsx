@@ -15,7 +15,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ConversationTimelineSnapshot } from '@monotykamary/dsh-client-runtime/client'
-import { Button, IconChevronDownOutline14, Modal } from '@monotykamary/dsh-client-ui-primitives'
+import { Button, IconChevronDownOutline14, Modal, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import type { ChatViewSlotProps, RenderMessageImages } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
@@ -147,6 +147,7 @@ function TurnStatus({ startTime, t }: {
           {formatRunDuration(elapsedMs, t)}
         </span>
       )}
+      <TextShimmer color="color-mix(in srgb, var(--dsw-static-deepseek-200) 45%, transparent)" />
     </div>
   )
 }

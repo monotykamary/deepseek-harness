@@ -6,7 +6,7 @@ import css from './DisclosureRow.module.css'
 /** Shared 24px disclosure chrome for compact flow rows. */
 export interface DisclosureRowProps {
   icon: ReactNode
-  title: string
+  title: ReactNode
   open: boolean
   expandable: boolean
   onToggle: () => void

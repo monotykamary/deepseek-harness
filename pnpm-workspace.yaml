@@ -93,6 +93,9 @@ minimumReleaseAgeExclude:
   - dsh-fabric-system-prompt@0.1.0
   - dsh-fabric@0.1.0
   - dsh-fovea@0.2.0
+  - framer-motion@13.1.1
+  - motion-dom@13.1.1
+  - motion@13.1.1
 
 patchedDependencies:
   # Adapted from localterm: ligature overhang, color-emoji muting, and device-resolution images.

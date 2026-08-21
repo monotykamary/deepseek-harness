@@ -3,9 +3,7 @@
 // the exact durable tool output remains available in a bounded disclosure card.
 
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
-import {
-  IconChevronDownOutline14, IconInspectOutline12, IconSkillOutline16, StateDot,
-} from '@monotykamary/dsh-client-ui-primitives'
+import { IconChevronDownOutline14, IconInspectOutline12, IconSkillOutline16, StateDot, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import type { ToolCallViewProps } from '@monotykamary/dsh-client-ui-tool/client'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import css from './SkillRow.module.css'
@@ -121,6 +119,7 @@ export function SkillRow({ block, inspect, t }: SkillRowProps) {
   const open = expanded && expandable
   const status = stateStatus(model.state, t)
   const summary = model.errorSummary ?? model.name
+  const running = model.state === 'running'
   const toggleExpand = (): void => {
     setExpanded(value => !value)
   }
@@ -146,10 +145,11 @@ export function SkillRow({ block, inspect, t }: SkillRowProps) {
       >
         <span className={css.leading}>{leading}</span>
         {status !== null ? <span className={css.visuallyHidden}>{status}</span> : null}
-        <span className={css.title}>Skill</span>
+        <span className={css.title}>Skill{running && <TextShimmer />}</span>
         <span className={css.separator} aria-hidden />
         <span className={model.errorSummary === null ? css.summary : `${css.summary} ${css.errorSummary}`}>
           {summary}
+          {running && <TextShimmer />}
         </span>
       </div>
       {open ? (

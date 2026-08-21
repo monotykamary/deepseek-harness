@@ -1,0 +1,21 @@
+/* The sweep band rendered by TextShimmer.tsx. The host text box anchors it
+   (position: relative — the running-state rule in each row surface) and clips
+   it (row summaries already clip; the surface rule bites for the title), so
+   the band can never wash row chrome beyond its own text. The band uses a
+   page-background wash by default; TextShimmer's color prop overrides the
+   CSS custom property below. */
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 340px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--dsw-text-shimmer-color, var(--dsw-alias-bg-base)) 60%, transparent) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  will-change: transform;
+}

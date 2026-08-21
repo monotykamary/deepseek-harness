@@ -72,8 +72,9 @@
 /* Selection still sets data-selected for details linkage; no outline —
    tool rows match Think chrome (no selected ring). */
 
-/* Turn activity keeps the former loader's one-line footprint. A pale
-   brand-blue band sweeps from left to right; reduced-motion keeps it static. */
+/* Turn activity keeps the former loader's one-line footprint. The brand-blue
+   pill text rides the TextShimmer band (blue stays Deep Diving's identity);
+   reduced-motion drops the band at the atom level. */
 .turnStatus {
   align-self: flex-start;
   flex: none;
@@ -82,21 +83,9 @@
   height: 26px;
   font: var(--dsw-font-s-strong-14);
   white-space: nowrap;
-  background: linear-gradient(
-    90deg,
-    var(--dsw-static-deepseek-500) 0%,
-    var(--dsw-static-deepseek-500) 40%,
-    var(--dsw-static-deepseek-200) 50%,
-    var(--dsw-static-deepseek-500) 60%,
-    var(--dsw-static-deepseek-500) 100%
-  );
-  background-position: 100% 0;
-  background-size: 250% 100%;
-  background-clip: text;
-  color: transparent;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: dsh-turn-status-shimmer 1.8s linear infinite;
+  position: relative;
+  overflow: hidden;
+  color: var(--dsw-static-deepseek-500);
 }
 
 .turnStatusClock {
@@ -108,19 +97,7 @@
   -webkit-text-fill-color: var(--dsw-alias-label-caption);
 }
 
-@keyframes dsh-turn-status-shimmer {
-  to {
-    background-position: 0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .turnStatus {
-    background-position: 0 0;
-    background-size: 100% 100%;
-    animation: none;
-  }
-}
+/* Turn status band = TextShimmer (motion) inside the pill; nothing here. */
 
 .hint {
   color: var(--dsw-alias-label-tertiary);

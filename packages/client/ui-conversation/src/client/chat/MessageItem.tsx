@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 import type {
   ModelRetryNode, TurnErrorNode, UserMessageNode,
 } from '@monotykamary/dsh-client-runtime/client'
-import { JsonBlock, MessageText, StateDot } from '@monotykamary/dsh-client-ui-primitives'
+import { JsonBlock, MessageText, StateDot, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import type { ChatNodeOwnerProps, ChatNodeViewProps, ChatViewSlotProps } from '../contract/slots.ts'
 import { ReferenceIcon } from '../reference/ReferenceIcon.tsx'
 import { CompactionItem } from './CompactionItem.tsx'
@@ -96,6 +96,7 @@ function ModelRetryItem({ node, active, t }: {
       <summary className={css.retrySummary}>
         <span className={css.retryText} role="status">
           {t('message.retry.status', { label, retry: node.retry, maximum, seconds })}
+          {active && <TextShimmer />}
         </span>
       </summary>
       <div className={css.retryDetails}>

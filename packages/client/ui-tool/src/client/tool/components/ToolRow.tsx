@@ -19,9 +19,7 @@
 
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import clsx from 'clsx'
-import {
-  CodeBlock, DiffBlock, DisclosureRow, IconInspectOutline12, ReadBlock, SearchBlock, StateDot, TerminalBlock, WebBlock,
-} from '@monotykamary/dsh-client-ui-primitives'
+import { CodeBlock, DiffBlock, DisclosureRow, IconInspectOutline12, ReadBlock, SearchBlock, StateDot, TerminalBlock, TextShimmer, WebBlock } from '@monotykamary/dsh-client-ui-primitives'
 import type { WebBlockProps } from '@monotykamary/dsh-client-ui-primitives'
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import { CHAT_DIFF_MAX_LINES, type DiffCardModel } from '../models/diff-card-model.ts'
@@ -103,7 +101,7 @@ export interface ToolRowProps {
 
 /** Leading-slot state substitution: the tool icon yields to the terminal state
  *  semantic (error = red, interrupted = amber halo). Running keeps the icon —
- *  the running text shimmer (CSS on data-state) carries the in-flight signal. */
+ *  the TextShimmer band over the running text box carries the in-flight signal. */
 function leadingFor(state: ToolRowState, icon: ReactNode): ReactNode {
   switch (state) {
     case 'error': return <StateDot state="error" />
@@ -166,6 +164,7 @@ export function ToolRow({
   // the error color outranks both the args summary and a terminal description.
   const failureLine = state === 'error' ? errorSummary ?? null : null
   const summaryText = failureLine ?? summary
+  const running = state === 'running'
   // The failure line replaces the summary wholesale, so a suffix derived from
   // the call args has nothing left to sit beside.
   const suffix = failureLine === null ? summarySuffix ?? null : null
@@ -200,7 +199,7 @@ export function ToolRow({
         titleClassName={css.title}
         chevronClassName={css.chevron}
         icon={leadingFor(state, icon)}
-        title={title}
+        title={running ? <>{title}<TextShimmer /></> : title}
         open={open}
         expandable={expandable}
         expandOnRowClick
@@ -219,15 +218,17 @@ export function ToolRow({
                 onKeyDown={fileLinkKeyDown}
               >
                 {summaryText}
+                {running && <TextShimmer />}
               </button>
             ) : (
               <span
                 className={clsx(css.summary, failureLine !== null && css.errorSummary)}
               >
                 {summaryText}
+                {running && <TextShimmer />}
               </span>
             )}
-            {suffix !== null && <span className={css.summarySuffix}>{suffix}</span>}
+            {suffix !== null && <span className={css.summarySuffix}>{suffix}{running && <TextShimmer />}</span>}
           </>
         )}
       >

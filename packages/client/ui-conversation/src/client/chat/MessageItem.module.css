@@ -193,21 +193,11 @@
   color: inherit;
 }
 
+/* Active retry text carries the TextShimmer band; the countdown stays on the
+   resting color and the band clips to this box. */
 .retryRow[data-active] .retryText {
-  background:
-    linear-gradient(
-      90deg,
-      var(--dsw-alias-label-tertiary) 0%,
-      var(--dsw-alias-label-tertiary) 40%,
-      var(--dsw-alias-label-secondary) 50%,
-      var(--dsw-alias-label-tertiary) 60%,
-      var(--dsw-alias-label-tertiary) 100%
-    );
-  background-position: 100% 50%;
-  background-size: 200% 100%;
-  background-clip: text;
-  color: transparent;
-  animation: retry-shimmer 1.6s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
 }
 
 .retryRow[open] .retrySummary::after {
@@ -268,23 +258,7 @@
   font-weight: 600;
 }
 
-@keyframes retry-shimmer {
-  from {
-    background-position: 100% 50%;
-  }
-
-  to {
-    background-position: 0 50%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .retryRow[data-active] .retryText {
-    background: none;
-    color: inherit;
-    animation: none;
-  }
-}
+/* Retry sweep band = TextShimmer atom; reduced-motion drops it there. */
 
 /* Inline references use domain glyphs and business-color text without another
    container inside the user bubble. */

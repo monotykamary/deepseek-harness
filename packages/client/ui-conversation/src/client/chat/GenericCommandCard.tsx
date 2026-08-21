@@ -6,7 +6,7 @@
 
 import { useState, type ReactNode } from 'react'
 import type { ChatViewSlotProps, CommandRowOwnerProps } from '../contract/slots.ts'
-import { DisclosureRow, IconApiOutline14, StateDot } from '@monotykamary/dsh-client-ui-primitives'
+import { DisclosureRow, IconApiOutline14, StateDot, TextShimmer } from '@monotykamary/dsh-client-ui-primitives'
 import a11yCss from './accessibility.module.css'
 import css from './GenericCommandCard.module.css'
 
@@ -53,7 +53,7 @@ export function GenericCommandCard({ node, t, runningSummary }: GenericCommandCa
         titleClassName={css.title}
         chevronClassName={css.chevron}
         icon={leadingFor(state)}
-        title={title}
+        title={state === 'running' ? <>{title}<TextShimmer /></> : title}
         open={open}
         expandable={body !== null}
         expandOnRowClick
@@ -62,7 +62,7 @@ export function GenericCommandCard({ node, t, runningSummary }: GenericCommandCa
         collapsedContent={(
           <>
             <span className={css.separator} aria-hidden />
-            <span className={css.summary} data-error={state === 'error' || undefined}>{summary}</span>
+            <span className={css.summary} data-error={state === 'error' || undefined}>{summary}{state === 'running' && <TextShimmer />}</span>
           </>
         )}
       >
