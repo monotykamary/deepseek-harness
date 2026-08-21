@@ -141,6 +141,8 @@ export type HostFrame =
     origin?: 'subagent'
     cwd?: string
     agentPreset?: string
+    /** Current git branch of the new session's working tree (see SessionSummary.branch). */
+    branch?: string
   }
   | { type: 'host/session-removed'; sessionId: SessionId }
   | { type: 'host/session-status'; sessionId: SessionId; running: boolean }

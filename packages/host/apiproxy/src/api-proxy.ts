@@ -5,6 +5,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { mkdir, stat } from 'node:fs/promises'
+import { gitBranchName } from './git-branch.ts'
 import { homedir } from 'node:os'
 import { dirname } from 'node:path'
 import type { Context } from '@monotykamary/cordis'
@@ -496,6 +497,12 @@ function sessionListFields(header: SessionHeader, events: readonly SessionEvent[
     ...header.cwd === undefined ? {} : { cwd: header.cwd },
     ...agentPreset === undefined ? {} : { agentPreset },
   }
+}
+
+/** The current branch of a working tree, or an empty object when none is discoverable. */
+function pickBranch(cwd: string): { branch?: string } {
+  const branch = gitBranchName(cwd)
+  return branch === undefined ? {} : { branch }
 }
 
 /** SessionSummary projection for attached (in-memory) sessions. */
@@ -2009,7 +2016,22 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
       // Logs without a cwd are not served; every session records its project
       // at create time.
       async list(request) {
-        return ok(request, { items: await listVisibleSessionSummaries() })
+        // The git branch is list display data, not a session-log field: it is
+        // resolved once per distinct working tree (per-cwd memo) so a list with
+        // many sessions in one repository still pays one probe, and bulk paths
+        // that share this visibility collection (search) never probe at all.
+        const rows = await listVisibleSessionSummaries()
+        const branchByCwd = new Map<string, string | undefined>()
+        const attach = (row: SessionSummary): SessionSummary => {
+          if (row.cwd === undefined) return row
+          let branch = branchByCwd.get(row.cwd)
+          if (branch === undefined && !branchByCwd.has(row.cwd)) {
+            branch = gitBranchName(row.cwd)
+            branchByCwd.set(row.cwd, branch)
+          }
+          return branch === undefined ? row : { ...row, branch }
+        }
+        return ok(request, { items: rows.map(attach) })
       },
 
       async search(request, signal) {
@@ -3583,6 +3605,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
               blank: sessionBlank(session),
               // Including cwd lets the client group the new session without refreshing the list.
               ...sessionListFields(session.header, session.events),
+              // One-probe per created session (the list memo dedupes refreshes).
+              ...session.header.cwd === undefined ? {} : pickBranch(session.header.cwd),
             }))
           }),
           ctx.on('session/disposed', (session: Session) => {

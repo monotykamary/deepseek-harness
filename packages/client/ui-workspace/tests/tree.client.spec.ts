@@ -93,17 +93,17 @@ describe('deriveGroups', () => {
   it('projects card context and pending-interaction state into grouped and flat rows', () => {
     const awaiting = {
       ...summary('awaiting', 10, '/projects/fallback'),
-      agentPreset: 'code', pendingInteraction: 'plan-review' as const, running: true,
+      branch: 'feature/x', pendingInteraction: 'plan-review' as const, running: true,
     }
     const sessions = list(awaiting)
     const grouped = deriveGroups(
       sessions, [workspace('project', ['awaiting'], 'Project Label')], noArchive, view(['project']),
     )
     expect(grouped[0]!.sessions[0]).toMatchObject({
-      workspace: 'Project Label', agentPreset: 'code', pendingInteraction: 'plan-review', running: true,
+      workspace: 'Project Label', branch: 'feature/x', pendingInteraction: 'plan-review', running: true,
     })
     expect(deriveFlat(sessions, noArchive)[0]).toMatchObject({
-      workspace: 'fallback', agentPreset: 'code', pendingInteraction: 'plan-review', running: true,
+      workspace: 'fallback', branch: 'feature/x', pendingInteraction: 'plan-review', running: true,
     })
   })
 

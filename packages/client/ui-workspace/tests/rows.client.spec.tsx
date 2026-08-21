@@ -64,7 +64,7 @@ function fireDrag(row: HTMLElement, kind: 'dragOver' | 'drop', clientY: number):
 describe('workspace browser rows', () => {
   it('renders Workspace context and live status in the hierarchy-free card', () => {
     const idle: SessionNode = {
-      id: sid('flat'), workspace: 'Project', agentPreset: 'code', title: 'Flat Session',
+      id: sid('flat'), workspace: 'Project', branch: 'main', title: 'Flat Session',
       running: false, runningSubagentCount: 0, completed: false, updatedAt: 0,
     }
     const view = render(<SessionNodeItem node={idle} currentId={undefined} now={0} onOpen={vi.fn()}
@@ -73,7 +73,7 @@ describe('workspace browser rows', () => {
     const row = screen.getByRole('treeitem')
     expect(row.textContent).toContain('Project')
     expect(row.textContent).toContain('Flat Session')
-    expect(row.textContent).toContain('code')
+    expect(row.textContent).toContain('main')
     expect(row.querySelector('[data-state]')).toBeNull()
 
     view.rerender(<SessionNodeItem node={{ ...idle, running: true }} currentId={undefined} now={0}

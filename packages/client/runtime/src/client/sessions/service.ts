@@ -52,6 +52,8 @@ export interface SessionSummary {
    * session actually runs rather than the deployment's current default.
    */
   agentPreset?: string
+  /** Current git branch of the session's working tree (host summary passthrough); absent when none is reported. */
+  branch?: string
   parentId?: SessionId
   /** Coarse durable origin for navigation filtering; not a continuation capability. */
   origin?: 'subagent'
@@ -683,6 +685,7 @@ export class SessionRuntime implements ISessions {
         ...(entry.parentSessionId !== undefined ? { parentId: entry.parentSessionId } : {}),
         ...(entry.origin !== undefined ? { origin: entry.origin } : {}),
         ...(entry.agentPreset !== undefined ? { agentPreset: entry.agentPreset } : {}),
+        ...(entry.branch !== undefined ? { branch: entry.branch } : {}),
       }
     }
     if (current !== undefined && currentAddress !== undefined) {

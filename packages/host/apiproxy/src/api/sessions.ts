@@ -208,6 +208,13 @@ export interface SessionSummary {
    */
   agentPreset?: string
   /**
+   * Current git branch of the session's working tree (the enclosing
+   * repository's HEAD symref, resolved host-side at listing time). Absent
+   * when the session's cwd is unrecorded, outside any repository, or on a
+   * detached HEAD — a listing client then omits the branch label.
+   */
+  branch?: string
+  /**
    * Projection baseline for this row, with zero log loads: attached sessions
    * read the registry's live watermark cut; cold sessions read the persisted
    * projection cache's stored rows — as stale as that session's last durable

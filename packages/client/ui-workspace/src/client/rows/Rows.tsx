@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { AlarmClock, AlarmClockOff, Check, Clock, Undo2 } from 'lucide-react'
 import {
-  HoverCard, IconAgentPresetOutline16, IconArchiveOutline20, IconBranchOutline16,
+  HoverCard, IconArchiveOutline20, IconBranchOutline16,
   IconEditOutline16, IconFolderClose16, IconFolderOpen16, IconPlusOutline16,
   IconTrashOutline16, IconTriangleRightFill14, Menu, StateDot,
 } from '@monotykamary/dsh-client-ui-primitives'
@@ -422,7 +422,7 @@ export function SearchResultItem({ result, currentId, onOpen, t }: {
 
 /**
  * One top-level Session card: Workspace context, primary status or time,
- * title, agent preset, relative time, and the row quick actions.
+ * title, git branch, relative time, and the row quick actions.
  * @param props.node - derived session node.
  * @param props.currentId - selected session id (row highlight).
  * @param props.now - epoch ms for relative-time formatting.
@@ -671,12 +671,12 @@ export function SessionNodeItem({
       </div>
       <span className={css.title}>{title}</span>
       <div className={css.cardFoot}>
-        {node.agentPreset === undefined
+        {node.branch === undefined
           ? <span />
           : (
-            <span className={css.preset}>
-              <IconAgentPresetOutline16 size={14} />
-              <span>{node.agentPreset}</span>
+            <span className={css.branch}>
+              <IconBranchOutline16 size={14} />
+              <span>{node.branch}</span>
             </span>
           )}
         {showStatus && (

@@ -27,6 +27,8 @@ export interface SessionListEntry {
   cwd?: string
   /** Agent preset the session's agent was composed from (summary passthrough). */
   agentPreset?: string
+  /** Current git branch of the session's working tree (summary passthrough). */
+  branch?: string
   /** Current host-computed projection values for list consumers. */
   projectionValues?: Readonly<Partial<SessionProjectionMap>>
   /** User interaction currently blocking this session, derived from live mux frames. */

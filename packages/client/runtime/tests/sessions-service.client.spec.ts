@@ -36,6 +36,7 @@ type FeedRow = {
   running?: boolean
   blank?: boolean
   agentPreset?: string
+  branch?: string
 }
 
 async function feedList(b: Bench, rows: FeedRow[]): Promise<void> {
@@ -46,6 +47,7 @@ async function feedList(b: Bench, rows: FeedRow[]): Promise<void> {
       ...(r.parentId !== undefined ? { parentSessionId: sid(r.parentId) } : {}),
       ...(r.origin !== undefined ? { origin: r.origin } : {}),
       ...(r.agentPreset !== undefined ? { agentPreset: r.agentPreset } : {}),
+      ...(r.branch !== undefined ? { branch: r.branch } : {}),
     })),
   }) as never)
   await b.svc.refresh()
@@ -85,6 +87,18 @@ describe('list store projection', () => {
     await Promise.resolve()
 
     expect(b.svc.list.getSnapshot().byId[sid('s1')]?.agentPreset).toBe('minimal')
+  })
+
+  it('projects the git branch passthrough from list and added frames', async () => {
+    const b = bench()
+    await feedList(b, [{ id: 's1', branch: 'main' }])
+    expect(b.svc.list.getSnapshot().byId[sid('s1')]?.branch).toBe('main')
+    b.svc.handleHostEnvelope({
+      rpcId: 'r1' as never,
+      payload: { type: 'host/session-added', blank: true, sessionId: sid('s2'), branch: 'feature/x' } as never,
+    })
+    await Promise.resolve()
+    expect(b.svc.list.getSnapshot().byId[sid('s2')]?.branch).toBe('feature/x')
   })
 
   it('reflects live increments (host stream via manager) into the store', async () => {
