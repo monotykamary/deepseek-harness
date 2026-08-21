@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-06-30-hook-protocol-lib.md
 2026-06-30-hook-protocol-lib.md: d29e0aa3b7d6905a348e720762ddf604ea007038
-2026-06-30-hook-protocol-lib.zh.md: 31ef29be035308568c05fbc8446776495baea6be
+2026-06-30-hook-protocol-lib.zh.md: bd1d19537d996245bc63980abcb5f2cee7639de4

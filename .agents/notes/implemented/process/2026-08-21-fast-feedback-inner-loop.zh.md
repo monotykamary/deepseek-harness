@@ -6,7 +6,7 @@ Status: implemented
 
 ## 问题
 
-黄金法则禁止在编辑之间运行任何测试、构建、lint 或类型检查，而被认可的终检（test:coverage、test:web、test:snapshot）要花数小时。一个多小时的特性因此直到最后都得不到验证，一个笔误就要耗费整整一轮门禁周期才能发现——这是一个无法单独测试任何东西的反馈环。[GUI 测试体系 note](2026-07-20-gui-testing-system.md) 早已承诺秒级 `test:gui` 反馈，但根 AGENTS.md 的黄金法则连这条廉价内环都禁止，与之矛盾。
+黄金法则禁止在编辑之间运行任何测试、构建、lint 或类型检查，而被认可的终检（test:coverage、test:web、test:snapshot）要花数小时。一个多小时的特性因此直到最后都得不到验证，一个笔误就要耗费整整一轮门禁周期才能发现——这是一个无法单独测试任何东西的反馈环。[GUI 测试体系 note](2026-07-20-gui-testing-system.zh.md) 早已承诺秒级 `test:gui` 反馈，但根 AGENTS.md 的黄金法则连这条廉价内环都禁止，与之矛盾。
 
 ## 决策
 

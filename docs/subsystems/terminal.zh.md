@@ -2,7 +2,7 @@
 
 [English](terminal.md) | 中文
 
-PTY 后端、`ctx.terminals` 与面向模型的消费方共享的类型。[持久 PTY Agent Note](../../.agents/notes/implemented/feature/2026-07-16-persistent-pty-sessions.md) 负责记录决策依据；本页记录来自 [`packages/terminal/terminal/src/types.ts`](../../packages/terminal/terminal/src/types.ts) 的跨包词汇。
+PTY 后端、`ctx.terminals` 与面向模型的消费方共享的类型。[持久 PTY Agent Note](../../.agents/notes/implemented/feature/2026-07-16-persistent-pty-sessions.zh.md) 负责记录决策依据；本页记录来自 [`packages/terminal/terminal/src/types.ts`](../../packages/terminal/terminal/src/types.ts) 的跨包词汇。
 
 ## 标识与就绪
 
@@ -80,7 +80,7 @@ interface TerminalInteractiveAttachment {
 }
 ```
 
-发货的 Host 为所有 Agent 挂载同一个 `ctx.terminals` 注册表与 shell 后端。[`dsh-terminal-web`](../../packages/terminal/terminal-web/README.md) 增加身份准入的 WebSocket framing，[`dsh-client-ui-terminal`](../../packages/client/ui-terminal/README.md) 则在独立的底部与右侧位置消费它。
+发货的 Host 为所有 Agent 挂载同一个 `ctx.terminals` 注册表与 shell 后端。[`dsh-terminal-web`](../../packages/terminal/terminal-web/README.zh.md) 增加身份准入的 WebSocket framing，[`dsh-client-ui-terminal`](../../packages/client/ui-terminal/README.zh.md) 则在独立的底部与右侧位置消费它。
 
 ## 发送与保留输出
 
@@ -122,7 +122,7 @@ interface TerminalSendResult {
 
 ## Cordis API
 
-Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — this section is byte-identical in both language sides of the page. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
 <a id="ctxterminals--terminalsessionservice"></a>
 
@@ -212,7 +212,7 @@ async kill(owner: Agent, id: TerminalSessionId, reason: string = 'model request'
 list(owner: Agent): TerminalSessionSnapshot[]
 ```
 
-Types: [Agent](core.md)
+Types: [Agent](core.zh.md)
 
-Source: [`packages/terminal/terminal/src/index.ts:112`](../../packages/terminal/terminal/src/index.ts)
+Source: [`packages/terminal/terminal/src/index.ts`](../../packages/terminal/terminal/src/index.ts)
 <!-- END GENERATED cordis-surface -->

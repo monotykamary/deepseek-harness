@@ -74,8 +74,7 @@
     "@monotykamary/dsh-tool-workflow": "workspace:^",
     "@monotykamary/dsh-workflow": "workspace:^",
     "@types/react": "~18.3.1",
-    "@monotykamary/cordis": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/cordis": "workspace:^"
   },
   "dependencies": {
     "react": "^18.2.0"

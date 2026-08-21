@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/simplification/2026-07-20-remove-stdio-and-echo-agents.md
 2026-07-20-remove-stdio-and-echo-agents.md: 2ae300982ac95f0520ed9fd4e2e286bb0bc021cf
-2026-07-20-remove-stdio-and-echo-agents.zh.md: 93ae1ca8331f15b1e73cd6294c9ca5a80963c121
+2026-07-20-remove-stdio-and-echo-agents.zh.md: 98cc9290da1728f031b63fb02455ff7f7159acd5

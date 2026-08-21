@@ -6,7 +6,7 @@ Status: implemented
 
 ## 问题
 
-[特权面信任部署表面决策](../architecture/2026-08-18-privileged-plane-trusted-surfaces.md)在 /api 栅栏上把整个配置平面——`settings.*`、`credentials.*`、`host.*`、agent-preset 创作——开放给部署的可信表面（tailnet、portless、`--trusted-host`），并承诺 `dsh web --portless`／--tailnet 表面可以加载和保存 Models 提供方目录。栅栏半边落地了，浏览器半边没有。客户端设置传输仍然以 `connection.isLoopback` 为门槛，而该判定只把精确的 `localhost`／127/8／`[::1]` 主机名归类为回环（`isLoopbackHostname`）：在 `https://dsh.localhost`（portless 别名，解析到回环地址）和 `https://<node>.ts.net` 上，describe 镜像保持进程内（memory）模式，从不发出 `settings.describe`，Models 页面因此报错「加载提供方目录失败：settings are unavailable in this browser」。栅栏从来不是瓶颈——`llm.providers`（非特权）在这些表面是成功的；只是客户端从不发起请求。
+[特权面信任部署表面决策](../architecture/2026-08-18-privileged-plane-trusted-surfaces.zh.md)在 /api 栅栏上把整个配置平面——`settings.*`、`credentials.*`、`host.*`、agent-preset 创作——开放给部署的可信表面（tailnet、portless、`--trusted-host`），并承诺 `dsh web --portless`／--tailnet 表面可以加载和保存 Models 提供方目录。栅栏半边落地了，浏览器半边没有。客户端设置传输仍然以 `connection.isLoopback` 为门槛，而该判定只把精确的 `localhost`／127/8／`[::1]` 主机名归类为回环（`isLoopbackHostname`）：在 `https://dsh.localhost`（portless 别名，解析到回环地址）和 `https://<node>.ts.net` 上，describe 镜像保持进程内（memory）模式，从不发出 `settings.describe`，Models 页面因此报错「加载提供方目录失败：settings are unavailable in this browser」。栅栏从来不是瓶颈——`llm.providers`（非特权）在这些表面是成功的；只是客户端从不发起请求。
 
 ## 决策
 

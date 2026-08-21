@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/web-identity.md
 web-identity.md: 735b0bfa1dd6f1878b98895515d7e8fe9edbeb72
-web-identity.zh.md: 8451e54e1974bd3442ac8b532b96e29e485089a1
+web-identity.zh.md: 1c21a607509acdeb0784d086cff3564301010d4f

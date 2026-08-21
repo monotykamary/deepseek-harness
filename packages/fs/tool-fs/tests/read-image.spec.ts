@@ -13,7 +13,7 @@ import { Context } from '@monotykamary/cordis'
 import { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@monotykamary/dsh-code-runtime'
 import { CallId, LlmAdapter, LlmRuntime } from '@monotykamary/dsh-llm'
-import type { GenerateOptions, LlmModelInfo, LlmResolvedModelInfo, StreamChunk } from '@monotykamary/dsh-llm'
+import type { GenerateOptions, LlmModelInfo, LlmResolvedModelInfo, Message, StreamChunk } from '@monotykamary/dsh-llm'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import ToolRuntime, { RUN_CODE_NAME } from '@monotykamary/dsh-tools'
 import type { Config as ToolConfig } from '@monotykamary/dsh-tools'
@@ -32,7 +32,7 @@ import {
 
 /** 1x1 red PNG (valid signature, IHDR, IDAT). */
 const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64')
-/** 3x3 red PNG used to exercise configured pixel and dimension limits. */
+/** 3x3 red PNG used to trip a tiny configured pixel limit. */
 const PNG_3X3 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEElEQVR4nGP4z8AAQQxYWACPjgj4kWPEuQAAAABJRU5ErkJggg==', 'base64')
 
 const testToolSignal = new AbortController().signal
@@ -122,12 +122,13 @@ async function setup(options: SetupOptions = {}) {
 }
 
 /** A fake calling agent pinned to one routed provider/model. */
-function agentOn(model: string | undefined, provider = 'visual'): object {
+function agentOn(model: string | undefined, provider = 'visual', messages: readonly Message[] = []): object {
   return {
     options: {},
     session: {
       header: { cwd: dir },
       requestHeader: () => (model === undefined ? undefined : { config: { provider, model } }),
+      deriveMessages: () => [...messages],
       append: () => undefined,
     },
   }
@@ -169,6 +170,8 @@ describe('imageRefFromValue', () => {
     const base = { attachmentId: 'sha256:00', mediaType: 'image/png' as const, bytes: 1, width: 1, height: 1 }
     expect(imageRefFromValue(base)).toEqual(base)
     expect(imageRefFromValue({ ...base, name: 'a.png' })).toEqual({ ...base, name: 'a.png' })
+    expect(imageRefFromValue({ ...base, originalDimensions: { width: 4, height: 2 } }))
+      .toEqual({ ...base, originalDimensions: { width: 4, height: 2 } })
   })
 })
 
@@ -386,24 +389,22 @@ describe('image admission failures', () => {
     expect(text(result)).toContain('exceeds')
   })
 
-  it('downscales an image past the pixel limit into a fitting read', async () => {
+  it('surfaces the pixel limit from the attachment admission', async () => {
     await writeFile(join(dir, 'big.png'), PNG_3X3)
     const ctx = await setup({ storeConfig: { maxImagePixels: 4 } })
     const result = await readImage(ctx, { file_path: 'big.png' }, agentOn('vision-model'))
-    expect(result.isError).toBe(false)
-    expect(text(result)).toContain('image/png image, 2x2 px')
-    const image = result.content[1] as { attachment: ImageAttachmentRef }
-    expect(image.attachment).toMatchObject({ mediaType: 'image/png', width: 2, height: 2 })
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('exceeds the 4-pixel decoded-size limit')
+    expect(text(result)).toContain('downscale the image and read the smaller copy')
   })
 
-  it('downscales an image past the per-side limit into a fitting read', async () => {
+  it('surfaces the per-side limit from attachment admission', async () => {
     await writeFile(join(dir, 'wide.png'), PNG_3X3)
     const ctx = await setup({ storeConfig: { maxImageDimension: 2 } })
     const result = await readImage(ctx, { file_path: 'wide.png' }, agentOn('vision-model'))
-    expect(result.isError).toBe(false)
-    expect(text(result)).toContain('image/png image, 2x2 px')
-    const image = result.content[1] as { attachment: ImageAttachmentRef }
-    expect(image.attachment).toMatchObject({ mediaType: 'image/png', width: 2, height: 2 })
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('at least one image side exceeds the 2px limit')
+    expect(text(result)).toContain('downscale the image and read the smaller copy')
   })
 
   it('passes storage faults and non-attachment failures through unchanged', async () => {
@@ -439,6 +440,20 @@ describe('image admission failures', () => {
     const storageFault = await readImage(ctx, { file_path: 'red.png' }, agentOn('vision-model'))
     expect(storageFault.isError).toBe(true)
     expect(text(storageFault)).toContain('Unable to persist image attachment.')
+
+    FailingStore.failure = new AttachmentError(
+      'The 16-bit PNG could not be converted to the normalized 8-bit sRGB form.',
+      'ATTACHMENT_WRITE_FAILED',
+    )
+    const sixteenBit = await readImage(ctx, { file_path: 'red.png' }, agentOn('vision-model'))
+    expect(text(sixteenBit)).toContain(
+      `cannot read "${join(dir, 'red.png')}": the 16-bit PNG could not be converted to the normalized 8-bit sRGB form; convert it to an 8-bit PNG/JPEG/WebP and retry`,
+    )
+
+    FailingStore.failure = new AttachmentError('Image cannot be encoded within the configured normalized-image byte cap.', 'IMAGE_TOO_LARGE')
+    const overBudget = await readImage(ctx, { file_path: 'red.png' }, agentOn('vision-model'))
+    expect(overBudget.isError).toBe(true)
+    expect(text(overBudget)).toContain('cannot be stored within the deployment\'s byte limits; downscale the image and read the smaller copy')
 
     FailingStore.failure = new Error('unrelated infrastructure failure')
     const unrelated = await readImage(ctx, { file_path: 'red.png' }, agentOn('vision-model'))
@@ -492,6 +507,53 @@ describe('image admission failures', () => {
     expect(result.isError).toBe(false)
     const image = result.content[1] as { attachment: ImageAttachmentRef }
     expect(image.attachment.name).toBeUndefined()
+  })
+
+  it('names the on-disk dimensions and coordinate multiplier when storage downscales', async () => {
+    /** Store whose normalized image halves the input on both sides. */
+    class DownscalingStore extends AttachmentStore {
+      readonly imageLimits: ImageAttachmentLimits = Object.freeze({
+        maxImageBytes: 1024,
+        maxImagesPerMessage: 1,
+        maxMessageImageBytes: 1024,
+        maxImagePixels: 100,
+        maxImageDimension: 2000,
+        mediaTypes: Object.freeze(['image/png'] as const),
+      })
+
+      validateImage(_input: SaveImageAttachment): Promise<void> {
+        return Promise.resolve()
+      }
+
+      async saveImage(input: SaveImageAttachment): Promise<ImageAttachmentRef> {
+        return {
+          attachmentId: AttachmentId('sha256:feed'),
+          mediaType: input.mediaType,
+          bytes: 7,
+          width: 2,
+          height: 1,
+          originalDimensions: { width: 4, height: 2 },
+        }
+      }
+
+      readImage(_ref: ImageAttachmentRef): Promise<StoredImageAttachment> {
+        throw new Error('unreachable in this test')
+      }
+    }
+    await writeFile(join(dir, 'red.png'), PNG_1X1)
+    const ctx = await setup({ attachments: false })
+    await ctx.plugin(DownscalingStore)
+    const result = await readImage(ctx, { file_path: 'red.png' }, agentOn('vision-model'))
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('image/png image, 2x1 px, 7 bytes (downscaled from 4x2 px; multiply coordinates by 2.00 to locate features in the original file)')
+  })
+
+  it('names per-axis multipliers when integer rounding makes the ratios differ', () => {
+    const envelope = formatImageReadOutput('/img/photo.jpg', {
+      attachmentId: 'sha256:feed', mediaType: 'image/jpeg', bytes: 9, width: 2, height: 1,
+      originalDimensions: { width: 5, height: 2 },
+    })
+    expect(envelope).toContain('downscaled from 5x2 px; multiply x coordinates by 2.50 and y coordinates by 2.00 to locate features in the original file')
   })
 })
 

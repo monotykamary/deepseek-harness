@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-17-web-identity-sso.md
 2026-08-17-web-identity-sso.md: ce792c72760495a427d665d451db88226f8c6379
-2026-08-17-web-identity-sso.zh.md: 3229d7e62a0e97c0cb9d7a45fcb390865fc31e5a
+2026-08-17-web-identity-sso.zh.md: 3c8072e23311123428d9951aec872fdb3f39ced9

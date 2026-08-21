@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-20-connection-hidden-tab-reconnect-pause.md
 2026-08-20-connection-hidden-tab-reconnect-pause.md: 99365ab1b5c70c90e1283e8768fd3eb5b3ed05cf
-2026-08-20-connection-hidden-tab-reconnect-pause.zh.md: 0af20c6bc3948d3239da9550cbcff27be34c4737
+2026-08-20-connection-hidden-tab-reconnect-pause.zh.md: 0ed873e18100bf43d36b19345103761ed2991abc

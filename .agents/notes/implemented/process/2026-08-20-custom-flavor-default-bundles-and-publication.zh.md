@@ -16,7 +16,7 @@ Status: implemented
 
 ### 本地开发默认解析已发布的组件包
 
-harness 工作区从 npm 解析 `dsh-fabric` 与 `dsh-fovea`；此处原先记录的同级 `link:` override 对已由 [npm 默认的 custom-flavor 解析](2026-08-20-npm-default-custom-flavor-dev-install.md) 取代，活链接降级为不提交的自选项。pnpm 不安装 `link:` 解析包的依赖，这一性质对自选路径仍然正确：每个同级检出携带自己完整的安装（其自身 overrides 将 `@monotykamary/*` 钉回本检出），Node 跟随符号链接的解析能从链接后的真实位置到达那些包。
+harness 工作区从 npm 解析 `dsh-fabric` 与 `dsh-fovea`；此处原先记录的同级 `link:` override 对已由 [npm 默认的 custom-flavor 解析](2026-08-20-npm-default-custom-flavor-dev-install.zh.md) 取代，活链接降级为不提交的自选项。pnpm 不安装 `link:` 解析包的依赖，这一性质对自选路径仍然正确：每个同级检出携带自己完整的安装（其自身 overrides 将 `@monotykamary/*` 钉回本检出），Node 跟随符号链接的解析能从链接后的真实位置到达那些包。
 
 ### fabric 系列以无 scope 名称发布
 
@@ -46,4 +46,4 @@ prepublish 变换（link: → 范围、发布、还原）让签入的清单保�
 
 ## Consequences
 
-安装已发布的 `@monotykamary/dsh` 现在会拉入 `dsh-fabric` 与 `dsh-fovea`，每个自动初始化的 profile 都会组合它们；上游同步合入必须留意模板列表与应用依赖，任何未来的 fabric/fovea 发布都要求 harness 家族先行协调发布。没有同级目录的 harness 检出也能安装并组合 profile —— 两个组件包从 npm 解析；钉住它们需要 [npm 默认的 custom-flavor 解析](2026-08-20-npm-default-custom-flavor-dev-install.md) 中的自选 overrides。原本声称的钉死变体硬性失败从未存在 —— pnpm 11 对缺失的 `link:` override 目标是静默跳过的 —— 所以没有同级目录的检出会干净地安装，却以两个组件包缺席的状态启动。同级仓库自己的 `install:local` 脚本钉住 `@monotykamary/dsh@0.1.0-rc.7`，该版本只有在 harness 发布后存在。
+安装已发布的 `@monotykamary/dsh` 现在会拉入 `dsh-fabric` 与 `dsh-fovea`，每个自动初始化的 profile 都会组合它们；上游同步合入必须留意模板列表与应用依赖，任何未来的 fabric/fovea 发布都要求 harness 家族先行协调发布。没有同级目录的 harness 检出也能安装并组合 profile —— 两个组件包从 npm 解析；钉住它们需要 [npm 默认的 custom-flavor 解析](2026-08-20-npm-default-custom-flavor-dev-install.zh.md) 中的自选 overrides。原本声称的钉死变体硬性失败从未存在 —— pnpm 11 对缺失的 `link:` override 目标是静默跳过的 —— 所以没有同级目录的检出会干净地安装，却以两个组件包缺席的状态启动。同级仓库自己的 `install:local` 脚本钉住 `@monotykamary/dsh@0.1.0-rc.7`，该版本只有在 harness 发布后存在。

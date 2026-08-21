@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cookbook/adding-a-settings-card.md
 adding-a-settings-card.md: 2bd4a0b449bf26cce59bbb12745ab20e0e43c716
-adding-a-settings-card.zh.md: c08979c2ff3335696bc0e68c8d15d2086cc8c0ef
+adding-a-settings-card.zh.md: ae88e06927f18b783f32f2e860702e3f78171f3e

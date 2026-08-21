@@ -223,7 +223,7 @@
     "margins": 7,
     "zindexes": 0
   },
-  "packages/client/ui-subagent/src/client/SubagentCatalogAction.module.css": {
+  "packages/client/ui-subagent/src/client/SubagentHeaderLineage.module.css": {
     "margins": 5,
     "zindexes": 1
   },

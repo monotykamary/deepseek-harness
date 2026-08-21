@@ -31,5 +31,5 @@ Status: implemented
 
 ## Related
 
-- [Plan mode narrow-viewport regression](../bug-fix/2026-08-06-plan-narrow-viewport-regression.md) — 本变更取代的更早的移动端行修复。
+- [Plan mode narrow-viewport regression](../bug-fix/2026-08-06-plan-narrow-viewport-regression.zh.md) — 本变更取代的更早的移动端行修复。
 - localterm `apps/terminal/src/utils/compute-header-layout.ts` — 测量文本模式的上游来源。

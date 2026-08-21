@@ -64,7 +64,6 @@
     "@monotykamary/dsh-subprocess-local": "workspace:^",
     "@monotykamary/dsh-timeout": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-sdk-protocol": "workspace:^",
     "@openai/codex": "0.147.0"
   }
 }

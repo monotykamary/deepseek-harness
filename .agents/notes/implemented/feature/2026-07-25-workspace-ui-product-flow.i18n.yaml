@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-25-workspace-ui-product-flow.md
 2026-07-25-workspace-ui-product-flow.md: e0a1ccbea9f303e8ac617734e4759cc3b24b400c
-2026-07-25-workspace-ui-product-flow.zh.md: ad8287752856b1b1e169054c6180984fd828bdc6
+2026-07-25-workspace-ui-product-flow.zh.md: ab31316e73de74cbaac198bc9f16c2ac5f5ec77a

@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/simplification/2026-08-04-remove-tui-package.md
 2026-08-04-remove-tui-package.md: 261ea13f75952e4223a33adda451b3f6d936872a
-2026-08-04-remove-tui-package.zh.md: 9cc750e2a78edb55abe309f6b4f7c5fa2fca906b
+2026-08-04-remove-tui-package.zh.md: 42eb9159079c764426521baec4deb262bae5ada8

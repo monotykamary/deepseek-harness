@@ -6,13 +6,13 @@ Status: implemented
 
 ## 问题
 
-浏览器界面已经通过 [Web 远程面解析](2026-08-17-web-remote-surface-resolution.md) 到达了远程源（tailnet、portless），但 `/api` 浏览器信任栅栏是 DNS 重绑定防御，明确不是身份认证层：任何通过栅栏的调用者都能看到所有会话，特权面因为没有其他可授予的主体而只能钉在 loopback 上。共享网关——多个人访问同一个 `dsh web`——需要远程用户只能到达自己的会话、运营者层级保持完全访问，以及一套登录故事。localterm 的身份设计（其身份文档与 server 身份源码）正是这套姿态经过验证的参考实现。
+浏览器界面已经通过 [Web 远程面解析](2026-08-17-web-remote-surface-resolution.zh.md) 到达了远程源（tailnet、portless），但 `/api` 浏览器信任栅栏是 DNS 重绑定防御，明确不是身份认证层：任何通过栅栏的调用者都能看到所有会话，特权面因为没有其他可授予的主体而只能钉在 loopback 上。共享网关——多个人访问同一个 `dsh web`——需要远程用户只能到达自己的会话、运营者层级保持完全访问，以及一套登录故事。localterm 的身份设计（其身份文档与 server 身份源码）正是这套姿态经过验证的参考实现。
 
 ## 决策
 
 把 localterm 的身份层移植到 `dsh web`，成为新包 `@monotykamary/dsh-web-identity` 与可选的 `ctx.identity` 服务，并在这三个开放的产品决策上采用 localterm 的默认值：
 
-- **特权面** —— 运营者层级（属主 `null`）就是特权面。认证后的非运营者用户无论来自哪个源都只能到达普通 RPC；`PRIVILEGED_METHODS` 集合还要求属主为 `null` 且（来自 loopback 或部署可信权威，或经运营者 Bearer 令牌放行）。表面授权（loopback 或可信权威）是 [特权面信任部署表面](../architecture/2026-08-18-privileged-plane-trusted-surfaces.md) 的默认——身份的令牌把它扩展到任意表面；分区用户即使在 loopback 上也拿不到特权方法，所以 passkey 模式下运营者通过令牌工作。
+- **特权面** —— 运营者层级（属主 `null`）就是特权面。认证后的非运营者用户无论来自哪个源都只能到达普通 RPC；`PRIVILEGED_METHODS` 集合还要求属主为 `null` 且（来自 loopback 或部署可信权威，或经运营者 Bearer 令牌放行）。表面授权（loopback 或可信权威）是 [特权面信任部署表面](../architecture/2026-08-18-privileged-plane-trusted-surfaces.zh.md) 的默认——身份的令牌把它扩展到任意表面；分区用户即使在 loopback 上也拿不到特权方法，所以 passkey 模式下运营者通过令牌工作。
 - **按用户分区（而非共享）** —— 会话在创建时把持久的 `owner` 记在会话头上；`session.list`/`search` 只返回请求用户的会话；其他所有按会话寻址的 RPC 与 typert `session`/`agent` 查找对跨租户 id 一律回答 `session-not-found`，与未知 id 无法区分。
 - **运营者 Bearer 令牌** —— `header`：无（`denyUnauthenticated: false`；来自受信代理、未带头部的请求即运营者层级）。`passkey`：未配置时首次启动自动生成，持久化在状态目录，只打印一次，任何来源均可通过 `Authorization: Bearer` 使用。
 
@@ -37,5 +37,5 @@ Status: implemented
 - passkey 模式下连 loopback 浏览器也必须登录（passkey 或运营者令牌）；运营者令牌生成时只打印一次，存储在 harness home 的 `identity/` 状态目录下（`auth-secret`、`users.json`、`credentials.json`、`operator-token`）。
 - 实时的 `host/workspace-changed` 推送仅限运营者；分区用户的工作区选择器通过过滤后的 `workspace.list` RPC 重新建立基线（记录在包 README 的已知限制中）。
 - Passkey 绑定 RP 源（loopback 与 tailnet/portless 面需要分别注册；`127.0.0.1` 不是可注册的 RP ID）。
-- 此前面解析笔记中的结论“特权 /api 面保持 loopback 钉扎”分两步被取代：本层加入了运营者 Bearer 令牌，[特权面信任部署表面](../architecture/2026-08-18-privileged-plane-trusted-surfaces.md) 又把表面授权扩展到部署可信权威；该笔记现已交叉链接到本文。
+- 此前面解析笔记中的结论“特权 /api 面保持 loopback 钉扎”分两步被取代：本层加入了运营者 Bearer 令牌，[特权面信任部署表面](../architecture/2026-08-18-privileged-plane-trusted-surfaces.zh.md) 又把表面授权扩展到部署可信权威；该笔记现已交叉链接到本文。
 - 覆盖：新包内的提供者/Cookie/白名单/门禁单元套件、`identity-gate.host.spec`（真实身份插件经连接路由）、`api-proxy-identity.spec`（真实 api-proxy 上的 list/create/rename/mux/workspace 分区）、客户端半边的令牌/跳转规格、JSONL/SQLite 持久化套件中的属主往返，以及 `identity-header.e2e.ts`（真实 `dsh web` 启动按代理头分区列表/创建/历史）。

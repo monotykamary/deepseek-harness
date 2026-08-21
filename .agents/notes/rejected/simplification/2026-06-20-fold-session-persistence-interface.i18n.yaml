@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/rejected/simplification/2026-06-20-fold-session-persistence-interface.md
 2026-06-20-fold-session-persistence-interface.md: 47c09457b2b210200db2c6942fe64088ecc32bb6
-2026-06-20-fold-session-persistence-interface.zh.md: 13cf73515bb8eb4edd75d98e579afb644e4cf299
+2026-06-20-fold-session-persistence-interface.zh.md: 9eb6ca2e68261d51ce032a0ad3dc4ba811ed06c9

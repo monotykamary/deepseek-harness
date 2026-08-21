@@ -801,7 +801,10 @@
     },
     "packages/bundle/headless": {
       "ignoreDependencies": [
-        "@monotykamary/dsh-code-runtime-worker-thread"
+        "@monotykamary/dsh-code-runtime-worker-thread",
+        "@monotykamary/dsh-storage",
+        "@monotykamary/dsh-storage-domain",
+        "@monotykamary/dsh-storage-json"
       ]
     },
     "packages/bundle/web-app": {

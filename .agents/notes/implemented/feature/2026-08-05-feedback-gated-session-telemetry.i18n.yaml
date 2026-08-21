@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-05-feedback-gated-session-telemetry.md
 2026-08-05-feedback-gated-session-telemetry.md: ee926e572ef3b596736b236431f2c7864df8eb62
-2026-08-05-feedback-gated-session-telemetry.zh.md: 81e411edbfec2b89f4d5c5a1544f1556d1300b4e
+2026-08-05-feedback-gated-session-telemetry.zh.md: 94c9470a58c6d1ba1ade4ce45bb4ed5bb5344175

@@ -17,6 +17,7 @@
     "@monotykamary/dsh-agent-tool-presentation": "workspace:^",
     "@monotykamary/dsh-app-boot": "workspace:^",
     "@monotykamary/dsh-attachment": "workspace:^",
+    "@monotykamary/dsh-atomic-write": "workspace:^",
     "@monotykamary/dsh-shell": "workspace:^",
     "@monotykamary/dsh-shell-env": "workspace:^",
     "@monotykamary/dsh-bash-local": "workspace:^",

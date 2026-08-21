@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-27-typescript-sdk-and-sdk-subagent-backend.md
 2026-07-27-typescript-sdk-and-sdk-subagent-backend.md: 09050555a16fb2c77e46918e2ede1b431717c198
-2026-07-27-typescript-sdk-and-sdk-subagent-backend.zh.md: 154fbec5f4ca4ab05ab2c4e4966110e00f368849
+2026-07-27-typescript-sdk-and-sdk-subagent-backend.zh.md: 60830e9ca4a3add6ff765ab52fa77097ee64e8b4

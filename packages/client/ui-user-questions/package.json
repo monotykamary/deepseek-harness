@@ -69,13 +69,7 @@
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
     "@monotykamary/dsh-user-questions": "workspace:^",
-    "@types/react": "~18.3.1",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0",
-    "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-connection": "workspace:^"
+    "@types/react": "~18.3.1"
   },
   "files": [
     "lib/index.js",

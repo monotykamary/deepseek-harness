@@ -25,6 +25,6 @@ Status: implemented
 ## 后果
 
 - 任何随附 profile 都不导出会话数据，任何随附工件都不再命名 DeepSeek 遥测 endpoint。
-- `x-deepseek-harness-*` 提供方标头是另一个 surface，由[标头显式启用决策](../feature/2026-08-17-deepseek-request-headers-opt-in.md)设为默认关闭。
+- `x-deepseek-harness-*` 提供方标头是另一个 surface，由[标头显式启用决策](../feature/2026-08-17-deepseek-request-headers-opt-in.zh.md)设为默认关闭。
 - 组合 `@monotykamary/dsh-session-telemetry-otel` 的部署需在行内提供自己的 endpoint 与 mode；除非挂载 `session-telemetry/record` 规则，否则导出的是未经处理的原始捕获副本。
 - CI 不再设置 `DSH_TELEMETRY_DISABLED`；打包安装与 workflow spec 删除了该固定断言。

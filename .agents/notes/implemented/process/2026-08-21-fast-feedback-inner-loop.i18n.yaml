@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-21-fast-feedback-inner-loop.md
 2026-08-21-fast-feedback-inner-loop.md: a4be58e6672fb568a0c5521301fa52d0b9f62e7b
-2026-08-21-fast-feedback-inner-loop.zh.md: b3bc466fcbe7c9c7461b50350aa9532dd69f36e3
+2026-08-21-fast-feedback-inner-loop.zh.md: 539155279819212307e940bcf10523d92653f420

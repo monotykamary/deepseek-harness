@@ -6,7 +6,7 @@ Status: implemented
 
 ## 问题
 
-每个已授权的 DeepSeek 提供方请求都携带 `x-deepseek-harness-user-id`（与遥测和反馈共享的 harness home 匿名 UUID）、调用方提供会话 id 时的 `x-deepseek-harness-session-id`，以及压缩用途调用上的 `x-deepseek-harness-compact: 1`。[请求身份决策](2026-08-11-deepseek-request-user-id-header.md)在未经部署选择的情况下于每个请求发送用户 id，且首个已授权请求会顺带创建 `$DSH_HOME/.anonymous-user-id`。harness 的所有权已离开 DeepSeek，因此对提供方的出站关联必须改为显式启用。
+每个已授权的 DeepSeek 提供方请求都携带 `x-deepseek-harness-user-id`（与遥测和反馈共享的 harness home 匿名 UUID）、调用方提供会话 id 时的 `x-deepseek-harness-session-id`，以及压缩用途调用上的 `x-deepseek-harness-compact: 1`。[请求身份决策](2026-08-11-deepseek-request-user-id-header.zh.md)在未经部署选择的情况下于每个请求发送用户 id，且首个已授权请求会顺带创建 `$DSH_HOME/.anonymous-user-id`。harness 的所有权已离开 DeepSeek，因此对提供方的出站关联必须改为显式启用。
 
 ## 决策
 

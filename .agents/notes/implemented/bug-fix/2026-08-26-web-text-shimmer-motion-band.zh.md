@@ -6,7 +6,7 @@
 
 ## 背景
 
-由 [2026-08-20-web-running-row-text-shimmer](2026-08-20-web-running-row-text-shimmer.md) 引入的文字裁切闪光（`background-clip: text`）每帧都会重建行内每个字形的光栅；多行工具同时流式输出时，同一会话会按帧累积多次重绘，在长会话中表现为持续的 CPU 占用。早先的固定宽度扫光带（`left: -300px → 100%` 扫动，7d5ef1 时代继承）只是一层普通绘制、跑得明显更顺滑，但会扫过整行图标、分隔符与行宽。
+由 [2026-08-20-web-running-row-text-shimmer](2026-08-20-web-running-row-text-shimmer.zh.md) 引入的文字裁切闪光（`background-clip: text`）每帧都会重建行内每个字形的光栅；多行工具同时流式输出时，同一会话会按帧累积多次重绘，在长会话中表现为持续的 CPU 占用。早先的固定宽度扫光带（`left: -300px → 100%` 扫动，7d5ef1 时代继承）只是一层普通绘制、跑得明显更顺滑，但会扫过整行图标、分隔符与行宽。
 
 ## 决策
 

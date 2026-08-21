@@ -10,7 +10,7 @@ import * as FsPolicy from '@monotykamary/dsh-fs-observation-policy'
 import SandboxedFileSystem from '@monotykamary/dsh-fs-sandbox'
 import { CallId } from '@monotykamary/dsh-llm'
 import { LocalSandboxProvider } from '@monotykamary/dsh-sandbox-local'
-import { seatbeltProfileArgs } from '@monotykamary/dsh-sandbox-local/src/profiles.ts'
+import { bwrapProfileArgs, seatbeltProfileArgs } from '@monotykamary/dsh-sandbox-local/src/profiles.ts'
 import SandboxPolicyService from '@monotykamary/dsh-sandbox-policy'
 import { SessionId } from '@monotykamary/dsh-session'
 import * as ToolFs from '@monotykamary/dsh-tool-fs'
@@ -18,9 +18,7 @@ import type { ToolResult } from '@monotykamary/dsh-tools'
 import { launcherPath } from '@monotykamary/node-addon-landlock-run'
 import * as agentSpine from '../src/index.ts'
 
-const bwrapUsable = spawnSync('bwrap', [
-  '--ro-bind', '/', '/', '--dev', '/dev', '--proc', '/proc', '--die-with-parent', '--', 'true',
-], { timeout: 5_000, stdio: 'ignore' }).status === 0
+const bwrapUsable = spawnSync('bwrap', [...bwrapProfileArgs({ mode: 'read-only', workspaceRoot: '/' }), '--', 'true'], { timeout: 5_000, stdio: 'ignore' }).status === 0
 const landlockUsable = spawnSync(launcherPath(), ['--probe'], { timeout: 5_000, stdio: 'ignore' }).status === 0
 const seatbeltUsable = process.platform === 'darwin'
   && spawnSync('sandbox-exec', [...seatbeltProfileArgs({ mode: 'workspace-write', workspaceRoot: homedir() }), '--', 'true'], { timeout: 5_000, stdio: 'ignore' }).status === 0

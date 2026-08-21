@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-21-client-settings-plane-operator-eligible.md
 2026-08-21-client-settings-plane-operator-eligible.md: b31cf26a9c672787f0caae700f07781f504284f0
-2026-08-21-client-settings-plane-operator-eligible.zh.md: 233e2a9dcdb8ce509716cbc4cd30e3745193e319
+2026-08-21-client-settings-plane-operator-eligible.zh.md: bee94d56ee1839062f1da570e44f0e9539bf4695

@@ -55,6 +55,8 @@
   ],
   "peerDependencies": {
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/cordis-plugin-loader": "workspace:^",
+    "@monotykamary/dsh-host-webserver": "workspace:^"
   }
 }

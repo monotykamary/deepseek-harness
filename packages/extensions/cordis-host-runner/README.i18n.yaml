@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/extensions/cordis-host-runner/README.md
 README.md: 17922dd17df681c5886f9d8b301dc2fa3ad79c9f
-README.zh.md: b661ab5614ccbc577fe2c8e5082c056611758d85
+README.zh.md: 9619b9c1c17cd17f8ab70f1eb1914d6c69bc905d

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-06-16-pnpm-over-yarn.md
-2026-06-16-pnpm-over-yarn.md: 78975dc824607bfdc6919c7b9877015a51dab8c0
-2026-06-16-pnpm-over-yarn.zh.md: c69efc26a79f170312657bf33bcddc27217d028a
+2026-06-16-pnpm-over-yarn.md: 5468516a5d5788241d8412eebfe6a1b3678df0b2
+2026-06-16-pnpm-over-yarn.zh.md: 374b1670b576fc4d651a8ac68a6120a4e9d260fa

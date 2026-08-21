@@ -10,7 +10,7 @@ GUI 每次首启都会先显示共用弹窗的内部测试声明（内测声明�
 
 ## 决策
 
-从 `settings.onboarding` 中移除 `welcome-notice` 步骤，而不是改写。`ui-settings-models` 不再注册该步骤；其组件（`WelcomeNotice`）、确认 store（`welcome-store.ts`）、文案所有者（`onboarding-copy.ts`）、locale 键及其包级与浏览器 e2e 覆盖均被删除。`ui-settings-general` 继续注册 `ui-onboarding` namespace 及其 `welcomeNoticeVersion` 字段，使既有设置文档保持有效，与更早的[移除首次启动内测声明](2026-08-13-remove-first-run-beta-notice.md)做法一致。`deepseek-official` 凭据步骤与共用 `OnboardingModal` 保持不变；全新回环 GUI 直接进入凭据步骤（或就绪应用），不再有插页。
+从 `settings.onboarding` 中移除 `welcome-notice` 步骤，而不是改写。`ui-settings-models` 不再注册该步骤；其组件（`WelcomeNotice`）、确认 store（`welcome-store.ts`）、文案所有者（`onboarding-copy.ts`）、locale 键及其包级与浏览器 e2e 覆盖均被删除。`ui-settings-general` 继续注册 `ui-onboarding` namespace 及其 `welcomeNoticeVersion` 字段，使既有设置文档保持有效，与更早的[移除首次启动内测声明](2026-08-13-remove-first-run-beta-notice.zh.md)做法一致。`deepseek-official` 凭据步骤与共用 `OnboardingModal` 保持不变；全新回环 GUI 直接进入凭据步骤（或就绪应用），不再有插页。
 
 ## 曾考虑的替代方案
 
@@ -20,4 +20,4 @@ GUI 每次首启都会先显示共用弹窗的内部测试声明（内测声明�
 
 ## 后果
 
-全新 profile 不再看到内部测试插页；DeepSeek 凭据步骤成为唯一的引导弹窗。`ui-onboarding.welcomeNoticeVersion` 字段在宿主端继续注册，以保持文档兼容。[版本化 GUI 欢迎引导](../feature/2026-07-30-versioned-gui-welcome-onboarding.md)与[共用弹窗产品引导](../feature/2026-08-13-shared-modal-product-onboarding.md)两个决策在欢迎步骤上被部分取代，其余表面继续有效；本笔记持有移除理由。重新引入走同一 seam：在 `settings.onboarding` 中注册新步骤，复用不变的版本化字段。
+全新 profile 不再看到内部测试插页；DeepSeek 凭据步骤成为唯一的引导弹窗。`ui-onboarding.welcomeNoticeVersion` 字段在宿主端继续注册，以保持文档兼容。[版本化 GUI 欢迎引导](../feature/2026-07-30-versioned-gui-welcome-onboarding.zh.md)与[共用弹窗产品引导](../feature/2026-08-13-shared-modal-product-onboarding.zh.md)两个决策在欢迎步骤上被部分取代，其余表面继续有效；本笔记持有移除理由。重新引入走同一 seam：在 `settings.onboarding` 中注册新步骤，复用不变的版本化字段。

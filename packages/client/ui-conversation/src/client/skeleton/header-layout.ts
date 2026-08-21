@@ -116,6 +116,7 @@ export const HEADER_TIERS: readonly HeaderTier[] = [
   TITLE_ONLY_TIER,
 ]
 
+/** Measured inputs and previous selection used by the header disclosure solver. */
 export interface HeaderLayoutParams {
   /** Measured width of the header container (px), 0 before any read. */
   availableWidth: number
@@ -131,6 +132,7 @@ export interface HeaderLayoutParams {
   previousConfigIndex: number
 }
 
+/** Selected header tier and its measured fit result. */
 export interface HeaderLayoutResult {
   /** Resolved ladder index. */
   configIndex: number

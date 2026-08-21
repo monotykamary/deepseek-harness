@@ -8,7 +8,7 @@
 
 Layout 提供 Details 承载模式。三栏让步求解器能够保留中心栏下限时，Workbench 填充可调整宽度的内联栏。明确打开的 Details 偏好若求解为零内联宽度，同一个已挂载 Workbench 会通过共享的右侧 `Sheet` portal；关闭任一宿主都写入唯一的 layout 关闭动作。切换 Session 仍会在绘制前关闭 Details，而每个驻留 Session 的 store 会保留自身标签页。
 
-发货的 Web 组合由 [`ui-conversation`](../ui-conversation/README.md) 注册 **Inspect**，由 [`ui-deliverables`](../ui-deliverables/README.md) 注册 **Changes**，并由 [`ui-files`](../ui-files/README.md) 注册 **Files**；[Workbench Agent Note](../../../.agents/notes/implemented/feature/2026-08-18-web-ui-workbench.md)负责包拆分。Inspect 共享 conversation store，Changes 读取自己的增量 Conversation target，Files 则通过其 Session 授权的 Host Remote 读取。40px 标签栏、图标切换关闭按钮的交互、空启动器和响应式 Sheet 行为改编自 [T3 Code](https://github.com/pingdotgg/t3code) 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整 MIT 文本。
+发货的 Web 组合由 [`ui-conversation`](../ui-conversation/README.zh.md) 注册 **Inspect**，由 [`ui-deliverables`](../ui-deliverables/README.zh.md) 注册 **Changes**，并由 [`ui-files`](../ui-files/README.zh.md) 注册 **Files**；[Workbench Agent Note](../../../.agents/notes/implemented/feature/2026-08-18-web-ui-workbench.zh.md)负责包拆分。Inspect 共享 conversation store，Changes 读取自己的增量 Conversation target，Files 则通过其 Session 授权的 Host Remote 读取。40px 标签栏、图标切换关闭按钮的交互、空启动器和响应式 Sheet 行为改编自 [T3 Code](https://github.com/pingdotgg/t3code) 修订版 `a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2`；[`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 保留完整 MIT 文本。
 
 `/client` 入口导出插件主体、`IWorkbench`，以及品牌化界面和展示类型。组件、store factory、目录投影和 controller 实现保持包内私有。
 

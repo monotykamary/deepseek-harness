@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/sandbox/sandbox/README.md
 README.md: 886eeecda3a57289e2cb1c48088da7fd81ded750
-README.zh.md: 9b29bf44c4fc54637729adbb53f22deece05db3a
+README.zh.md: f6595c1019dee13a06c6dfc2de95578de868d8c9

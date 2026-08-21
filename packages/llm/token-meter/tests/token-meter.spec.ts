@@ -4,6 +4,7 @@ import { createUserMessage, CallId, createMessage } from '@monotykamary/dsh-llm'
 import type { ContentBlock, Message, TokenUsage } from '@monotykamary/dsh-llm'
 import SessionStore, { Session, SessionId, canonicalHeader } from '@monotykamary/dsh-session'
 import type { EpochHeader, SessionEvent } from '@monotykamary/dsh-session'
+import SessionProjectionRegistry from '@monotykamary/dsh-session-projection'
 import TokenMeter from '@monotykamary/dsh-token-meter'
 import type { TokenMeasurement, TokenMeterConfig } from '@monotykamary/dsh-token-meter'
 
@@ -90,7 +91,11 @@ function appendSuccessfulCall(
 }
 
 function meter(config: TokenMeterConfig = {}): TokenMeter {
-  return new TokenMeter(new Context(), config)
+  const ctx = new Context()
+  // The registry is a required injection of the service (its three projection
+  // units register in the constructor); mount it synchronously.
+  new SessionProjectionRegistry(ctx)
+  return new TokenMeter(ctx, config)
 }
 
 function expectSurfaceTotal(measurement: TokenMeasurement): void {
@@ -115,6 +120,7 @@ describe('TokenMeter configuration and registration', () => {
   it('registers and unregisters ctx.tokenMeter with its plugin fiber', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
     const fiber = await ctx.plugin(TokenMeter)
     expect(ctx.get('tokenMeter')).toBeInstanceOf(TokenMeter)
     await fiber.dispose()
@@ -660,6 +666,7 @@ describe('malformed replay and listener lifecycle', () => {
   it('handles earlier-reader catch-up, eager observation, and service reload', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
     let activeMeter: TokenMeter | undefined
     const revisions: number[] = []
     ctx.on('session/event', (session) => {

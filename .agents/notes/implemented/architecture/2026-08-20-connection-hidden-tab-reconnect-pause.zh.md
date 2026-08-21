@@ -32,4 +32,4 @@ ConnectionController 的重连循环会无视标签页可见性，以带抖动�
 
 ## Related
 
-[WebSocket downlink carrier](2026-08-04-websocket-downlink-carrier.md) 拥有双 socket 物理布局，其 generation 失败会进入这个循环；断线后重连并重建的 resync 策略是 [gui layering and RPC protocol](2026-07-19-gui-layering-and-rpc-protocol.md) 的决策。
+[WebSocket downlink carrier](2026-08-04-websocket-downlink-carrier.zh.md) 拥有双 socket 物理布局，其 generation 失败会进入这个循环；断线后重连并重建的 resync 策略是 [gui layering and RPC protocol](2026-07-19-gui-layering-and-rpc-protocol.zh.md) 的决策。

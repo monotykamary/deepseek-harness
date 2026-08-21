@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-12-scoped-layers-store.md
 2026-07-12-scoped-layers-store.md: 7760dbc4c7faff83449e9b9ed92515975432b1a9
-2026-07-12-scoped-layers-store.zh.md: 9e4e660acf6eec7a7ce7c5ab4667b3a81c2a45b9
+2026-07-12-scoped-layers-store.zh.md: bba0c9498f3e8ea340907f9cf0f42cb3a2525f87

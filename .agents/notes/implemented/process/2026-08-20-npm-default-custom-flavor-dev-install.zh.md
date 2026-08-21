@@ -6,7 +6,7 @@ Status: implemented
 
 ## Problem
 
-全新的 harness 检出无法组合 `web` 或 `headless` profile：工作区的 `overrides` 把 `dsh-fabric` 和 `dsh-fovea` 钉在旁人没有的同级 `link:` 检出上，而 pnpm 11 会静默跳过缺失的 `link:` override 目标 —— 安装以 0 退出，两个组件包都不落进 `node_modules`，第一次失败发生在 profile 启动时，以一条与根因毫不相干的裸模块解析错误出现。已用 node:24 容器中的干净克隆验证：安装退出码 0，每个 `node_modules` 里都没有 `dsh-fabric`，从 `apps/cli` 执行 `require.resolve('dsh-fabric')` 抛错。一位下游使用者在真实环境中踩中了这一点，并自行猜测布局，把他的 dsh-fabric 检出嵌套到了 `apps/web/dsh-fabric`。钉链接的做法早于组件包的发布；它们如今在 npm 上（`dsh-fabric@0.1.0`、`dsh-fovea@0.2.0`），因此公共默认值成为可能。被本说明部分取代的同级链接设计由[定制风味默认组件包及其发布](2026-08-20-custom-flavor-default-bundles-and-publication.md)持有。
+全新的 harness 检出无法组合 `web` 或 `headless` profile：工作区的 `overrides` 把 `dsh-fabric` 和 `dsh-fovea` 钉在旁人没有的同级 `link:` 检出上，而 pnpm 11 会静默跳过缺失的 `link:` override 目标 —— 安装以 0 退出，两个组件包都不落进 `node_modules`，第一次失败发生在 profile 启动时，以一条与根因毫不相干的裸模块解析错误出现。已用 node:24 容器中的干净克隆验证：安装退出码 0，每个 `node_modules` 里都没有 `dsh-fabric`，从 `apps/cli` 执行 `require.resolve('dsh-fabric')` 抛错。一位下游使用者在真实环境中踩中了这一点，并自行猜测布局，把他的 dsh-fabric 检出嵌套到了 `apps/web/dsh-fabric`。钉链接的做法早于组件包的发布；它们如今在 npm 上（`dsh-fabric@0.1.0`、`dsh-fovea@0.2.0`），因此公共默认值成为可能。被本说明部分取代的同级链接设计由[定制风味默认组件包及其发布](2026-08-20-custom-flavor-default-bundles-and-publication.zh.md)持有。
 
 ## Decision
 

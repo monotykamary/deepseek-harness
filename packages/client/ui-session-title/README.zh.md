@@ -10,7 +10,7 @@ Web 端会话标题偏好插件：其浏览器半边在通用设置区注册 `se
 
 ## 模型体验
 
-间接地，经由该开关选入的宿主标题提供方发起，其辅助请求由 [dsh-session-title-llm](../../session/session-title-llm/README.md#model-experience) 说明。
+间接地，经由该开关选入的宿主标题提供方发起，其辅助请求由 [dsh-session-title-llm](../../session/session-title-llm/README.zh.md#model-experience) 说明。
 
 #### KV Cache 影响
 

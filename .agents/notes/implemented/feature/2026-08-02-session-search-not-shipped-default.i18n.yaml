@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-02-session-search-not-shipped-default.md
 2026-08-02-session-search-not-shipped-default.md: 6c438adcebc7b4262a3e4b51d42eeabd4815caf4
-2026-08-02-session-search-not-shipped-default.zh.md: 307850136c9bcaf5796e694a5ad8d19dfa16f2cb
+2026-08-02-session-search-not-shipped-default.zh.md: 0542aaca21e3d2aabf52d80deaed652a2cb63e40

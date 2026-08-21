@@ -37,7 +37,7 @@ function scopeOf(path: string): string | undefined {
   return undefined
 }
 
-const options = parseArgs({
+const { values: options } = parseArgs({
   args: process.argv.slice(2),
   options: {
     watch: { type: 'boolean', default: false },

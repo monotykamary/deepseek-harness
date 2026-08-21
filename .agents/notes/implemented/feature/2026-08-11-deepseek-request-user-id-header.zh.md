@@ -12,7 +12,7 @@ Status: implemented
 
 ## 决策
 
-`dsh-llm-deepseek` 仅在启用 `requestHeaders.userId` 时发送 `x-deepseek-harness-user-id`；[标头显式启用决策](2026-08-17-deepseek-request-headers-opt-in.md)使全部 harness 关联标头默认关闭。启用时，该值来自 `@monotykamary/dsh-anonymous-user-id`，因此与同一 `$DSH_HOME` 的 OpenTelemetry Resource `user.id` 及 `/feedback` 确认一致。适配器仅在 `requestHeaders.sessionId` 启用且存在 `GenerateOptions.sessionId` 时发送 `x-deepseek-harness-session-id`；普通 agent、标题生成与压缩请求由 agent loop 提供当前持久化 `Session.id`。`requestHeaders.compact` 控制压缩用途请求上的 `x-deepseek-harness-compact: 1`。
+`dsh-llm-deepseek` 仅在启用 `requestHeaders.userId` 时发送 `x-deepseek-harness-user-id`；[标头显式启用决策](2026-08-17-deepseek-request-headers-opt-in.zh.md)使全部 harness 关联标头默认关闭。启用时，该值来自 `@monotykamary/dsh-anonymous-user-id`，因此与同一 `$DSH_HOME` 的 OpenTelemetry Resource `user.id` 及 `/feedback` 确认一致。适配器仅在 `requestHeaders.sessionId` 启用且存在 `GenerateOptions.sessionId` 时发送 `x-deepseek-harness-session-id`；普通 agent、标题生成与压缩请求由 agent loop 提供当前持久化 `Session.id`。`requestHeaders.compact` 控制压缩用途请求上的 `x-deepseek-harness-compact: 1`。
 
 插件在凭据解析成功后惰性获取用户 id，并在该插件实例内缓存。缺少凭据不会创建 `.anonymous-user-id`，且 userId 标头关闭时解析器绝不会被调用，因此只有标头启用时，首个已授权的提供方请求才可能创建它。直连适配器构造函数接收 `resolveUserId` 依赖，使线路行为可在单元测试中保持确定性。
 

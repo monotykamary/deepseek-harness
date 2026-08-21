@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-06-17-filesystem-tool-schemas.md
 2026-06-17-filesystem-tool-schemas.md: eb140a180134e116b49a66e2819b39e874d05b8a
-2026-06-17-filesystem-tool-schemas.zh.md: 625247133cdcde0b168a9104e4af00d2d2f1ae6b
+2026-06-17-filesystem-tool-schemas.zh.md: b1d12e2b8557bdf9c52fb3b42da33ed5957e3ae2

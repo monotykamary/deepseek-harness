@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/schedule/schedule/README.md
 README.md: e52a663bc983b281179544f1dd2b27c435cf1bdc
-README.zh.md: 2eee3d0ac17e3a30f0b6a16eb8addada450ef418
+README.zh.md: ea1acdaf62fef39a221d29e94623d15fcdbc4607

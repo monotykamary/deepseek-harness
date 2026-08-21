@@ -1,7 +1,7 @@
 /**
  * Derives the workspace browser tree from Host Workspace order and membership.
  * Unassigned Sessions trail under Ungrouped; blank Sessions (nothing started)
- * are hidden everywhere until the first prompt converts them.
+ * expose only the selected provisional row until the first prompt converts it.
  */
 import {
   indexSubagentDescendants, type PendingInteractionStatus, type SessionId, type SessionListState,
@@ -26,6 +26,8 @@ export interface SessionNode {
   branch?: string
   /** Stored display title. */
   title: string
+  /** Selected provisional session with no first prompt yet; omitted for ordinary rows. */
+  blank?: boolean
   /** The runtime Session list reports an interaction awaiting this user. */
   pendingInteraction?: PendingInteractionStatus
   running: boolean
@@ -115,15 +117,20 @@ function byRecency(a: SessionSummary, b: SessionSummary): number {
 
 /**
  * Ordinary sessions are visible; blank sessions (nothing started yet) are
- * visible nowhere — New Session is an ephemeral page until the first prompt
- * converts the session. Subagent children use their parent header catalog;
- * archived sessions are visible nowhere, while their accounting slots remain
- * so unarchiving restores position.
+ * Ordinary sessions are visible; among blank sessions, only the current one
+ * is visible. Subagent children use their parent header catalog; archived
+ * sessions are visible nowhere, while their accounting slots remain so
+ * unarchiving restores position.
  */
-function sessionVisible(session: SessionSummary, archived: ReadonlySet<SessionId>): boolean {
+function sessionVisible(session: SessionSummary, current: SessionId | undefined, archived: ReadonlySet<SessionId>): boolean {
   return session.origin !== 'subagent'
     && !archived.has(session.id)
-    && !session.blank
+    && (!session.blank || session.id === current)
+}
+
+/** Display title for one sidebar row, including the provisional blank label. */
+function sessionTitle(session: SessionSummary): string {
+  return session.blank ? 'New Session' : session.displayTitle
 }
 
 /** Build one group without projecting session lineage into presentation. */
@@ -182,7 +189,7 @@ function groupByWorkspace(
       const summary = list.byId[id]
       if (summary === undefined) continue // account may lead the list pull; the row appears when the summary lands
       accounted.add(id)
-      if (!sessionVisible(summary, archived) || shelved.has(summary.id)) continue
+      if (!sessionVisible(summary, list.current, archived) || shelved.has(summary.id)) continue
       members.push(summary)
     }
     groups.push(buildGroup(
@@ -194,7 +201,7 @@ function groupByWorkspace(
     .map(id => list.byId[id])
     .filter((s): s is SessionSummary =>
       s !== undefined && !accounted.has(s.id) && !shelved.has(s.id)
-      && sessionVisible(s, archived))
+      && sessionVisible(s, list.current, archived))
   if (stray.length > 0) {
     groups.push(buildGroup(
       UNGROUPED_KEY,
@@ -218,7 +225,8 @@ function sessionNode(
     id: s.id,
     workspace,
     ...(s.branch === undefined ? {} : { branch: s.branch }),
-    title: s.displayTitle,
+    title: sessionTitle(s),
+    blank: s.blank,
     running: s.running,
     runningSubagentCount: descendants.get(s.id)?.runningCount ?? 0,
     completed: s.completed === true,
@@ -391,7 +399,7 @@ export function deriveFlat(
   const rows: SessionSummary[] = []
   for (const id of list.ids) {
     const s = list.byId[id]
-    if (s === undefined || shelved.has(s.id) || !sessionVisible(s, archived)) continue
+    if (s === undefined || shelved.has(s.id) || !sessionVisible(s, list.current, archived)) continue
     rows.push(s)
   }
   rows.sort(byRecency)
@@ -461,7 +469,7 @@ export function deriveSearchResults(
       summary === undefined
       || summary.blank
       || !inScope(summary.id)
-      || !sessionVisible(summary, archived)
+      || !sessionVisible(summary, list.current, archived)
     ) continue
     if (
       summary.displayTitle.toLowerCase().includes(q)
@@ -486,7 +494,7 @@ export function deriveSearchResults(
       summary !== undefined
       && !summary.blank
       && inScope(summary.id)
-      && sessionVisible(summary, archived)
+      && sessionVisible(summary, list.current, archived)
     ) include(summary)
   }
 

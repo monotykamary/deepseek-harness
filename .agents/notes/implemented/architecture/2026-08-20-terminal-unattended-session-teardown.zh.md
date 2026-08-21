@@ -32,4 +32,4 @@ Status: implemented
 
 ## Related
 
-[Terminal latency parity](2026-08-19-terminal-latency-parity.md) 拥有输出调度与查看方 fan-out 机制，本次 teardown 为它们加上时间上的边界。
+[Terminal latency parity](2026-08-19-terminal-latency-parity.zh.md) 拥有输出调度与查看方 fan-out 机制，本次 teardown 为它们加上时间上的边界。

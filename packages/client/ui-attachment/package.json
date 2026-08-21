@@ -56,11 +56,7 @@
     "@types/react-dom": "~18.3.0",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@monotykamary/dsh-attachment": "workspace:^"
+    "@monotykamary/dsh-client-ui-slots": "workspace:^"
   },
   "files": [
     "lib/index.js",

@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/simplification/2026-08-12-production-dsh-excludes-product-subagent-providers.md
 2026-08-12-production-dsh-excludes-product-subagent-providers.md: e252910012b2a9bed8df55fd2b648307d616d86c
-2026-08-12-production-dsh-excludes-product-subagent-providers.zh.md: 72f92b9299e0649b8a6da47df74a37e39bc0d0b8
+2026-08-12-production-dsh-excludes-product-subagent-providers.zh.md: 361f00f628e6740143b1d12dfc26c9777d996b48

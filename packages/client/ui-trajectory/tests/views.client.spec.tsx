@@ -49,11 +49,21 @@ const sessionSnapshots = new WeakMap<SlotRegistry, SnapshotStore<ConversationSna
 const tConversation: ConversationSessionHeaderProps['t'] =
   key => (conversationZh as Record<string, string>)[key] ?? key
 
-afterEach(cleanup)
+class ResizeObserverStub {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 // The chat store persists under its declared key; clear so one case's active
 // view cannot rehydrate into the next.
 beforeEach(() => {
   localStorage.clear()
+  vi.stubGlobal('ResizeObserver', ResizeObserverStub)
 })
 
 /** Node fixture: user prologue, two turns, one tool result inside turn 1. */
@@ -274,6 +284,12 @@ function mount(slots: SlotRegistry, nodes: ConversationSnapshot['nodes'] = NODES
         detailsOpen={false}
         renderSlot={() => null}
         views={views}
+        headerEntries={{
+          actions: () => 0,
+          utilities: () => 0,
+          subscribe: () => () => {},
+          version: () => 0,
+        }}
         useInput={useInput}
         inputActions={inputActions}
         open={vi.fn()}

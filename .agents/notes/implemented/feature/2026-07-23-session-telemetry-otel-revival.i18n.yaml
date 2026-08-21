@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-23-session-telemetry-otel-revival.md
 2026-07-23-session-telemetry-otel-revival.md: a8902a15fd007616333b907b3ab748b0500144ab
-2026-07-23-session-telemetry-otel-revival.zh.md: 2b19c8e807ce783fe6c6bbcfbdbbd9dbad1ad5cd
+2026-07-23-session-telemetry-otel-revival.zh.md: 0dc3ea5f6337bcf7fba48fb07645cbc6b9b6092e

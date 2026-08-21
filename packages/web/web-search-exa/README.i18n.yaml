@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/web/web-search-exa/README.md
 README.md: 3201f576179eab9362dc1c03ae3742970387ba43
-README.zh.md: 1aaa8e5fd793846c2943fb098e14cd7365179fc3
+README.zh.md: 515652062848ad58a0a2eaffc54dbf0a6d8738a0

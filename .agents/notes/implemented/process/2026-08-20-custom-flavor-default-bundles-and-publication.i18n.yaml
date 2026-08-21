@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-20-custom-flavor-default-bundles-and-publication.md
 2026-08-20-custom-flavor-default-bundles-and-publication.md: f0fbb9cd3b13ef081edf99e5ccf211d76f6c0797
-2026-08-20-custom-flavor-default-bundles-and-publication.zh.md: d6a07339807609efe38867032f751fa557350135
+2026-08-20-custom-flavor-default-bundles-and-publication.zh.md: 5ca643ad9e3606ee2bb18480313ffaad8fc9d222

@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-26-mobile-header-disclosure-solver.md
 2026-08-26-mobile-header-disclosure-solver.md: a333b207a3aec04a8d71c5aa1ba160919dfab70f
-2026-08-26-mobile-header-disclosure-solver.zh.md: 716c70dacb789b4aefb5216e45557b78b260f573
+2026-08-26-mobile-header-disclosure-solver.zh.md: 96885d10be165aab8700c57de69254d15017bb39

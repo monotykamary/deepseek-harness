@@ -27,6 +27,11 @@ import css from './Rows.module.css'
 /** The standard locale seat, prop-passed from the browser root. */
 type RowTranslate = WorkspaceBrowserProps['t']
 
+/** Row display title: blank rows show the localized New Session label. */
+function displayTitle(node: SessionNode, t: RowTranslate): string {
+  return node.blank ? t('session.new') : node.title
+}
+
 /** Localized compact relative time ("刚刚"/"5分钟" in zh, "now"/"5min" in en). */
 function timeLabel(updatedAt: number, now: number, t: RowTranslate): string {
   const { unit, n } = relativeTime(updatedAt, now)
@@ -474,7 +479,7 @@ export function SessionNodeItem({
   t: RowTranslate
 }) {
   const row = node
-  const title = row.title
+  const title = displayTitle(row, t)
   const selected = node.id === currentId
   const statuses = sessionStatuses(node, t)
   const primaryStatus = statuses[0]

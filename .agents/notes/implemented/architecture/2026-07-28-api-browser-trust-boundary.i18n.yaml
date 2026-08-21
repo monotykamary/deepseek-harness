@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-28-api-browser-trust-boundary.md
 2026-07-28-api-browser-trust-boundary.md: 044e12f40fa586be8e08f5fa8bdd83875f7c81da
-2026-07-28-api-browser-trust-boundary.zh.md: 2bd436ee217c1f46185543c7cbb9be448b4c8e45
+2026-07-28-api-browser-trust-boundary.zh.md: e4cb34e3f094202899c01913a064481d7bbdb274

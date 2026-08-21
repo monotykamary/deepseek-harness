@@ -2778,6 +2778,9 @@ importers:
 
   packages/client/ui-settings:
     dependencies:
+      '@monotykamary/dsh-client-schema-form':
+        specifier: workspace:^
+        version: link:../schema-form
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -2794,9 +2797,6 @@ importers:
       '@monotykamary/dsh-client-runtime':
         specifier: workspace:^
         version: link:../runtime
-      '@monotykamary/dsh-client-schema-form':
-        specifier: workspace:^
-        version: link:../schema-form
       '@monotykamary/dsh-client-test-runtime':
         specifier: workspace:^
         version: link:../../test-support/client-runtime
@@ -3106,6 +3106,9 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -3143,6 +3146,9 @@ importers:
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
+      '@types/react-dom':
+        specifier: ~18.3.0
+        version: 18.3.7(@types/react@18.3.31)
 
   packages/client/ui-terminal:
     dependencies:
@@ -3597,21 +3603,12 @@ importers:
       '@monotykamary/dsh-client-modules':
         specifier: workspace:^
         version: link:../modules
-      '@monotykamary/dsh-client-schema-form':
-        specifier: workspace:^
-        version: link:../schema-form
-      '@monotykamary/dsh-client-ui-attachment':
-        specifier: workspace:^
-        version: link:../ui-attachment
       '@monotykamary/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
-      '@monotykamary/dsh-client-ui-theme':
-        specifier: workspace:^
-        version: link:../ui-theme
       '@monotykamary/dsh-client-web-react':
         specifier: workspace:^
         version: link:../web-react
@@ -4246,6 +4243,21 @@ importers:
       '@monotykamary/dsh-user-approval':
         specifier: workspace:^
         version: link:../../interaction/user-approval
+
+  packages/credentials/authorization:
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-credentials':
+        specifier: workspace:^
+        version: link:../credentials
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
 
   packages/credentials/credentials:
     devDependencies:
@@ -5981,12 +5993,21 @@ importers:
       '@monotykamary/dsh-anonymous-user-id':
         specifier: workspace:^
         version: link:../../identity/anonymous-user-id
+      '@monotykamary/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
       '@monotykamary/dsh-attachment':
         specifier: workspace:^
         version: link:../../attachment/attachment
+      '@monotykamary/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
       '@monotykamary/dsh-credentials':
         specifier: workspace:^
         version: link:../../credentials/credentials
+      '@monotykamary/dsh-home-paths':
+        specifier: workspace:^
+        version: link:../../util/home-paths
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -8555,6 +8576,9 @@ importers:
 
   packages/test-support/client-runtime:
     dependencies:
+      '@monotykamary/dsh-client-web-react':
+        specifier: workspace:^
+        version: link:../../client/web-react
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -8577,9 +8601,6 @@ importers:
       '@monotykamary/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../../client/ui-slots
-      '@monotykamary/dsh-client-web-react':
-        specifier: workspace:^
-        version: link:../../client/web-react
       '@monotykamary/dsh-host-apiproxy':
         specifier: workspace:^
         version: link:../../host/apiproxy
@@ -9231,6 +9252,9 @@ importers:
       '@monotykamary/dsh-app-boot':
         specifier: workspace:^
         version: link:../../packages/boot/app-boot
+      '@monotykamary/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../packages/util/atomic-write
       '@monotykamary/dsh-attachment':
         specifier: workspace:^
         version: link:../../packages/attachment/attachment

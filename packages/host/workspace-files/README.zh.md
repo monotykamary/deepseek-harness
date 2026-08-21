@@ -19,7 +19,7 @@ Session 授权且与 provider 无关的 Host Remote，用于工作区目录列�
 
 四个值都必须是正安全整数；无效的自包含配置会在插件构造时明确失败。
 
-包根入口导出 `WorkspaceFilesGateway`、`Config` 以及 JSON 安全的 locator、entry、listing、read、version 与 write-result 类型。`./types` 只导出该 payload 词汇；Typert 生成的 Host 与 Client 产物位于 `./typert` 和 `./remote`。浏览器包通过显式的 [`api-remotes`](../../api/remotes/README.md) 组合消费后者。[Files Agent Note](../../../.agents/notes/implemented/feature/2026-08-18-workspace-files-workbench.md)负责授权与有界读取的理由。
+包根入口导出 `WorkspaceFilesGateway`、`Config` 以及 JSON 安全的 locator、entry、listing、read、version 与 write-result 类型。`./types` 只导出该 payload 词汇；Typert 生成的 Host 与 Client 产物位于 `./typert` 和 `./remote`。浏览器包通过显式的 [`api-remotes`](../../api/remotes/README.zh.md) 组合消费后者。[Files Agent Note](../../../.agents/notes/implemented/feature/2026-08-18-workspace-files-workbench.zh.md)负责授权与有界读取的理由。
 
 ## Model Experience
 

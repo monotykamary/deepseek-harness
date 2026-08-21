@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/testing/2026-07-24-web-gui-browser-e2e-lane.md
 2026-07-24-web-gui-browser-e2e-lane.md: 1860fe619ab6d3940d029da4e713fdf9b9d42109
-2026-07-24-web-gui-browser-e2e-lane.zh.md: 44a58cb8a6db18eb082aa388af3a4c9146a97bea
+2026-07-24-web-gui-browser-e2e-lane.zh.md: 758260253e8262097d67a46821fcee357ee0b76d

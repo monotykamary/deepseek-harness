@@ -43,4 +43,4 @@ Use **Terminal settings** in either placement to select the theme, font or custo
 - [Configure models](./providers.md)
 - [Use the Python SDK](./python-sdk.md)
 - [Use other CLI modes](../../../apps/cli/README.md)
-- [Develop a plugin](../develop/basic/)
+- [Develop a plugin](../develop/basic/index.md)

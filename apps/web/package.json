@@ -30,7 +30,6 @@
     "@monotykamary/dsh-client-modules": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "@monotykamary/dsh-client-web": "workspace:^",
     "@monotykamary/dsh-cmdline": "workspace:^",
     "@monotykamary/dsh-pwsh-local": "workspace:^",
     "@types/node": "^22.0.0",

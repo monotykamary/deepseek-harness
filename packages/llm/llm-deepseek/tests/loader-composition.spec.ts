@@ -53,7 +53,7 @@ async function loadComposition(
   const credentialsPath = join(root, '.credentials.yaml')
   if (options.withDynamic && fresh) {
     await writeFile(settingsPath, '# personal settings\n')
-    await writeFile(credentialsPath, 'DEEPSEEK_API_KEY: boot-key\n', { mode: 0o600 })
+    await writeFile(credentialsPath, 'version: 1\nrefs:\n  DEEPSEEK_API_KEY: boot-key\n', { mode: 0o600 })
   }
 
   const configPath = join(root, 'cordis.yml')
@@ -119,14 +119,12 @@ describe('llm-deepseek real dynamic composition', () => {
     expect(serverA.headers[0]?.authorization).toBe('Bearer boot-key')
     expect(serverA.headers[0]).not.toHaveProperty('x-deepseek-harness-user-id')
 
-    // External edits, exactly as a user or the web UI would leave them on
-    // disk; enabling the opt-in header here proves the settings-document path
-    // reaches the very next request.
+    // External edits, exactly as a user or the web UI would leave them on disk.
     await writeFile(settingsPath, `llm-deepseek:\n  baseURL: ${serverB.url}\n  requestHeaders:\n    userId: true\n`)
     await vi.waitFor(() => {
       expect((ctx.get('settings')!.get(NS) as { baseURL?: string }).baseURL).toBe(serverB.url)
     }, { timeout: 5000 })
-    await writeFile(credentialsPath, 'DEEPSEEK_API_KEY: rotated-key\n', { mode: 0o600 })
+    await writeFile(credentialsPath, 'version: 1\nrefs:\n  DEEPSEEK_API_KEY: rotated-key\n', { mode: 0o600 })
     await vi.waitFor(async () => {
       expect(await ctx.get('credentials')!.resolve(KEY_REF)).toEqual({ value: 'rotated-key', source: 'file' })
     }, { timeout: 5000 })

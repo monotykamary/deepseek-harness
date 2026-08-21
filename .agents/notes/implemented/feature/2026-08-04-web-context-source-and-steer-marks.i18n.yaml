@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-04-web-context-source-and-steer-marks.md
 2026-08-04-web-context-source-and-steer-marks.md: 75c3e387d69c2a187f8315583711552ade0c5f32
-2026-08-04-web-context-source-and-steer-marks.zh.md: b743713b6a3c2a3137995600ea973369e271c1bd
+2026-08-04-web-context-source-and-steer-marks.zh.md: 3d120a4289f5f20931d18a4f7df2170fee509a07

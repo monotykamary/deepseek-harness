@@ -35,10 +35,8 @@
 import { Context } from '@monotykamary/cordis'
 import Loader from '@monotykamary/cordis-plugin-loader'
 import { createRoot, type Root } from 'react-dom/client'
-import * as ModulesClient from '@monotykamary/dsh-client-modules/client'
-import {
-  ClientModuleSystem, parseBootManifest,
-  type BootManifest, type ClientModuleSystemOptions, type DshWindow,
+import type {
+  BootManifest, ClientModuleCreateOptions, ClientModuleSystem, DshWindow,
 } from '@monotykamary/dsh-client-modules/client'
 import * as AppShell from './app-shell.ts'
 import { APP_SHELL_ID } from './app-shell.ts'
@@ -48,7 +46,7 @@ import { STATE_LABELS, createLoaderStatusStore, createSignal } from './loader-st
 import './base.css'
 
 /** Module transport hook the shell passes through (jsdom tests replace the <script> path). */
-export type BootSeams = Pick<ClientModuleSystemOptions, 'loadBundle'>
+export type BootSeams = Pick<ClientModuleCreateOptions, 'loadBundle'>
 
 /**
  * Reload a visible document whose shell-owned React mount point has become empty.
@@ -70,11 +68,10 @@ export function installBlankRootRecovery(element: HTMLElement, reload: () => voi
 }
 
 /**
- * The modules package's own graph row id. The kernel adopts that entry
- * itself (its wrapper is statically registered — shell-bundled code, never
- * fetched), so the plugin-row loop must skip it: the vendored Group.create
- * does not deduplicate by name, and a second fiber would provide 'modules'
- * twice.
+ * The modules package's own graph row id. The HTML parser preloads and
+ * materializes its bootstrap registration before this kernel runs, so the
+ * plugin-row loop must skip that id when mapping the remaining rows: the
+ * vendored Group.create does not deduplicate by name.
  */
 const MODULES_ID = '@monotykamary/dsh-client-modules'
 
@@ -115,21 +112,23 @@ export class AppWebEntry {
    * @returns resolves once the UI settled or the failure report rendered.
    */
   async run(): Promise<void> {
-    this.manifest = parseBootManifest((globalThis as DshWindow).__DSH_BOOT__)
-
-    this.modules = new ClientModuleSystem({
-      modules: this.manifest.modules, staticModules: getStaticModules(), ...this.seams,
+    const win = globalThis as DshWindow
+    const moduleLoader = win.__ModuleLoader__
+    if (moduleLoader === undefined) {
+      throw new Error('web boot: window.__ModuleLoader__ bootstrap facade is missing')
+    }
+    // A pre-injected transport (the worker preview page) owns bundle bytes;
+    // its loadBundle is the default and explicit seams still win.
+    const transport = (globalThis as {
+      __DSH_TRANSPORT__?: { loadBundle?: ClientModuleCreateOptions['loadBundle'] }
+    }).__DSH_TRANSPORT__
+    this.modules = moduleLoader.create({
+      boot: win.__DSH_BOOT__,
+      staticModules: { ...getStaticModules(), [APP_SHELL_ID]: AppShell },
+      ...transport?.loadBundle === undefined ? {} : { loadBundle: transport.loadBundle },
+      ...this.seams,
     })
-    // The app-shell assembly is the only shell-own module: every other graph
-    // row is a plugin bundle arriving through fetch.
-    this.modules.registerStatic(APP_SHELL_ID, AppShell)
-    // Adoption handoff, supply side: register the modules
-    // package's own client half under its bare package name (= graph row id
-    // = entry name — a suffixed key would miss the statics branch and
-    // trigger a real fetch), and put the instance on the kernel slot the
-    // wrapper's apply reads to provide ctx.modules.
-    this.modules.registerStatic(MODULES_ID, ModulesClient)
-    ;(globalThis as DshWindow).__DSH_MODULES__ = this.modules
+    this.manifest = this.modules.manifest
 
     this.root = createRoot(this.el)
     this.root.render(
@@ -172,6 +171,11 @@ export class AppWebEntry {
 
   /** Prefetch the immediately tier (factory registration only; failures defer to the import path). */
   private async prefetchImmediateTier(): Promise<void> {
+    // A transport carrying loadBundle owns bundle bytes instead of the HTTP deployment.
+    const transport = (globalThis as {
+      __DSH_TRANSPORT__?: { loadBundle?: unknown }
+    }).__DSH_TRANSPORT__
+    if (transport?.loadBundle !== undefined) return
     await Promise.all(this.manifest.plugins
       .filter(row => row.immediately)
       .map(row => this.modules.prefetch(row.id).catch(() => {

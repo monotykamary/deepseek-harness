@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/rejected/simplification/2026-07-19-fold-compaction-package-split.md
 2026-07-19-fold-compaction-package-split.md: 178754fbc5974e61b5eee8f6a6159d8b3b587fc5
-2026-07-19-fold-compaction-package-split.zh.md: 667bae0018953e1568c22fa2bc30127e0c252365
+2026-07-19-fold-compaction-package-split.zh.md: ba43c4773a5f2b338847de0f81fdc33c4b888920

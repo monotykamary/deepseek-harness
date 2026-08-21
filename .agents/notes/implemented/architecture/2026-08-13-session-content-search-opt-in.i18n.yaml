@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-13-session-content-search-opt-in.md
 2026-08-13-session-content-search-opt-in.md: c5164be41f5c007632128c640691ec512c939fe2
-2026-08-13-session-content-search-opt-in.zh.md: b4e43678a3e7e480f4c95eeb4c01ebcf805eb6b6
+2026-08-13-session-content-search-opt-in.zh.md: 9a9b7cbe7f7e80269162238591451cd535e00f9a

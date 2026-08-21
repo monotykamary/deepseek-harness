@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-02-win32-in-process-folder-dialog.md
 2026-08-02-win32-in-process-folder-dialog.md: 90e4efc45532a92989841ccc79f00648e2053b1d
-2026-08-02-win32-in-process-folder-dialog.zh.md: dbf7719a5c2276cca7d2b378e6490572cb1058fe
+2026-08-02-win32-in-process-folder-dialog.zh.md: 864d43d5972755a14e95d6577bb4afd2b84d50ee

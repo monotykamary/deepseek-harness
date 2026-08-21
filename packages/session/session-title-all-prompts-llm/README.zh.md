@@ -6,7 +6,7 @@
 
 自动生成默认关闭：只有当解析后的 `session-title-llm` 设置区段具有 `enabled: true`（Web 设置开关）或组合条目显式设置时才挂载该提供方。禁用或移除该插件时，确定性的回退标题仍然生效。
 
-该插件使用完整且必填的[共享 LLM（大语言模型）配置](../session-title-llm/README.md#configuration)。同时省略 `provider` 与 `model` 时，会继承每个当前已记录主请求的确切路由；也可以同时设置二者，使标题生成使用独立路由。如果最终封装的聚合提示词超过 `maxInputBytes`，请求会失败而不是截断历史；自动使用时会发出警告并保留先前标题。
+该插件使用完整且必填的[共享 LLM（大语言模型）配置](../session-title-llm/README.zh.md#configuration)。同时省略 `provider` 与 `model` 时，会继承每个当前已记录主请求的确切路由；也可以同时设置二者，使标题生成使用独立路由。如果最终封装的聚合提示词超过 `maxInputBytes`，请求会失败而不是截断历史；自动使用时会发出警告并保留先前标题。
 
 ## 模型体验
 

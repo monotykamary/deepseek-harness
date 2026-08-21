@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/subagent/subagent-dsh-sdk/README.md
 README.md: e06eec9e8c3982f0620e10775618ccc78ee7bf19
-README.zh.md: 4346dc0da7db3879c7ba31dc2dda2157fc6899df
+README.zh.md: 47870e4b2aa4d14449d62a95d3b7b8da86bfcfce

@@ -12,7 +12,7 @@ Status: implemented
 
 插件配置分区渲染的是注册进 `settings.plugin.item` 的卡片列表，无序。卡片携带的是不透明的 `id`，从不是它所编辑的命名空间，因此分区无从判断哪些被服务的命名空间已经有了归属。凡是"这个命名空间由谁渲染"的问题，都无法从分区看得见的账本里得到答案。
 
-两者相加，用户自己写的插件就只能靠手改 `settings.yaml` 来配置。[web 插件配置 note](../feature/2026-08-10-web-plugin-configuration.md) 把白名单记为刻意为之，[配置面边界 note](2026-07-30-config-plane-boundaries.md) 则把「可在 Web 上配置」绑定到可配置提供方目录的成员资格。这两条结论恰恰挡住了那个通用 seam 本来要服务的插件作者。
+两者相加，用户自己写的插件就只能靠手改 `settings.yaml` 来配置。[web 插件配置 note](../feature/2026-08-10-web-plugin-configuration.zh.md) 把白名单记为刻意为之，[配置面边界 note](2026-07-30-config-plane-boundaries.zh.md) 则把「可在 Web 上配置」绑定到可配置提供方目录的成员资格。这两条结论恰恰挡住了那个通用 seam 本来要服务的插件作者。
 
 ## Decision
 
@@ -22,7 +22,7 @@ Status: implemented
 
 **`settings.plugin.item` 以 settings 命名空间为键。** 该 slot 从 `list` 改为 `keyed`，键就是卡片所编辑的命名空间，沿用 `tool.call.toolview` 的先例——每个工具插件把自己的渲染器注册在工具名这个键上。卡片声明 `key`，不再声明 `id`/`order`。该 slot 由「插件」分区的 `configurable` 标签页声明，卡片列表归它所有。
 
-**标签页以被服务的命名空间驱动派发。** 它从 `ctx.settingsScope.describe()` 派生当前被服务的集合并跟随该共享 settings 镜像，自身的监听器只跟随卡片 slot 账本；随后为每个被服务的命名空间派发一个键。渲染出来的是两份账本的交集——存活 Host 插件注册的命名空间，以及注册在这些键上的卡片——由标签页的 controller 从 slot 账本（`ctx.slots.entries`、`ctx.slots.subscribe`）与镜像应答算出。后续的 [settings describe 镜像决策](2026-08-17-settings-describe-mirror.md)持有浏览器全局的读取与失效生命周期。
+**标签页以被服务的命名空间驱动派发。** 它从 `ctx.settingsScope.describe()` 派生当前被服务的集合并跟随该共享 settings 镜像，自身的监听器只跟随卡片 slot 账本；随后为每个被服务的命名空间派发一个键。渲染出来的是两份账本的交集——存活 Host 插件注册的命名空间，以及注册在这些键上的卡片——由标签页的 controller 从 slot 账本（`ctx.slots.entries`、`ctx.slots.subscribe`）与镜像应答算出。后续的 [settings describe 镜像决策](2026-08-17-settings-describe-mirror.zh.md)持有浏览器全局的读取与失效生命周期。
 
 以命名空间为键，让「缺席」本身成为信号，而这正是它消掉旧形态所需簿记的原因。归别的界面所有的命名空间（`ui-theme`、`permission`、`llm-*`、`agent-presets`）在其键上没有卡片，于是什么都不渲染，且无需在任何地方声明任何东西。命名空间未被本部署服务的卡片根本不会被派发，这同时修掉了旧的空态缺陷：标签页数的是已注册卡片，其中包含那些什么都不渲染的，因此一个都不暴露的部署看到的是空列表，而不是它那行空态文案。
 
@@ -32,7 +32,7 @@ Status: implemented
 
 这道门确实挡住了一样东西，本 note 如实写出，因为这个决策必须在准确版本下也站得住：不在名单上的已注册命名空间，其 resolved、`base` 与 `user` 值根本不会抵达浏览器。插件清单页不能替代它——`PluginInventoryEntry` 携带的是 `entryId`、`moduleName`、`enabled` 与 `fiberPhase`，它那一行「configuration」渲染的是启用／停用标签，从不是任何已存值。
 
-这道门不是的，是它所处位置暗示的那种边界。每个 `settings.*` 方法都在 `PRIVILEGED_METHODS` 里（`packages/client/connection`），来自未声明表面的非回环请求以及所有跨源请求在到达这段代码之前就以 403 被拒——运营者可达面是 loopback 加部署可信权威（见 [特权面信任部署表面](2026-08-18-privileged-plane-trusted-surfaces.md)）；`role('secret')` 字段在每种响应的每一层都被结构性剥离；而这个面所编辑的文档，本就是用户自己的 `settings.yaml`，同一个设置页还提供了打开它的入口。它没有挡住的写入，恰恰是有分量的那些：`permission`（能放宽审批预设）与 `agent-presets`（决定一个会话挂载什么）本来就已被服务。
+这道门不是的，是它所处位置暗示的那种边界。每个 `settings.*` 方法都在 `PRIVILEGED_METHODS` 里（`packages/client/connection`），来自未声明表面的非回环请求以及所有跨源请求在到达这段代码之前就以 403 被拒——运营者可达面是 loopback 加部署可信权威（见 [特权面信任部署表面](2026-08-18-privileged-plane-trusted-surfaces.zh.md)）；`role('secret')` 字段在每种响应的每一层都被结构性剥离；而这个面所编辑的文档，本就是用户自己的 `settings.yaml`，同一个设置页还提供了打开它的入口。它没有挡住的写入，恰恰是有分量的那些：`permission`（能放宽审批预设）与 `agent-presets`（决定一个会话挂载什么）本来就已被服务。
 
 因此本次改动在本仓库实际新增的暴露面是一个命名空间：`agent-default-model`——它的两个字段指明一个提供方与一个模型，且没有任何浏览器半侧渲染它。将来若某个命名空间的值确实不该跨越协议，由 `role('secret')` 逐字段作答：比整命名空间开关更精细，而且已经在执行。
 

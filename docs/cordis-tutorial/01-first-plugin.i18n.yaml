@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cordis-tutorial/01-first-plugin.md
 01-first-plugin.md: 58da632bd13c0766a18c7273a490986fc7dbc03c
-01-first-plugin.zh.md: 146746d18f3b336dfdc8140619650356d0aa30d9
+01-first-plugin.zh.md: 16512a5855eceb1b93ea16f3c89271e6e0ffa079

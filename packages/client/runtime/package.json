@@ -83,20 +83,7 @@
     "@monotykamary/dsh-timeout": "workspace:^",
     "@monotykamary/dsh-typert-protocol": "workspace:^",
     "@monotykamary/dsh-typert-registry": "workspace:^",
-    "@types/react": "~18.3.1",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0",
-    "@monotykamary/dsh-agent": "workspace:^",
-    "@monotykamary/dsh-attachment": "workspace:^",
-    "@monotykamary/dsh-client-connection": "workspace:^",
-    "@monotykamary/dsh-commands": "workspace:^",
-    "@monotykamary/dsh-host-apiproxy": "workspace:^",
-    "@monotykamary/dsh-llm": "workspace:^",
-    "@monotykamary/dsh-llm-retry": "workspace:^",
-    "@monotykamary/dsh-session": "workspace:^",
-    "@monotykamary/dsh-session-projection": "workspace:^",
-    "@monotykamary/dsh-session-title": "workspace:^",
-    "@monotykamary/dsh-tools": "workspace:^"
+    "@types/react": "~18.3.1"
   },
   "files": [
     "lib/index.js",

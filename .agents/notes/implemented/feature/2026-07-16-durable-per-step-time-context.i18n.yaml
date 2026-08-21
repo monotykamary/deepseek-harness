@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-16-durable-per-step-time-context.md
 2026-07-16-durable-per-step-time-context.md: 0acc617ce87e5a9324b86a20a1d091bdd9c2909d
-2026-07-16-durable-per-step-time-context.zh.md: 11b0eb204b8d72c81074d4ef935c338d9e5bf48d
+2026-07-16-durable-per-step-time-context.zh.md: 0a67039ba0f903723ef879641d6c49c984b82e7c

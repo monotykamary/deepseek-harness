@@ -2,7 +2,7 @@
 
 [English](web-identity.md) | 中文
 
-[`dsh-web-identity`](../../packages/identity/web-identity) 是 GUI 主机的 Web 身份权威：一个为每个请求解析身份（受信代理头，或 passkey 会话 Cookie）的插件，以可选的 `ctx.identity` 服务暴露身份，并按用户分区会话注册表。连接层读取该服务：其 `/api` 路由与 WebSocket 升级让每个请求通过门禁，放行结果通过 `AsyncLocalStorage` 传递，供下游分发读取，api-proxy 与 typert 会话查找据此限定每次会话读取。未配置提供者时插件不提供任何服务，每个请求都是运营者层级——与不安装该包的部署逐字节一致。提供者语义、配置与运营者令牌流程详见[包 README](../../packages/identity/web-identity/README.md)；决策记录见 [Web 身份 Agent Note](../../.agents/notes/implemented/feature/2026-08-17-web-identity-sso.md)。
+[`dsh-web-identity`](../../packages/identity/web-identity) 是 GUI 主机的 Web 身份权威：一个为每个请求解析身份（受信代理头，或 passkey 会话 Cookie）的插件，以可选的 `ctx.identity` 服务暴露身份，并按用户分区会话注册表。连接层读取该服务：其 `/api` 路由与 WebSocket 升级让每个请求通过门禁，放行结果通过 `AsyncLocalStorage` 传递，供下游分发读取，api-proxy 与 typert 会话查找据此限定每次会话读取。未配置提供者时插件不提供任何服务，每个请求都是运营者层级——与不安装该包的部署逐字节一致。提供者语义、配置与运营者令牌流程详见[包 README](../../packages/identity/web-identity/README.zh.md)；决策记录见 [Web 身份 Agent Note](../../.agents/notes/implemented/feature/2026-08-17-web-identity-sso.zh.md)。
 
 来源：[`packages/identity/web-identity/src/types.ts`](../../packages/identity/web-identity/src/types.ts)
 
@@ -92,4 +92,4 @@ interface WebIdentityService {
 }
 ```
 
-`SessionOwner` 是分区键：`null` 是运营者层级（完全访问，会话无属主），字符串把每次会话读取限定到该用户。`Identity` 是每次门禁放行所依据的提供者解析结果。`Admission` 把属主与门禁的放行方式配对——只有运营者 Bearer 令牌会置 `operator`，特权方法面读取的正是它。`WebIdentityService` 是连接层面对的契约：`admit` 执行提供者策略（passkey 模式下拒绝未认证请求），`runWith` 把放行结果绑定到异步上下文中，下游每次会话读取通过 `current()`/`mayAccess` 查询它，`identify` 为 `/auth` 读取提供无门禁的身份解析。提供者配置联合类型与 `/auth` 线上的响应属于[配置目录](../config-catalog.md)与包 README 的词汇。
+`SessionOwner` 是分区键：`null` 是运营者层级（完全访问，会话无属主），字符串把每次会话读取限定到该用户。`Identity` 是每次门禁放行所依据的提供者解析结果。`Admission` 把属主与门禁的放行方式配对——只有运营者 Bearer 令牌会置 `operator`，特权方法面读取的正是它。`WebIdentityService` 是连接层面对的契约：`admit` 执行提供者策略（passkey 模式下拒绝未认证请求），`runWith` 把放行结果绑定到异步上下文中，下游每次会话读取通过 `current()`/`mayAccess` 查询它，`identify` 为 `/auth` 读取提供无门禁的身份解析。提供者配置联合类型与 `/auth` 线上的响应属于[配置目录](../config-catalog.zh.md)与包 README 的词汇。

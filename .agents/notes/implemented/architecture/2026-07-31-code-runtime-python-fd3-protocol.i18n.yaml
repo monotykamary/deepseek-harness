@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-31-code-runtime-python-fd3-protocol.md
 2026-07-31-code-runtime-python-fd3-protocol.md: 711766e39b79fcb3322b93083574ab37be17e767
-2026-07-31-code-runtime-python-fd3-protocol.zh.md: 0a6dc76e4d7912021bccbae2276ff242f5207e0c
+2026-07-31-code-runtime-python-fd3-protocol.zh.md: 0b7043b36a57574c6ef22beecf5d9cfcde5d17b1

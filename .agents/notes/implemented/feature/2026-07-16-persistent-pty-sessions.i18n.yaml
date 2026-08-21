@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-16-persistent-pty-sessions.md
 2026-07-16-persistent-pty-sessions.md: 0633efbc5e8a8a2df067e5b247473700a3fe596e
-2026-07-16-persistent-pty-sessions.zh.md: 0c31dbe4837ecca375681f0c059c079e1c5ec2c1
+2026-07-16-persistent-pty-sessions.zh.md: cd61dba0abfd2551c1bc9fc293f0422524a3fb07

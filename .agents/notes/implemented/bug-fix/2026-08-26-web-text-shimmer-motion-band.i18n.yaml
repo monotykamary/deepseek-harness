@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-26-web-text-shimmer-motion-band.md
 2026-08-26-web-text-shimmer-motion-band.md: f5a38c3a0dceae083dd3eccfeefcdc22db7c7977
-2026-08-26-web-text-shimmer-motion-band.zh.md: 25ac6aeddd6abb0edd1a01f1498b28c65295bc43
+2026-08-26-web-text-shimmer-motion-band.zh.md: b2700d835e39117e804ec70861604619ad75db3f

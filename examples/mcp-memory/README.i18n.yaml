@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write examples/mcp-memory/README.md
 README.md: eb566f76000b5ff0d60246ecb90cd1a16d527726
-README.zh.md: 138ced20f72687bd2f980b8b563d7f625ecc9656
+README.zh.md: 7082558aeac8737dc2bd82b1066e5bfe82e25741

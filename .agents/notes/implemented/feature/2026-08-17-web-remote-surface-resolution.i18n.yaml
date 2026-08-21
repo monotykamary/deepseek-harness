@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-17-web-remote-surface-resolution.md
 2026-08-17-web-remote-surface-resolution.md: 987c091fb8656084f891dabd7cf2d26103347630
-2026-08-17-web-remote-surface-resolution.zh.md: e6550e43f0a97b537e31eb75eab24c51f2cab578
+2026-08-17-web-remote-surface-resolution.zh.md: ddde2a886b1058bdaea7b7c822c5ad3f08240c22

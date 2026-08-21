@@ -108,7 +108,6 @@
     "@monotykamary/dsh-plan-mode": "workspace:^",
     "@monotykamary/dsh-session-projection": "workspace:^",
     "@monotykamary/dsh-session-stats": "workspace:^",
-    "@monotykamary/dsh-settings": "workspace:^",
     "@monotykamary/dsh-token-meter": "workspace:^",
     "@monotykamary/dsh-tool-todo": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
