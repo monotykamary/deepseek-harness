@@ -6,6 +6,7 @@
 - inspector title: write
 - inspector sticky gap after scroll: 0px
 - Changes summary: Changes 1 · Files 1
+- Changes accordion: expanded → collapsed → expanded
 - compact conversation width: 700px
 - compact workbench side: right
 - compact close returns to Chat: true

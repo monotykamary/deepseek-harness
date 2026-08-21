@@ -16,7 +16,7 @@ An empty panel remains open and presents every registered surface as a centered 
 
 `ui-conversation` registers **Inspect** with the existing chat store and declares `conversation.details.tool` beneath that entry. Tool **Inspect** selects the call and opens this surface. The inspector retains Input/Output fallback behavior and offers an explicit **View in Trajectory** handoff, so the workbench does not absorb Trajectory's event-ledger role.
 
-`ui-deliverables` registers **Changes**. Its existing Turn Definition validates successful result-time diff intent, publishes mutation groups through a dedicated incremental `deliverables` Conversation target, and marks a Produced Files row only when its closing boundary has a rendered change. **View changes** opens the tab. The panel reports the loaded Session window; it does not claim Git working-tree state.
+`ui-deliverables` registers **Changes**. Its existing Turn Definition validates successful result-time diff intent, publishes mutation groups through a dedicated incremental `deliverables` Conversation target, and marks a Produced Files row only when its closing boundary has a rendered change. **View changes** opens the tab. Loaded successful mutation hunks are grouped by distinct path; each file is an expanded-by-default accordion row with line totals, independent and all-row collapse controls, and its existing `DiffBlock` body. The panel reports the loaded Session window; it does not claim Git working-tree state.
 
 Layout passes `column` or `sheet` through the Details owner share. The Workbench fills the inline resizable column when it fits. If an explicitly open preference is concession-resolved to zero, the same component renders through the shared right Sheet while the conversation keeps the complete frame width. Closing either mode uses the layout-owned callback. Tabs survive that host-mode flip and remain transient across reloads.
 
@@ -24,7 +24,7 @@ The empty launcher, icon-to-close tabs, panel control, and Sheet interaction ada
 
 ## Verification
 
-Per-file coverage pins the workbench store, presentation projection, service, empty launcher, icon/close tabs, registration teardown, right-panel utility, responsive Sheet, deliverables Definition, incremental target, and Changes presenter. Keyless Web journeys boot the shipped Loader composition, open the empty panel from its header glyph, launch Files from a card, inspect tab hover behavior, and verify inline and compact hosting alongside the recorded mutation path through Changes and Inspect.
+Per-file coverage pins the workbench store, presentation projection, service, empty launcher, icon/close tabs, registration teardown, right-panel utility, responsive Sheet, deliverables Definition, incremental target, and the Changes presenter’s independent and all-row disclosure states. Keyless Web journeys boot the shipped Loader composition, open the empty panel from its header glyph, launch Files from a card, inspect tab hover behavior, and verify inline and compact hosting alongside the recorded mutation path through Changes and Inspect.
 
 ## Alternatives considered
 

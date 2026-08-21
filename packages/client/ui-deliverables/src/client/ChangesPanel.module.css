@@ -29,38 +29,83 @@
   white-space: nowrap;
 }
 
-.summary {
+.headerActions {
+  display: flex;
   flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary {
   color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
   line-height: 18px;
+}
+
+.toggleAll {
+  width: 28px;
+  padding: 0;
 }
 
 .body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 14px;
   min-height: 0;
-  padding: 12px;
   overflow: auto;
 }
 
 .change {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  border-bottom: 1px solid var(--dsw-specific-workbench-divider);
+}
+
+.changeRow {
+  box-sizing: border-box;
+  height: 38px;
+  padding: 0 12px;
 }
 
 .changeTitle {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
-  color: var(--dsw-alias-label-secondary);
+  color: var(--dsw-alias-label-primary);
   font-size: 12px;
   line-height: 18px;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.changeChevron {
+  transform: rotate(-90deg);
+  transition: transform 100ms ease;
+}
+
+.change[data-open] .changeChevron {
+  transform: rotate(0deg);
+}
+
+.changeStats {
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  padding-left: 8px;
+  font-size: 11px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.additions {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.deletions {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.diffWrap {
+  padding: 0 12px 0 34px;
 }
 
 .empty {

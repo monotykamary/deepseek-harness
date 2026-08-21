@@ -15,6 +15,8 @@ export const zh = {
   'changes.description': '查看此会话中已加载的文件更改',
   'changes.title': '已载入的更改',
   'changes.summary': '{changes} 次更改 · {files} 个文件',
+  'changes.expandAll': '展开所有更改',
+  'changes.collapseAll': '收起所有更改',
   'changes.empty': '当前载入的会话窗口中没有文件更改',
 }
 
@@ -30,6 +32,8 @@ export const en: Record<DeliverablesKey, string> = {
   'changes.description': 'Review loaded file changes in this Session',
   'changes.title': 'Loaded changes',
   'changes.summary': 'Changes {changes} · Files {files}',
+  'changes.expandAll': 'Expand all changes',
+  'changes.collapseAll': 'Collapse all changes',
   'changes.empty': 'No file changes are present in the loaded Session window',
 }
 

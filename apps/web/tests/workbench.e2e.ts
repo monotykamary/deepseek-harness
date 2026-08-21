@@ -45,6 +45,7 @@ function renderGolden(values: {
   inspectTitle: string
   inspectorStickyGap: number
   changesSummary: string
+  changesAccordion: string
   compactConversation: number
   compactSide: string | null
   closed: boolean
@@ -58,6 +59,7 @@ function renderGolden(values: {
     `- inspector title: ${values.inspectTitle}`,
     `- inspector sticky gap after scroll: ${String(values.inspectorStickyGap)}px`,
     `- Changes summary: ${values.changesSummary}`,
+    `- Changes accordion: ${values.changesAccordion}`,
     `- compact conversation width: ${String(values.compactConversation)}px`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
     `- compact close returns to Chat: ${String(values.closed)}`,
@@ -97,6 +99,13 @@ describe('web e2e: UI workbench', () => {
     const inlineWorkbench = await workbench.evaluate(element => Math.round(element.getBoundingClientRect().width))
     const changesSummary = await workbench.getByText(/Changes 1 · Files 1/u).innerText()
     await workbench.getByText('export const workbench = true', { exact: true }).waitFor({ timeout: 10_000 })
+    const changeDisclosure = workbench.getByRole('button', { name: /^src\/workbench\.ts/u })
+    expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('true')
+    await changeDisclosure.click()
+    expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('false')
+    await changeDisclosure.click()
+    expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('true')
+    const changesAccordion = 'expanded → collapsed → expanded'
 
     const call = page.locator('[data-chat-call-id="call-workbench-write"]')
     const disclosure = call.locator('[data-expandable]')
@@ -139,7 +148,7 @@ describe('web e2e: UI workbench', () => {
 
     await compareOrRefreshGolden(EXPECTED, renderGolden({
       inlineConversation, inlineWorkbench, tabs, inspectTitle,
-      inspectorStickyGap: inspectorSticky.gap, changesSummary,
+      inspectorStickyGap: inspectorSticky.gap, changesSummary, changesAccordion,
       compactConversation, compactSide, closed,
     }), MODE)
     await assertFixtureInventory(SNAPSHOT_DIR, ['seed.jsonl', 'workbench.expected.md'])

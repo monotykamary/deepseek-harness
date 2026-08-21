@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type {
   ConversationSnapshot, SessionId, SessionListState, WorkspaceListState,
@@ -52,8 +52,42 @@ describe('ChangesPanel', () => {
     }] })} />)
     expect(screen.getByText('已载入的更改')).toBeTruthy()
     expect(screen.getByText('1 次更改 · 2 个文件')).toBeTruthy()
-    expect(screen.getByText('Write src/a.ts')).toBeTruthy()
+    const change = screen.getByRole('button', { name: /^src\/a\.ts/u })
+    expect(change.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByText('+2')).toBeTruthy()
+    expect(screen.getByText('−1')).toBeTruthy()
     expect(screen.getByText('export const a = 1')).toBeTruthy()
+
+    fireEvent.click(change)
+    expect(change.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByText('export const a = 1')).toBeNull()
+
+    fireEvent.click(change)
+    expect(change.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByText('export const a = 1')).toBeTruthy()
+  })
+
+  it('collapses and expands every loaded mutation group', () => {
+    render(<ChangesPanel {...props({ changes: [
+      {
+        seq: 4, turn: 1, callId: 'write-1', title: 'Write a.ts',
+        diffs: [{ path: 'a.ts', oldText: null, newText: 'a' }],
+      },
+      {
+        seq: 8, turn: 2, callId: 'write-2', title: 'Write b.ts',
+        diffs: [{ path: 'b.ts', oldText: null, newText: 'b' }],
+      },
+    ] })} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '收起所有更改' }))
+    expect(screen.getByRole('button', { name: /^a\.ts/u }).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.getByRole('button', { name: /^b\.ts/u }).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByText('a')).toBeNull()
+    expect(screen.queryByText('b')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: '展开所有更改' }))
+    expect(screen.getByRole('button', { name: /^a\.ts/u }).getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('button', { name: /^b\.ts/u }).getAttribute('aria-expanded')).toBe('true')
   })
 
   it('renders the loaded-window empty state', () => {
