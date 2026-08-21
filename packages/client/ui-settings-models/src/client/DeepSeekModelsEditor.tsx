@@ -17,7 +17,7 @@ import styles from './ModelsSection.module.css'
 export type DeepSeekModelDraft = Record<string, unknown>
 
 /** The catalog fields this editor writes. */
-type CatalogField = 'id' | 'name' | 'contextWindow' | 'maxTokens'
+type CatalogField = 'id' | 'name' | 'contextWindow' | 'maxTokens' | 'inputModalities'
 
 /** The two token counts edited as K/M-suffixed text behind a row's disclosure. */
 type CapacityField = 'contextWindow' | 'maxTokens'
@@ -144,7 +144,7 @@ export interface DeepSeekModelsEditorProps {
 
 /**
  * Render the direct DeepSeek adapter's model catalog: id and display name on
- * each row, capacities behind the row's own disclosure.
+ * each row, capacities and image-input capability behind the row's disclosure.
  * @param props - effective rows plus the array-level override actions.
  * @returns the catalog editor.
  */
@@ -343,6 +343,18 @@ export function DeepSeekModelsEditor(props: DeepSeekModelsEditorProps): ReactNod
                     <div className={styles['modelAdvanced']}>
                       {capacityField(model, index, 'contextWindow', props.defaultContextWindow)}
                       {capacityField(model, index, 'maxTokens', props.defaultMaxTokens)}
+                      <label className={styles['modelModalityField']}>
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(model['inputModalities'])
+                            && model['inputModalities'].includes('image')}
+                          disabled={props.disabled}
+                          onChange={(event) => {
+                            update(index, 'inputModalities', event.target.checked ? ['text', 'image'] : ['text'])
+                          }}
+                        />
+                        <span>{`${props.t('modelVision')} ${String(index + 1)}`}</span>
+                      </label>
                     </div>
                   )
                   : null}

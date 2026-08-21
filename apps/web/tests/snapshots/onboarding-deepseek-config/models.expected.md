@@ -40,7 +40,7 @@
           - textbox "显示名称 1":
             - /placeholder: 显示名称
             - text: DeepSeek-V4-Pro
-          - button "容量 1":
+          - button "模型详情 1":
             - img
           - button "删除模型 1":
             - img
@@ -50,7 +50,7 @@
           - textbox "显示名称 2":
             - /placeholder: 显示名称
             - text: DeepSeek-V4-Flash-Vision-Exp
-          - button "容量 2":
+          - button "模型详情 2":
             - img
           - button "删除模型 2":
             - img
@@ -60,7 +60,7 @@
           - textbox "显示名称 3":
             - /placeholder: 显示名称
             - text: Private Preview
-          - button "容量 3" [expanded]:
+          - button "模型详情 3" [expanded]:
             - img
           - button "删除模型 3":
             - img
@@ -72,6 +72,8 @@
           - textbox "最大输出 token 数 3":
             - /placeholder: 256K
             - text: 64K
+          - checkbox "接受图片输入 3" [checked]
+          - text: 接受图片输入 3
           - button "添加模型":
             - img
             - text: 添加模型

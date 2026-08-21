@@ -59,6 +59,7 @@ const DeepSeekConfig = Schema.object({
     name: Schema.string(),
     description: Schema.string(),
     contextWindow: Schema.number().step(1).min(1),
+    inputModalities: Schema.array(Schema.union(['text', 'image'])).default(['text']),
   // The adapter declares its catalog as a schema default rather than a
   // composition entry, which is what the restore-defaults path has to read.
   })).default([
@@ -67,12 +68,14 @@ const DeepSeekConfig = Schema.object({
       name: 'DeepSeek-V4-Flash',
       description: '',
       contextWindow: 1_000_000,
+      inputModalities: ['text'],
     },
     {
       id: 'deepseek-v4-pro',
       name: 'DeepSeek-V4-Pro',
       description: '',
       contextWindow: 1_000_000,
+      inputModalities: ['text'],
     },
   ]),
 })
@@ -469,8 +472,9 @@ describe('ModelsSection', () => {
     expandRow(3)
     fireEvent.change(ids[2] as HTMLInputElement, { target: { value: 'private-preview' } })
     fireEvent.change(names[2] as HTMLInputElement, { target: { value: 'Private Preview' } })
-    // Only row 3 is open, so its capacity is addressed by its own label.
+    // Only row 3 is open, so its details are addressed by their own labels.
     fireEvent.change(screen.getByLabelText(`${en.contextWindow} 3`), { target: { value: '131072' } })
+    fireEvent.click(screen.getByLabelText(`${en.modelVision} 3`))
     fireEvent.click(screen.getByText(en.apply))
 
     await waitFor(() => { expect(mutate).toHaveBeenCalledTimes(1) })
@@ -481,7 +485,12 @@ describe('ModelsSection', () => {
         path: ['models'],
         value: [
           ...DEFAULT_DEEPSEEK_MODELS,
-          { id: 'private-preview', name: 'Private Preview', contextWindow: 131_072 },
+          {
+            id: 'private-preview',
+            name: 'Private Preview',
+            contextWindow: 131_072,
+            inputModalities: ['text', 'image'],
+          },
         ],
       }],
       expectedRevision: 0,
