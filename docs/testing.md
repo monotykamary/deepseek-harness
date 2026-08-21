@@ -4,6 +4,10 @@ English | [中文](testing.zh.md)
 
 How this repo tests, tier by tier, and the rules that keep a green suite meaningful. Commands live in root [AGENTS.md](../AGENTS.md); linked Agent Notes carry the rationale.
 
+## The inner loop
+
+`pnpm run test:gui` (seconds; no browser, no server) covers every client and host GUI package; `pnpm run test:changed` scopes vitest to the packages the worktree touched, and its `--coverage` mode enforces the per-file 100% bar on just those packages' src (minutes, not the hours-long full gate). `test:gui:watch` and `test:changed:watch` iterate on one package. The golden rule in root AGENTS.md makes these checks free during implementation; the full-suite gates below stay one-shot end checks.
+
 ## Tiers
 
 - **Unit** (`pnpm run test`): vitest over package and example specs under their `tests/**` directories plus repository script specs under `scripts/**/*.spec.ts`; tests stay with the code area they exercise. Every registry gets an HMR-safety test (dispose the contributing fiber, assert cleanup). Prefer edge cases, error paths, event ordering, concurrency races, and permanent tests for contract regressions (see `packages/core/agent-loop/tests/contract-regressions.spec.ts`).

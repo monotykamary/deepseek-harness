@@ -4,6 +4,10 @@
 
 本文说明本仓库的分层测试方式，以及保持绿色测试套件有意义的规则。命令见根目录 [AGENTS.md](../AGENTS.md)；相关 Agent Note 承载设计动机。
 
+## 内环反馈
+
+`pnpm run test:gui`（秒级；无浏览器、无服务器）覆盖全部客户端与 host 端 GUI 包；`pnpm run test:changed` 把 vitest 限定到工作区改动的包，其 `--coverage` 模式只对改动包的 src 执行按文件 100% 门槛（几分钟，而非数小时的完整门禁）。`test:gui:watch` 与 `test:changed:watch` 在单个包上迭代。根 AGENTS.md 的黄金法则让这些检查在实现期间自由运行；下面各完整套件门禁仍是完成时的一次性终检。
+
 ## 层级
 
 - **单元测试**（`pnpm run test`）：vitest 运行包和示例各自的 `tests/**` 目录下的测试，以及匹配 `scripts/**/*.spec.ts` 的仓库脚本测试；测试文件与其所覆盖的代码区域放在一起。每个注册表都有一个 HMR（热模块替换）安全测试（对向该注册表贡献内容的 fiber 执行 dispose（资源释放），并断言清理完成）。优先覆盖边界情况、错误路径、事件顺序、并发竞态，以及针对约定回归的永久测试（见 `packages/core/agent-loop/tests/contract-regressions.spec.ts`）。
