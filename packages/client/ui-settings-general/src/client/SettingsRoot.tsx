@@ -7,7 +7,7 @@
  * aria-labelledby the title node; close: visually-hidden slot text). Modal
  * open state and the active section id are component-local viewing state;
  * the onboarding coordinator mounts exactly one ordered registrant while the
- * sessions-derived empty-Hero fact is active. Visible dialog chrome belongs
+ * Session directory is ready. Visible dialog chrome belongs
  * to the step, so a mounted-but-deciding step paints nothing here.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
@@ -120,17 +120,15 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
   // seats re-render through their own outlets' subscriptions.
   const rows = useSections(s => s)
   const onboardingSteps = useOnboardingSteps(s => s)
-  const onboardingActive = useSessions(state =>
-    state.phase === 'ready'
-    && (state.current === undefined || state.byId[state.current]?.blank === true))
-  const onboardingStep = onboardingActive
+  const onboardingReady = useSessions(state => state.phase === 'ready')
+  const onboardingStep = onboardingReady
     ? onboardingSteps.find(step => !completedOnboarding.has(step.id))
     : undefined
 
   useEffect(() => {
-    if (onboardingActive) return
+    if (onboardingReady) return
     setCompletedOnboarding(new Set())
-  }, [onboardingActive])
+  }, [onboardingReady])
 
   const completeOnboardingStep = useCallback((id: string) => {
     setCompletedOnboarding((previous) => {

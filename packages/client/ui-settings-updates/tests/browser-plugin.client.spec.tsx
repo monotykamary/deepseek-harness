@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { Context, Service } from '@monotykamary/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
@@ -41,6 +41,24 @@ function declare(slots: SlotRegistry): void {
 }
 
 describe('ui-settings-updates browser plugin', () => {
+  it('uses shared themed button chrome for update actions', async () => {
+    const unusedHook = (() => { throw new Error('unused by component') }) as never
+    render(<UpdateSettings
+      useSessions={unusedHook}
+      useWorkspaces={unusedHook}
+      snapshot={vi.fn(async () => snapshot)}
+      check={vi.fn(async () => ({ ...snapshot, updateAvailable: true }))}
+      start={vi.fn(async () => launch)}
+      t={(key: string) => key}
+      close={vi.fn()}
+    />)
+    const check = await screen.findByRole('button', { name: 'check' })
+    const update = screen.getByRole('button', { name: 'update' })
+    expect(check.className).not.toBe('')
+    expect(update.className).not.toBe('')
+    expect(check.className).not.toBe(update.className)
+  })
+
   it('provides a no-op node-half Loader seat', () => {
     applyNode()
   })

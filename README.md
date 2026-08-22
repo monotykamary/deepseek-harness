@@ -12,6 +12,8 @@ English | [中文](README.zh.md)
 
 </div>
 
+<a id="run"></a>
+
 ## Run
 
 ```sh
@@ -70,6 +72,8 @@ nix run github:deepseek-ai/deepseek-harness
 ```
 
 The flake pins the npm release named by this checkout. Set `DSH_INSTALL_CHANNEL=nix` in a packaged deployment so Settings reports Nix-owned updates rather than offering npm self-update.
+
+<a id="run-from-source"></a>
 
 ### Run from source
 

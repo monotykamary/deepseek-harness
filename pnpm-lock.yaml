@@ -1861,6 +1861,9 @@ importers:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@monotykamary/dsh-api-remotes':
+        specifier: workspace:^
+        version: link:../../api/remotes
       '@monotykamary/dsh-client-locale':
         specifier: workspace:^
         version: link:../locale
@@ -1876,6 +1879,9 @@ importers:
       '@monotykamary/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
+      '@monotykamary/dsh-client-ui-settings':
+        specifier: workspace:^
+        version: link:../ui-settings
       '@monotykamary/dsh-client-ui-sidebar':
         specifier: workspace:^
         version: link:../ui-sidebar
@@ -3039,9 +3045,6 @@ importers:
       '@monotykamary/dsh-client-runtime':
         specifier: workspace:^
         version: link:../runtime
-      '@monotykamary/dsh-client-test-runtime':
-        specifier: workspace:^
-        version: link:../../test-support/client-runtime
       '@monotykamary/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
@@ -4370,9 +4373,6 @@ importers:
       '@monotykamary/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^

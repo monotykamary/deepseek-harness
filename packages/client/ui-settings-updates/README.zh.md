@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-`distributionUpdate` 的 Web 设置 Consumer：添加更新页面，在设置入口 Badge 挂载时检查 Registry，并在任一托管包与最新 Registry 标签不同时标记设置。页面显示安装渠道、已安装与最新版本、渠道命令，以及支持时的分离更新操作。
+`distributionUpdate` 的 Web 设置 Consumer：添加更新页面，在设置入口 Badge 挂载时检查 Registry，并在任一托管包与最新 Registry 标签不同时标记设置。页面显示安装渠道、已安装与最新版本、渠道命令，以及支持时的分离更新操作。卡片和状态文本使用共享主题 token，重试、检查与更新操作使用共享 `Button` 变体。
 
 ## 模型体验
 

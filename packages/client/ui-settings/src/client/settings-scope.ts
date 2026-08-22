@@ -163,7 +163,7 @@ export class SettingsScopeController<T> implements SettingsScope<T> {
   async dispose(): Promise<void> {
     this.disposed = true
     this.writeGeneration += 1
-    this.unsubscribe?.()
+    this.unsubscribe()
     await this.tail
   }
 

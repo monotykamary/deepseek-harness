@@ -16,7 +16,6 @@ import css from './FilesPanel.module.css'
 
 const SAVE_DEBOUNCE_MS = 500
 
-const WrapTextIcon = WrapText
 
 type SavePhase = 'idle' | 'pending' | 'saved' | 'conflict' | 'too-large' | 'not-file' | 'error'
 
@@ -193,7 +192,7 @@ export function FilePreview({
               aria-pressed={wrap}
               onClick={() => { setWrap(value => !value) }}
             >
-              <WrapTextIcon />
+              <WrapText />
             </button>
           </Tooltip>
         )}

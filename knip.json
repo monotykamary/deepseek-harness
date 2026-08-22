@@ -718,6 +718,15 @@
         "tests/**/*.tsx"
       ]
     },
+    "packages/client/ui-settings-updates": {
+      "entry": [
+        "tests/**/*.spec.tsx"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "tests/**/*.tsx"
+      ]
+    },
     "packages/client/ui-settings": {
       "entry": [
         "tests/**/*.spec.ts"

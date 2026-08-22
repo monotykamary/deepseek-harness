@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 20px;
   padding: 24px;
+  color: var(--dsw-alias-label-primary);
 }
 
 .heading,
@@ -14,11 +15,25 @@
   gap: 12px;
 }
 
+.heading h2,
+.heading p,
+.failure p,
+.status,
+.warning,
+.notice {
+}
+
 .heading > div,
 .failure {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+}
+
+.heading p,
+.status {
+  color: var(--dsw-alias-label-secondary);
 }
 
 .packages {
@@ -34,13 +49,31 @@
 .warning,
 .notice {
   padding: 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 8px;
-  background: var(--dsr-bg-elevated, #f6f7f9);
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.package code,
+.command {
+  color: var(--dsw-alias-label-secondary);
+}
+
+.command {
+  overflow-wrap: anywhere;
+}
+
+.state {
+  color: var(--dsw-alias-label-secondary);
 }
 
 .state[data-available='true'],
 .warning {
-  color: var(--dsr-text-warning, #a35b00);
+  color: var(--dsw-alias-state-warning-primary);
+}
+
+.notice {
+  color: var(--dsw-alias-state-success-primary);
 }
 
 .badge {
@@ -48,5 +81,5 @@
   height: 8px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #e5484d;
+  background: var(--dsw-alias-state-error-primary);
 }

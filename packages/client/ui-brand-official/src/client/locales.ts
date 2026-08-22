@@ -12,6 +12,8 @@ export const en = {
   fabricTitle: 'Fabric execution',
   fabricBody: 'Typed tools, provider integrations, and orchestration make complex agent workflows observable and extensible.',
   footer: 'Everything is a Cordis plugin — skills, workflows, subagents, providers, UI surfaces, and the harness itself.',
+  continue: 'Continue',
+  error: 'The acknowledgement could not be saved. Please try again.',
 } as const
 
 /** Chinese official welcome dictionary. */
@@ -28,6 +30,8 @@ export const zh: Record<keyof typeof en, string> = {
   fabricTitle: 'Fabric 执行层',
   fabricBody: '类型化工具、Provider 集成与编排，让复杂智能体工作流可观察、可扩展。',
   footer: '一切皆为 Cordis 插件——技能、工作流、子智能体、Provider、UI 界面乃至 Harness 本身。',
+  continue: '继续',
+  error: '暂时无法保存确认状态，请重试。',
 }
 
 /** Translation keys owned by the official welcome surface. */

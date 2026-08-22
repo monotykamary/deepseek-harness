@@ -1,0 +1,19 @@
+- dialog "完整的编程智能体工作台":
+  - region "完整的编程智能体工作台":
+    - text: DeepSeek Harness
+    - heading "完整的编程智能体工作台" [level=1]
+    - paragraph: 不止于上游聊天外壳：这个 Harness 将导航、执行与开发界面整合为一套插件化工作流。
+    - article:
+      - heading "受 T3 启发的导航" [level=2]
+      - paragraph: 工作区与会话管理、智能体预设、生命周期控制和快速切换集中在同一处。
+    - article:
+      - heading "终端与文件工作台" [level=2]
+      - paragraph: 持久终端、会话授权的文件浏览器、编辑、差异和工具检查共享同一工作区。
+    - article:
+      - heading "Fovea 代码智能" [level=2]
+      - paragraph: 代码图搜索与聚焦依赖追踪帮助智能体用更少上下文浏览大型代码库。
+    - article:
+      - heading "Fabric 执行层" [level=2]
+      - paragraph: 类型化工具、Provider 集成与编排，让复杂智能体工作流可观察、可扩展。
+    - paragraph: 一切皆为 Cordis 插件——技能、工作流、子智能体、Provider、UI 界面乃至 Harness 本身。
+    - button "继续"

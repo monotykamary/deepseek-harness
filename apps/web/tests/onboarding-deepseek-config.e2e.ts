@@ -16,6 +16,7 @@ import {
 import { ZH_BROWSER_LOCALE, connectFreshWorkspaceZh, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/onboarding-deepseek-config', import.meta.url))
+const WELCOME_EXPECTED = join(SNAPSHOT_DIR, 'welcome.expected.md')
 const MISSING_EXPECTED = join(SNAPSHOT_DIR, 'missing.expected.md')
 const MODELS_EXPECTED = join(SNAPSHOT_DIR, 'models.expected.md')
 const MODE = webSnapshotMode()
@@ -45,6 +46,13 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
 
   it('stores a key write-only and observes configured state without restarting', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-onboarding-deepseek-config'))
+    const welcomeStep = page.getByRole('dialog', { name: '完整的编程智能体工作台' })
+    await welcomeStep.waitFor({ timeout: 15_000 })
+    const welcome = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
+    await compareOrRefreshGolden(WELCOME_EXPECTED, welcome, MODE)
+    await welcomeStep.getByRole('button', { name: '继续' }).click()
+    await welcomeStep.waitFor({ state: 'detached', timeout: 15_000 })
+
     const credentialStep = page.getByRole('dialog', { name: '添加一个 API Key 开始使用' })
     await credentialStep.waitFor({ timeout: 15_000 })
     const keyInput = credentialStep.getByLabel('API 密钥', { exact: true })
@@ -205,7 +213,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
   it('keeps the fixture inventory closed', async () => {
     await assertFixtureInventory(
       SNAPSHOT_DIR,
-      ['missing.expected.md', 'models.expected.md'],
+      ['missing.expected.md', 'models.expected.md', 'welcome.expected.md'],
     )
   })
 })

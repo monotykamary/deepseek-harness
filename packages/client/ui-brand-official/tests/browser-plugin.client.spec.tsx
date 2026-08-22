@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { Context } from '@monotykamary/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
@@ -15,8 +15,8 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-const unusedHook = (() => { throw new Error('unused by welcome') }) as never
-const kit = { useSessions: unusedHook, useWorkspaces: unusedHook }
+const unusedHook = (() => { throw new Error('unused by component') }) as never
+const runtime = { useSessions: unusedHook, useWorkspaces: unusedHook }
 
 const BRAND_HOLES = [
   'sidebar.brand.mark',
@@ -28,7 +28,7 @@ const HOLES = [
   'sidebar.brand.mark',
   'sidebar.brand.name',
   'conversation.hero.brand.mark',
-  'conversation.hero.welcome',
+  'settings.onboarding',
 ] as const
 
 async function bench(declare = true) {
@@ -36,9 +36,12 @@ async function bench(declare = true) {
   await ctx.plugin(SlotRegistry).await()
   const slots = ctx.get('slots') as SlotRegistry
   ctx.provide('locale', new LocaleRuntime(ctx))
+  ctx.provide('connection', { api: {}, isLoopback: false })
   const declareHoles = () => slots.register({
     name: 'root',
-    children: Object.fromEntries(HOLES.map(name => [name, { kind: 'single', scope: 'root' }])),
+    children: Object.fromEntries(HOLES.map(name => [
+      name, { kind: name === 'settings.onboarding' ? 'list' : 'single', scope: 'root' },
+    ])),
   } as never, () => null)
   const disposeHoles = declare ? declareHoles() : undefined
   return { ctx, slots, declareHoles, disposeHoles }
@@ -46,7 +49,7 @@ async function bench(declare = true) {
 
 describe('official browser-brand plugin', () => {
   it('declares only the slot service it uses', () => {
-    expect(inject).toEqual(['slots', 'locale'])
+    expect(inject).toEqual(['slots', 'locale', 'connection'])
   })
 
   it('leaves every slot empty outside the official build profile', async () => {
@@ -54,7 +57,7 @@ describe('official browser-brand plugin', () => {
     const subject = await bench()
     await subject.ctx.plugin({ inject: [...inject], apply }).await()
     for (const hole of BRAND_HOLES) expect(subject.slots.entries(hole)).toHaveLength(0)
-    expect(subject.slots.entries('conversation.hero.welcome')).toHaveLength(1)
+    expect(subject.slots.entries('settings.onboarding')).toHaveLength(1)
   })
 
   it('fills declarations before or after apply and removes every occupant on teardown', async () => {
@@ -81,16 +84,18 @@ describe('official browser-brand plugin', () => {
     for (const hole of HOLES) expect(after.slots.entries(hole)).toHaveLength(1)
   })
 
-  it('renders the welcome only on the no-session landing page', () => {
-    const t = makeTranslate(en)
-    const view = render(<Welcome {...kit} landing t={t} />)
-    expect(view.getByText('A complete coding-agent workbench')).toBeTruthy()
-    expect(view.getByText('T3-inspired navigation')).toBeTruthy()
-    expect(view.getByText('Terminal + file workbench')).toBeTruthy()
-    expect(view.getByText('Fovea code intelligence')).toBeTruthy()
-    expect(view.getByText('Fabric execution')).toBeTruthy()
-    view.rerender(<Welcome {...kit} landing={false} t={t} />)
-    expect(view.container.childElementCount).toBe(0)
+  it('renders the persisted welcome modal and completes after acknowledgement', async () => {
+    const complete = vi.fn()
+    const controller = { acknowledged: vi.fn(async () => false), acknowledge: vi.fn(async () => {}) }
+    render(<Welcome {...runtime} stepId="official-welcome" openSection={vi.fn()} complete={complete} controller={controller as never} t={makeTranslate(en)} />)
+    expect(await screen.findByRole('dialog', { name: 'A complete coding-agent workbench' })).toBeTruthy()
+    expect(screen.getByText('T3-inspired navigation')).toBeTruthy()
+    expect(screen.getByText('Terminal + file workbench')).toBeTruthy()
+    expect(screen.getByText('Fovea code intelligence')).toBeTruthy()
+    expect(screen.getByText('Fabric execution')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await vi.waitFor(() => { expect(complete).toHaveBeenCalledOnce() })
+    expect(controller.acknowledge).toHaveBeenCalledOnce()
   })
 
   it('renders the official name independently from both requested mark sizes', () => {

@@ -55,8 +55,7 @@
   "dependencies": {
     "@monotykamary/dsh-atomic-write": "workspace:^",
     "@monotykamary/dsh-home-paths": "workspace:^",
-    "@monotykamary/schemastery": "workspace:^",
-    "zod": "^4.4.3"
+    "@monotykamary/schemastery": "workspace:^"
   },
   "peerDependencies": {
     "@monotykamary/cordis": "workspace:^",

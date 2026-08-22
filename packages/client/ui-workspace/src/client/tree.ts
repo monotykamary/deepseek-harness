@@ -116,16 +116,15 @@ function byRecency(a: SessionSummary, b: SessionSummary): number {
 }
 
 /**
- * Ordinary sessions are visible; blank sessions (nothing started yet) are
- * Ordinary sessions are visible; among blank sessions, only the current one
- * is visible. Subagent children use their parent header catalog; archived
+ * Ordinary sessions are visible; blank sessions (nothing started yet) never
+ * materialize as sidebar rows. Subagent children use their parent header catalog; archived
  * sessions are visible nowhere, while their accounting slots remain so
  * unarchiving restores position.
  */
-function sessionVisible(session: SessionSummary, current: SessionId | undefined, archived: ReadonlySet<SessionId>): boolean {
+function sessionVisible(session: SessionSummary, _current: SessionId | undefined, archived: ReadonlySet<SessionId>): boolean {
   return session.origin !== 'subagent'
     && !archived.has(session.id)
-    && (!session.blank || session.id === current)
+    && !session.blank
 }
 
 /** Display title for one sidebar row, including the provisional blank label. */

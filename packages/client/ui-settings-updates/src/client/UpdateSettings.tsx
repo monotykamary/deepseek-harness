@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { DistributionUpdateLaunch, DistributionUpdateSnapshot } from '@monotykamary/dsh-api-remotes/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
+import { Button } from '@monotykamary/dsh-client-ui-primitives'
 import css from './UpdateSettings.module.css'
 
 /** Remote operations consumed by the update page and badge. */
@@ -47,7 +48,7 @@ export function UpdateSettings({ check, start, t }: UpdateSettingsProps): ReactN
 
   if (state.status === 'loading') return <p className={css.status}>{t('checking')}</p>
   if (state.status === 'error') {
-    return <div className={css.failure}><p role="alert">{t('failed')}: {state.message}</p><button type="button" onClick={() => { setRequest(value => value + 1) }}>{t('retry')}</button></div>
+    return <div className={css.failure}><p role="alert">{t('failed')}: {state.message}</p><Button variant="outline" onClick={() => { setRequest(value => value + 1) }}>{t('retry')}</Button></div>
   }
   const { snapshot } = state
   const startUpdate = (): void => {
@@ -68,8 +69,8 @@ export function UpdateSettings({ check, start, t }: UpdateSettingsProps): ReactN
       </ul>
       {snapshot.updateCommand !== null ? <code className={css.command}>{snapshot.updateCommand}</code> : null}
       <div className={css.actions}>
-        <button type="button" onClick={() => { setRequest(value => value + 1) }}>{t('check')}</button>
-        {snapshot.updateAvailable ? <button type="button" onClick={startUpdate}>{t('update')}</button> : null}
+        <Button variant="outline" onClick={() => { setRequest(value => value + 1) }}>{t('check')}</Button>
+        {snapshot.updateAvailable ? <Button variant="primary" onClick={startUpdate}>{t('update')}</Button> : null}
       </div>
       {state.launch !== undefined ? <p className={css.notice} role="status">{state.launch.message}</p> : null}
     </div>

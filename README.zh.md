@@ -12,6 +12,8 @@ _一条命令即可本地运行；所有能力均可组合，经过测试的发�
 
 </div>
 
+<a id="run"></a>
+
 ## 运行
 
 ```sh
@@ -70,6 +72,8 @@ nix run github:deepseek-ai/deepseek-harness
 ```
 
 Flake 固定当前检出版本对应的 npm 发行版。打包部署应设置 `DSH_INSTALL_CHANNEL=nix`，让设置页报告由 Nix 管理的更新，而不是提供 npm 自更新。
+
+<a id="run-from-source"></a>
 
 ### 从源码运行
 
