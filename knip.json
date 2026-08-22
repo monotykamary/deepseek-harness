@@ -506,6 +506,11 @@
         "tests/**/*.ts"
       ]
     },
+    "packages/distribution/update": {
+      "ignoreDependencies": [
+        "zod"
+      ]
+    },
     "packages/context/file-reference": {
       "ignoreDependencies": [
         "zod"

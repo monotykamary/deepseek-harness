@@ -48,6 +48,13 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     onTestFailed(() => saveFailureShot(page, 'web-e2e-onboarding-deepseek-config'))
     const welcomeStep = page.getByRole('dialog', { name: '完整的编程智能体工作台' })
     await welcomeStep.waitFor({ timeout: 15_000 })
+    const cardCenterOffsets = await welcomeStep.locator('article').evaluateAll(cards => cards.map((card) => {
+      const icon = card.querySelector('span')?.getBoundingClientRect()
+      const title = card.querySelector('h2')?.getBoundingClientRect()
+      if (icon === undefined || title === undefined) return Number.POSITIVE_INFINITY
+      return Math.abs((icon.top + icon.bottom) / 2 - (title.top + title.bottom) / 2)
+    }))
+    expect(Math.max(...cardCenterOffsets)).toBeLessThanOrEqual(1)
     const welcome = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(WELCOME_EXPECTED, welcome, MODE)
     await welcomeStep.getByRole('button', { name: '继续' }).click()

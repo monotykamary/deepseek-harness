@@ -32,12 +32,14 @@
 
 .title,
 .cardTitle {
+  all: unset;
   padding: 0;
   font-weight: 600;
   color: var(--dsw-alias-label-primary);
 }
 
 .title {
+  display: block;
   font-size: 24px;
   line-height: 32px;
   outline: none;
@@ -46,6 +48,8 @@
 .lead,
 .cardBody,
 .footerCopy {
+  all: unset;
+  display: block;
   padding: 0;
   color: var(--dsw-alias-label-secondary);
 }
@@ -94,6 +98,9 @@
 }
 
 .cardTitle {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
   font-size: 13px;
   line-height: 20px;
 }
@@ -111,6 +118,8 @@
 }
 
 .error {
+  all: unset;
+  display: block;
   color: var(--dsw-alias-state-error-primary);
   font-size: 12px;
   line-height: 18px;
