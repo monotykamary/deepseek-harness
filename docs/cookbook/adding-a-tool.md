@@ -64,6 +64,8 @@ In [Code Mode](../../packages/core/tools/README.md), every visible registered to
 
 Design `output.schema` as a useful programmatic API: return handles and fields directly, allow scalar/array/null roots when they are the honest value, and keep human explanation in `output.render`. Intermediate values are execution-local, are not persisted or prompt-truncated, and have no byte cap, so the producer's truthful acquisition bounds and process memory still matter. Only the outer `run_code` logs/result cross the configurable output cap and model-facing spill pipeline.
 
+A tool that commits a workspace text-file mutation calls `exec.recordFileMutation()` only after the provider operation succeeds. Record the file-level operation and ordered textual hunks; the registry persists direct and nested Code Mode receipts independently from UI presentation. See the [durable mutation receipts decision](../../.agents/notes/implemented/feature/2026-08-22-durable-tool-mutation-receipts.md).
+
 ## How your tool renders in a UI
 
 Your tool's `output.render` returns model-facing content; its **UI card** is a separate concern declared through pure presentation projections and optional `presentCall` / `presentResult` methods. Design these alongside the canonical value. A tool with no UI presentation falls back to a generic card (title = tool name, raw args as input).

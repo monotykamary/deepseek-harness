@@ -1,5 +1,5 @@
-// Keyless browser journey for the T3-adapted workbench: a produced-file
-// action opens Changes inline, Tool Inspect adds a peer tab, and layout
+// Keyless browser journey for the T3-adapted workbench: a changed-files card
+// opens Changes inline, Tool Inspect adds a peer tab, and layout
 // concession rehosts the same workbench in a right Sheet.
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -44,6 +44,8 @@ function renderGolden(values: {
   tabs: string[]
   inspectTitle: string
   inspectorStickyGap: number
+  changedCard: string
+  changedTree: string
   changesSummary: string
   changesAccordion: string
   compactConversation: number
@@ -58,6 +60,8 @@ function renderGolden(values: {
     `- tabs after Tool Inspect: ${values.tabs.join(' → ')}`,
     `- inspector title: ${values.inspectTitle}`,
     `- inspector sticky gap after scroll: ${String(values.inspectorStickyGap)}px`,
+    `- changed-files card: ${values.changedCard}`,
+    `- changed-files tree: ${values.changedTree}`,
     `- Changes summary: ${values.changesSummary}`,
     `- Changes accordion: ${values.changesAccordion}`,
     `- compact conversation width: ${String(values.compactConversation)}px`,
@@ -81,6 +85,8 @@ describe('web e2e: UI workbench', () => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    const continueButton = page.getByRole('button', { name: 'Continue', exact: true })
+    if (await continueButton.isVisible()) await continueButton.click()
     await openSeededSession(page)
   }, 120_000)
 
@@ -91,13 +97,20 @@ describe('web e2e: UI workbench', () => {
 
   it.skipIf(MODE === 'record')('opens Changes and Inspect inline, then rehosts in a compact right Sheet', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-workbench'))
-    await page.getByRole('button', { name: 'View changes', exact: true }).click()
+    const changedFilesCard = page.locator('[data-changed-files-card]')
+    await changedFilesCard.getByText('Changed files (1)', { exact: true }).waitFor()
+    const changedFolder = changedFilesCard.getByRole('button', { name: /^src/u })
+    expect(await changedFolder.getAttribute('aria-expanded')).toBe('true')
+    await changedFilesCard.getByRole('button', { name: 'View diff for src/workbench.ts', exact: true }).waitFor()
+    const changedCard = 'Changed files (1) · +1 −0'
+    const changedTree = 'src → workbench.ts'
+    await changedFilesCard.getByRole('button', { name: 'View diff', exact: true }).click()
     const workbench = page.locator('[data-workbench]')
     await workbench.waitFor({ timeout: 10_000 })
     await page.waitForTimeout(350)
     const inlineConversation = await conversationWidth(page)
     const inlineWorkbench = await workbench.evaluate(element => Math.round(element.getBoundingClientRect().width))
-    const changesSummary = await workbench.getByText(/Changes 1 · Files 1/u).innerText()
+    const changesSummary = await workbench.getByText(/1 changed file · \+1 −0/u).innerText()
     await workbench.getByText('export const workbench = true', { exact: true }).waitFor({ timeout: 10_000 })
     const changeDisclosure = workbench.getByRole('button', { name: /^src\/workbench\.ts/u })
     expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('true')
@@ -148,7 +161,7 @@ describe('web e2e: UI workbench', () => {
 
     await compareOrRefreshGolden(EXPECTED, renderGolden({
       inlineConversation, inlineWorkbench, tabs, inspectTitle,
-      inspectorStickyGap: inspectorSticky.gap, changesSummary, changesAccordion,
+      inspectorStickyGap: inspectorSticky.gap, changedCard, changedTree, changesSummary, changesAccordion,
       compactConversation, compactSide, closed,
     }), MODE)
     await assertFixtureInventory(SNAPSHOT_DIR, ['seed.jsonl', 'workbench.expected.md'])

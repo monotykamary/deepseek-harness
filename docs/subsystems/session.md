@@ -18,6 +18,28 @@ interface UserMessage extends Message {
 ```
 
 ```ts type-equiv
+/** One textual hunk committed to a workspace file by a tool execution. */
+interface FileMutationDiff {
+  /** Text replaced by the mutation; `null` marks an insertion or file creation. */
+  oldText: string | null
+  /** Replacement text; `null` marks a deletion. */
+  newText: string | null
+}
+```
+
+```ts type-equiv
+/** Durable receipt for one committed workspace-file mutation. */
+interface FileMutation {
+  /** Filesystem target display path recorded by the tool. */
+  path: string
+  /** File-level operation committed by the tool. */
+  operation: 'create' | 'modify' | 'delete'
+  /** Ordered textual hunks committed by this operation. */
+  diffs: FileMutationDiff[]
+}
+```
+
+```ts type-equiv
 /**
  * The merge-extensible, append-only source of truth for an agent interaction.
  * Message history is derived from this log. Every event is lossless JSON and
@@ -89,6 +111,8 @@ interface SessionEventMap {
     message: ToolResultMessage
     error?: { name: string; code: string }
     meta?: JsonValue
+    /** Workspace-file mutations committed by this call, independent of presentation metadata. */
+    mutations?: FileMutation[]
   }
   /** Whole-list snapshot; latest write wins on replay. Log-only UI state; never derived history. */
   'todo/write': { todos: TodoItem[] }

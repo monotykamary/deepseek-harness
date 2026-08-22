@@ -34,6 +34,26 @@ export interface DiffHunk {
   newText: string
 }
 
+/** Owner-provided labels for DiffBlock chrome. */
+export interface DiffBlockLabels {
+  /** Idle copy action. */
+  readonly copy: string
+  /** Successful copy feedback. */
+  readonly copied: string
+  /** Accessible expanded-state collapse action. */
+  readonly collapseAria: string
+  /** Accessible collapsed-state expansion action. */
+  readonly expandAria: (hidden: number) => string
+  /** Visible expanded-state collapse action. */
+  readonly collapse: string
+  /** Visible collapsed-state expansion action. */
+  readonly expand: (hidden: number) => string
+  /** Singular footer file unit. */
+  readonly file: string
+  /** Plural footer file unit. */
+  readonly files: string
+}
+
 export interface DiffBlockProps {
   /** One entry per applied hunk, in file order; empty renders nothing. */
   diffs: DiffHunk[]
@@ -41,6 +61,10 @@ export interface DiffBlockProps {
   maxLines?: number | undefined
   /** Extra class merged onto the wrapper (callers position; this component draws). */
   className?: string | undefined
+  /** Localized control and footer labels. */
+  labels?: DiffBlockLabels | undefined
+  /** Card chrome for standalone output, or seamless content beneath an owning file header. */
+  appearance?: 'card' | 'file' | undefined
 }
 
 /** A single rendered body line and its role, so the height cap slices a flat list. */
@@ -138,8 +162,22 @@ function copyText(rows: DiffRow[]): string {
  * @param props - see {@link DiffBlockProps}.
  * @returns the diff block element.
  */
-export function DiffBlock({ diffs, maxLines = DEFAULT_DIFF_MAX_LINES, className }: DiffBlockProps) {
+const DEFAULT_LABELS: DiffBlockLabels = {
+  copy: 'Copy',
+  copied: 'Copied',
+  collapseAria: 'Collapse diff',
+  expandAria: hidden => `Expand the remaining ${hidden} diff lines`,
+  collapse: 'Collapse',
+  expand: hidden => `… ${hidden} more lines`,
+  file: 'file',
+  files: 'files',
+}
+
+export function DiffBlock({
+  diffs, maxLines = DEFAULT_DIFF_MAX_LINES, className, labels = DEFAULT_LABELS, appearance = 'card',
+}: DiffBlockProps) {
   const { rows, added, removed, files } = useMemo(() => buildRows(diffs), [diffs])
+  const visibleRows = appearance === 'file' ? rows.filter(row => row.kind !== 'path') : rows
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -156,19 +194,19 @@ export function DiffBlock({ diffs, maxLines = DEFAULT_DIFF_MAX_LINES, className 
 
   if (rows.length === 0) return null
 
-  const hidden = rows.length - maxLines
+  const hidden = visibleRows.length - maxLines
   const capped = hidden > 0 && !expanded
   // Same split arithmetic as TerminalBlock and the TUI transcript's collapsed
   // card, so a body's head and tail slices agree across the front ends.
   const headLines = Math.ceil(maxLines / 2)
   const tailLines = maxLines - headLines
-  const head = capped ? rows.slice(0, headLines) : rows
-  const tail = capped ? rows.slice(rows.length - tailLines) : []
+  const head = capped ? visibleRows.slice(0, headLines) : visibleRows
+  const tail = capped ? visibleRows.slice(visibleRows.length - tailLines) : []
 
   return (
-    <div className={clsx(css.block, className)} data-diff="">
+    <div className={clsx(css.block, className)} data-diff="" data-appearance={appearance}>
       <button type="button" className={css.copyButton} onClick={onCopy}>
-        {copied ? '复制成功' : '复制'}
+        {copied ? labels.copied : labels.copy}
       </button>
       <div className={css.body}>
         {head.map((row, index) => (
@@ -179,17 +217,19 @@ export function DiffBlock({ diffs, maxLines = DEFAULT_DIFF_MAX_LINES, className 
             type="button"
             className={css.expand}
             aria-expanded={expanded}
-            aria-label={expanded ? '收起差异' : `展开其余 ${hidden} 行差异`}
+            aria-label={expanded ? labels.collapseAria : labels.expandAria(hidden)}
             onClick={onToggle}
           >
-            {expanded ? '收起' : `… 其余 ${hidden} 行`}
+            {expanded ? labels.collapse : labels.expand(hidden)}
           </button>
         )}
         {tail.map((row, index) => (
           <div key={index} className={clsx(css.line, ROW_CLASS[row.kind])}>{row.text}</div>
         ))}
       </div>
-      <div className={css.footer}>└ +{added} -{removed} · {files} file{files === 1 ? '' : 's'}</div>
+      {appearance === 'card' && (
+        <div className={css.footer}>└ +{added} -{removed} · {files} {files === 1 ? labels.file : labels.files}</div>
+      )}
     </div>
   )
 }

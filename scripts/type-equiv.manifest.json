@@ -435,6 +435,16 @@
     },
     {
       "doc": "docs/subsystems/session.md",
+      "symbol": "FileMutationDiff",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
+      "symbol": "FileMutation",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
       "symbol": "SessionEventMap",
       "source": "packages/core/session/src/types.ts"
     },
@@ -752,6 +762,11 @@
     },
     {
       "doc": "docs/subsystems/tools.md",
+      "symbol": "ToolExecutionLocation",
+      "source": "packages/core/tools/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/tools.md",
       "symbol": "ToolExecutionInput",
       "source": "packages/core/tools/src/index.ts"
     },
@@ -769,6 +784,16 @@
       "doc": "docs/subsystems/tools.md",
       "symbol": "ToolExecutionMode",
       "source": "packages/core/tools/src/index.ts"
+    },
+    {
+      "doc": "docs/subsystems/tools.md",
+      "symbol": "CodeDispatchStartEventData",
+      "source": "packages/core/tools/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/tools.md",
+      "symbol": "CodeDispatchEventData",
+      "source": "packages/core/tools/src/types.ts"
     },
     {
       "doc": "docs/subsystems/tools.md",

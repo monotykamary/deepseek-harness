@@ -6,11 +6,10 @@ import {
   ChevronDown,
   SquareMinus,
   SquarePlus,
-  type DiffHunk,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import { EMPTY_DELIVERABLES_SNAPSHOT } from './deliverables-view.ts'
-import type { DeliverableChange } from './contract.ts'
+import { changedFiles, totalChangeStats } from './changed-files.ts'
 import type { NS } from './locales.ts'
 import css from './ChangesPanel.module.css'
 
@@ -20,38 +19,6 @@ export type ChangesPanelProps = PropsRuntime<'workbench.surface'> & PropsLocale<
 interface CollapsedChangesState {
   readonly sessionId: ChangesPanelProps['sessionId']
   readonly keys: ReadonlySet<string>
-}
-
-interface ChangedFile {
-  readonly path: string
-  readonly diffs: readonly DiffHunk[]
-}
-
-function changedFiles(changes: readonly DeliverableChange[]): readonly ChangedFile[] {
-  const byPath = new Map<string, DiffHunk[]>()
-  for (const change of changes) {
-    for (const diff of change.diffs) {
-      const diffs = byPath.get(diff.path) ?? []
-      diffs.push(diff)
-      byPath.set(diff.path, diffs)
-    }
-  }
-  return [...byPath].map(([path, diffs]) => ({ path, diffs }))
-}
-
-function contentLineCount(text: string | null): number {
-  if (text === null || text === '') return 0
-  return (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n').length
-}
-
-function changeStats(diffs: readonly DiffHunk[]): { additions: number; deletions: number } {
-  let additions = 0
-  let deletions = 0
-  for (const diff of diffs) {
-    additions += contentLineCount(diff.newText)
-    deletions += contentLineCount(diff.oldText)
-  }
-  return { additions, deletions }
 }
 
 /**
@@ -70,6 +37,7 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
   const keys = files.map(file => file.path)
   const allCollapsed = keys.length > 0 && keys.every(key => collapsedKeys.has(key))
   const fileCount = files.length
+  const total = totalChangeStats(files)
 
   const toggleChange = (key: string) => {
     setCollapsed((current) => {
@@ -90,9 +58,10 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
         <span className={css.title}>{t('changes.title')}</span>
         {snapshot.changes.length > 0 && (
           <div className={css.headerActions}>
-            <span className={css.summary}>{t('changes.summary', {
-              changes: String(snapshot.changes.length),
+            <span className={css.summary}>{t(fileCount === 1 ? 'changes.summaryOne' : 'changes.summary', {
               files: String(fileCount),
+              additions: String(total.additions),
+              deletions: String(total.deletions),
             })}</span>
             <Button
               variant="ghost"
@@ -110,7 +79,7 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
           ? <div className={css.empty}>{t('changes.empty')}</div>
           : files.map((file) => {
             const open = !collapsedKeys.has(file.path)
-            const { additions, deletions } = changeStats(file.diffs)
+            const { additions, deletions } = file
             return (
               <DisclosureRow
                 key={file.path}
@@ -134,7 +103,20 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
                 )}
               >
                 <div className={css.diffWrap}>
-                  <DiffBlock diffs={[...file.diffs]} />
+                  <DiffBlock
+                    diffs={[...file.diffs]}
+                    appearance="file"
+                    labels={{
+                      copy: t('changes.copy'),
+                      copied: t('changes.copied'),
+                      collapseAria: t('changes.collapseDiff'),
+                      expandAria: count => t('changes.expandDiff', { count: String(count) }),
+                      collapse: t('changes.collapse'),
+                      expand: count => t('changes.showDiff', { count: String(count) }),
+                      file: t('changes.file'),
+                      files: t('changes.files'),
+                    }}
+                  />
                 </div>
               </DisclosureRow>
             )

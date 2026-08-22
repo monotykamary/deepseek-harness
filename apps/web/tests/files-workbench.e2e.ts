@@ -53,6 +53,7 @@ function renderGolden(values: {
   preview: string
   rootRows: string[]
   tabs: string[]
+  wrapIconSize: string
 }): string {
   return [
     '# Files workbench',
@@ -63,6 +64,7 @@ function renderGolden(values: {
     `- preview: ${JSON.stringify(values.preview)}`,
     `- edited source: ${JSON.stringify(values.editedSource)}`,
     `- fullscreen editor: ${String(values.fullscreenEditor)}`,
+    `- wrap icon size: ${values.wrapIconSize}`,
     `- tab icon before hover: ${String(values.iconBeforeHover)}`,
     `- tab close after hover: ${String(values.closeAfterHover)}`,
     `- filtered rows: ${values.filteredRows.join(' → ')}`,
@@ -148,6 +150,10 @@ describe('web e2e: Files workbench', () => {
     const editor = panel.getByRole('textbox', { name: 'Edit src/index.ts', exact: true })
     await editor.waitFor({ timeout: 10_000 })
     const preview = await editor.inputValue()
+    const wrapIconBox = await panel.getByRole('button', { name: 'Wrap text', exact: true }).locator('svg').boundingBox()
+    const wrapIconSize = wrapIconBox === null
+      ? 'missing'
+      : `${String(Math.round(wrapIconBox.width))}×${String(Math.round(wrapIconBox.height))}`
     await panel.getByRole('button', { name: 'Edit file in fullscreen', exact: true }).click()
     const fullscreenBox = await panel.locator('[data-fullscreen]').boundingBox()
     const fullscreenEditor = fullscreenBox !== null
@@ -201,6 +207,7 @@ describe('web e2e: Files workbench', () => {
       preview,
       rootRows,
       tabs,
+      wrapIconSize,
     }), MODE)
     await assertFixtureInventory(SNAPSHOT_DIR, ['files-workbench.expected.md', 'seed.jsonl'])
     expect(tripwire.pageErrors).toEqual([])

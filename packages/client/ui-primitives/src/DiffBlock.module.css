@@ -9,10 +9,16 @@
   --dsl-diff-line-height: 22px;
 
   position: relative;
-  margin: 16px 0;
+  margin: var(--dsl-diff-outer-space, 16px 0);
   color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-markdown-code-block);
   border-radius: var(--dsl-diff-radius);
+}
+
+.block[data-appearance='file'] {
+  --dsl-diff-outer-space: 0;
+
+  border-radius: 0;
 }
 
 /* The copy control floats in the top-right corner over the body, so the card
@@ -33,11 +39,25 @@
   font: var(--dsw-font-xs-13);
 }
 
+.block[data-appearance='file'] .copyButton {
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.block[data-appearance='file']:hover .copyButton,
+.block[data-appearance='file'] .copyButton:focus-visible {
+  opacity: 1;
+}
+
 .body {
   padding: 12px 14px;
   font: var(--dsw-font-markdown-code-block);
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+.block[data-appearance='file'] .body {
+  padding: 10px 12px;
 }
 
 /* No wrapping, no word-break: a diff is read by its indentation. */

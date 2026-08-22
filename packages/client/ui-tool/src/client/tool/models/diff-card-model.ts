@@ -7,7 +7,8 @@
  * call this, so the hunks they show are derived once.
  * @module
  */
-import type { DiffBlockProps, DiffHunk } from '@monotykamary/dsh-client-ui-primitives'
+import type { DiffBlockLabels, DiffBlockProps, DiffHunk } from '@monotykamary/dsh-client-ui-primitives'
+import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
 import type { ToolCallBlock } from './tool-call-model.ts'
 
 /**
@@ -57,6 +58,24 @@ function narrowDiffs(diffs: unknown): DiffHunk[] | null {
     out.push({ path, oldText, newText })
   }
   return out
+}
+
+/**
+ * Build localized DiffBlock chrome from the conversation locale seat.
+ * @param t - Conversation namespace translator.
+ * @returns Complete labels for the shared diff primitive.
+ */
+export function diffBlockLabels(t: TranslateNS<'conversation'>): DiffBlockLabels {
+  return {
+    copy: t('copy'),
+    copied: t('copied'),
+    collapseAria: t('diff.collapseAria'),
+    expandAria: hidden => t('diff.expandAria', { n: hidden }),
+    collapse: t('diff.collapse'),
+    expand: hidden => t('diff.expandRest', { n: hidden }),
+    file: t('diff.file'),
+    files: t('diff.files'),
+  }
 }
 
 /**

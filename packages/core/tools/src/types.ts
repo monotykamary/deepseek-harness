@@ -6,6 +6,7 @@
 
 import type { CallId } from '@monotykamary/dsh-llm/brand'
 import type { ContentBlock } from '@monotykamary/dsh-llm/types'
+import type { FileMutation } from '@monotykamary/dsh-session/types'
 
 /** Payload recorded when one nested Code Mode Tool dispatch starts. */
 export interface CodeDispatchStartEventData {
@@ -14,12 +15,16 @@ export interface CodeDispatchStartEventData {
   subCallId: CallId
   name: string
   arguments: unknown
+  /** Agent-loop position of the owning root call, when loop-dispatched. */
+  location?: { turn: number; step: number }
 }
 
 /** Payload recorded when one nested Code Mode Tool dispatch settles. */
 export interface CodeDispatchEventData extends CodeDispatchStartEventData {
   isError: boolean
   content: ContentBlock[]
+  /** Workspace-file mutations committed by the nested call. */
+  mutations?: FileMutation[]
 }
 
 declare module '@monotykamary/dsh-session/types' {

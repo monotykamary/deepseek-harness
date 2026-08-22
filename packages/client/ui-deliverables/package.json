@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/dsh-client-ui-deliverables",
-  "description": "Produced-files turn tail, file references, and loaded mutation Changes surface for Web",
+  "description": "Changed-files turn card, file references, and loaded mutation Changes surface for Web",
   "version": "0.1.0-rc.11",
   "publishConfig": {
     "access": "public"
@@ -32,7 +32,6 @@
   "dsh": {
     "client": {
       "inject": [
-        "@monotykamary/dsh-client-connection",
         "@monotykamary/dsh-client-locale",
         "@monotykamary/dsh-client-runtime",
         "@monotykamary/dsh-client-ui-conversation",
@@ -47,19 +46,16 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@monotykamary/dsh-client-connection": "workspace:^",
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^"
   },
   "devDependencies": {
-    "@monotykamary/dsh-client-connection": "workspace:^",
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-test-runtime": "workspace:^",
@@ -67,7 +63,9 @@
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
     "@types/react": "~18.3.1",
+    "react": "^18.2.0",
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^"
@@ -77,8 +75,5 @@
     "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
-  ],
-  "dependencies": {
-    "react": "^18.2.0"
-  }
+  ]
 }

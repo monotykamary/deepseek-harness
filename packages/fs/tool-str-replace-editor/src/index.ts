@@ -267,6 +267,11 @@ async function createFile(
   } catch (error: unknown) {
     throw policy.mapError(error, sandboxPolicy)
   }
+  exec.recordFileMutation({
+    path: target.displayPath,
+    operation: 'create',
+    diffs: [{ oldText: null, newText: outcome.after }],
+  })
   ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
   return `New file created successfully at: ${target.displayPath}`
 }
@@ -318,6 +323,11 @@ async function replaceInFile(
   } catch (error: unknown) {
     throw policy.mapError(error, sandboxPolicy)
   }
+  exec.recordFileMutation({
+    path: target.displayPath,
+    operation: 'modify',
+    diffs: [{ oldText: oldValue, newText: newValue }],
+  })
   ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
   return `The file ${target.displayPath} has been edited successfully.`
 }
@@ -360,6 +370,11 @@ async function insertInFile(
   } catch (error: unknown) {
     throw policy.mapError(error, sandboxPolicy)
   }
+  exec.recordFileMutation({
+    path: target.displayPath,
+    operation: 'modify',
+    diffs: [{ oldText: before, newText: after }],
+  })
   ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
   return `The file ${target.displayPath} has been edited successfully.`
 }

@@ -5,7 +5,9 @@
 - tabs after Tool Inspect: Changes → Inspect
 - inspector title: write
 - inspector sticky gap after scroll: 0px
-- Changes summary: Changes 1 · Files 1
+- changed-files card: Changed files (1) · +1 −0
+- changed-files tree: src → workbench.ts
+- Changes summary: 1 changed file · +1 −0
 - Changes accordion: expanded → collapsed → expanded
 - compact conversation width: 700px
 - compact workbench side: right

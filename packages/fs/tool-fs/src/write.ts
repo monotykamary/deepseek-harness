@@ -118,6 +118,17 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
         // model-facing remedy; anything else passes through.
         throw remediateFsError(sandbox.mapError(error, sandboxPolicy))
       }
+      const diffs = outcome.before === null
+        ? [{ oldText: null, newText: outcome.after }]
+        : computeHunkDiffs(target.displayPath, outcome.before, outcome.after)
+          .map(({ oldText, newText }) => ({ oldText, newText }))
+      if (outcome.operation === 'create' || diffs.length > 0) {
+        exec.recordFileMutation({
+          path: target.displayPath,
+          operation: outcome.operation === 'create' ? 'create' : 'modify',
+          diffs,
+        })
+      }
       // Record the present observation (a no-op when no policy plugin listens).
       ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
       return {

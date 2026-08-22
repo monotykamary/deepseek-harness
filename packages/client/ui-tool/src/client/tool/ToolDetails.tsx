@@ -1,7 +1,7 @@
 /** Card-aware output body for the selected Tool call in details. */
 import { DiffBlock, ReadBlock, SearchBlock, TerminalBlock, WebBlock } from '@monotykamary/dsh-client-ui-primitives'
 import type { ToolDetailsProps } from '../contract/slots.ts'
-import { diffCardModel } from './models/diff-card-model.ts'
+import { diffBlockLabels, diffCardModel } from './models/diff-card-model.ts'
 import { readCardModel } from './models/read-card-model.ts'
 import { searchCardModel } from './models/search-card-model.ts'
 import { terminalBlockLabels, terminalCardModel } from './models/terminal-card-model.ts'
@@ -33,7 +33,7 @@ export function ToolDetails({
   const read = readCardModel(block, cwd, home)
   if (read !== null) return <ReadBlock {...read} className={css.read} />
   const diff = diffCardModel(block)
-  if (diff !== null) return <DiffBlock {...diff.card} className={css.cardBody} />
+  if (diff !== null) return <DiffBlock {...diff.card} labels={diffBlockLabels(t)} className={css.cardBody} />
   const search = searchCardModel(block)
   if (search !== null) {
     return (

@@ -18,6 +18,24 @@ import type { JsonValue } from './json.ts'
 // `ctx.sessions` (a Host-only SessionStore) into every consumer's program.
 export type { JsonValue } from './json.ts'
 
+/** One textual hunk committed to a workspace file by a tool execution. */
+export interface FileMutationDiff {
+  /** Text replaced by the mutation; `null` marks an insertion or file creation. */
+  oldText: string | null
+  /** Replacement text; `null` marks a deletion. */
+  newText: string | null
+}
+
+/** Durable receipt for one committed workspace-file mutation. */
+export interface FileMutation {
+  /** Filesystem target display path recorded by the tool. */
+  path: string
+  /** File-level operation committed by the tool. */
+  operation: 'create' | 'modify' | 'delete'
+  /** Ordered textual hunks committed by this operation. */
+  diffs: FileMutationDiff[]
+}
+
 /** Identifies one session in the store (and its persistence artifacts). */
 export type SessionId = Branded<'SessionId'>
 
@@ -307,6 +325,8 @@ export interface SessionEventMap {
     message: ToolResultMessage
     error?: { name: string; code: string }
     meta?: JsonValue
+    /** Workspace-file mutations committed by this call, independent of presentation metadata. */
+    mutations?: FileMutation[]
   }
   /** Whole-list snapshot; latest write wins on replay. Log-only UI state; never derived history. */
   'todo/write': { todos: TodoItem[] }

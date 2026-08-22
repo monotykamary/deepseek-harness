@@ -12,7 +12,7 @@ import type { CallId, ContentBlock, ToolSchema } from '@monotykamary/dsh-llm'
 import { assertNever, deepFreeze, HarnessError } from '@monotykamary/dsh-llm'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { snapshotJsonValue } from '@monotykamary/dsh-session'
-import type { JsonValue, UserMessage } from '@monotykamary/dsh-session'
+import type { FileMutation, JsonValue, UserMessage } from '@monotykamary/dsh-session'
 import type { ToolProviderResult } from '@monotykamary/dsh-system-prompt'
 import type { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
@@ -306,6 +306,12 @@ declare const toolExecutionTokenBrand: unique symbol
 /** Opaque call identity that permits correlation without exposing mutable execution state. */
 export type ToolExecutionToken = symbol & { readonly [toolExecutionTokenBrand]: true }
 
+/** Agent-loop position that owns one root execution tree. */
+export interface ToolExecutionLocation {
+  readonly turn: number
+  readonly step: number
+}
+
 /**
  * Caller-supplied description of one tool call. {@link ToolRuntime.execute}
  * adds the registry-owned token to form a pipeline {@link ToolExecution};
@@ -318,6 +324,8 @@ export interface ToolExecutionInput {
    * a root execution; nested dispatchers propagate the enclosing value.
    */
   readonly rootCallId?: CallId
+  /** Agent-loop position owning this root or nested execution, when loop-dispatched. */
+  readonly location?: ToolExecutionLocation
   readonly name: string
   /** Losslessly JSON-serializable parsed arguments (tools validate their own schema). */
   readonly arguments: unknown
@@ -367,6 +375,8 @@ export interface CodeDispatchLog {
   readonly isError: boolean
   /** The sub-call's complete model-facing content (the settle event's default payload). */
   readonly content: ContentBlock[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
 }
 
 /**
@@ -409,6 +419,13 @@ export interface ToolRunContext extends ToolExecution {
    * source and metadata and are emitted in call order.
    */
   deferContext(context: UserMessage): void
+  /**
+   * Record one workspace-file mutation after it commits. The receipt is
+   * attached to this execution's final result even when later policy replaces
+   * the result projection.
+   * @param mutation - committed file operation and its textual hunks.
+   */
+  recordFileMutation(mutation: FileMutation): void
   /**
    * Mark a successful final result as terminal for the current agent turn.
    * The marker rides this execution's own result (`concludesTurn` exists only
@@ -561,6 +578,8 @@ export interface ToolExecutionSuccess {
   readonly error?: never
   readonly meta?: JsonValue
   readonly additionalContexts?: UserMessage[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
   /** The agent loop stops after committing this successful result batch. */
   readonly concludesTurn?: true
 }
@@ -573,6 +592,8 @@ export interface ToolExecutionFailure {
   readonly content: ContentBlock[]
   readonly meta?: JsonValue
   readonly additionalContexts?: UserMessage[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
   readonly concludesTurn?: never
 }
 
@@ -802,6 +823,8 @@ export class ToolRuntime extends Service {
 
   /** Context deferred by a running tool body, keyed by its scheduler-owned execution. */
   private deferredContexts = new WeakMap<ToolRunContext, UserMessage[]>()
+  /** Committed file mutations recorded by a running tool body. */
+  private fileMutations = new WeakMap<ToolRunContext, FileMutation[]>()
   /** Executions whose tool body declared the current turn complete. */
   private concludingExecutions = new WeakSet<ToolExecution>()
   /** Original caller cancellation, kept outside the wrapper-mutable execution object. */
@@ -1363,12 +1386,14 @@ export class ToolRuntime extends Service {
 
   private createExecution(exec: ToolExecutionInput): ScheduledToolPreparation | { kind: 'ready'; exec: MutableToolRunContext } {
     const deferredContexts: UserMessage[] = []
+    const fileMutations: FileMutation[] = []
     const token = createExecutionToken()
     const callId = exec.callId
     const rootCallId = exec.rootCallId ?? callId
     const name = exec.name
     const agent = exec.agent
     const parent = exec.parent
+    const location = exec.location
     const signal = exec.signal
     // Distinguish a mode-collapsed call (visible in the scope, denied only by
     // the `code` collapse) from a genuinely unknown tool. A collapsed call is
@@ -1388,8 +1413,16 @@ export class ToolRuntime extends Service {
       signal,
       ...agent !== undefined ? { agent } : {},
       ...parent !== undefined ? { parent } : {},
+      ...location !== undefined ? { location } : {},
       deferContext(context: UserMessage): void {
         deferredContexts.push(context)
+      },
+      recordFileMutation(mutation: FileMutation): void {
+        fileMutations.push(deepFreeze({
+          path: mutation.path,
+          operation: mutation.operation,
+          diffs: mutation.diffs.map(diff => ({ ...diff })),
+        }))
       },
       concludeTurn(): void {
         concludingExecutions.add(this as unknown as ToolExecution)
@@ -1415,6 +1448,7 @@ export class ToolRuntime extends Service {
       }
       const execution: MutableToolRunContext = { ...base, arguments: deepFreeze(detached) }
       this.deferredContexts.set(execution, deferredContexts)
+      this.fileMutations.set(execution, fileMutations)
       this.contentFinalizers.set(execution, finalizerFor())
       this.cancellationStates.set(execution, {
         callerSignal: signal,
@@ -1641,6 +1675,10 @@ export class ToolRuntime extends Service {
     } catch (error: unknown) {
       finalResult = this.materializeFinalResult(toolErrorResult(error))
     }
+    const fileMutations = this.fileMutations.get(exec)
+    if (fileMutations !== undefined && fileMutations.length > 0) {
+      finalResult = this.materializeFinalResult({ ...finalResult, mutations: fileMutations })
+    }
     this.notifyResult(exec, finalResult)
     return finalResult
   }
@@ -1849,6 +1887,7 @@ export class ToolRuntime extends Service {
       content: result.content,
       ...result.meta !== undefined ? { meta: result.meta } : {},
       ...result.additionalContexts !== undefined ? { additionalContexts: result.additionalContexts } : {},
+      ...result.mutations !== undefined ? { mutations: result.mutations } : {},
     }
     if (result.isError) {
       return materializePresentation({ isError: true as const, error: result.error, ...presentation })

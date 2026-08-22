@@ -158,11 +158,16 @@ describe('tool-str-replace-editor', () => {
   it('creates, views, replaces, and inserts with the canonical model-facing output', async () => {
     const { ctx, root, owner } = await setup()
     const sample = join(root, 'sample.txt')
-    expect(text(await call(ctx, owner, {
+    const created = await call(ctx, owner, {
       command: 'create',
       path: sample,
       file_text: 'one\ntwo\nthree\n',
-    }))).toBe(`New file created successfully at: ${sample}`)
+    })
+    expect(text(created)).toBe(`New file created successfully at: ${sample}`)
+    expect(created.mutations).toEqual([{
+      path: sample, operation: 'create',
+      diffs: [{ oldText: null, newText: 'one\ntwo\nthree\n' }],
+    }])
 
     expect(text(await call(ctx, owner, {
       command: 'view',
@@ -176,23 +181,36 @@ describe('tool-str-replace-editor', () => {
       '',
     ].join('\n'))
 
-    expect(text(await call(ctx, owner, {
+    const replaced = await call(ctx, owner, {
       command: 'str_replace',
       path: sample,
       old_str: 'two',
       new_str: 'TWO',
-    }))).toBe(`The file ${sample} has been edited successfully.`)
-    expect(text(await call(ctx, owner, {
+    })
+    expect(text(replaced)).toBe(`The file ${sample} has been edited successfully.`)
+    expect(replaced.mutations).toEqual([{
+      path: sample, operation: 'modify', diffs: [{ oldText: 'two', newText: 'TWO' }],
+    }])
+    const removed = await call(ctx, owner, {
       command: 'str_replace',
       path: sample,
       old_str: 'TWO',
-    }))).toBe(`The file ${sample} has been edited successfully.`)
-    expect(text(await call(ctx, owner, {
+    })
+    expect(text(removed)).toBe(`The file ${sample} has been edited successfully.`)
+    expect(removed.mutations).toEqual([{
+      path: sample, operation: 'modify', diffs: [{ oldText: 'TWO', newText: '' }],
+    }])
+    const inserted = await call(ctx, owner, {
       command: 'insert',
       path: sample,
       insert_line: 1,
       new_str: 'between',
-    }))).toBe(`The file ${sample} has been edited successfully.`)
+    })
+    expect(text(inserted)).toBe(`The file ${sample} has been edited successfully.`)
+    expect(inserted.mutations).toEqual([{
+      path: sample, operation: 'modify',
+      diffs: [{ oldText: 'one\n\nthree\n', newText: 'one\nbetween\n\nthree\n' }],
+    }])
     expect(await readFile(sample, 'utf8')).toBe('one\nbetween\n\nthree\n')
   })
 

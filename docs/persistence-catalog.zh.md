@@ -875,6 +875,8 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
   message: ToolResultMessage
   error?: { name: string; code: string }
   meta?: JsonValue
+  /** Workspace-file mutations committed by this call, independent of presentation metadata. */
+  mutations?: FileMutation[]
 }
 ```
 

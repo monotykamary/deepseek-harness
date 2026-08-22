@@ -59,7 +59,16 @@ return (ctx) => {
         return [{ type: 'text', text: String(value) }]
       }
     },
-    async execute(args) {
+    async execute(args, exec) {
+      const content = 'python sdk mutation receipt\n'
+      const filePath = `${exec.agent.session.header.cwd}/sdk-mutation.txt`
+      const { writeFile } = await import('node:fs/promises')
+      await writeFile(filePath, content, 'utf8')
+      exec.recordFileMutation({
+        path: filePath,
+        operation: 'create',
+        diffs: [{ oldText: null, newText: content }],
+      })
       return args.value * 2
     }
   }))

@@ -192,7 +192,7 @@ export function FilePreview({
               aria-pressed={wrap}
               onClick={() => { setWrap(value => !value) }}
             >
-              <WrapText />
+              <WrapText size={16} />
             </button>
           </Tooltip>
         )}

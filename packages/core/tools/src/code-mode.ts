@@ -476,6 +476,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
           name,
           arguments: normalized.dispatched,
           ...exec.agent ? { agent: exec.agent } : {},
+          ...exec.location ? { location: exec.location } : {},
           parent: exec.token,
           signal: runController.signal,
         }
@@ -508,6 +509,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 // finalization; append snapshots the final copy again, so
                 // the log stays detached.
                 content: result.content,
+                ...result.mutations !== undefined ? { mutations: result.mutations } : {},
               })
               agent.session.append('tool/code-dispatch', {
                 rootCallId: exec.rootCallId,
@@ -520,6 +522,8 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 arguments: normalized.logged,
                 isError: result.isError,
                 content: logged,
+                ...exec.location !== undefined ? { location: exec.location } : {},
+                ...result.mutations !== undefined ? { mutations: result.mutations } : {},
               })
             })().finally(() => { logWork.delete(task) })
             logWork.add(task)
@@ -540,6 +544,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 subCallId,
                 name,
                 arguments: normalized.logged,
+                ...exec.location !== undefined ? { location: exec.location } : {},
               })
               // Ordered prepare runs INSIDE the driver lane: the next entry's
               // pre-execute waits for this resolution, as under the native

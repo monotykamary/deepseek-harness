@@ -137,6 +137,12 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
         // model-facing remedy; anything else passes through.
         throw remediateFsError(sandbox.mapError(error, sandboxPolicy))
       }
+      exec.recordFileMutation({
+        path: target.displayPath,
+        operation: 'modify',
+        diffs: computeHunkDiffs(target.displayPath, outcome.before, outcome.after)
+          .map(({ oldText, newText }) => ({ oldText, newText })),
+      })
       // Record the present observation (a no-op when no policy plugin listens).
       ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
       return {

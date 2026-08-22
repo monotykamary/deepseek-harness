@@ -103,7 +103,12 @@ function fakeAgent(): { agent: Agent; events: { type: string; data: unknown }[] 
 async function runCode(
   ctx: Context,
   code: string,
-  extras: { agent?: Agent; signal?: AbortSignal; description?: string } = {},
+  extras: {
+    agent?: Agent
+    signal?: AbortSignal
+    description?: string
+    location?: { turn: number; step: number }
+  } = {},
 ): Promise<ToolExecutionResult> {
   return ctx.tools.execute({
     signal: testToolSignal,
@@ -111,6 +116,7 @@ async function runCode(
     name: RUN_CODE_NAME,
     arguments: { code, description: extras.description ?? 'Run the test program' },
     ...extras.agent ? { agent: extras.agent } : {},
+    ...extras.location ? { location: extras.location } : {},
     ...extras.signal ? { signal: extras.signal } : {},
   })
 }
@@ -965,6 +971,40 @@ describe('the run_code dispatch bridge', () => {
     expect(result.isError).toBe(false)
     const settle = events.find(event => event.type === 'tool/code-dispatch')
     expect(settle?.data).toMatchObject({ name: 'echo', isError: false, content: [{ type: 'text', text: 'echo:x' }] })
+  })
+
+  it('logs nested mutation receipts with the owning loop location', async () => {
+    const { ctx, runtime } = await setup({ mode: 'code' })
+    ctx.tools.register(defineTool({
+      name: 'mutate',
+      description: 'Mutate one file.',
+      parameters: {},
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(_args, exec) {
+        exec.recordFileMutation({
+          path: 'nested.ts', operation: 'create',
+          diffs: [{ oldText: null, newText: 'nested' }],
+        })
+        return Promise.resolve('done')
+      },
+    }))
+    const { agent, events } = fakeAgent()
+    runtime.behavior = async (request) => {
+      await request.bindings[0]!.functions.mutate!({})
+      return { logs: [], value: 'done' }
+    }
+
+    await runCode(ctx, 'program', { agent, location: { turn: 3, step: 2 } })
+
+    const start = events.find(event => event.type === 'tool/code-dispatch-start')
+    expect(start?.data).toMatchObject({ location: { turn: 3, step: 2 } })
+    const settle = events.find(event => event.type === 'tool/code-dispatch')
+    expect(settle?.data).toMatchObject({
+      location: { turn: 3, step: 2 },
+      mutations: [{
+        path: 'nested.ts', operation: 'create', diffs: [{ oldText: null, newText: 'nested' }],
+      }],
+    })
   })
 
   it('a throwing tools/pre-execute listener settles the sub-call without post-execute', async () => {

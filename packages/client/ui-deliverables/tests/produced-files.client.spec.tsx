@@ -6,7 +6,7 @@
  * (HMR safety) against the real SlotRegistry.
  */
 import { Context } from '@monotykamary/cordis'
-import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   ConversationEventRegistry, ConversationNodeAssembler, ConversationViewRegistry, SlotRegistry,
@@ -20,9 +20,7 @@ import { apply as applyLocale, inject as localeInject } from '@monotykamary/dsh-
 import type { ChatFileMentions, TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import { makeTranslate, stubSettingsScope } from '@monotykamary/dsh-client-test-runtime'
-import {
-  fitProducedFiles, ProducedFiles, type ProducedFilesInjected, type ProducedFilesProps,
-} from '../src/client/ProducedFiles.tsx'
+import { ProducedFiles, type ProducedFilesInjected } from '../src/client/ProducedFiles.tsx'
 import {
   basename, deliverablesDefinition, producedFileMentions, producedForClosing, selectProducedFiles,
   type DeliverablesTurnData,
@@ -33,17 +31,10 @@ import type { DeliverablesSnapshot } from '../src/client/contract.ts'
 import { apply as applyInvariant } from '../src/invariant.ts'
 import { en, zh } from '../src/client/locales.ts'
 
-const originalClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
-
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
-  if (originalClientWidth === undefined) {
-    delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth
-  } else {
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', originalClientWidth)
-  }
 })
 
 class TestTurnDataStore implements ConversationLocationDataStore<ConversationTurnDataMap> {
@@ -142,7 +133,8 @@ function call(
 }
 
 function result(
-  seq: number, callId: string, isError = false, turn = 1, view?: Exclude<ToolResultNode['resultView'], null>,
+  seq: number, callId: string, isError = false, turn = 1,
+  view?: Exclude<ToolResultNode['resultView'], null>, mutations?: unknown,
 ): ConversationEventInput {
   return at(seq, 'tool/result', {
     turn,
@@ -151,7 +143,16 @@ function result(
       source: { type: 'tool-result', callId },
       content: [{ type: 'tool-result', content: [], isError }],
     },
+    ...(mutations === undefined ? {} : { mutations }),
   }, view === undefined ? undefined : { for: 'result', view })
+}
+
+function mutations(...paths: string[]): unknown[] {
+  return paths.map(path => ({
+    path,
+    operation: 'modify',
+    diffs: [{ oldText: 'before', newText: 'after' }],
+  }))
 }
 
 function diff(...paths: string[]): ToolResultNode['callView'] {
@@ -192,7 +193,7 @@ describe('produced-file Turn data', () => {
     )
     expect(producedForClosing(data, 6)).toEqual(['out/index.html', 'out/app.css'])
     expect(selectProducedFiles(tailOwner(data, 6))).toEqual({
-      paths: ['out/index.html', 'out/app.css'], hasChanges: false,
+      paths: ['out/index.html', 'out/app.css'], changes: [],
     })
     const changed: DeliverablesTurnData = {
       ...data,
@@ -204,29 +205,39 @@ describe('produced-file Turn data', () => {
         diffs: [{ path: 'after.txt', oldText: null, newText: 'y' }],
       }],
     }
-    expect(selectProducedFiles(tailOwner(changed, 6))?.hasChanges).toBe(true)
-    expect(selectProducedFiles(tailOwner({ ...changed, changes: changed.changes.slice(1) }, 6))?.hasChanges).toBe(false)
+    expect(selectProducedFiles(tailOwner(changed, 6))?.changes).toEqual(changed.changes.slice(0, 1))
+    expect(selectProducedFiles(tailOwner({ ...changed, changes: changed.changes.slice(1) }, 6))?.changes).toEqual([])
+    const deletionOnly: DeliverablesTurnData = {
+      produced: [],
+      changes: [{
+        seq: 3, turn: 1, callId: 'delete', title: 'Delete',
+        diffs: [{ path: 'removed.txt', oldText: 'old', newText: '' }],
+      }],
+    }
+    expect(selectProducedFiles(tailOwner(deletionOnly, 4))).toEqual({
+      paths: [], changes: deletionOnly.changes,
+    })
     expect(producedForClosing(undefined)).toEqual([])
     expect(selectProducedFiles(tailOwner(undefined, 9, () => {}, 2))).toBeNull()
   })
 
-  it('folds successful diff and generic-edit calls while ignoring reads, failures, and missing locations', () => {
+  it('folds committed receipts while ignoring reads and presentation-only mutation intent', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'write', diff('out/index.html', 'out/app.css')),
-      result(3, 'write'),
+      result(3, 'write', false, 1, undefined, mutations('out/index.html', 'out/app.css')),
       call(4, 'edit', edit('notes.md')),
-      result(5, 'edit'),
+      result(5, 'edit', false, 1, undefined, mutations('notes.md')),
       call(6, 'read', { card: 'generic', title: 'Read', locations: [{ path: 'input.txt' }] }),
       result(7, 'read'),
       call(8, 'failed', diff('broken.txt')),
-      result(9, 'failed', true),
+      result(9, 'failed', true, 1, undefined, mutations('broken.txt')),
       call(10, 'locationless', { card: 'diff', title: 'Write', diffs: [] }),
       result(11, 'locationless'),
     ])
 
     expect(producedForClosing(deliverablesOf(value))).toEqual([
-      'out/index.html', 'out/app.css', 'notes.md',
+      'out/index.html', 'out/app.css', 'notes.md', 'broken.txt',
     ])
   })
 
@@ -238,7 +249,9 @@ describe('produced-file Turn data', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'write', diff('src/config.ts')),
-      result(3, 'write', false, 1, applied),
+      result(3, 'write', false, 1, applied, [{
+        path: 'src/config.ts', operation: 'modify', diffs: applied.diffs.map(({ oldText, newText }) => ({ oldText, newText })),
+      }]),
     ])
     expect(changesOf(value).changes).toEqual([{
       seq: 3, turn: 1, callId: 'write', title: 'Updated config', diffs: applied.diffs,
@@ -248,10 +261,37 @@ describe('produced-file Turn data', () => {
     const malformed = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'bad', diff('bad.ts')),
-      result(3, 'bad', false, 1, { card: 'diff', diffs: [{ path: 1 }] } as never),
+      result(3, 'bad', false, 1, { card: 'diff', diffs: [{ path: 1 }] } as never, [null]),
     ])
     // A malformed authoritative result stays off the Changes surface.
     expect(changesOf(malformed)).toEqual({ changes: [] })
+  })
+
+  it('attributes nested Code Mode mutation receipts to the owning Turn', () => {
+    const value = assembler([
+      at(1, 'turn/start', { turn: 2 }),
+      at(2, 'tool/code-dispatch', {
+        rootCallId: 'root', parentCallId: 'root', subCallId: 'root:code:1',
+        name: 'write', arguments: {}, isError: false, content: [],
+        location: { turn: 2, step: 1 },
+        mutations: [
+          { path: 'nested.ts', operation: 'create', diffs: [{ oldText: null, newText: 'nested' }] },
+          { path: 'removed.ts', operation: 'delete', diffs: [{ oldText: 'old', newText: null }] },
+        ],
+      }),
+    ])
+
+    expect(producedForClosing(deliverablesOf(value, 2))).toEqual(['nested.ts'])
+    expect(changesOf(value).changes).toEqual([{
+      seq: 2,
+      turn: 2,
+      callId: 'root:code:1',
+      title: 'write',
+      diffs: [
+        { path: 'nested.ts', oldText: null, newText: 'nested' },
+        { path: 'removed.ts', oldText: 'old', newText: '' },
+      ],
+    }])
   })
 
   it('falls back through call titles and call ids while rejecting non-object diff entries', () => {
@@ -260,10 +300,10 @@ describe('produced-file Turn data', () => {
       call(2, 'fallback-title', diff('fallback.ts')),
       result(3, 'fallback-title', false, 1, {
         card: 'diff', diffs: [{ path: 'fallback.ts', oldText: null, newText: 'next' }],
-      }),
+      }, mutations('fallback.ts')),
       result(4, 'orphan-title', false, 1, {
         card: 'diff', diffs: [{ path: 'orphan.ts', oldText: null, newText: 'orphan' }],
-      }),
+      }, mutations('orphan.ts')),
     ])
     expect(changesOf(value).changes.map(change => change.title)).toEqual([
       'Write fallback.ts', 'orphan-title',
@@ -272,7 +312,7 @@ describe('produced-file Turn data', () => {
     const malformed = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'bad', diff('bad.ts')),
-      result(3, 'bad', false, 1, { card: 'diff', diffs: [null] } as never),
+      result(3, 'bad', false, 1, { card: 'diff', diffs: [null] } as never, [{ path: 'bad.ts', operation: 'modify', diffs: [null] }]),
     ])
     expect(changesOf(malformed)).toEqual({ changes: [] })
   })
@@ -324,7 +364,7 @@ describe('produced-file Turn data', () => {
   it('replays a tail page once prepend supplies its missing Turn start', () => {
     const value = assembler([
       call(10, 'late', diff('history.txt')),
-      result(11, 'late'),
+      result(11, 'late', false, 1, undefined, mutations('history.txt')),
     ], true)
     expect(deliverablesOf(value)).toBeUndefined()
 
@@ -337,164 +377,93 @@ describe('produced-file Turn data', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'first', diff('first.txt')),
-      result(3, 'first'),
+      result(3, 'first', false, 1, undefined, mutations('first.txt')),
     ])
     const first = deliverablesOf(value)
     expect(producedForClosing(first)).toEqual(['first.txt'])
 
     value.append(call(4, 'second', diff('second.txt')))
-    value.append(result(5, 'second'))
+    value.append(result(5, 'second', false, 1, undefined, mutations('second.txt')))
     value.flush()
     expect(producedForClosing(deliverablesOf(value))).toEqual(['first.txt', 'second.txt'])
   })
 })
 
-describe('ProducedFiles row', () => {
+describe('ProducedFiles changed-files card', () => {
   const t = makeTranslate(zh)
-  const capability = (
-    canOpenPath: boolean | undefined,
-    isOperatorEligible = true,
-  ): Pick<ProducedFilesProps, 'isOperatorEligible' | 'openChanges' | 'useHostDescription'> => {
-    const description = canOpenPath === undefined
-      ? undefined
-      : { version: 'test', cwd: '/workspace', attachedSessions: 1, home: '/h', canOpenPath }
-    return {
-      isOperatorEligible,
-      openChanges: vi.fn(),
-      useHostDescription: selector => selector(description),
-    }
-  }
 
-  it('selects the largest prefix using the exact remainder width', () => {
-    expect(fitProducedFiles(230, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(2)
-    expect(fitProducedFiles(145, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(1)
-    expect(fitProducedFiles(300, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(3)
-    // A zero-width lane is a pre-layout test/hidden state, not evidence that
-    // every chip overflowed; keep the bounded initial prefix until measured.
-    expect(fitProducedFiles(0, 8, [70, 60], [60, 50, undefined])).toBe(2)
-    expect(fitProducedFiles(128, 8, [60, 60], [70, 50, undefined])).toBe(2)
-    // Candidate-specific suffix widths matter at the 10 -> 9 digit boundary.
-    expect(fitProducedFiles(126, 8, [60], [70, 50])).toBe(1)
-    expect(fitProducedFiles(20, 8, [60], [70, 50])).toBe(0)
-  })
+  const changes = [{
+    seq: 4,
+    turn: 1,
+    callId: 'write',
+    title: 'Write files',
+    diffs: [
+      { path: 'src/a.ts', oldText: null, newText: 'a\nb' },
+      { path: 'src/nested/b.ts', oldText: 'old', newText: 'new' },
+      { path: 'README.md', oldText: 'remove', newText: '' },
+    ],
+  }]
 
-  it('keeps one measured line, updates on resize, and opens a file or the workspace folder', () => {
-    const paths = ['deep/a.html', 'b.css', 'c.ts', 'd.ts', 'e.ts', 'f.ts', 'g.ts']
-    const openFile = vi.fn<(path: string) => void>()
-    let available = 226
-    let resize: ResizeObserverCallback | undefined
-    const disconnect = vi.fn()
-    const observeNode = vi.fn<(target: Element) => void>()
-    vi.stubGlobal('ResizeObserver', class {
-      constructor(callback: ResizeObserverCallback) { resize = callback }
-      observe(target: Element): void {
-        expect(target).toBeInstanceOf(Element)
-        observeNode(target)
-      }
-      disconnect(): void { disconnect() }
-    })
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-      configurable: true,
-      get(this: HTMLElement) { return this.hasAttribute('data-produced-files-row') ? available : 0 },
-    })
-    const rect = (width: number): DOMRect => ({
-      x: 0, y: 0, width, height: 22, top: 0, right: width, bottom: 22, left: 0,
-      toJSON: () => ({}),
-    })
-    const bounds = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
-      .mockImplementation(function getProbeRect(this: HTMLElement) {
-        if (this.closest('[aria-hidden="true"]') === null) return rect(0)
-        if (this.tagName !== 'BUTTON') return rect(60)
-        return rect(this.textContent === 'a.html' || this.textContent === 'b.css' ? 50 : 100)
-      })
-
-    const view = render(
-      <ProducedFiles matched={{ paths, hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    expect(view.getByText('产物')).toBeTruthy()
-    const row = view.container.querySelector('[data-produced-files-row]')
-    if (!(row instanceof HTMLElement)) throw new Error('produced row missing')
-    // The third probe is 100px: two chips plus the remainder fit, three do not.
-    expect(within(row).getAllByRole('button')).toHaveLength(2)
-    expect(within(row).getByText('+ 5 个文件')).toBeTruthy()
-    const chip = view.getByRole('button', { name: '打开 deep/a.html' })
-    expect(chip.textContent).toBe('a.html')
-    expect(chip.getAttribute('title')).toBe('deep/a.html')
-    expect(view.queryByRole('button', { name: '打开 g.ts' })).toBeNull()
-    fireEvent.click(chip)
-    expect(openFile).toHaveBeenCalledWith('deep/a.html')
-
-    const showFolder = view.getByRole('button', { name: '在文件夹中显示' })
-    fireEvent.click(showFolder)
-    expect(openFile).toHaveBeenLastCalledWith('.')
-
-    available = 150
-    act(() => { resize?.([], {} as ResizeObserver) })
-    expect(within(row).getAllByRole('button')).toHaveLength(1)
-    expect(within(row).getByText('+ 6 个文件')).toBeTruthy()
-
-    // A missing/unsupported computed gap falls back to zero rather than NaN.
-    vi.stubGlobal('getComputedStyle', () => ({ columnGap: '', gap: '' } as CSSStyleDeclaration))
-    available = 165
-    act(() => { resize?.([], {} as ResizeObserver) })
-    expect(within(row).getAllByRole('button')).toHaveLength(2)
-
-    // Ref callbacks leave nulls in the probe arrays when the candidate set
-    // shrinks; the replacement observer must skip those stale slots.
-    observeNode.mockClear()
-    view.rerender(
-      <ProducedFiles matched={{ paths: paths.slice(0, 1), hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    expect(within(row).getAllByRole('button')).toHaveLength(1)
-    expect(observeNode).toHaveBeenCalledTimes(3)
-
-    view.unmount()
-    expect(disconnect).toHaveBeenCalledTimes(2)
-    bounds.mockRestore()
-  })
-
-  it('opens workbench Changes only when the matched Turn carries a diff', () => {
-    const props = capability(false)
+  it('renders aggregate and hierarchical file statistics and opens diffs', () => {
+    const openChanges = vi.fn()
     const view = render(
       <ProducedFiles
-        matched={{ paths: ['a.md'], hasChanges: true }} openFile={() => {}} {...props} t={t}
+        matched={{ paths: ['src/a.ts', 'src/nested/b.ts'], changes }}
+        openChanges={openChanges}
+        t={t}
       />,
     )
-    fireEvent.click(view.getByRole('button', { name: '查看更改' }))
-    expect(props.openChanges).toHaveBeenCalledTimes(1)
-    view.rerender(
+
+    expect(view.getByText('已更改文件（3）')).toBeTruthy()
+    expect(view.getAllByLabelText('+3 −2').length).toBeGreaterThan(0)
+    const src = view.getByRole('button', { name: /^src/u })
+    expect(src.getAttribute('aria-expanded')).toBe('true')
+    expect(view.getByRole('button', { name: '查看 src/a.ts 的差异' })).toBeTruthy()
+    expect(view.getByRole('button', { name: '查看 src/nested/b.ts 的差异' })).toBeTruthy()
+    expect(view.getByRole('button', { name: '查看 README.md 的差异' })).toBeTruthy()
+
+    fireEvent.click(view.getByRole('button', { name: '查看 src/a.ts 的差异' }))
+    expect(openChanges).toHaveBeenCalledTimes(1)
+    fireEvent.click(view.getByRole('button', { name: '查看差异' }))
+    expect(openChanges).toHaveBeenCalledTimes(2)
+
+    fireEvent.click(src)
+    expect(src.getAttribute('aria-expanded')).toBe('false')
+    expect(view.queryByRole('button', { name: '查看 src/a.ts 的差异' })).toBeNull()
+  })
+
+  it('toggles every directory while keeping the hierarchy visible', () => {
+    const view = render(
       <ProducedFiles
-        matched={{ paths: ['a.md'], hasChanges: false }} openFile={() => {}} {...props} t={t}
+        matched={{ paths: ['src/a.ts', 'src/nested/b.ts'], changes }}
+        openChanges={() => {}}
+        t={t}
       />,
     )
-    expect(view.queryByRole('button', { name: '查看更改' })).toBeNull()
+
+    fireEvent.click(view.getByRole('button', { name: '收起全部' }))
+    expect(view.getByRole('button', { name: /^src/u }).getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(view.getByRole('button', { name: '展开全部' }))
+    expect(view.getByRole('button', { name: /^src/u }).getAttribute('aria-expanded')).toBe('true')
+
+    expect(view.getByRole('button', { name: /^src/u })).toBeTruthy()
+    expect(view.getByRole('button', { name: '查看差异' })).toBeTruthy()
   })
 
-  it('keeps the folder action absent without overflow or a local native opener', () => {
-    const openFile = vi.fn<(path: string) => void>()
-    const view = render(
-      <ProducedFiles matched={{ paths: ['a.md'], hasChanges: false }} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    const overflowing = ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md']
-    expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
-    for (const unavailable of [capability(false), capability(true, false), capability(undefined)]) {
-      view.rerender(<ProducedFiles matched={{ paths: overflowing, hasChanges: false }} openFile={openFile} {...unavailable} t={t} />)
-      expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
-    }
-  })
-
-  it('uses singular English copy when exactly one file is hidden', () => {
+  it('uses singular English copy for one changed file', () => {
+    const one = [{
+      seq: 1, turn: 1, callId: 'write', title: 'Write one',
+      diffs: [{ path: 'a.md', oldText: null, newText: 'a' }],
+    }]
     const view = render(
       <ProducedFiles
-        matched={{ paths: ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md'], hasChanges: false }}
-        openFile={() => {}}
-        {...capability(false)}
+        matched={{ paths: ['a.md'], changes: one }}
+        openChanges={() => {}}
         t={makeTranslate(en)}
       />,
     )
-    const row = view.container.querySelector('[data-produced-files-row]')
-    if (!(row instanceof HTMLElement)) throw new Error('produced row missing')
-    expect(within(row).getByText('+ 1 file')).toBeTruthy()
+    expect(view.getByText('Changed files (1)')).toBeTruthy()
+    expect(view.getByRole('button', { name: 'View diff' })).toBeTruthy()
   })
 })
 
@@ -553,7 +522,6 @@ describe('plugin registration', () => {
         'workbench.surface': { kind: 'list', scope: 'session' },
       },
     } as never, () => null)
-    const hostDescription = { getSnapshot: () => undefined, subscribe: () => () => {} }
     const disposePresentation = vi.fn()
     const workbench = {
       open: vi.fn(), close: vi.fn(), show: vi.fn(),
@@ -567,7 +535,7 @@ describe('plugin registration', () => {
       api: { settings: {} },
       isLoopback: false,
       isOperatorEligible: { getSnapshot: () => false, subscribe: () => () => {} },
-      hostDescription,
+      hostDescription: { getSnapshot: () => undefined, subscribe: () => () => {} },
     } as never)
     // ui-theme's Appearance row binds a durable scope through these two.
     ctx.provide('remote', { $on: () => () => {} } as never)
@@ -579,7 +547,8 @@ describe('plugin registration', () => {
     const [entry] = ctx.slots.entries('conversation.chat.turnTail')
     expect(entry).toBeDefined()
     const injected = entry?.inject?.() as unknown as ProducedFilesInjected
-    expect(injected).toMatchObject({ isOperatorEligible: false, hooks: { hostDescription } })
+    expect(Object.keys(injected)).toEqual(['openChanges'])
+    expect(injected.openChanges).toBeTypeOf('function')
     injected.openChanges()
     expect(workbench.open).toHaveBeenCalledWith('changes')
     const changes = ctx.slots.entries('workbench.surface')[0]

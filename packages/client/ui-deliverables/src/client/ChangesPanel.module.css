@@ -63,6 +63,11 @@
   box-sizing: border-box;
   height: 38px;
   padding: 0 12px;
+  background: transparent;
+}
+
+.changeRow:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .changeTitle {
@@ -105,7 +110,9 @@
 }
 
 .diffWrap {
-  padding: 0 12px 0 34px;
+  overflow: hidden;
+  border-top: 1px solid var(--dsw-specific-workbench-divider);
+  background: var(--dsw-alias-markdown-code-block);
 }
 
 .empty {

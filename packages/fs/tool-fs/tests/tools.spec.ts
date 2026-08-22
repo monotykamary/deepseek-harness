@@ -398,6 +398,9 @@ describe('write tool', () => {
     expect(result.isError).toBe(false)
     if (result.isError) throw new Error('expected write success')
     expect(result.value).toEqual({ path: '/abs/a.txt', operation: 'create', before: null, after: 'hi' })
+    expect(result.mutations).toEqual([{
+      path: '/abs/a.txt', operation: 'create', diffs: [{ oldText: null, newText: 'hi' }],
+    }])
     expect(text(result)).toContain('Created file')
     expect(fs.writeIntents).toEqual([{ kind: 'createIfAbsent' }])
   })
@@ -428,6 +431,9 @@ describe('edit tool', () => {
     const result = await call(ctx, 'edit', { file_path: 'a.txt', old_string: 'a', new_string: 'b' }, { session })
     if (result.isError) throw new Error('expected edit success')
     expect(result.value).toEqual({ path: '/abs/a.txt', before: 'a', after: 'b' })
+    expect(result.mutations).toEqual([{
+      path: '/abs/a.txt', operation: 'modify', diffs: [{ oldText: 'a', newText: 'b' }],
+    }])
     expect(text(result)).toBe('The file /abs/a.txt has been updated successfully.')
   })
 

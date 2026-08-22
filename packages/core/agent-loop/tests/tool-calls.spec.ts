@@ -97,6 +97,35 @@ async function until(predicate: () => boolean): Promise<void> {
 }
 
 describe('tool-call scheduler: grouping and barriers', () => {
+  it('logs root mutation receipts and supplies their owning turn and step', async () => {
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'mutate', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter)
+    let location: { turn: number; step: number } | undefined
+    ctx.tools.register(defineContentToolFixture({
+      name: 'mutate', description: 'mutate', parameters: {},
+      execute(_args, exec) {
+        location = exec.location
+        exec.recordFileMutation({
+          path: 'root.ts', operation: 'create', diffs: [{ oldText: null, newText: 'root' }],
+        })
+        return Promise.resolve([{ type: 'text', text: 'done' }])
+      },
+    }))
+    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx, agent)
+
+    expect(location).toEqual({ turn: 1, step: 1 })
+    const result = events(agent).find(event => event.type === 'tool/result')
+    expect(result?.type === 'tool/result' ? result.data.mutations : undefined).toEqual([{
+      path: 'root.ts', operation: 'create', diffs: [{ oldText: null, newText: 'root' }],
+    }])
+  })
+
   it('runs parallel-safe siblings concurrently (all start before any completes)', async () => {
     const adapter = new MockAdapter([
       multiCall([{ id: 'c1', name: 'p', args: { id: '1' } }, { id: 'c2', name: 'p', args: { id: '2' } }, { id: 'c3', name: 'p', args: { id: '3' } }]),

@@ -22,7 +22,7 @@ import clsx from 'clsx'
 import { CodeBlock, DiffBlock, DisclosureRow, ScanSearch, ReadBlock, SearchBlock, StateDot, TerminalBlock, TextShimmer, WebBlock } from '@monotykamary/dsh-client-ui-primitives'
 import type { WebBlockProps } from '@monotykamary/dsh-client-ui-primitives'
 import type { TranslateNS } from '@monotykamary/dsh-client-ui-slots'
-import { CHAT_DIFF_MAX_LINES, type DiffCardModel } from '../models/diff-card-model.ts'
+import { CHAT_DIFF_MAX_LINES, diffBlockLabels, type DiffCardModel } from '../models/diff-card-model.ts'
 import { CHAT_READ_MAX_LINES, type ReadCardModel } from '../models/read-card-model.ts'
 import { CHAT_SEARCH_MAX_LINES, type SearchCardModel } from '../models/search-card-model.ts'
 import { terminalBlockLabels, type TerminalCardModel } from '../models/terminal-card-model.ts'
@@ -245,7 +245,7 @@ export function ToolRow({
               />
             )
             : diffBody !== null
-              ? <DiffBlock {...diffBody.card} maxLines={CHAT_DIFF_MAX_LINES} className={css.diffBody} />
+              ? <DiffBlock {...diffBody.card} maxLines={CHAT_DIFF_MAX_LINES} labels={diffBlockLabels(t)} className={css.diffBody} />
               : readBody !== null
                 ? <ReadBlock {...readBody} maxLines={CHAT_READ_MAX_LINES} className={css.readBody} />
                 : searchBody !== null

@@ -1,111 +1,176 @@
-/* Turn-tail produced-files summary: one measured chip lane plus an optional
-   native-folder action below it. */
-
 .root {
-  position: relative;
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: center;
-  column-gap: 8px;
-  row-gap: 6px;
-  margin-top: 16px;
-  font-size: 13px;
-  line-height: 22px;
-}
-
-.label {
-  grid-column: 1;
-  grid-row: 1;
-  color: var(--dsw-alias-label-tertiary);
-}
-
-.row {
-  grid-column: 2;
-  grid-row: 1;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   min-width: 0;
-  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
 }
 
-/* One produced file. A link by behavior (it opens the file), a chip by shape:
-   full paths are long, while the measured lane stays on one row. */
-.file {
-  flex: 0 0 auto;
-  max-width: 320px;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summaryLine {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.summary {
   overflow: hidden;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-overflow: ellipsis;
+  text-transform: uppercase;
   white-space: nowrap;
-  margin: 0;
-  padding: 0 8px;
-  border: none;
-  border-radius: 6px;
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-secondary);
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.treeRow,
+.actionButton {
+  border: 0;
   font: inherit;
   cursor: pointer;
 }
 
-.file:hover {
-  color: var(--dsw-alias-label-primary);
-  text-decoration: underline;
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  white-space: nowrap;
 }
 
-.file:focus-visible,
-.secondaryAction:focus-visible {
+.treeRow:hover,
+.actionButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.treeRow:focus-visible,
+.actionButton:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
 }
 
-/* Overflow count: the row never silently drops files it did not show. */
-.more {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  color: var(--dsw-alias-label-tertiary);
+.tree,
+.treeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.actions {
-  grid-column: 2;
-  grid-row: 2;
+.treeRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  justify-self: start;
-}
-
-.secondaryAction {
-  margin: 0;
-  padding: 0 2px;
-  border: none;
-  border-radius: 4px;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px 3px calc(6px + var(--changed-files-depth) * 14px);
+  border-radius: 5px;
   background: transparent;
-  color: var(--dsw-alias-label-tertiary);
-  font: inherit;
-  line-height: 20px;
-  cursor: pointer;
-}
-
-.secondaryAction:hover {
   color: var(--dsw-alias-label-secondary);
-  text-decoration: underline;
+  text-align: left;
 }
 
-/* Exact browser-native probes for every candidate shown count. They share the
-   visible styles but never affect layout, accessibility, or scroll width. */
-.measure {
-  position: absolute;
-  width: 0;
-  height: 0;
+.path {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-  contain: strict;
+  font-family: var(--dsw-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.probe {
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: max-content;
+.chevron,
+.chevronOpen {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  transition: transform 100ms ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.chevronSpacer {
+  flex: none;
+  width: 14px;
+}
+
+.stats {
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  font-family: var(--dsw-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.additions {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.deletions {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+:global(body[data-ds-dark-theme]) .root {
+  border-color: transparent;
+  background: color-mix(
+    in srgb,
+    var(--dsw-alias-label-primary) 2.5%,
+    var(--dsw-specific-conversation-canvas)
+  );
+  box-shadow: var(--dsw-shadow-lv1);
+}
+
+:global(body[data-ds-dark-theme]) .actionButton {
+  border-color: var(--dsw-alias-border-l2-darkmode-thin);
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 2.5%, transparent);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.02);
+}
+
+:global(body[data-ds-dark-theme]) .directoryPath {
+  color: color-mix(in srgb, var(--dsw-alias-label-caption) 90%, transparent);
+}
+
+:global(body[data-ds-dark-theme]) .filePath {
+  color: color-mix(in srgb, var(--dsw-alias-label-caption) 80%, transparent);
+}
+
+:global(body[data-ds-dark-theme]) .folderIcon {
+  color: color-mix(in srgb, var(--dsw-alias-label-caption) 75%, transparent);
+}
+
+:global(body[data-ds-dark-theme]) .fileIcon,
+:global(body[data-ds-dark-theme]) .chevron,
+:global(body[data-ds-dark-theme]) .chevronOpen {
+  color: color-mix(in srgb, var(--dsw-alias-label-caption) 70%, transparent);
 }

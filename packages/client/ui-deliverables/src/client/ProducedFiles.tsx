@@ -1,167 +1,129 @@
-// ProducedFiles: the produced-file row a finished turn ends with. The paths
-// come pre-matched by the turn-tail chain from the mutation tools'
-// follow-along locations, never from the closing prose. Clicking one goes
-// through the same openFile the tool rows use — the Host's own opener, on the
-// Host machine.
-
-import { useLayoutEffect, useRef, useState } from 'react'
-import type { HostDescriptionSource } from '@monotykamary/dsh-client-connection/client'
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { ChevronRight, File, Folder, FolderOpen } from '@monotykamary/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale } from '@monotykamary/dsh-client-ui-slots'
-import type { TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
-import { basename, type ProducedFilesMatch } from './turn-deliverables.ts'
+import {
+  changedFiles, changedFileTree, totalChangeStats, type ChangedFileTreeNode,
+} from './changed-files.ts'
+import type { ProducedFilesMatch } from './turn-deliverables.ts'
 import type { NS } from './locales.ts'
 import css from './ProducedFiles.module.css'
 
-/** At most six chips compete for the one-line summary; every other path stays counted. */
-const SHOWN_LIMIT = 6
-
-/**
- * Select the largest prefix whose measured chips and exact remainder fit.
- * @param available - usable width of the one-line file lane.
- * @param gap - computed flex gap between adjacent visible items.
- * @param chipWidths - measured widths for the candidate file chips.
- * @param moreWidthsByShown - exact localized remainder width for each shown count.
- * @returns Number of leading chips to render.
- */
-export function fitProducedFiles(
-  available: number,
-  gap: number,
-  chipWidths: readonly number[],
-  moreWidthsByShown: readonly (number | undefined)[],
-): number {
-  if (available <= 0) return chipWidths.length
-  const prefix = [0]
-  let prefixWidth = 0
-  for (const width of chipWidths) {
-    prefixWidth += width
-    prefix.push(prefixWidth)
-  }
-  let largestFit = 0
-  for (const [shown, width] of prefix.entries()) {
-    const more = moreWidthsByShown[shown]
-    const items = shown + (more === undefined ? 0 : 1)
-    const needed = width + (more ?? 0) + Math.max(0, items - 1) * gap
-    if (needed <= available) largestFit = shown
-  }
-  return largestFit
-}
-
-/** Registration-side Host capability facts. */
+/** Workbench navigation injected by the deliverables plugin. */
 export interface ProducedFilesInjected {
-  /** Whether the page sits on the operator-eligible plane (loopback or a deployment-trusted surface). */
-  isOperatorEligible: boolean
-  /** Open the workbench Changes surface for this Session. */
+  /** Open the loaded Changes surface. */
   openChanges: () => void
-  hooks: {
-    /** Current generation's Host description, bound by the slot renderer. */
-    hostDescription: HostDescriptionSource
-  }
 }
 
-/** Matched paths plus the opener, locale, and injected Host capability. */
-export type ProducedFilesProps = Pick<TurnTailOwnerProps, 'openFile'> & {
+/** Changed-files card props for one completed Turn. */
+export type ProducedFilesProps = {
   matched: ProducedFilesMatch
 } & PropsLocale<typeof NS> & InjectFace<ProducedFilesInjected>
 
-function moreLabel(t: ProducedFilesProps['t'], count: number): string {
-  return count === 1 ? t('produced.moreOne') : t('produced.more', { count: String(count) })
+function Stats({ additions, deletions }: { additions: number; deletions: number }) {
+  return (
+    <span className={css.stats} aria-label={`+${additions} −${deletions}`}>
+      <span className={css.additions}>+{additions}</span>
+      <span className={css.deletions}>−{deletions}</span>
+    </span>
+  )
 }
 
 /**
- * Render one turn's produced files as openable chips.
- * @param props - selector-matched paths, the chat view's file opener, and the locale seat.
- * @returns The produced-files row.
+ * Render one Turn's committed mutations as an expandable changed-files card.
+ * @param props - Turn-local receipt groups, navigation actions, and locale seat.
+ * @returns Hierarchical changed-files summary and full-diff launcher.
  */
 export function ProducedFiles({
-  matched: { paths, hasChanges }, openFile, openChanges, isOperatorEligible, useHostDescription, t,
+  matched: { changes }, openChanges, t,
 }: ProducedFilesProps) {
-  const hostCanOpenPath = useHostDescription(description => description?.canOpenPath === true)
-  const canOpenPath = isOperatorEligible && hostCanOpenPath
-  const limit = Math.min(paths.length, SHOWN_LIMIT)
-  const [shownCount, setShownCount] = useState(limit)
-  const rowRef = useRef<HTMLDivElement>(null)
-  const chipProbes = useRef<Array<HTMLButtonElement | null>>([])
-  const moreProbe = useRef<HTMLSpanElement>(null)
-
-  useLayoutEffect(() => {
-    const row = rowRef.current
-    const remainderProbe = moreProbe.current
-    /* v8 ignore next -- React attaches both refs before the layout effect runs. */
-    if (row === null || remainderProbe === null) return
-    const measure = (): void => {
-      const styles = getComputedStyle(row)
-      const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0
-      // React attaches every still-mounted callback ref before layout effects run.
-      const activeChipProbes = chipProbes.current.slice(0, limit) as HTMLButtonElement[]
-      const chips = activeChipProbes.map(probe => probe.getBoundingClientRect().width)
-      const more = Array.from({ length: limit + 1 }, (_, candidate) => {
-        if (paths.length === candidate) return undefined
-        remainderProbe.textContent = moreLabel(t, paths.length - candidate)
-        return remainderProbe.getBoundingClientRect().width
-      })
-      setShownCount(fitProducedFiles(row.clientWidth, gap, chips, more))
+  const files = useMemo(() => changedFiles(changes), [changes])
+  const tree = useMemo(() => changedFileTree(files), [files])
+  const total = useMemo(() => totalChangeStats(files), [files])
+  const [collapsedDirectories, setCollapsedDirectories] = useState<ReadonlySet<string>>(() => new Set())
+  const directoryPaths = useMemo(() => {
+    const paths: string[] = []
+    const visit = (nodes: readonly ChangedFileTreeNode[]) => {
+      for (const node of nodes) {
+        if (node.kind === 'directory') {
+          paths.push(node.path)
+          visit(node.children)
+        }
+      }
     }
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(measure)
-    observer.observe(row)
-    for (const probe of [...chipProbes.current, moreProbe.current]) {
-      if (probe !== null) observer.observe(probe)
-    }
-    return () => { observer.disconnect() }
-  }, [limit, paths, t])
+    visit(tree)
+    return paths
+  }, [tree])
+  const allDirectoriesCollapsed = directoryPaths.length > 0
+    && directoryPaths.every(path => collapsedDirectories.has(path))
 
-  const visibleCount = Math.min(shownCount, limit)
-  const shown = paths.slice(0, visibleCount)
-  const hidden = paths.length - shown.length
-  return (
-    <div className={css.root}>
-      <span className={css.label}>{t('produced.label')}</span>
-      <div ref={rowRef} className={css.row} data-produced-files-row>
-        {shown.map(path => (
-          <button
-            key={path}
-            type="button"
-            className={css.file}
-            // The full path is the disambiguator when two turns produce files
-            // that share a basename; the chip itself stays short.
-            title={path}
-            aria-label={t('produced.open', { name: path })}
-            onClick={() => { openFile(path) }}
-          >
-            {basename(path)}
+  if (files.length === 0) return null
+
+  const toggleAllDirectories = () => {
+    setCollapsedDirectories(allDirectoriesCollapsed ? new Set() : new Set(directoryPaths))
+  }
+
+  const toggleDirectory = (path: string) => {
+    setCollapsedDirectories((current) => {
+      const next = new Set(current)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }
+
+  const renderNodes = (nodes: readonly ChangedFileTreeNode[], depth = 0): ReactNode => nodes.map((node) => {
+    const style = { '--changed-files-depth': String(depth) } as CSSProperties
+    if (node.kind === 'directory') {
+      const open = !collapsedDirectories.has(node.path)
+      return (
+        <div key={`directory:${node.path}`} className={css.treeGroup}>
+          <button type="button" className={css.treeRow} style={style} aria-expanded={open} onClick={() => { toggleDirectory(node.path) }}>
+            <ChevronRight size={14} className={open ? css.chevronOpen : css.chevron} />
+            {open
+              ? <FolderOpen size={14} className={css.folderIcon} />
+              : <Folder size={14} className={css.folderIcon} />}
+            <span className={`${css.path} ${css.directoryPath}`}>{node.name}</span>
+            <Stats additions={node.additions} deletions={node.deletions} />
           </button>
-        ))}
-        {hidden > 0 && <span className={css.more}>{moreLabel(t, hidden)}</span>}
-      </div>
-      {(hasChanges || (hidden > 0 && canOpenPath)) && (
-        <div className={css.actions}>
-          {hasChanges && (
-            <button type="button" className={css.secondaryAction} onClick={openChanges}>
-              {t('produced.viewChanges')}
-            </button>
-          )}
-          {hidden > 0 && canOpenPath && (
-            <button type="button" className={css.secondaryAction} onClick={() => { openFile('.') }}>
-              {t('produced.showInFolder')}
-            </button>
-          )}
+          {open && <div className={css.tree}>{renderNodes(node.children, depth + 1)}</div>}
         </div>
-      )}
-      <div className={css.measure} aria-hidden="true">
-        {paths.slice(0, limit).map((path, index) => (
-          <button
-            key={path}
-            ref={(node) => { chipProbes.current[index] = node }}
-            type="button"
-            tabIndex={-1}
-            className={`${css.file} ${css.probe}`}
-          >
-            {basename(path)}
-          </button>
-        ))}
-        <span ref={moreProbe} className={`${css.more} ${css.probe}`} />
+      )
+    }
+    return (
+      <button
+        key={`file:${node.path}`}
+        type="button"
+        className={css.treeRow}
+        style={style}
+        title={node.path}
+        aria-label={t('produced.viewFileDiff', { name: node.path })}
+        onClick={openChanges}
+      >
+        <span className={css.chevronSpacer} />
+        <File size={14} className={css.fileIcon} />
+        <span className={`${css.path} ${css.filePath}`}>{node.name}</span>
+        <Stats additions={node.additions} deletions={node.deletions} />
+      </button>
+    )
+  })
+
+  return (
+    <div className={css.root} data-changed-files-card="">
+      <div className={css.header}>
+        <div className={css.summaryLine}>
+          <span className={css.summary}>{t(files.length === 1 ? 'produced.changedOne' : 'produced.changed', { count: String(files.length) })}</span>
+          <Stats additions={total.additions} deletions={total.deletions} />
+        </div>
+        <div className={css.actions}>
+          {directoryPaths.length > 0 && (
+            <button type="button" className={css.actionButton} onClick={toggleAllDirectories}>
+              {t(allDirectoriesCollapsed ? 'produced.expandFolders' : 'produced.collapseFolders')}
+            </button>
+          )}
+          <button type="button" className={css.actionButton} onClick={openChanges}>{t('produced.viewDiff')}</button>
+        </div>
       </div>
+      <div className={css.tree}>{renderNodes(tree)}</div>
     </div>
   )
 }

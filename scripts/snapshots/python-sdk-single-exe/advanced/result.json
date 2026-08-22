@@ -684,6 +684,10 @@
         "name": "snapshot_double",
         "arguments": {
           "value": 21
+        },
+        "location": {
+          "turn": 1,
+          "step": 3
         }
       }
     },
@@ -704,6 +708,22 @@
           {
             "type": "text",
             "text": "42"
+          }
+        ],
+        "location": {
+          "turn": 1,
+          "step": 3
+        },
+        "mutations": [
+          {
+            "path": "{{cwd}}/sdk-mutation.txt",
+            "operation": "create",
+            "diffs": [
+              {
+                "oldText": null,
+                "newText": "python sdk mutation receipt\n"
+              }
+            ]
           }
         ]
       }
@@ -2425,6 +2445,10 @@
             "name": "snapshot_double",
             "arguments": {
               "value": 21
+            },
+            "location": {
+              "turn": 1,
+              "step": 3
             }
           }
         }
@@ -2451,6 +2475,22 @@
               {
                 "type": "text",
                 "text": "42"
+              }
+            ],
+            "location": {
+              "turn": 1,
+              "step": 3
+            },
+            "mutations": [
+              {
+                "path": "{{cwd}}/sdk-mutation.txt",
+                "operation": "create",
+                "diffs": [
+                  {
+                    "oldText": null,
+                    "newText": "python sdk mutation receipt\n"
+                  }
+                ]
               }
             ]
           }

@@ -79,10 +79,6 @@
     "margins": 2,
     "zindexes": 0
   },
-  "packages/client/ui-deliverables/src/client/ProducedFiles.module.css": {
-    "margins": 3,
-    "zindexes": 0
-  },
   "packages/client/ui-directory-picker-browse/src/client/DirectoryBrowser.module.css": {
     "margins": 5,
     "zindexes": 0

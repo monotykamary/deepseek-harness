@@ -1,13 +1,12 @@
 /**
- * Deliverables plugin, browser half: registers the produced-files row into
+ * Deliverables plugin, browser half: registers the changed-files card into
  * the chat view's turn-tail chain, and provides the `chatFileMentions`
  * service that links inline-code mentions of produced files in the closing
- * prose. All policy lives here — the derivation from the mutation tools'
- * `locations`, the mention matching, the chip cap, and the copy — so
- * composing this plugin out of cordis.yml removes both surfaces entirely;
+ * prose. All policy lives here — receipt projection, changed-file hierarchy,
+ * mention matching, and workbench navigation — so composing this plugin out
+ * of cordis.yml removes both surfaces entirely;
  * the owning view renders an empty chain and inert prose at zero cost.
  */
-import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/client'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 import type { ChatFileMentions } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
@@ -33,14 +32,13 @@ export { producedForClosing } from './turn-deliverables.ts'
 const CHANGES_SURFACE_ID = 'changes' as WorkbenchSurfaceId
 
 /** Required services for projections, workbench navigation, slots, and dictionaries. */
-export const inject = ['slots', 'locale', 'conversationEvents', 'conversationViews', 'connection', 'workbench']
+export const inject = ['slots', 'locale', 'conversationEvents', 'conversationViews', 'workbench']
 
 /**
  * Client plugin body: register the dictionaries and the turn-tail entry.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  const connection = ctx.get('connection') as ConnectionHandle
   ctx.conversationEvents.register(deliverablesDefinition)
   ctx.conversationViews.register(deliverablesViewDefinition)
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-deliverables: dictionaries')
@@ -52,9 +50,7 @@ export function apply(ctx: ClientContext): void {
       select: selectProducedFiles,
       locale: NS,
       inject: () => ({
-        isOperatorEligible: connection.isOperatorEligible.getSnapshot(),
         openChanges: () => { ctx.workbench.open(CHANGES_SURFACE_ID) },
-        hooks: { hostDescription: connection.hostDescription },
       }),
     }, ProducedFiles),
   )
@@ -76,7 +72,7 @@ export function apply(ctx: ClientContext): void {
       // Same claim test the turn-tail chain entry runs: no produced files,
       // no vocabulary — the two surfaces agree by construction.
       const match = selectProducedFiles(owner)
-      if (match === null) return undefined
+      if (match === null || match.paths.length === 0) return undefined
       return producedFileMentions(match.paths, owner.openFile, path => t('produced.open', { name: path }))
     },
   }

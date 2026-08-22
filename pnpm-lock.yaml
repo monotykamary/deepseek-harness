@@ -2100,17 +2100,10 @@ importers:
         version: 18.3.1
 
   packages/client/ui-deliverables:
-    dependencies:
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
-      '@monotykamary/dsh-client-connection':
-        specifier: workspace:^
-        version: link:../connection
       '@monotykamary/dsh-client-locale':
         specifier: workspace:^
         version: link:../locale
@@ -2138,9 +2131,15 @@ importers:
       '@monotykamary/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../core/system-prompt
+      '@monotykamary/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
 
   packages/client/ui-directory-picker-browse:
     dependencies:

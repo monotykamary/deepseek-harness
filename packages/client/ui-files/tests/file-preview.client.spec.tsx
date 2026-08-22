@@ -117,6 +117,8 @@ describe('FilePreview', () => {
     const editor = screen.getByRole('textbox', { name: 'Edit src/value.ts' })
     const wrap = screen.getByRole('button', { name: en['editor.wrapOn'] })
     expect(wrap.getAttribute('aria-pressed')).toBe('false')
+    expect(wrap.querySelector('svg')?.getAttribute('width')).toBe('16')
+    expect(wrap.querySelector('svg')?.getAttribute('height')).toBe('16')
     fireEvent.click(wrap)
     expect(screen.getByRole('button', { name: en['editor.wrapOff'] }).getAttribute('aria-pressed')).toBe('true')
     expect(view.container.querySelector('[data-fullscreen]')).toBeNull()

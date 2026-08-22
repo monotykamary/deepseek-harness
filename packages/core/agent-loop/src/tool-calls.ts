@@ -74,6 +74,7 @@ export async function executeToolCalls(
       callId: block.id,
       name: block.name,
       arguments: parseArguments(block.arguments),
+      location: { turn, step },
       agent,
       signal,
     },
@@ -285,5 +286,6 @@ function appendToolResult(
     // The tool's private presentation payload (e.g. a result-time diff),
     // persisted so a UI bridge reproduces the card on replay.
     ...result.meta !== undefined ? { meta: result.meta } : {},
+    ...result.mutations !== undefined ? { mutations: result.mutations } : {},
   }, { surfaceOp: 'append', sourceEventSeqs: [callSeq] })
 }

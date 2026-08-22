@@ -177,6 +177,14 @@ type ToolExecutionToken = symbol & { readonly [toolExecutionTokenBrand]: true }
 ```
 
 ```ts type-equiv
+/** Agent-loop position that owns one root execution tree. */
+interface ToolExecutionLocation {
+  readonly turn: number
+  readonly step: number
+}
+```
+
+```ts type-equiv
 /**
  * Caller-supplied description of one tool call. {@link ToolRuntime.execute}
  * adds the registry-owned token to form a pipeline {@link ToolExecution};
@@ -189,6 +197,8 @@ interface ToolExecutionInput {
    * a root execution; nested dispatchers propagate the enclosing value.
    */
   readonly rootCallId?: CallId
+  /** Agent-loop position owning this root or nested execution, when loop-dispatched. */
+  readonly location?: ToolExecutionLocation
   readonly name: string
   /** Losslessly JSON-serializable parsed arguments (tools validate their own schema). */
   readonly arguments: unknown
@@ -228,6 +238,13 @@ interface ToolRunContext extends ToolExecution {
    * source and metadata and are emitted in call order.
    */
   deferContext(context: UserMessage): void
+  /**
+   * Record one workspace-file mutation after it commits. The receipt is
+   * attached to this execution's final result even when later policy replaces
+   * the result projection.
+   * @param mutation - committed file operation and its textual hunks.
+   */
+  recordFileMutation(mutation: FileMutation): void
   /**
    * Mark a successful final result as terminal for the current agent turn.
    * The marker rides this execution's own result (`concludesTurn` exists only
@@ -277,6 +294,31 @@ interface CodeDispatchLog {
   readonly isError: boolean
   /** The sub-call's complete model-facing content (the settle event's default payload). */
   readonly content: ContentBlock[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
+}
+```
+
+```ts type-equiv
+/** Payload recorded when one nested Code Mode Tool dispatch starts. */
+interface CodeDispatchStartEventData {
+  rootCallId: CallId
+  parentCallId: CallId
+  subCallId: CallId
+  name: string
+  arguments: unknown
+  /** Agent-loop position of the owning root call, when loop-dispatched. */
+  location?: { turn: number; step: number }
+}
+```
+
+```ts type-equiv
+/** Payload recorded when one nested Code Mode Tool dispatch settles. */
+interface CodeDispatchEventData extends CodeDispatchStartEventData {
+  isError: boolean
+  content: ContentBlock[]
+  /** Workspace-file mutations committed by the nested call. */
+  mutations?: FileMutation[]
 }
 ```
 
@@ -344,6 +386,8 @@ interface ToolExecutionSuccess {
   readonly error?: never
   readonly meta?: JsonValue
   readonly additionalContexts?: UserMessage[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
   /** The agent loop stops after committing this successful result batch. */
   readonly concludesTurn?: true
 }
@@ -358,6 +402,8 @@ interface ToolExecutionFailure {
   readonly content: ContentBlock[]
   readonly meta?: JsonValue
   readonly additionalContexts?: UserMessage[]
+  /** Workspace-file mutations committed before this outcome finalized. */
+  readonly mutations?: FileMutation[]
   readonly concludesTurn?: never
 }
 ```

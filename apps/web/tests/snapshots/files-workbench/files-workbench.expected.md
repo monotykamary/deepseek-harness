@@ -6,6 +6,7 @@
 - preview: "export const answer = 42\n"
 - edited source: "export const answer = 43\n"
 - fullscreen editor: true
+- wrap icon size: 16×16
 - tab icon before hover: true
 - tab close after hover: true
 - filtered rows: README.md /

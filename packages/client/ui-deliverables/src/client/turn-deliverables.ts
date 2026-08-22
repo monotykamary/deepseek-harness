@@ -1,12 +1,13 @@
 /**
  * Turn-scoped produced-file Definition and readers. Client-only and
- * model-free: the vocabulary is the mutation tools' own follow-along
- * `locations`, never the closing prose.
+ * model-free: committed mutation receipts are the vocabulary, never tool
+ * presentation intent or the closing prose.
  */
 import type {
   ConversationMatch, ConversationNodeDefinition, ToolResultNode,
 } from '@monotykamary/dsh-client-runtime/client'
 import { isAppendSurfaceEvent } from '@monotykamary/dsh-client-runtime/client'
+import type {} from '@monotykamary/dsh-tools/types'
 import type { DiffHunk, MarkdownFileMentions } from '@monotykamary/dsh-client-ui-primitives'
 import type { TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { DeliverableChange, DeliverablesTurnData } from './contract.ts'
@@ -25,73 +26,76 @@ interface DeliverablesState extends DeliverablesTurnData {
   readonly calls: ReadonlyMap<string, ToolResultNode['callView']>
 }
 
-/**
- * Paths a call view reports having created or changed, by render intent rather
- * than tool name: a diff card, or a generic card whose kind is `edit` (the
- * shape `str_replace_editor`'s insert presents). Every other card produces
- * nothing to open — a read looked, a delete removed, a terminal ran. Only
- * root call views enter this Turn accumulator; nested Code Mode dispatches
- * preserve the pre-assembly behavior and do not contribute independently.
- */
-function producedPaths(view: ToolResultNode['callView']): readonly string[] {
-  if (view === null) return []
-  if (view.card === 'diff') return (view.locations ?? []).map(location => location.path)
-  if (view.card === 'generic' && view.kind === 'edit') {
-    return (view.locations ?? []).map(location => location.path)
-  }
-  return []
+interface MutationProjection {
+  readonly produced: readonly string[]
+  readonly diffs: readonly DiffHunk[]
 }
 
-/** Narrow wire-derived diff values before they reach the strict DiffBlock primitive. */
-function narrowDiffs(value: unknown): readonly DiffHunk[] | null {
+interface ReceiptChange {
+  readonly produced: readonly string[]
+  readonly change: DeliverableChange
+}
+
+/** Narrow durable mutation receipts before projecting them into UI primitives. */
+function projectMutations(value: unknown): MutationProjection | null {
   if (!Array.isArray(value) || value.length === 0) return null
+  const produced: string[] = []
   const diffs: DiffHunk[] = []
   for (const candidate of value) {
     if (typeof candidate !== 'object' || candidate === null || Array.isArray(candidate)) return null
-    const { path, oldText, newText } = candidate as Record<string, unknown>
-    if (typeof path !== 'string' || (oldText !== null && typeof oldText !== 'string') || typeof newText !== 'string') {
-      return null
+    const record = candidate as Record<string, unknown>
+    if (typeof record.path !== 'string'
+      || (record.operation !== 'create' && record.operation !== 'modify' && record.operation !== 'delete')
+      || !Array.isArray(record.diffs)) return null
+    if (record.operation !== 'delete') produced.push(record.path)
+    for (const diff of record.diffs) {
+      if (typeof diff !== 'object' || diff === null || Array.isArray(diff)) return null
+      const { oldText, newText } = diff as Record<string, unknown>
+      if ((oldText !== null && typeof oldText !== 'string')
+        || (newText !== null && typeof newText !== 'string')) return null
+      diffs.push({ path: record.path, oldText, newText: newText ?? '' })
     }
-    diffs.push({ path, oldText, newText })
   }
-  return diffs
+  return diffs.length === 0 ? null : { produced, diffs }
 }
 
-/** Build one successful mutation group from result-time or call-time diff intent. */
-function changeFrom(
+/** Build one change from committed mutation receipts. */
+function changeFromMutations(
   match: ConversationMatch,
-  callView: ToolResultNode['callView'],
+  mutations: unknown,
   callId: string,
+  title: string,
   turn: number,
-): DeliverableChange | null {
-  const resultView = match.view?.for === 'result' && match.view.view.card === 'diff'
-    ? match.view.view
-    : null
-  const fallbackView = callView?.card === 'diff' ? callView : null
-  const view = resultView ?? fallbackView
-  if (view === null) return null
-  const diffs = narrowDiffs(view.diffs)
-  if (diffs === null) return null
+): ReceiptChange | null {
+  const projection = projectMutations(mutations)
+  if (projection === null) return null
   return {
-    seq: match.event.seq,
-    turn,
-    callId,
-    title: view.title ?? fallbackView?.title ?? callId,
-    diffs,
+    produced: projection.produced,
+    change: { seq: match.event.seq, turn, callId, title, diffs: projection.diffs },
+  }
+}
+
+/** Add one committed receipt projection to its Turn accumulator. */
+function appendReceipt(
+  state: DeliverablesState,
+  match: ConversationMatch,
+  receipt: ReceiptChange,
+): DeliverablesState {
+  return {
+    ...state,
+    produced: [...state.produced, ...receipt.produced.map(path => ({ seq: match.event.seq, path }))],
+    changes: [...state.changes, receipt.change],
   }
 }
 
 /**
  * Files produced by one Turn data value.
  *
- * The source is the mutation tools' own follow-along `locations`, not the
- * closing prose: a produced file must be listed whether or not the model
- * remembered to name it. A mutation is recognized by render intent, not by
- * tool name — a diff card, or a generic card whose `kind` is `edit` (the shape
- * `str_replace_editor`'s insert presents) — so a new mutation tool joins by
- * declaring what it does. Reads contribute nothing (looking at a file does not
- * produce it), and neither do deletes (there is nothing left to open) or
- * failed calls. Paths keep first-seen order and appear once, so a file written
+ * The source is each tool execution's committed mutation receipts, not
+ * presentation metadata or closing prose. Calls without valid receipts
+ * contribute nothing; deletes remain visible in Changes but produce no
+ * openable file. Direct and nested Code Mode calls use the same receipt
+ * vocabulary. Paths keep first-seen order and appear once, so a file written
  * and then edited in the same turn is one entry.
  *
  * The Conversation Location index owns turn membership before this function
@@ -116,22 +120,25 @@ export function producedForClosing(
   return paths
 }
 
-/** Produced-files row currency, including whether its Turn has a rendered diff. */
+/** Changed-files card currency at one closing Assistant sequence. */
 export interface ProducedFilesMatch {
+  /** Successfully created or modified paths available to inline mentions. */
   readonly paths: readonly string[]
-  readonly hasChanges: boolean
+  /** Committed mutation groups visible before the closing message. */
+  readonly changes: readonly DeliverableChange[]
 }
 
 /**
- * Claim the turn-tail chain only when its closing turn produced files.
+ * Claim the turn-tail chain when committed mutations precede the closing message.
  * @param owner - Turn-tail owner currency for the closing assistant.
- * @returns Produced paths and Changes availability, or null to decline before mount.
+ * @returns Mention paths and changed-file groups, or null when neither exists.
  */
 export function selectProducedFiles(owner: TurnTailOwnerProps): ProducedFilesMatch | null {
   const data = owner.turn.data.get('deliverables')
   const paths = producedForClosing(data, owner.seq)
-  if (paths.length === 0) return null
-  return { paths, hasChanges: data?.changes.some(change => change.seq <= owner.seq) === true }
+  const changes = data?.changes.filter(change => change.seq <= owner.seq) ?? []
+  if (paths.length === 0 && changes.length === 0) return null
+  return { paths, changes }
 }
 
 /** Turn-local successful mutation accumulator; it publishes no view Node. */
@@ -143,6 +150,9 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
     if (event.type === 'tool/call') return { id: String(event.data.turn), role: 'update' }
     if (event.type === 'tool/result' && isAppendSurfaceEvent(event)) {
       return { id: String(event.data.turn), role: 'update' }
+    }
+    if (event.type === 'tool/code-dispatch' && event.data.location !== undefined) {
+      return { id: String(event.data.location.turn), role: 'update' }
     }
     return null
   },
@@ -159,19 +169,23 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
       )
       return { ...context.state, calls }
     }
-    if (match.event.type !== 'tool/result') return context.state
-    const result = match.event.data.message.content[0]
-    if (result.isError === true) return context.state
-    const callId = String(match.event.data.message.source.callId)
-    const callView = context.state.calls.get(callId) ?? null
-    const additions = producedPaths(callView).map(path => ({ seq: match.event.seq, path }))
-    const change = changeFrom(match, callView, callId, context.state.turn)
-    if (additions.length === 0 && change === null) return context.state
-    return {
-      ...context.state,
-      produced: additions.length === 0 ? context.state.produced : [...context.state.produced, ...additions],
-      changes: change === null ? context.state.changes : [...context.state.changes, change],
+    if (match.event.type === 'tool/result') {
+      const callId = String(match.event.data.message.source.callId)
+      const callView = context.state.calls.get(callId) ?? null
+      const resultTitle = match.view?.for === 'result' ? match.view.view.title : undefined
+      const receipt = changeFromMutations(
+        match, match.event.data.mutations, callId, resultTitle ?? callView?.title ?? callId, context.state.turn,
+      )
+      return receipt === null ? context.state : appendReceipt(context.state, match, receipt)
     }
+    if (match.event.type === 'tool/code-dispatch') {
+      const callId = String(match.event.data.subCallId)
+      const receipt = changeFromMutations(
+        match, match.event.data.mutations, callId, match.event.data.name, context.state.turn,
+      )
+      return receipt === null ? context.state : appendReceipt(context.state, match, receipt)
+    }
+    return context.state
   },
   buildLocationData: (context, scope) => scope !== 'turn' || context.state === undefined
     ? null

@@ -49,4 +49,4 @@ Append-only tool results follow the reusable request prefix.
 
 - Operations target UTF-8 text; binary files are unsupported.
 - `str_replace` intentionally rejects zero or multiple matches and has no `replace_all` argument.
-- Every mutation goes through `fs/write-intent` or `fs/edit-intent`, resolves the current session sandbox policy, and delegates enforcement to the mounted filesystem and policy plugins.
+- Every mutation goes through `fs/write-intent` or `fs/edit-intent`, resolves the current session sandbox policy, delegates enforcement to the mounted filesystem and policy plugins, and records a durable `FileMutation` receipt only after the filesystem commit succeeds.

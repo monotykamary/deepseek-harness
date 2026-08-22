@@ -416,6 +416,39 @@ describe('ToolRuntime', () => {
     expect('value' in invalidResult).toBe(false)
   })
 
+  it('preserves detached committed mutation receipts through post-execute replacement', async () => {
+    const ctx = await setup()
+    ctx.tools.register(defineTool({
+      name: 'mutator',
+      description: 'mutator',
+      parameters: {},
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(_args, exec) {
+        const mutation = {
+          path: 'file.ts', operation: 'modify' as const,
+          diffs: [{ oldText: 'old', newText: 'new' }],
+        }
+        exec.recordFileMutation(mutation)
+        mutation.diffs[0]!.newText = 'mutated later'
+        return Promise.resolve('written')
+      },
+    }))
+    ctx.on('tools/post-execute', async () => ({
+      kind: 'block', feedback: [{ type: 'text', text: 'result hidden' }],
+    }))
+
+    const result = await ctx.tools.execute({
+      signal: testToolSignal, callId: CallId('mutation'), name: 'mutator', arguments: {},
+    })
+
+    expect(result).toMatchObject({
+      isError: true,
+      mutations: [{
+        path: 'file.ts', operation: 'modify', diffs: [{ oldText: 'old', newText: 'new' }],
+      }],
+    })
+  })
+
   it('turns a post-execute block into a valueless failure', async () => {
     const ctx = await setup()
     ctx.tools.register(echoTool)

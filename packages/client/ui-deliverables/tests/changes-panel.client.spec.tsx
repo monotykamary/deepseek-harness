@@ -8,7 +8,7 @@ import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import type { ChangesPanelProps } from '../src/client/ChangesPanel.tsx'
 import { ChangesPanel } from '../src/client/ChangesPanel.tsx'
 import type { DeliverablesSnapshot } from '../src/client/contract.ts'
-import { zh } from '../src/client/locales.ts'
+import { en, zh } from '../src/client/locales.ts'
 
 const SID = 'session' as SessionId
 const inputActions: ChangesPanelProps['inputActions'] = {
@@ -19,7 +19,10 @@ function hook<T>(value: T) {
   return function useSelector<S>(selector: (snapshot: T) => S): S { return selector(value) }
 }
 
-function props(snapshot: DeliverablesSnapshot | undefined): ChangesPanelProps {
+function props(
+  snapshot: DeliverablesSnapshot | undefined,
+  t: ChangesPanelProps['t'] = makeTranslate(zh),
+): ChangesPanelProps {
   const conversation = {
     views: { get: ((target: string) => target === 'deliverables' ? snapshot : undefined) as ConversationSnapshot['views']['get'] },
   } as ConversationSnapshot
@@ -31,7 +34,7 @@ function props(snapshot: DeliverablesSnapshot | undefined): ChangesPanelProps {
     inputActions,
     useSessions: hook({} as SessionListState),
     useWorkspaces: hook({} as WorkspaceListState),
-    t: makeTranslate(zh),
+    t,
   }
 }
 
@@ -50,8 +53,8 @@ describe('ChangesPanel', () => {
         { path: 'src/b.ts', oldText: null, newText: 'export const b = 2' },
       ],
     }] })} />)
-    expect(screen.getByText('已载入的更改')).toBeTruthy()
-    expect(screen.getByText('1 次更改 · 2 个文件')).toBeTruthy()
+    expect(screen.getByText('已更改文件')).toBeTruthy()
+    expect(screen.getByText('2 个已更改文件 · +3 −1')).toBeTruthy()
     const change = screen.getByRole('button', { name: /^src\/a\.ts/u })
     expect(change.getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByText('+2')).toBeTruthy()
@@ -88,6 +91,15 @@ describe('ChangesPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: '展开所有更改' }))
     expect(screen.getByRole('button', { name: /^a\.ts/u }).getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByRole('button', { name: /^b\.ts/u }).getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('localizes diff controls on an English surface', () => {
+    render(<ChangesPanel {...props({ changes: [{
+      seq: 1, turn: 1, callId: 'write', title: 'Write a.ts',
+      diffs: [{ path: 'a.ts', oldText: null, newText: 'a' }],
+    }] }, makeTranslate(en))} />)
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy()
+    expect(screen.queryByText('复制')).toBeNull()
   })
 
   it('renders the loaded-window empty state', () => {
