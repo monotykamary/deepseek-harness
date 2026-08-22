@@ -44,6 +44,7 @@
     "tests/details-session-lifecycle.e2e.ts",
     "tests/plugin-config.e2e.ts",
     "tests/settings-chrome.e2e.ts",
+    "tests/distribution-updates.e2e.ts",
     "tests/models-settings.e2e.ts",
     "tests/default-model.e2e.ts",
     "tests/declared-reasoning.e2e.ts",
