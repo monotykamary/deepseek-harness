@@ -328,17 +328,18 @@ export function apply(ctx: Context, config: Config): void {
       // a URL line for a dead server would only mislead, and reading the
       // torn-down port would turn a clean shutdown into a crash.
       if (ctx.get('webServer') === undefined) return
-      const webUrl = localWebUrl(ctx)
+      const localUrl = localWebUrl(ctx)
       const resolution = await settleSurfaces(ctx, config)
       for (const warning of resolution.warnings) ctx.logger.warn(warning)
       if (config.printUrl) {
         printUrl(ctx, runtime, resolution)
       }
       if (handoffBrowser) {
+        const browserUrl = resolution.portless?.url ?? localUrl
         console.log('dsh web: opening the default browser; pass --no-open to disable')
-        void internals.openBrowser(webUrl).catch((error: unknown) => {
+        void internals.openBrowser(browserUrl).catch((error: unknown) => {
           const reason = error instanceof Error ? error.message : String(error)
-          console.error(`web-app: could not open the default browser because ${reason}; visit ${webUrl} manually`)
+          console.error(`web-app: could not open the default browser because ${reason}; visit ${browserUrl} manually`)
         })
       }
     }

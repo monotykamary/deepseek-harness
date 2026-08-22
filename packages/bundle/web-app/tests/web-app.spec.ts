@@ -43,12 +43,14 @@ afterEach(() => {
   vi.mocked(spawn).mockReset()
   vi.unstubAllEnvs()
   internals.resolveDistIndex = originalResolve
+  internals.resolveSurfaces = originalResolveSurfaces
   internals.openBrowser = originalOpenBrowser
   if (dist !== undefined) rmSync(dist, { recursive: true, force: true })
   dist = undefined
 })
 
 const originalResolve = internals.resolveDistIndex
+const originalResolveSurfaces = internals.resolveSurfaces
 const originalOpenBrowser = internals.openBrowser
 
 type BrowserLauncher = ChildProcess & { stderr: PassThrough }
@@ -347,6 +349,29 @@ describe('web-app runtime glue', () => {
     await ctx.fiber.dispose()
   })
 
+  it('opens the resolved portless URL when --portless is enabled', async () => {
+    stageDist()
+    const ctx = new Context()
+    ctx.provide('webServer', fakeHttpServer().server)
+    internals.resolveSurfaces = async () => ({
+      portless: { url: 'https://dsh.localhost', authority: 'dsh.localhost' },
+      warnings: [],
+    })
+    const openBrowser = vi.fn(async () => {})
+    internals.openBrowser = openBrowser
+    apply(ctx, new Config({
+      openBrowser: true,
+      printUrl: false,
+      surfaceContext: false,
+      trustedHosts: [],
+      tailnet: false,
+      portless: true,
+    }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(openBrowser).toHaveBeenCalledWith('https://dsh.localhost')
+    await ctx.fiber.dispose()
+  })
+
   it('adds surface authorities even when the URL line is silenced', async () => {
     stageDist()
     const ctx = new Context()
@@ -383,6 +408,33 @@ describe('web-app runtime glue', () => {
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(warn).toHaveBeenCalledWith('derived tailnet surface authority "node.tail.ts.net" refused: refused node.tail.ts.net')
     expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567')
+    await ctx.fiber.dispose()
+  })
+
+  it('reports a non-Error surface-authority refusal', async () => {
+    stageDist()
+    const ctx = new Context()
+    ctx.provide('webServer', fakeHttpServer().server)
+    ctx.provide('connection', {
+      addTrustedAuthority: () => { throw 'authority unavailable' },
+    } as never)
+    internals.resolveSurfaces = async () => ({
+      portless: { url: 'https://dsh.localhost', authority: 'dsh.localhost' },
+      warnings: [],
+    })
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+    apply(ctx, new Config({
+      openBrowser: false,
+      printUrl: false,
+      surfaceContext: false,
+      trustedHosts: [],
+      tailnet: false,
+      portless: true,
+    }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(warn).toHaveBeenCalledWith(
+      'derived portless surface authority "dsh.localhost" refused: authority unavailable',
+    )
     await ctx.fiber.dispose()
   })
 
