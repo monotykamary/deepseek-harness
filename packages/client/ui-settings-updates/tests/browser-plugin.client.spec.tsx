@@ -13,7 +13,7 @@ afterEach(cleanup)
 
 const snapshot = {
   channel: 'source' as const, checkedAt: 1, checking: false, error: null, updateAvailable: false,
-  packages: [], updateCommand: 'git pull --ff-only && pnpm install && pnpm run build',
+  packages: [], updateCommand: null,
 }
 const launch = { started: false, message: 'manual', statusPath: null }
 
@@ -57,6 +57,28 @@ describe('ui-settings-updates browser plugin', () => {
     expect(check.className).not.toBe('')
     expect(update.className).not.toBe('')
     expect(check.className).not.toBe(update.className)
+  })
+
+  it('does not render non-upgrade targets as version transitions', async () => {
+    const unusedHook = (() => { throw new Error('unused by component') }) as never
+    render(<UpdateSettings
+      useSessions={unusedHook}
+      useWorkspaces={unusedHook}
+      snapshot={vi.fn(async () => snapshot)}
+      check={vi.fn(async () => ({
+        ...snapshot, packages: [
+          { name: '@monotykamary/dsh', installed: '0.1.0-rc.11', latest: '0.1.0-rc.8', updateAvailable: false },
+          { name: 'dsh-fabric', installed: '0.1.0', latest: '^0.1.0', updateAvailable: false },
+        ],
+      }))}
+      start={vi.fn(async () => launch)}
+      t={(key: string) => key}
+      close={vi.fn()}
+    />)
+    await screen.findByText('@monotykamary/dsh')
+    expect(screen.queryByText('0.1.0-rc.8', { exact: false })).toBeNull()
+    expect(screen.queryByText('^0.1.0', { exact: false })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'update' })).toBeNull()
   })
 
   it('provides a no-op node-half Loader seat', () => {

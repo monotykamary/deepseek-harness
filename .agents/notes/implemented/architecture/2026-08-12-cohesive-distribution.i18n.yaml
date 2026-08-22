@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-12-cohesive-distribution.md
-2026-08-12-cohesive-distribution.md: dd2031f107ca136315c708310de194c09ecc3c72
-2026-08-12-cohesive-distribution.zh.md: eb8465af7d16c9e57dfe7413c7e8e56aac75a56c
+2026-08-12-cohesive-distribution.md: e103289ae27188c8bf164451c339563c462acc92
+2026-08-12-cohesive-distribution.zh.md: 9aadac2a16183194baf043551a702b52475f8e8b

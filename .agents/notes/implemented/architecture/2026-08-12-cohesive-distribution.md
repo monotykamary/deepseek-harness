@@ -14,7 +14,7 @@ The installation also exposed no common version inventory. npm, npx, Nix, and so
 
 The `@monotykamary/dsh` app is one tested distribution. Its manifest pins exact Fabric and Fovea versions and records the same versions under `dsh.distribution.companions`; release verification rejects drift between those fields. Shipped profiles persist `dsh.profile.template` plus user-managed `bundles`. The launcher resolves the current template from its own installation on every boot and migrates recognized legacy prefixes while preserving appended user bundles.
 
-`@monotykamary/dsh-distribution-update` projects installed package versions, caches bounded npm registry checks, detects the installation channel, and exposes status to CLI and Web Settings. Only npm-global installations launch the detached worker. The worker strips credential-like environment variables, writes owner-only status, and never restarts the harness. Other channels return their owning command.
+`@monotykamary/dsh-distribution-update` projects installed package versions, caches bounded npm registry checks, detects the installation channel, and exposes status to CLI and Web Settings. npm-global installations and source checkouts launch the detached worker; the source-channel change is owned by [the automatic monotonic update decision](../bug-fix/2026-08-22-automatic-monotonic-source-updates.md). The worker strips credential-like environment variables, writes owner-only status, and never restarts the harness. Nix, npx, and unknown channels return externally managed guidance.
 
 The Settings Consumer registers an Updates page and a badge seat inside the existing Settings trigger. A registry failure is an operator-visible diagnostic, not an application startup failure.
 

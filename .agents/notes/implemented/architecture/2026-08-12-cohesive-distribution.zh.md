@@ -14,7 +14,7 @@ Status: implemented
 
 `@monotykamary/dsh` 应用是一套经过测试的发行版。其清单固定 Fabric 与 Fovea 的精确版本，并在 `dsh.distribution.companions` 下记录相同版本；发行验证拒绝两处漂移。内置配置档保存 `dsh.profile.template` 与用户管理的 `bundles`。启动器每次启动都从自身安装解析当前模板，并迁移已识别的历史前缀，同时保留追加的用户 Bundle。
 
-`@monotykamary/dsh-distribution-update` 投影已安装包版本，缓存有界 npm Registry 检查，识别安装渠道，并向 CLI 与 Web 设置公开状态。只有 npm 全局安装会启动分离 Worker。Worker 移除类似凭据的环境变量，写入仅所有者可读的状态，且不重启 Harness。其他渠道返回其所属的命令。
+`@monotykamary/dsh-distribution-update` 投影已安装包版本，缓存有界 npm Registry 检查，识别安装渠道，并向 CLI 与 Web 设置公开状态。npm 全局安装与源码检出会启动分离 Worker；源码渠道变更由[自动单调更新决策](../bug-fix/2026-08-22-automatic-monotonic-source-updates.zh.md)负责。Worker 移除类似凭据的环境变量，写入仅所有者可读的状态，且不重启 Harness。Nix、npx 与未知渠道返回外部管理指引。
 
 设置 Consumer 注册更新页面与现有设置入口内的 Badge 席位。Registry 失败是面向操作者的诊断，而不是应用启动失败。
 

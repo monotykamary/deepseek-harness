@@ -282,6 +282,8 @@ export interface LaunchOptions {
     header?: string
     trustedProxy?: string
   }
+  /** Deterministic registry endpoint for assembled Distribution Updates scenarios. */
+  distributionUpdateRegistryUrl?: string
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
 }
@@ -465,7 +467,12 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     { id: 'settings', config: { dshHome: harnessHome } },
     // The CLI normally replaces the shipped placeholder with its own manifest.
     // This direct Loader harness performs the same installation-owned patch.
-    { id: 'distribution-update', config: { appManifest: INSTALL_ANCHOR } },
+    {
+      id: 'distribution-update',
+      config: { appManifest: INSTALL_ANCHOR, ...options.distributionUpdateRegistryUrl === undefined
+        ? {}
+        : { registryUrl: options.distributionUpdateRegistryUrl } },
+    },
     { id: 'credentials', config: { dshHome: harnessHome } },
     // The shipped directory-picker row is the -auto chooser, which resolves
     // the interaction from the RUNNING host (display, SSH launch, bind). The

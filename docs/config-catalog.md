@@ -611,7 +611,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/distribution/update/src/index.ts:25`](../packages/distribution/update/src/index.ts)
+Source: [`packages/distribution/update/src/index.ts:26`](../packages/distribution/update/src/index.ts)
 
 <a id="monotykamarydsh-e2b"></a>
 

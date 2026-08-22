@@ -17,6 +17,8 @@ import { runUpdateWorker } from '../src/startup.ts'
 function fixture(): { root: string; manifest: string } {
   const root = mkdtempSync(join(tmpdir(), 'dsh-distribution-'))
   const app = join(root, 'app')
+  mkdirSync(join(root, '.git'))
+  writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: []\n')
   mkdirSync(join(app, 'node_modules', 'dsh-fabric'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-fovea'), { recursive: true })
   const manifest = join(app, 'package.json')
@@ -64,6 +66,19 @@ describe('distribution inventory', () => {
     }))
     writeFileSync(join(root, 'app', 'node_modules', 'dsh-fabric', 'package.json'), '{}')
     expect(() => installedDistribution(manifest)).toThrow('declares no version')
+  })
+
+  it('never treats an older release or a satisfied dependency range as an update', async () => {
+    const { manifest } = fixture()
+    writeFileSync(manifest, JSON.stringify({
+      name: '@monotykamary/dsh', version: '0.1.0-rc.11',
+      dependencies: { 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9' },
+    }))
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      version: '0.1.0-rc.8', dependencies: { 'dsh-fabric': '^4.5.0', 'dsh-fovea': '^7.8.0' },
+    }))))
+    const packages = await checkInstalledDistribution(manifest)
+    expect(packages.map(pkg => pkg.updateAvailable)).toEqual([false, false, false])
   })
 
   it('checks latest tags and rejects malformed registry responses', async () => {
@@ -115,7 +130,10 @@ describe('distribution inventory', () => {
     release?.()
     const result = await first
     expect(result).toMatchObject({ checking: false, updateAvailable: true, error: null })
-    expect(service.start()).toMatchObject({ started: false, statusPath: null })
+    spawnMock.mockReturnValue(childProcess(0))
+    const launch = service.start()
+    expect(launch.started).toBe(true)
+    expect(typeof launch.statusPath).toBe('string')
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline') }))
     expect(await service.check()).toMatchObject({ error: 'offline', updateAvailable: true })
     await ctx.fiber.dispose()
@@ -126,7 +144,6 @@ describe('distribution inventory', () => {
     for (const [channel, message] of [
       ['nix', 'nix flake update'],
       ['npx', 'npx @monotykamary/dsh@latest web'],
-      ['source', 'git pull --ff-only && pnpm install && pnpm run build'],
       ['unknown', 'This installation channel must be updated by its package manager.'],
     ] as const) {
       process.env.DSH_INSTALL_CHANNEL = channel
@@ -186,8 +203,8 @@ function childProcess(outcome: number | null | Error | string): EventEmitter & {
 }
 
 describe('detached launch and worker', () => {
-  it('launches npm-global updates detached with a scrubbed environment', () => {
-    const { manifest } = fixture()
+  it('launches npm-global and source updates detached with a scrubbed environment', () => {
+    const { root, manifest } = fixture()
     process.env.DSH_INSTALL_CHANNEL = 'npm-global'
     process.env.DSH_TEST_SECRET = 'remove-me'
     spawnMock.mockReturnValue(childProcess(0))
@@ -198,7 +215,38 @@ describe('detached launch and worker', () => {
     if (options?.env === undefined) throw new Error('detached launch omitted spawn environment')
     expect(options.detached).toBe(true)
     expect(options.env.DSH_TEST_SECRET).toBeUndefined()
+    process.env.DSH_INSTALL_CHANNEL = 'source'
+    const sourceLaunch = launchDetachedUpdate(manifest)
+    expect(sourceLaunch.started).toBe(true)
+    expect(typeof sourceLaunch.statusPath).toBe('string')
+    const sourceArgs = spawnMock.mock.calls[1]?.[1]
+    expect(sourceArgs?.includes('source')).toBe(true)
+    expect(sourceArgs?.includes(root)).toBe(true)
     delete process.env.DSH_TEST_SECRET
+  })
+
+  it('runs source pull, install, and build sequentially in the repository root', async () => {
+    const { root } = fixture()
+    spawnMock.mockReturnValueOnce(childProcess(0)).mockReturnValueOnce(childProcess(0)).mockReturnValueOnce(childProcess(0))
+    const status = join(root, 'private', 'status.json')
+    expect(await runUpdateWorker(status, 'source', root)).toBe(0)
+    expect((spawnMock.mock.calls[0]?.[2] as { env?: NodeJS.ProcessEnv }).env?.GIT_TERMINAL_PROMPT).toBe('0')
+    expect(spawnMock.mock.calls.map(([executable, args, options]) => ({
+      executable, args, cwd: (options as { cwd?: string }).cwd,
+    }))).toEqual([
+      { executable: 'git', args: ['pull', '--ff-only'], cwd: root },
+      { executable: 'pnpm', args: ['install'], cwd: root },
+      { executable: 'pnpm', args: ['run', 'build'], cwd: root },
+    ])
+  })
+
+  it('stops a source update at the first failing command', async () => {
+    const { root } = fixture()
+    spawnMock.mockReturnValueOnce(childProcess(0)).mockReturnValueOnce(childProcess(7))
+    const status = join(root, 'private', 'status.json')
+    expect(await runUpdateWorker(status, 'source', root)).toBe(7)
+    expect(spawnMock).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(readFileSync(status, 'utf8'))).toMatchObject({ state: 'failed', exitCode: 7 })
   })
 
   it('uses the npm command shim on Windows', async () => {
@@ -206,7 +254,7 @@ describe('detached launch and worker', () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
     spawnMock.mockReturnValue(childProcess(0))
     const status = join(root, 'private', 'status.json')
-    expect(await runUpdateWorker(status, '@monotykamary/dsh')).toBe(0)
+    expect(await runUpdateWorker(status, 'npm-global', '@monotykamary/dsh')).toBe(0)
     expect(spawnMock.mock.calls[0]?.[0]).toBe('npm.cmd')
     expect((spawnMock.mock.calls[0]?.[2] as { shell: boolean }).shell).toBe(true)
   })
@@ -219,7 +267,7 @@ describe('detached launch and worker', () => {
     const { root } = fixture()
     spawnMock.mockReturnValue(childProcess(exit))
     const status = join(root, 'private', 'status.json')
-    expect(await runUpdateWorker(status, '@monotykamary/dsh')).toBe(returned)
+    expect(await runUpdateWorker(status, 'npm-global', '@monotykamary/dsh')).toBe(returned)
     expect(JSON.parse(readFileSync(status, 'utf8'))).toMatchObject({ state, exitCode: exit })
   })
 
@@ -227,7 +275,7 @@ describe('detached launch and worker', () => {
     const { root } = fixture()
     spawnMock.mockReturnValue(childProcess(failure))
     const status = join(root, 'private', 'status.json')
-    expect(await runUpdateWorker(status, '@monotykamary/dsh')).toBe(1)
+    expect(await runUpdateWorker(status, 'npm-global', '@monotykamary/dsh')).toBe(1)
     expect(JSON.parse(readFileSync(status, 'utf8'))).toMatchObject({ state: 'failed', error: failure instanceof Error ? 'npm missing' : 'string failure' })
   })
 })

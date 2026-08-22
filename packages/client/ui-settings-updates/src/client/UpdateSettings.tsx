@@ -64,7 +64,7 @@ export function UpdateSettings({ check, start, t }: UpdateSettingsProps): ReactN
       <ul className={css.packages}>
         {snapshot.packages.map(pkg => <li key={pkg.name} className={css.package}>
           <strong>{pkg.name}</strong>
-          <code>{pkg.installed}{pkg.latest === null ? '' : ` → ${pkg.latest}`}</code>
+          <code>{pkg.installed}{pkg.latest === null || !pkg.updateAvailable ? '' : ` → ${pkg.latest}`}</code>
         </li>)}
       </ul>
       {snapshot.updateCommand !== null ? <code className={css.command}>{snapshot.updateCommand}</code> : null}

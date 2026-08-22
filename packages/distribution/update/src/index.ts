@@ -1,14 +1,15 @@
 /** Distribution update tracking and detached installation provider. */
 
 import { spawn } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join } from 'node:path'
+import { dirname, join, parse } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Context } from '@monotykamary/cordis'
 import { resolveDshHome } from '@monotykamary/dsh-home-paths'
 import { TypertRemoteService, Remote } from '@monotykamary/dsh-typert-protocol'
 import z from '@monotykamary/schemastery'
+import { gt, minVersion, valid } from 'semver'
 import type {
   DistributionPackageStatus, DistributionUpdateLaunch, DistributionUpdateSnapshot, InstallChannel,
 } from './types.ts'
@@ -74,7 +75,7 @@ function updateCommand(channel: InstallChannel, packageName: string): string | n
     case 'npm-global': return `npm install --global ${packageName}@latest`
     case 'npx': return `npx ${packageName}@latest web`
     case 'nix': return 'nix flake update'
-    case 'source': return 'git pull --ff-only && pnpm install && pnpm run build'
+    case 'source': return null
     case 'unknown': return null
     /* v8 ignore next -- TypeScript closes InstallChannel; runtime input is normalized before this call. */
     default: channel satisfies never; return null
@@ -137,15 +138,35 @@ export async function checkInstalledDistribution(
       if (typeof latest !== 'string') {
         throw new Error(`${app.name}: latest release has no tested version for ${pkg.name}`)
       }
-      return { ...pkg, latest, updateAvailable: latest !== pkg.installed }
+      const installedVersion = valid(pkg.installed)
+      if (installedVersion === null) throw new Error(`${pkg.name}: installed manifest has invalid version ${pkg.installed}`)
+      const exactTarget = valid(latest)
+      const minimumTarget = exactTarget === null ? minVersion(latest) : null
+      if (exactTarget === null && minimumTarget === null) {
+        throw new Error(`${app.name}: latest release has invalid version requirement for ${pkg.name}`)
+      }
+      const targetFloor = exactTarget ?? minimumTarget?.version
+      /* v8 ignore next -- exactTarget or minimumTarget supplied targetFloor. */
+      if (targetFloor === undefined) throw new Error(`${pkg.name}: target version has no minimum`)
+      return { ...pkg, latest, updateAvailable: gt(targetFloor, installedVersion) }
     })
   } finally {
     clearTimeout(timeout)
   }
 }
 
+function sourceRoot(appManifest: string): string {
+  const filesystemRoot = parse(appManifest).root
+  let directory = dirname(appManifest)
+  while (directory !== filesystemRoot) {
+    if (existsSync(join(directory, 'pnpm-workspace.yaml')) && existsSync(join(directory, '.git'))) return directory
+    directory = dirname(directory)
+  }
+  throw new Error(`distribution-update: cannot locate source repository above ${appManifest}`)
+}
+
 /**
- * Launch the owner-only npm updater worker for an npm-global installation.
+ * Launch the owner-only updater worker for an automatic installation channel.
  * @param appManifest - absolute running app manifest path.
  * @returns launch outcome or channel-specific manual guidance.
  */
@@ -156,15 +177,16 @@ export function launchDetachedUpdate(appManifest: string): DistributionUpdateLau
   if (app === undefined) throw new Error('distribution-update: installed distribution has no app')
   const channel = detectInstallChannel(appManifest)
   const command = updateCommand(channel, app.name)
-  if (channel !== 'npm-global') {
+  if (channel !== 'npm-global' && channel !== 'source') {
     return { started: false, message: command ?? 'This installation channel must be updated by its package manager.', statusPath: null }
   }
+  const target = channel === 'source' ? sourceRoot(appManifest) : app.name
   const statusPath = join(resolveDshHome(), 'updates', 'status.json')
   const worker = fileURLToPath(new URL('./startup.js', import.meta.url))
-  const child = spawn(process.execPath, [worker, statusPath, app.name], {
+  const child = spawn(process.execPath, [worker, statusPath, channel, target], {
     detached: true,
     stdio: 'ignore',
-    cwd: dirname(appManifest),
+    cwd: channel === 'source' ? target : dirname(appManifest),
     env: Object.fromEntries(Object.entries(process.env).filter(([key, value]) => value !== undefined
       && !/(?:KEY|SECRET|TOKEN|PASSWORD)/iu.test(key))),
   })
@@ -258,8 +280,8 @@ export class DistributionUpdateService extends TypertRemoteService {
   }
 
   /**
-   * Start an npm-global update in a detached worker.
-   * @returns the launch outcome, or manual guidance for other channels.
+   * Start an automatic update in a detached worker.
+   * @returns the launch outcome, or manual guidance for externally managed channels.
    */
   @Remote('start')
   start(): DistributionUpdateLaunch {

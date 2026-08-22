@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-`distributionUpdate` 的 Web 设置 Consumer：添加更新页面，在设置入口 Badge 挂载时检查 Registry，并在任一托管包与最新 Registry 标签不同时标记设置。页面显示安装渠道、已安装与最新版本、渠道命令，以及支持时的分离更新操作。卡片和状态文本使用共享主题 token，重试、检查与更新操作使用共享 `Button` 变体。
+`distributionUpdate` 的 Web 设置 Consumer：添加更新页面，在设置入口 Badge 挂载时检查 Registry，并在经过测试的发行版存在语义化升级时标记设置。页面显示安装渠道与升级，为 npm 全局安装和源码安装提供分离更新操作，并且只为外部管理的安装显示渠道指引。卡片和状态文本使用共享主题 token，重试、检查与更新操作使用共享 `Button` 变体。
 
 ## 模型体验
 
@@ -14,4 +14,4 @@
 
 ## 已知限制与待办事项
 
-- npm 分离更新完成后需要重启 DSH；旧页面不会流式读取 Worker 状态文件。
+- 分离更新完成后需要重启 DSH；旧页面不会流式读取 Worker 状态文件。

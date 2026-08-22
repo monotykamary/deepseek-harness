@@ -1,0 +1,27 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General"
+    - button "Models"
+    - button "Plugins"
+    - button "Agent presets"
+    - button "Updates"
+  - button "Open configuration file"
+  - button "Close"
+  - heading "Distribution updates" [level=2]
+  - paragraph:
+    - text: "Install channel:"
+    - strong: source
+  - text: Update available
+  - list:
+    - listitem:
+      - strong: "@monotykamary/dsh"
+      - code: 0.1.0-rc.11 → 999.0.0
+    - listitem:
+      - strong: dsh-fabric
+      - code: 0.1.0
+    - listitem:
+      - strong: dsh-fovea
+      - code: 0.2.0
+  - button "Check again"
+  - button "Update DSH"

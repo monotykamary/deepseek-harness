@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/dsh-distribution-update",
-  "description": "Distribution version tracking and detached npm-global updates",
+  "description": "Monotonic distribution tracking and detached npm-global or source updates",
   "version": "0.1.0-rc.11",
   "publishConfig": {
     "access": "public"
@@ -56,6 +56,7 @@
     "@monotykamary/dsh-atomic-write": "workspace:^",
     "@monotykamary/dsh-home-paths": "workspace:^",
     "@monotykamary/schemastery": "workspace:^",
+    "semver": "^7.7.4",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
@@ -66,6 +67,7 @@
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/dsh-typert-protocol": "workspace:^"
+    "@monotykamary/dsh-typert-protocol": "workspace:^",
+    "@types/semver": "^7.8.0"
   }
 }
