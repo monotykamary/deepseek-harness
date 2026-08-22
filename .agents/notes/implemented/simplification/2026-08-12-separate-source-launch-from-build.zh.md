@@ -12,7 +12,7 @@ TypeScript 源码启动器无需在每次调用前完成整个仓库的构建。
 
 ## 决策
 
-根目录的 `dsh` 脚本只运行 `node --import tsx/esm apps/cli/src/bin.ts`。`pnpm run build` 仍是生成包与前端产物的独立操作。源码用户在首次进行类生产启动前运行构建，并在前端或 Client plugin 产物需要刷新时再次运行。
+根目录的 `dsh` 脚本只运行 `node --expose-internals --import tsx/esm apps/cli/src/bin.ts`；长生命周期 Profile 的 Cordis HMR 需要内部模块钩子。`pnpm run build` 仍是生成包与前端产物的独立操作。源码用户在首次进行类生产启动前运行构建，并在前端或 Client plugin 产物需要刷新时再次运行。
 
 Typert Host 产物缺失时，profile 启动会因不含构建指引的模块解析错误而失败。这些 Host 产物存在后，如果前端或 Client plugin 产物缺失，启动会失败，诊断信息会指示用户运行 `pnpm run build`。启动器不会验证产物是否为最新：已有的陈旧前端或 Client plugin 组合包仍会被接受，并可能继续运行旧版浏览器代码，直至下次构建。各包的 Node 半侧至少构建过一次后，`pnpm run dev:web` 只重建声明了 `dsh.client` 的包；它会保持 Client plugin 组合包为最新状态并启用其热重载路径，但不会重建前端 shell。
 
