@@ -229,16 +229,28 @@
   position: relative;
 }
 
-/* Bottom fade: compact overlay pinned to the visible bottom,
-   transparent -> sidebar fill so it tracks the theme. */
+/* Directional fades appear only while more list content exists past that edge. */
 .fade {
   position: absolute;
   left: 0;
   right: var(--dsh-session-list-edge-inset);
-  bottom: 0;
   height: 24px;
-  background: linear-gradient(to bottom, transparent, var(--dsw-specific-sidebar-fill));
+  opacity: 0;
   pointer-events: none;
+}
+
+.fadeVisible {
+  opacity: 1;
+}
+
+.fadeTop {
+  top: 0;
+  background: linear-gradient(to bottom, var(--dsw-specific-sidebar-fill), transparent);
+}
+
+.fadeBottom {
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, var(--dsw-specific-sidebar-fill));
 }
 
 /* Wide-only content fades back in on expand remount (mirrors the shell). */

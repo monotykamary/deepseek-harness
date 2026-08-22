@@ -145,6 +145,38 @@ function openWorkspaceMenu(label: string): void {
 }
 
 describe('WorkspaceBrowser', () => {
+  it('shows fades only toward content beyond the scroll viewport', () => {
+    mount()
+    const list = screen.getByRole('tree')
+    Object.defineProperties(list, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 300 },
+      scrollTop: { configurable: true, writable: true, value: 0 },
+    })
+    const fade = (edge: 'top' | 'bottom') =>
+      document.querySelector(`[data-scroll-fade="${edge}"]`)?.getAttribute('data-visible')
+
+    fireEvent.scroll(list)
+    expect(fade('top')).toBe('false')
+    expect(fade('bottom')).toBe('true')
+
+    list.scrollTop = 80
+    fireEvent.scroll(list)
+    expect(fade('top')).toBe('true')
+    expect(fade('bottom')).toBe('true')
+
+    list.scrollTop = 200
+    fireEvent.scroll(list)
+    expect(fade('top')).toBe('true')
+    expect(fade('bottom')).toBe('false')
+
+    Object.defineProperty(list, 'scrollHeight', { configurable: true, value: 100 })
+    list.scrollTop = 0
+    fireEvent.scroll(list)
+    expect(fade('top')).toBe('false')
+    expect(fade('bottom')).toBe('false')
+  })
+
   it('collapses stale Sessions into a persisted settled shelf and reveals them on demand', () => {
     const day = 86_400_000
     const now = Date.now()

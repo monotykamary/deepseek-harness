@@ -52,6 +52,8 @@ describe('WorkspaceBrowser.module.css list', () => {
     expect(listArea?.get('padding-left')).toBe('4px')
     expect(listArea?.get('margin-right')).toBe('calc(-1 * var(--dsh-session-list-edge-inset))')
     expect(declarations('.fade')?.get('right')).toBe('var(--dsh-session-list-edge-inset)')
+    expect(declarations('.fadeTop')?.get('top')).toBe('0')
+    expect(declarations('.fadeBottom')?.get('bottom')).toBe('0')
     expect(list?.get('margin-right')).toBe('var(--dsh-session-list-scrollbar-offset)')
     expect(list?.get('margin-left')).toBe('-4px')
     expect(list?.get('padding-left')).toBe('4px')
@@ -98,6 +100,8 @@ describe('WorkspaceBrowser.module.css list', () => {
 
   it('keeps the compact fade and T3 Search, scope, and card geometry', () => {
     expect(declarations('.fade')?.get('height')).toBe('24px')
+    expect(declarations('.fade')?.get('opacity')).toBe('0')
+    expect(declarations('.fadeVisible')?.get('opacity')).toBe('1')
     expect(declarations('.sessionOverflowButton')?.get('height')).toBe('28px')
     expect(declarations('.searchRow')?.get('height')).toBe('32px')
     expect(declarations('.scopeRow')?.get('height')).toBe('32px')

@@ -32,6 +32,11 @@ describe('web e2e: rail search click survives its own document-level bubble', ()
     tripwire = watchConsole(page)
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    const welcome = page.getByRole('dialog', { name: 'A complete coding-agent workbench' })
+    if (await welcome.count() > 0) {
+      await welcome.getByRole('button', { name: 'Continue' }).click()
+      await welcome.waitFor({ state: 'detached', timeout: 15_000 })
+    }
   }, 120_000)
 
   afterAll(async () => {
@@ -44,25 +49,26 @@ describe('web e2e: rail search click survives its own document-level bubble', ()
     await page.getByRole('button', { name: 'Collapse sidebar' }).click()
     const railSearch = page.getByRole('button', { name: 'Search sessions' })
     // The wide chrome stays mounted through the 150ms collapse crossfade; the
-    // rail control (no aria-expanded) replaces it at settle.
-    await expect.poll(async () => railSearch.getAttribute('aria-expanded'), { timeout: 10_000 }).toBeNull()
+    // rail button replaces it at settle.
+    await railSearch.waitFor({ state: 'visible', timeout: 10_000 })
 
-    // The one real click under test: it must expand the sidebar AND leave the
-    // search expanded after its own bubble reaches document.
+    // The one real click under test must expand the sidebar and keep the newly
+    // mounted wide input focused after that click reaches document.
     await railSearch.click()
 
-    const wideSearch = page.getByRole('button', { name: 'Search sessions' })
-    await expect.poll(async () => wideSearch.getAttribute('aria-expanded'), { timeout: 10_000 }).toBe('true')
-    const input = page.getByPlaceholder('Search sessions...')
+    const input = page.getByPlaceholder('Search')
+    await input.waitFor({ state: 'visible', timeout: 10_000 })
     await expect.poll(
       async () => input.evaluate(el => document.activeElement === el),
       { timeout: FOCUS_SETTLE_MS + 10_000 },
     ).toBe(true)
 
-    // The guard ends with the gesture: a genuine outside click on an empty
-    // query dismisses the expanded search as before.
+    // The guard ends with the gesture: a genuine outside click moves focus.
     await page.getByRole('button', { name: 'New session' }).first().click()
-    await expect.poll(async () => wideSearch.getAttribute('aria-expanded'), { timeout: 10_000 }).toBe('false')
+    await expect.poll(
+      async () => input.evaluate(el => document.activeElement !== el),
+      { timeout: 10_000 },
+    ).toBe(true)
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 })

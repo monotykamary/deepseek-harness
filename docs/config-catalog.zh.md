@@ -613,7 +613,7 @@ export interface Config {
 }
 ```
 
-来源：[`packages/distribution/update/src/index.ts:25`](../packages/distribution/update/src/index.ts)
+来源：[`packages/distribution/update/src/index.ts:26`](../packages/distribution/update/src/index.ts)
 
 <a id="monotykamarydsh-e2b"></a>
 

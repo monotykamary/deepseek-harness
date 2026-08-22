@@ -6,7 +6,7 @@
  * shell's shared entry path. Adding raises the directory flow directly; the
  * flow and its error dialog remain in WorkspacePicker.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   Button, ChevronDown, CircleX, Folder, SlidersHorizontal,
@@ -113,6 +113,57 @@ function useNativeDragAcceptance(active: boolean): void {
       document.removeEventListener('drop', acceptDrop)
     }
   }, [active])
+}
+
+interface ScrollFadeVisibility {
+  top: boolean
+  bottom: boolean
+}
+
+/** Track whether the list has hidden content above or below its viewport. */
+function useScrollFades() {
+  const listRef = useRef<HTMLDivElement>(null)
+  const [visibility, setVisibility] = useState<ScrollFadeVisibility>({ top: false, bottom: false })
+  const update = useCallback(() => {
+    const list = listRef.current
+    if (list === null) return
+    const next = {
+      top: list.scrollTop > 0,
+      bottom: list.scrollTop < list.scrollHeight - list.clientHeight,
+    }
+    setVisibility(current => current.top === next.top && current.bottom === next.bottom ? current : next)
+  }, [])
+
+  useLayoutEffect(() => { update() })
+  useLayoutEffect(() => {
+    const list = listRef.current
+    if (list === null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(update)
+    observer.observe(list)
+    return () => { observer.disconnect() }
+  }, [update])
+
+  return { listRef, update, visibility }
+}
+
+/** Render the decorative cues for hidden list content in either direction. */
+function ScrollFades({ top, bottom }: ScrollFadeVisibility) {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className={clsx(css.fade, css.fadeTop, top && css.fadeVisible)}
+        data-scroll-fade="top"
+        data-visible={top}
+      />
+      <span
+        aria-hidden="true"
+        className={clsx(css.fade, css.fadeBottom, bottom && css.fadeVisible)}
+        data-scroll-fade="bottom"
+        data-visible={bottom}
+      />
+    </>
+  )
 }
 
 /** Reconcile a stored view order with the Workspace's current session account. */
@@ -534,6 +585,7 @@ function SessionTree({
   sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, home, t,
 }: SessionTreeProps) {
   const list = useSessions(s => s)
+  const fades = useScrollFades()
   const current = list.current
   const [expandedSessionGroups, setExpandedSessionGroups] = useState<string[]>([])
   // Transient drag marker state; the selected mode owns the resulting order.
@@ -686,8 +738,10 @@ function SessionTree({
     <div className={clsx(css.treeBody, css.wide)}>
       {workspaceDropAtListStart && <span className={css.listTopDropIndicator} aria-hidden="true" />}
       <div
+        ref={fades.listRef}
         className={clsx(css.list, workspaceDropAtListStart && css.listTopDropActive)}
         role="tree"
+        onScroll={fades.update}
         aria-label={t('section.sessions')}
       >
         {groups.length === 0 && settledRows.length === 0 && (
@@ -846,7 +900,7 @@ function SessionTree({
           currentId={current}
         />
       </div>
-      <span className={css.fade} />
+      <ScrollFades {...fades.visibility} />
     </div>
   )
 }
@@ -878,6 +932,7 @@ function FlatList({
   | 't'
 > & { workspace?: WorkspaceView | undefined }) {
   const list = useSessions(s => s)
+  const fades = useScrollFades()
   const workspaceSessionIds = useMemo(
     () => workspace === undefined ? null : new Set(workspace.sessionIds),
     [workspace],
@@ -963,7 +1018,13 @@ function FlatList({
   }
   return (
     <div className={clsx(css.treeBody, css.wide)}>
-      <div className={clsx(css.list, css.flatList)} role="tree" aria-label={t('section.sessions')}>
+      <div
+        ref={fades.listRef}
+        className={clsx(css.list, css.flatList)}
+        role="tree"
+        aria-label={t('section.sessions')}
+        onScroll={fades.update}
+      >
         {rows.length === 0 && settledRows.length === 0 && (
           <div className={css.empty}>{t('empty.none')}</div>
         )}
@@ -1009,7 +1070,7 @@ function FlatList({
           currentId={list.current}
         />
       </div>
-      <span className={css.fade} />
+      <ScrollFades {...fades.visibility} />
     </div>
   )
 }
@@ -1041,6 +1102,7 @@ function SearchResults({
   resultLimit: number
 }) {
   const list = useSessions(s => s)
+  const fades = useScrollFades()
   const currentRemote = remote.query === query
     ? remote
     : { query, status: 'loading' as const, items: [], hasMore: false }
@@ -1055,7 +1117,7 @@ function SearchResults({
 
   return (
     <div className={clsx(css.treeBody, css.wide)}>
-      <div className={css.list}>
+      <div ref={fades.listRef} className={css.list} onScroll={fades.update}>
         <div className={css.searchTree} role="tree" aria-label={t('search.results.aria')}>
           {results.items.map(result => (
             <SearchResultItem
@@ -1084,7 +1146,7 @@ function SearchResults({
           </div>
         )}
       </div>
-      <span className={css.fade} />
+      <ScrollFades {...fades.visibility} />
     </div>
   )
 }
