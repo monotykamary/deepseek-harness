@@ -24,7 +24,7 @@ The shipped apps own these command lines:
 
 | Profile | Arguments |
 |---|---|
-| `web` | `--host`, `--port`, repeatable `--trusted-host`, `--no-open` |
+| `web` | `--host`, `--port`, repeatable `--trusted-host`, `--tailnet`, `--portless`, identity flags, `--no-open` |
 | `headless` | the task text, as the positional argument |
 
 A one-shot task (`dsh --profile headless "run the tests"`) creates one fresh persisted Agent through the core registry, submits the task, waits for quiescence, and flushes the Session before deriving the last non-empty assistant text and final `turn/end` reason from its durable interval. It prints the text on stdout and exits 0 for `completed`, else 1. An invocation with no task is a usage error from that app. The shipped headless profile mounts no ApiProxy, Host, HTTP server, Web runtime, or browser client; a successful run writes nothing to stderr and opens no listening port.
@@ -37,6 +37,12 @@ dsh --profile web --patch ./extra.yml --dump-config
 ```
 
 `--dump-default-config` prints only the bundle layers; `--dump-config` adds the profile's `cordis.patch.yml`, the home-level `$DSH_HOME/cordis.patch.yml`, and `--patch` overlays. Both print comments naming the file that supplied each row and every overlay that changed it; `!!js` expressions remain unevaluated, and unmatched patch targets are reported on stderr. A dump never runs app command-line providers, so it shows the composed tree before any app argument is resolved and rejects an invocation that carries app arguments.
+
+## Installation commands
+
+`dsh version` prints the installed DSH, Fabric, and Fovea versions. `dsh doctor` adds DSH-home, shell, sandbox, and desktop readiness; `--json` emits the same fields as JSON, and a blocking result exits 2. `dsh update --check` performs the registry check, while `dsh update` starts an update only for installation channels DSH can safely own.
+
+`dsh portless setup` runs the portless CLI carried by this DSH installation to install and start its HTTPS system service. The command is deliberately separate from `dsh web --portless` because setup may request elevation and change operating-system startup or trust state.
 
 ## Plugin management
 
@@ -73,6 +79,8 @@ dsh web --patch ./extra.cordis.yml
 dsh web --dump-config
 dsh web --help
 ```
+
+`--portless` uses the portless CLI bundled in the DSH installation; run `dsh portless setup` once to install and start its HTTPS service, which may request operating-system elevation. `--tailnet` remains an external integration and requires an installed, connected Tailscale daemon plus a serve route. LSP and stdio MCP entries execute the commands named by user configuration and do not install those external servers.
 
 The production Web runner needs built package and frontend artifacts (`pnpm run build`). It serves `http://127.0.0.1:3080` by default and, for a local launch, opens a successfully resolved `--portless` URL or otherwise that canonical host URL only after the complete Loader tree settles. A non-empty inherited `SSH_CONNECTION` or `SSH_TTY` suppresses the browser handoff because the SSH client or editor owns the local forwarded address; the host URL is still printed. The CLI intentionally does not support `--host 0.0.0.0` yet and exits with a usage error. Immediately before a local handoff it prints `dsh web: opening the default browser; pass --no-open to disable`; if the operating-system handoff fails, a diagnostic on stderr states the reason, leaves the server running, and names the URL for manual use. `--trusted-host` adds named authorities accepted by the `/api` browser-trust fence.
 

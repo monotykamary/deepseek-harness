@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { EventEmitter } from 'node:events'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -7,10 +7,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 interface SpawnCallOptions { detached?: boolean; env?: NodeJS.ProcessEnv; shell?: boolean }
 const spawnMock = vi.hoisted(() => vi.fn<(command: string, args: readonly string[], options: SpawnCallOptions) => unknown>())
-vi.mock('node:child_process', () => ({ spawn: spawnMock }))
+const spawnSyncMock = vi.hoisted(() => vi.fn(() => ({ status: 0 })))
+vi.mock('node:child_process', () => ({ spawn: spawnMock, spawnSync: spawnSyncMock }))
 import {
-  checkInstalledDistribution, detectInstallChannel, DistributionUpdateService,
-  installedDistribution, launchDetachedUpdate,
+  checkInstalledDistribution, detectInstallChannel, DistributionUpdateService, internals,
+  installedDistribution, installationDiagnostics, launchDetachedUpdate,
 } from '../src/index.ts'
 import { runUpdateWorker } from '../src/startup.ts'
 
@@ -33,6 +34,8 @@ function fixture(): { root: string; manifest: string } {
 afterEach(() => {
   vi.restoreAllMocks()
   spawnMock.mockReset()
+  spawnSyncMock.mockClear()
+  internals.diagnose = installationDiagnostics
   delete process.env.DSH_INSTALL_CHANNEL
 })
 
@@ -66,6 +69,75 @@ describe('distribution inventory', () => {
     }))
     writeFileSync(join(root, 'app', 'node_modules', 'dsh-fabric', 'package.json'), '{}')
     expect(() => installedDistribution(manifest)).toThrow('declares no version')
+  })
+
+  it('reports actionable shell, sandbox, home, and desktop readiness', () => {
+    const ready = installationDiagnostics({
+      platform: 'linux',
+      env: { DISPLAY: ':0' },
+      dshHome: '/private/dsh',
+      writable: () => true,
+      run: command => command === 'bash',
+      landlock: () => 'full',
+    })
+    expect(ready).toEqual([
+      { id: 'dsh-home', severity: 'ok', summary: 'DSH home is writable: /private/dsh', remediation: null },
+      { id: 'shell', severity: 'ok', summary: 'Bash is available.', remediation: null },
+      { id: 'sandbox', severity: 'ok', summary: 'Installation-owned Landlock sandbox is available.', remediation: null },
+      { id: 'desktop', severity: 'ok', summary: 'Desktop handoff is available.', remediation: null },
+    ])
+    const blocked = installationDiagnostics({
+      platform: 'linux', env: {}, dshHome: '/locked/dsh', writable: () => false,
+      run: () => false, landlock: () => 'unusable',
+    })
+    expect(blocked.map(item => [item.id, item.severity])).toEqual([
+      ['dsh-home', 'blocking'], ['shell', 'blocking'], ['sandbox', 'blocking'], ['desktop', 'warning'],
+    ])
+    expect(blocked.find(item => item.id === 'sandbox')?.remediation).toContain('bubblewrap')
+  })
+
+  it('uses default command and writable-ancestor probes', () => {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-diagnostics-'))
+    expect(installationDiagnostics({ dshHome: join(root, 'future', 'home') }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'dsh-home', severity: 'ok' })]))
+    const file = join(root, 'not-a-directory')
+    writeFileSync(file, 'x')
+    expect(installationDiagnostics({ dshHome: file, run: () => true }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'dsh-home', severity: 'blocking' })]))
+    const locked = join(root, 'locked')
+    mkdirSync(locked)
+    chmodSync(locked, 0o000)
+    try {
+      expect(installationDiagnostics({ dshHome: locked, run: () => true }))
+        .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'dsh-home', severity: 'blocking' })]))
+    } finally {
+      chmodSync(locked, 0o700)
+    }
+    expect(installationDiagnostics({ platform: 'linux', dshHome: root, writable: () => true, run: command => command === 'bash' }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'sandbox' })]))
+  })
+
+  it('reports platform-specific PowerShell, Seatbelt, and unsupported-host readiness', () => {
+    expect(installationDiagnostics({ platform: 'win32', dshHome: 'C:\\dsh', writable: () => true, run: command => command === 'powershell.exe' }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'shell', severity: 'ok' }), expect.objectContaining({ id: 'sandbox', severity: 'ok' })]))
+    const windowsBlocked = installationDiagnostics({
+      platform: 'win32', dshHome: 'C:\\dsh', writable: () => true, run: () => false,
+    })
+    expect(windowsBlocked.find(item => item.id === 'shell')).toMatchObject({ severity: 'blocking' })
+    expect(windowsBlocked.find(item => item.id === 'shell')?.remediation).toContain('PowerShell')
+    expect(installationDiagnostics({ platform: 'darwin', dshHome: '/dsh', writable: () => true, run: command => command !== 'sandbox-exec' }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'sandbox', severity: 'blocking' })]))
+    expect(installationDiagnostics({ platform: 'darwin', dshHome: '/dsh', writable: () => true, run: () => true }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'sandbox', severity: 'ok' })]))
+    expect(installationDiagnostics({ platform: 'freebsd', dshHome: '/dsh', writable: () => true, run: () => true }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'sandbox', severity: 'blocking' })]))
+    expect(installationDiagnostics({ platform: 'linux', dshHome: '/dsh', writable: () => true, run: command => command === 'bash' || command === 'bwrap', landlock: () => { throw new Error('unused') } }))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'sandbox', summary: 'Bubblewrap sandbox is available.' })]))
+    const partial = installationDiagnostics({
+      platform: 'linux', dshHome: '/dsh', writable: () => true,
+      run: command => command === 'bash', landlock: () => 'partial',
+    })
+    expect(partial.find(item => item.id === 'sandbox')?.summary).toContain('partial')
   })
 
   it('never treats an older release or a satisfied dependency range as an update', async () => {
@@ -108,6 +180,25 @@ describe('distribution inventory', () => {
     await vi.advanceTimersByTimeAsync(10)
     await refusal
     vi.useRealTimers()
+  })
+
+  it('logs non-ready startup diagnostics and returns immutable copies', async () => {
+    const { manifest } = fixture()
+    internals.diagnose = () => [{
+      id: 'shell', severity: 'blocking', summary: 'Bash is unavailable.', remediation: 'Install Bash.',
+    }, {
+      id: 'desktop', severity: 'warning', summary: 'No desktop.', remediation: null,
+    }]
+    const ctx = new Context()
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => {})
+    const service = new DistributionUpdateService(ctx, { appManifest: manifest, checkOnStartup: false })
+    expect(warn).toHaveBeenCalledWith('[blocking] Bash is unavailable. Install Bash.')
+    expect(warn).toHaveBeenCalledWith('[warning] No desktop.')
+    const first = service.snapshot()
+    const second = service.snapshot()
+    expect(first.diagnostics).toEqual(second.diagnostics)
+    expect(first.diagnostics).not.toBe(second.diagnostics)
+    await ctx.fiber.dispose()
   })
 
   it('caches Remote status, folds concurrent checks, and reports channel guidance', async () => {

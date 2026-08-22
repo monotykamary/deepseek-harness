@@ -42,6 +42,11 @@ switch (invocation.mode) {
     process.exit(runPlugin(invocation.profile, invocation.args))
     break
   }
+  case 'portless': {
+    const { runPortlessCli } = await import('@monotykamary/dsh-web-app/portless')
+    process.exitCode = runPortlessCli(['service', 'install'])
+    break
+  }
   case 'dump-config': {
     const { runDumpConfig } = await import('./dump-config.ts')
     runDumpConfig(invocation.profile, invocation.defaultOnly, invocation.patches)

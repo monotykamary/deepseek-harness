@@ -22,6 +22,10 @@
       "types": "./lib/types/startup.d.ts",
       "default": "./lib/startup.js"
     },
+    "./portless": {
+      "types": "./lib/types/portless.d.ts",
+      "default": "./lib/portless.js"
+    },
     "./invariant": {
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
@@ -35,6 +39,7 @@
     "lib/invariant.js",
     "lib/startup.js",
     "cordis.patch.yml",
+    "lib/portless.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
@@ -122,7 +127,8 @@
     "@monotykamary/dsh-terminal-web": "workspace:^",
     "@monotykamary/dsh-web-identity": "workspace:^",
     "@monotykamary/dsh-distribution-update": "workspace:^",
-    "@monotykamary/dsh-client-ui-settings-updates": "workspace:^"
+    "@monotykamary/dsh-client-ui-settings-updates": "workspace:^",
+    "portless": "0.13.0"
   },
   "peerDependencies": {
     "@monotykamary/cordis-plugin-loader": "workspace:^",

@@ -55,6 +55,7 @@
   "dependencies": {
     "@monotykamary/dsh-atomic-write": "workspace:^",
     "@monotykamary/dsh-home-paths": "workspace:^",
+    "@monotykamary/node-addon-landlock-run": "workspace:^",
     "@monotykamary/schemastery": "workspace:^",
     "semver": "^7.7.4",
     "zod": "^4.4.3"

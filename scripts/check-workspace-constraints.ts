@@ -149,6 +149,8 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   '@monotykamary/dsh-client-ui-primitives': ['lib/**/*.css'],
   '@monotykamary/dsh-client-web': ['lib/**/*.css'],
   '@monotykamary/dsh-client-ui-theme': ['lib/styles'],
+  // Explicit system-service setup resolves through the Web bundle's installation-owned helper entry.
+  '@monotykamary/dsh-web-app': ['lib/portless.js'],
   // The CPython side ships as source .py files, published as-is rather than built.
   '@monotykamary/dsh-code-runtime-python': ['py/**/*.py'],
   // The Python runtime uses a distinct closed-resolution bin; the public CLI

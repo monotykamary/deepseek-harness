@@ -1,7 +1,7 @@
 /** CLI presentation for DSH distribution inventory and updates. */
 
 import {
-  checkInstalledDistribution, detectInstallChannel, installedDistribution, launchDetachedUpdate,
+  checkInstalledDistribution, detectInstallChannel, installedDistribution, installationDiagnostics, launchDetachedUpdate,
 } from '@monotykamary/dsh-distribution-update'
 import { resolveDshHome } from '@monotykamary/dsh-home-paths'
 
@@ -14,6 +14,10 @@ interface DistributionReport {
   readonly packages: ReturnType<typeof installedDistribution>
 }
 
+type DoctorReport = DistributionReport & {
+  readonly diagnostics: ReturnType<typeof installationDiagnostics>
+}
+
 function report(appManifest: string): DistributionReport {
   return {
     channel: detectInstallChannel(appManifest),
@@ -23,20 +27,40 @@ function report(appManifest: string): DistributionReport {
   }
 }
 
-function printReport(value: DistributionReport): void {
+function printReport(value: DistributionReport | DoctorReport): void {
   process.stdout.write(`Install channel: ${value.channel}\n`)
   process.stdout.write(`Node: ${value.node}\n`)
   process.stdout.write(`DSH home: ${value.dshHome}\n`)
   for (const pkg of value.packages) process.stdout.write(`${pkg.name}: ${pkg.installed}\n`)
+  if ('diagnostics' in value) {
+    for (const diagnostic of value.diagnostics) {
+      process.stdout.write(`[${diagnostic.severity}] ${diagnostic.summary}\n`)
+      if (diagnostic.remediation !== null) process.stdout.write(`  ${diagnostic.remediation}\n`)
+    }
+  }
 }
 
-/** Execute one distribution command and return its process exit code. */
-export async function runDistribution(action: DistributionAction, json: boolean, appManifest: string): Promise<number> {
+/**
+ * Execute one distribution command.
+ * @param action - launcher-owned distribution operation.
+ * @param json - whether to emit machine-readable JSON.
+ * @param appManifest - running DSH package manifest.
+ * @param diagnose - host diagnostic sampler used only by doctor.
+ * @returns the process exit code.
+ */
+export async function runDistribution(
+  action: DistributionAction,
+  json: boolean,
+  appManifest: string,
+  diagnose: typeof installationDiagnostics = installationDiagnostics,
+): Promise<number> {
   if (action === 'version' || action === 'doctor') {
-    const value = report(appManifest)
+    const value: DistributionReport | DoctorReport = action === 'doctor'
+      ? { ...report(appManifest), diagnostics: diagnose() }
+      : report(appManifest)
     if (json) process.stdout.write(`${JSON.stringify(value, undefined, 2)}\n`)
     else printReport(value)
-    return 0
+    return 'diagnostics' in value && value.diagnostics.some(item => item.severity === 'blocking') ? 2 : 0
   }
   if (action === 'check') {
     try {

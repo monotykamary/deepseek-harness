@@ -9,6 +9,7 @@ import {
   resolveRemoteSurfaces,
   type SurfaceProbeOptions,
 } from '../src/surfaces.ts'
+import { portlessCliPath } from '../src/portless.ts'
 
 /** A scriptable exec seam: one queued outcome per call, or a shared responder. */
 function execScript(
@@ -149,7 +150,7 @@ describe('resolveRemoteSurfaces', () => {
       portless: { url: 'https://dsh.localhost', authority: 'dsh.localhost' },
       warnings: [],
     })
-    expect(calls).toEqual([['portless', 'alias', 'dsh', '4567', '--force']])
+    expect(calls).toEqual([[process.execPath, portlessCliPath(), 'alias', 'dsh', '4567', '--force']])
   })
 
   it('accepts the proxy on either loopback family', async () => {
@@ -168,14 +169,14 @@ describe('resolveRemoteSurfaces', () => {
       probe: async () => false,
     })
     expect(resolution.portless).toBeUndefined()
-    expect(resolution.warnings).toEqual(['portless proxy not running on :443 — run `portless service install` for named localhost URLs'])
+    expect(resolution.warnings).toEqual(['portless proxy not running on :443 — run `dsh portless setup` for named localhost URLs'])
   })
 
-  it('warns when portless is not installed', async () => {
+  it('warns when the bundled portless CLI cannot start', async () => {
     const { exec } = execScript([enoent()])
     const resolution = await resolveRemoteSurfaces(4567, false, true, { exec })
     expect(resolution.portless).toBeUndefined()
-    expect(resolution.warnings).toEqual(['portless not installed — install from https://www.npmjs.com/package/portless for named localhost URLs'])
+    expect(resolution.warnings).toEqual(['bundled portless CLI is unavailable — reinstall DSH, then run `dsh portless setup`'])
   })
 
   it('resolves both enabled surfaces in one call', async () => {

@@ -25,11 +25,16 @@ describe('distribution CLI', () => {
   it('prints human and JSON inventory', async () => {
     process.env.DSH_INSTALL_CHANNEL = 'source'
     const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
-    expect(await runDistribution('version', false, manifest())).toBe(0)
+    expect(await runDistribution('version', false, manifest(), () => [])).toBe(0)
     expect(output.mock.calls.flat().join('')).toContain('@monotykamary/dsh: 1.0.0')
     output.mockClear()
-    expect(await runDistribution('doctor', true, manifest())).toBe(0)
-    expect(JSON.parse(String(output.mock.calls[0]?.[0]))).toMatchObject({ channel: 'source', node: process.version })
+    expect(await runDistribution('doctor', true, manifest(), () => [])).toBe(0)
+    expect(JSON.parse(String(output.mock.calls[0]?.[0]))).toMatchObject({ channel: 'source', node: process.version, diagnostics: [] })
+    output.mockClear()
+    expect(await runDistribution('doctor', false, manifest(), () => [{
+      id: 'shell', severity: 'blocking', summary: 'Bash is unavailable.', remediation: 'Install Bash.',
+    }])).toBe(2)
+    expect(output.mock.calls.flat().join('')).toContain('[blocking] Bash is unavailable.\n  Install Bash.')
   })
 
   it('reports available updates and registry failures with distinct exit codes', async () => {

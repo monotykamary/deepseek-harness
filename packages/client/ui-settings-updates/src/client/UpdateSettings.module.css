@@ -76,6 +76,39 @@
   color: var(--dsw-alias-state-success-primary);
 }
 
+.health,
+.readinessContent,
+.diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diagnostics {
+  padding: 0;
+  list-style: none;
+}
+
+.diagnostics li {
+  padding: 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.diagnostics li[data-severity='blocking'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.readinessDialog {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.readinessContent {
+  padding: 24px;
+  color: var(--dsw-alias-label-primary);
+}
+
 .badge {
   width: 8px;
   height: 8px;

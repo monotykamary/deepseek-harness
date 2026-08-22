@@ -1,0 +1,8 @@
+- dialog "宿主机设置需要处理":
+  - heading "宿主机设置需要处理" [level=2]
+  - paragraph: 这些前置条件可能导致 shell 或沙箱工具无法可靠运行。
+  - list:
+    - listitem:
+      - strong: No usable Linux sandbox is available.
+      - paragraph: "Install bubblewrap (`bwrap`) or enable Landlock in the running kernel."
+  - button "仍然继续"

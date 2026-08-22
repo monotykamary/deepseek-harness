@@ -44,6 +44,12 @@ interface PluginInvocation {
   args: string[]
 }
 
+/** Provision the installation-owned portless HTTPS service. */
+interface PortlessInvocation {
+  mode: 'portless'
+  action: 'setup'
+}
+
 /** Inspect or update the installed DSH distribution. */
 interface DistributionInvocation {
   mode: 'distribution'
@@ -52,7 +58,7 @@ interface DistributionInvocation {
 }
 
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | DistributionInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | PortlessInvocation | DistributionInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -78,6 +84,7 @@ Examples:
   dsh plugin --profile tui add <package>     install a plugin into the tui profile
   dsh update --check                          check DSH, Fabric, and Fovea versions
   dsh doctor --json                           print installation diagnostics
+  dsh portless setup                          install the bundled HTTPS service
 `
 
 /**
@@ -187,6 +194,14 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       if (options.profile === '') program.error('error: --profile needs a name')
       if (args.length === 0) program.error('error: plugin needs pnpm arguments to forward (e.g. add <package>)')
       resolved = { mode: 'plugin', profile: options.profile, args }
+    })
+
+  const portless = program.command('portless').description('manage the installation-owned named-localhost HTTPS service')
+  portless.command('setup')
+    .description('install and start the bundled portless HTTPS service (may request elevation)')
+    .action(() => {
+      rejectParentOptions('portless')
+      resolved = { mode: 'portless', action: 'setup' }
     })
 
   for (const command of ['version', 'doctor'] as const) {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { UpdateBadge, UpdateSettings, type UpdateBadgeProps, type UpdateInjected, type UpdateSettingsProps } from '../src/client/UpdateSettings.tsx'
+import { InstallationReadiness, UpdateBadge, UpdateSettings, type UpdateBadgeProps, type UpdateInjected, type UpdateSettingsProps } from '../src/client/UpdateSettings.tsx'
 import { en } from '../src/client/locales.ts'
 
 afterEach(cleanup)
@@ -13,10 +13,62 @@ const kit: Pick<UpdateBadgeProps, 'useSessions' | 'useWorkspaces'> = {
 const current = {
   channel: 'npm-global' as const, checkedAt: 1, checking: false, error: null, updateAvailable: true,
   packages: [{ name: '@monotykamary/dsh', installed: '1.0.0', latest: '1.1.0', updateAvailable: true }],
-  updateCommand: 'npm install --global @monotykamary/dsh@latest',
+  updateCommand: 'npm install --global @monotykamary/dsh@latest', diagnostics: [{
+    id: 'desktop' as const, severity: 'warning' as const, summary: 'No desktop.', remediation: 'Open manually.',
+  }, {
+    id: 'shell' as const, severity: 'ok' as const, summary: 'Bash is available.', remediation: null,
+  }],
 }
 
 describe('Update Settings components', () => {
+  it('blocks on host prerequisites and allows an explicit override', async () => {
+    const root = document.createElement('div')
+    root.id = 'root'
+    document.body.append(root)
+    const complete = vi.fn()
+    render(<InstallationReadiness {...kit} openSection={() => {}} complete={complete} stepId="installation-readiness"
+      snapshot={async () => ({ ...current, diagnostics: [{ id: 'shell', severity: 'blocking', summary: 'Bash is unavailable.', remediation: 'Install Bash.' }] })}
+      t={t} />)
+    expect(await screen.findByRole('dialog', { name: 'Host setup needs attention' })).toBeTruthy()
+    expect(root.inert).toBe(true)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(complete).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText('Continue anyway'))
+    expect(complete).toHaveBeenCalledOnce()
+    cleanup()
+    expect(root.inert).not.toBe(true)
+    root.remove()
+
+    const ready = vi.fn()
+    render(<InstallationReadiness {...kit} openSection={() => {}} complete={ready} stepId="installation-readiness"
+      snapshot={async () => ({ ...current, diagnostics: [] })} t={t} />)
+    await waitFor(() => { expect(ready).toHaveBeenCalledOnce() })
+
+    const rejected = vi.fn()
+    render(<InstallationReadiness {...kit} openSection={() => {}} complete={rejected} stepId="installation-readiness"
+      snapshot={async () => { throw new Error('offline') }} t={t} />)
+    await waitFor(() => { expect(rejected).toHaveBeenCalledOnce() })
+
+    let release: ((value: typeof current) => void) | undefined
+    const pending = new Promise<typeof current>((resolve) => { release = resolve })
+    const pendingView = render(<InstallationReadiness {...kit} openSection={() => {}} complete={() => {}} stepId="installation-readiness"
+      snapshot={() => pending} t={t} />)
+    pendingView.unmount()
+    release?.(current)
+    await pending
+    let rejectLate: ((reason: unknown) => void) | undefined
+    const lateFailure = new Promise<typeof current>((_resolve, reject) => { rejectLate = reject })
+    const failedView = render(<InstallationReadiness {...kit} openSection={() => {}} complete={() => {}} stepId="installation-readiness"
+      snapshot={() => lateFailure} t={t} />)
+    failedView.unmount()
+    rejectLate?.(new Error('late'))
+    await expect(lateFailure).rejects.toThrow('late')
+
+    render(<InstallationReadiness {...kit} openSection={() => {}} complete={() => {}} stepId="installation-readiness"
+      snapshot={async () => ({ ...current, diagnostics: [{ id: 'shell', severity: 'blocking', summary: 'No shell.', remediation: null }] })} t={t} />)
+    expect(await screen.findByText('No shell.')).toBeTruthy()
+  })
+
   it('shows the badge only for an available update', async () => {
     const check = vi.fn(async () => current)
     const { container } = render(<UpdateBadge {...kit} check={check} />)

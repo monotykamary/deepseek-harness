@@ -12,7 +12,7 @@ export interface Config {
   backendType?: string
   /** Interactive shell dialect (default: `bash`); selects the argv/env/startup defaults. */
   shellDialect?: ShellDialect
-  /** Interactive shell executable (default per dialect: `/bin/bash`, or the resolved pwsh). */
+  /** Interactive shell executable (default per dialect: PATH-resolved `bash`, or the resolved pwsh). */
   shellPath?: string
   /** Shell arguments (default per dialect: bash `--noprofile --norc -i`, pwsh `-NoLogo -NoProfile`). */
   shellArgs?: string[]
@@ -66,7 +66,7 @@ export type ResolvedConfig =
   }
 
 /** Bash dialect default executable. */
-export const DEFAULT_BASH_SHELL = '/bin/bash'
+export const DEFAULT_BASH_SHELL = 'bash'
 /** Bash dialect default arguments (interactive, profile-free). */
 export const DEFAULT_BASH_ARGS = ['--noprofile', '--norc', '-i']
 /** Pwsh dialect default arguments (interactive host, profile-free). */

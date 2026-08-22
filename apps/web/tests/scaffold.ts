@@ -42,6 +42,7 @@ import {
   loadOverlayPatches,
 } from '@monotykamary/dsh-app-boot'
 import { dshHomePath } from '@monotykamary/dsh-home-paths'
+import type { InstallationDiagnostic } from '@monotykamary/dsh-distribution-update'
 import { LlmAdapter } from '@monotykamary/dsh-llm'
 import type {
   LlmModelInfo, LlmProviderInfo, LlmResolvedModelInfo, RetryPolicyConfig, StreamChunk,
@@ -284,6 +285,8 @@ export interface LaunchOptions {
   }
   /** Deterministic registry endpoint for assembled Distribution Updates scenarios. */
   distributionUpdateRegistryUrl?: string
+  /** Override startup host diagnostics for readiness-onboarding scenarios. */
+  installationDiagnostics?: readonly InstallationDiagnostic[]
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
 }
@@ -627,6 +630,12 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     throw error
   } finally {
     if (process.cwd() !== originalCwd) process.chdir(originalCwd)
+  }
+
+  if (options.installationDiagnostics !== undefined) {
+    const service = ctx.get('distributionUpdate') as unknown as { diagnostics: InstallationDiagnostic[] } | undefined
+    if (service === undefined) throw new Error('web scaffold: distributionUpdate service missing')
+    service.diagnostics = options.installationDiagnostics.map(item => ({ ...item }))
   }
 
   return {

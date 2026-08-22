@@ -24,7 +24,7 @@
 
 | Profile | 参数 |
 |---|---|
-| `web` | `--host`、`--port`、可重复的 `--trusted-host`、`--no-open` |
+| `web` | `--host`、`--port`、可重复的 `--trusted-host`、`--tailnet`、`--portless`、identity flags、`--no-open` |
 | `headless` | 任务文本，作为位置参数 |
 
 一次性任务（`dsh --profile headless "run the tests"`）通过核心注册表创建一个全新的持久化 Agent（智能体），提交任务、等待完全停稳并对会话执行 flush，再从其持久化事件区间中推导最后一个非空 assistant 文本与最终 `turn/end` 原因。它在 stdout 打印文本，并在原因为 `completed` 时以 0 退出，否则以 1 退出。没有任务的调用是该应用的用法错误。随附 headless profile 不挂载 ApiProxy、Host、HTTP 服务器、Web 运行时或浏览器客户端；成功运行不会向 stderr 写入任何内容，也不会打开监听端口。
@@ -37,6 +37,12 @@ dsh --profile web --patch ./extra.yml --dump-config
 ```
 
 `--dump-default-config` 只打印组合包各层；`--dump-config` 额外加上 profile 的 `cordis.patch.yml`、home 级的 `$DSH_HOME/cordis.patch.yml` 和 `--patch` overlay。两者都会打印注释，标明每行由哪个文件提供，以及哪些 overlay 修改过它；`!!js` 表达式保持未求值，找不到目标的 patch 会报告到 stderr。dump 操作不会运行应用的命令行参数提供方，因此展示的是解析任何应用参数之前的组合配置树；如果调用中包含应用参数，dump 会拒绝该调用。
+
+## 安装命令
+
+`dsh version` 打印已安装的 DSH、Fabric 与 Fovea 版本。`dsh doctor` 还会报告 DSH home、shell、沙箱与桌面就绪状态；`--json` 以 JSON 输出相同字段，存在阻塞结果时以 2 退出。`dsh update --check` 执行 Registry 检查，`dsh update` 则只为 DSH 能安全持有的安装渠道启动更新。
+
+`dsh portless setup` 运行当前 DSH 安装携带的 portless CLI，以安装并启动其 HTTPS 系统服务。该命令有意与 `dsh web --portless` 分离，因为 setup 可能请求升权，并修改操作系统启动项或信任状态。
 
 ## 插件管理
 
@@ -73,6 +79,8 @@ dsh web --patch ./extra.cordis.yml
 dsh web --dump-config
 dsh web --help
 ```
+
+`--portless` 使用 DSH 安装中携带的 portless CLI；先运行一次 `dsh portless setup` 来安装并启动其 HTTPS 服务，该操作可能请求操作系统升权。`--tailnet` 仍是外部集成，需要已安装且已连接的 Tailscale 守护进程及 serve 路由。LSP 与 stdio MCP 配置项会执行用户配置中指定的命令，不会安装这些外部服务器。
 
 生产 Web 运行器需要已构建的包和前端产物（`pnpm run build`）。默认服务地址是 `http://127.0.0.1:3080`；本机启动时，只在完整 Loader 配置树结算后才用默认浏览器打开成功解析的 `--portless` URL，否则打开该规范宿主机 URL。继承的 `SSH_CONNECTION` 或 `SSH_TTY` 非空时会跳过浏览器交接，因为本地转发地址由 SSH 客户端或编辑器持有；宿主机 URL 仍会打印。CLI 目前有意不支持 `--host 0.0.0.0`，并会以用法错误退出。本机交接前会打印英文提示 `dsh web: opening the default browser; pass --no-open to disable`；若操作系统交接失败，stderr 诊断会说明原因、给出 URL 供手动访问，服务器仍继续运行。`--trusted-host` 可添加 `/api` 浏览器信任围栏接受的具名 authority。
 

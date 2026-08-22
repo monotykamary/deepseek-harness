@@ -1,17 +1,19 @@
 /** Distribution update tracking and detached installation provider. */
 
-import { spawn } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { accessSync, constants, existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join, parse } from 'node:path'
+import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Context } from '@monotykamary/cordis'
 import { resolveDshHome } from '@monotykamary/dsh-home-paths'
+import { launcherPath as landlockLauncherPath, probe as probeLandlock } from '@monotykamary/node-addon-landlock-run'
 import { TypertRemoteService, Remote } from '@monotykamary/dsh-typert-protocol'
 import z from '@monotykamary/schemastery'
 import { gt, minVersion, valid } from 'semver'
 import type {
   DistributionPackageStatus, DistributionUpdateLaunch, DistributionUpdateSnapshot, InstallChannel,
+  InstallationDiagnostic,
 } from './types.ts'
 
 export type * from './types.ts'
@@ -68,6 +70,98 @@ export function detectInstallChannel(appManifest: string, override = process.env
   if (normalized.includes('/nix/store/')) return 'nix'
   if (normalized.includes('/lib/node_modules/') || normalized.includes('/AppData/Roaming/npm/node_modules/')) return 'npm-global'
   return 'unknown'
+}
+
+/** Inputs overridden by deterministic doctor tests; production uses the host. */
+export interface InstallationDiagnosticOptions {
+  /** Host platform. */
+  readonly platform?: NodeJS.Platform
+  /** Host environment used by command and desktop checks. */
+  readonly env?: NodeJS.ProcessEnv
+  /** DSH home whose writable ancestor is checked. */
+  readonly dshHome?: string
+  /** Bounded command probe. */
+  readonly run?: (command: string, args: readonly string[]) => boolean
+  /** Installation-owned Landlock probe. */
+  readonly landlock?: () => 'full' | 'partial' | 'unusable'
+  /** Writable-ancestor probe. */
+  readonly writable?: (path: string) => boolean
+}
+
+function writableAncestor(path: string): boolean {
+  let candidate = resolve(path)
+  while (!existsSync(candidate)) {
+    const parent = dirname(candidate)
+    /* v8 ignore next -- every supported filesystem exposes its parsed root as an existing directory */
+    if (parent === candidate) return false
+    candidate = parent
+  }
+  try {
+    if (!statSync(candidate).isDirectory()) return false
+    accessSync(candidate, constants.W_OK | constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Sample host prerequisites used by the shipped Web profile without network access.
+ * @param options - deterministic host overrides for tests.
+ * @returns ordered actionable diagnostics; blocking entries prevent reliable tool execution.
+ */
+export function installationDiagnostics(options: InstallationDiagnosticOptions = {}): InstallationDiagnostic[] {
+  const platform = options.platform ?? process.platform
+  const env = options.env ?? process.env
+  const run = options.run ?? ((command, args) => {
+    const result = spawnSync(command, [...args], { stdio: 'ignore', timeout: 3_000, env })
+    return result.status === 0
+  })
+  const dshHome = options.dshHome ?? resolveDshHome()
+  const diagnostics: InstallationDiagnostic[] = []
+  const writable = options.writable ?? writableAncestor
+  diagnostics.push(writable(dshHome)
+    ? { id: 'dsh-home', severity: 'ok', summary: `DSH home is writable: ${dshHome}`, remediation: null }
+    : { id: 'dsh-home', severity: 'blocking', summary: `DSH home is not writable: ${dshHome}`, remediation: 'Set DSH_HOME to a writable private directory.' })
+
+  const shellReady = platform === 'win32'
+    ? run('pwsh', ['-NoLogo', '-NoProfile', '-Command', 'exit 0']) || run('powershell.exe', ['-NoLogo', '-NoProfile', '-Command', 'exit 0'])
+    : run('bash', ['--noprofile', '--norc', '-c', 'exit 0'])
+  diagnostics.push(shellReady
+    ? { id: 'shell', severity: 'ok', summary: platform === 'win32' ? 'PowerShell is available.' : 'Bash is available.', remediation: null }
+    : { id: 'shell', severity: 'blocking', summary: platform === 'win32' ? 'PowerShell is unavailable.' : 'Bash is unavailable.', remediation: platform === 'win32' ? 'Install PowerShell 7 or restore Windows PowerShell.' : 'Install Bash and ensure `bash` is on PATH.' })
+
+  let sandboxReady = true
+  let sandboxSummary = 'The installation-owned Windows ACL sandbox is available.'
+  let sandboxRemediation: string | null = null
+  if (platform === 'linux') {
+    const bwrap = run('bwrap', [
+      '--ro-bind', '/', '/', '--proc', '/proc', '--dev', '/dev',
+      '--unshare-all', '--share-net', '--die-with-parent', '--', 'true',
+    ])
+    const landlock = bwrap ? 'unusable' : (options.landlock ?? (() => probeLandlock(landlockLauncherPath(), { timeoutMs: 3_000 })))()
+    sandboxReady = bwrap || landlock !== 'unusable'
+    sandboxSummary = bwrap ? 'Bubblewrap sandbox is available.'
+      : landlock === 'full' ? 'Installation-owned Landlock sandbox is available.'
+        : landlock === 'partial' ? 'Installation-owned Landlock sandbox is available with partial kernel enforcement.'
+          : 'No usable Linux sandbox is available.'
+    sandboxRemediation = sandboxReady ? null : 'Install bubblewrap (`bwrap`) or enable Landlock in the running kernel.'
+  } else if (platform === 'darwin') {
+    sandboxReady = run('sandbox-exec', ['-p', '(version 1) (allow default)', '--', 'true'])
+    sandboxSummary = sandboxReady ? 'macOS Seatbelt sandbox is available.' : 'macOS sandbox-exec is unavailable.'
+    sandboxRemediation = sandboxReady ? null : 'Use a supported macOS installation that provides sandbox-exec.'
+  } else if (platform !== 'win32') {
+    sandboxReady = false
+    sandboxSummary = `No sandbox backend supports ${platform}.`
+    sandboxRemediation = 'Use Linux, macOS, or Windows, or configure a trusted sandbox runner.'
+  }
+  diagnostics.push({ id: 'sandbox', severity: sandboxReady ? 'ok' : 'blocking', summary: sandboxSummary, remediation: sandboxRemediation })
+
+  const desktopReady = platform !== 'linux' || Boolean(env.DISPLAY || env.WAYLAND_DISPLAY || env.WSL_DISTRO_NAME || env.WSL_INTEROP)
+  diagnostics.push(desktopReady
+    ? { id: 'desktop', severity: 'ok', summary: 'Desktop handoff is available.', remediation: null }
+    : { id: 'desktop', severity: 'warning', summary: 'No Linux desktop session was detected; automatic browser and native file opening may be unavailable.', remediation: 'Open the printed Web URL manually or provide DISPLAY/WAYLAND_DISPLAY.' })
+  return diagnostics
 }
 
 function updateCommand(channel: InstallChannel, packageName: string): string | null {
@@ -194,6 +288,11 @@ export function launchDetachedUpdate(appManifest: string): DistributionUpdateLau
   return { started: true, message: 'Update started. Restart DSH after it completes.', statusPath }
 }
 
+/** Test hook for startup diagnostic sampling; production never mutates it. */
+export const internals: { diagnose: () => InstallationDiagnostic[] } = {
+  diagnose: installationDiagnostics,
+}
+
 /** Remote service exposing cached status, explicit refresh, and detached npm-global installation. */
 export class DistributionUpdateService extends TypertRemoteService {
   static Config: z<Config> = z.object({
@@ -211,6 +310,7 @@ export class DistributionUpdateService extends TypertRemoteService {
   private pending: Promise<DistributionUpdateSnapshot> | null = null
   private readonly channel: InstallChannel
   private readonly appName: string
+  private readonly diagnostics: InstallationDiagnostic[]
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'distributionUpdate')
@@ -227,6 +327,11 @@ export class DistributionUpdateService extends TypertRemoteService {
     if (app === undefined) throw new Error('distribution-update: installed distribution has no app')
     this.appName = app.name
     this.channel = detectInstallChannel(config.appManifest)
+    this.diagnostics = internals.diagnose()
+    for (const diagnostic of this.diagnostics) {
+      if (diagnostic.severity === 'ok') continue
+      ctx.logger.warn(`[${diagnostic.severity}] ${diagnostic.summary}${diagnostic.remediation === null ? '' : ` ${diagnostic.remediation}`}`)
+    }
     const timer = setInterval(() => { void this.check() }, this.config.checkIntervalMs)
     timer.unref()
     ctx.effect(() => () => { clearInterval(timer) }, 'distribution-update: registry check timer')
@@ -242,6 +347,7 @@ export class DistributionUpdateService extends TypertRemoteService {
       updateAvailable: this.packages.some(pkg => pkg.updateAvailable),
       packages: this.packages.map(pkg => ({ ...pkg })),
       updateCommand: updateCommand(this.channel, this.appName),
+      diagnostics: this.diagnostics.map(item => ({ ...item })),
     }
   }
 

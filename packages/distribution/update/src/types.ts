@@ -18,6 +18,8 @@ export interface DistributionUpdateSnapshot {
   readonly updateAvailable: boolean
   readonly packages: readonly DistributionPackageStatus[]
   readonly updateCommand: string | null
+  /** Host prerequisites sampled without network access. */
+  readonly diagnostics: readonly InstallationDiagnostic[]
 }
 
 /** Result of handing an update to a detached installer. */
@@ -25,4 +27,15 @@ export interface DistributionUpdateLaunch {
   readonly started: boolean
   readonly message: string
   readonly statusPath: string | null
+}
+
+/** Stable installation-readiness check identifiers. */
+export type InstallationDiagnosticId = 'dsh-home' | 'shell' | 'sandbox' | 'desktop'
+
+/** One host prerequisite result shared by `dsh doctor`, startup logs, and the Web onboarding UI. */
+export interface InstallationDiagnostic {
+  readonly id: InstallationDiagnosticId
+  readonly severity: 'ok' | 'warning' | 'blocking'
+  readonly summary: string
+  readonly remediation: string | null
 }

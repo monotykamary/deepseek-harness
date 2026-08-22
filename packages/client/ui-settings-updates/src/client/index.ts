@@ -3,10 +3,10 @@
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
-import { UpdateBadge, UpdateSettings, type UpdateInjected } from './UpdateSettings.tsx'
+import { InstallationReadiness, UpdateBadge, UpdateSettings, type UpdateInjected } from './UpdateSettings.tsx'
 import { en, zh, type UpdateLocaleKey } from './locales.ts'
 
-export type { UpdateInjected, UpdateSettingsProps, UpdateBadgeProps } from './UpdateSettings.tsx'
+export type { InstallationReadinessProps, UpdateInjected, UpdateSettingsProps, UpdateBadgeProps } from './UpdateSettings.tsx'
 export type { UpdateLocaleKey } from './locales.ts'
 
 declare module '@monotykamary/dsh-client-ui-slots' {
@@ -35,6 +35,13 @@ export function apply(ctx: ClientContext): void {
     start: () => unwrap(ctx.remote.distributionUpdate.start()),
   }
   const t = ctx.locale.bind(NS)
+  ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
+    name: 'settings.onboarding',
+    id: 'installation-readiness',
+    order: -50,
+    locale: NS,
+    inject: () => ({ snapshot: injected.snapshot }),
+  }, InstallationReadiness))
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',
     id: 'updates',

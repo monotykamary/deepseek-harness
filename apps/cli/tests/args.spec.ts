@@ -63,6 +63,7 @@ describe('parseDshArgs', () => {
     expect(parse(['doctor', '--json'])).toEqual({ mode: 'distribution', action: 'doctor', json: true })
     expect(parse(['update', '--check'])).toEqual({ mode: 'distribution', action: 'check', json: false })
     expect(parse(['update', '--json'])).toEqual({ mode: 'distribution', action: 'update', json: true })
+    expect(parse(['portless', 'setup'])).toEqual({ mode: 'portless', action: 'setup' })
   })
 
   it('routes profile and web config dumps', () => {
@@ -103,6 +104,8 @@ describe('parseDshArgs', () => {
     expect(exitCode(['plugin', 'add', 'x'])).toBe(1) // --profile required
     expect(exitCode(['plugin', '--profile', 'tui'])).toBe(1) // nothing to forward
     expect(exitCode(['plugin', '--profile', ''])).toBe(1)
+    expect(exitCode(['portless'])).toBe(1)
+    expect(exitCode(['--profile', 'x', 'portless', 'setup'])).toBe(1)
     expect(exitCode(['--profile', 'x', 'plugin', 'add', 'y'])).toBe(1)
   })
 

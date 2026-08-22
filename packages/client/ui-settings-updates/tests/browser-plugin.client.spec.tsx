@@ -7,13 +7,13 @@ import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import { apply, inject } from '../src/client/index.ts'
 import { apply as applyNode } from '../src/index.ts'
-import { UpdateBadge, UpdateSettings, type UpdateInjected } from '../src/client/UpdateSettings.tsx'
+import { InstallationReadiness, UpdateBadge, UpdateSettings, type UpdateInjected } from '../src/client/UpdateSettings.tsx'
 
 afterEach(cleanup)
 
 const snapshot = {
   channel: 'source' as const, checkedAt: 1, checking: false, error: null, updateAvailable: false,
-  packages: [], updateCommand: null,
+  packages: [], updateCommand: null, diagnostics: [],
 }
 const launch = { started: false, message: 'manual', statusPath: null }
 
@@ -36,6 +36,7 @@ async function bench() {
 function declare(slots: SlotRegistry): void {
   slots.register({ name: 'root', children: {
     'settings.section': { kind: 'list', scope: 'root' },
+    'settings.onboarding': { kind: 'list', scope: 'root' },
     'settings.trigger.badge': { kind: 'single', scope: 'root' },
   } } as never, () => null)
 }
@@ -90,6 +91,11 @@ describe('ui-settings-updates browser plugin', () => {
     const b = await bench()
     declare(b.slots)
     await b.ctx.plugin({ inject: [...inject], apply }).await()
+    const onboarding = b.slots.entries('settings.onboarding')[0]!
+    expect(onboarding.component).toBe(InstallationReadiness)
+    expect(onboarding.options).toMatchObject({ id: 'installation-readiness', order: -50 })
+    const onboardingInjected = (onboarding.inject as unknown as () => Pick<UpdateInjected, 'snapshot'>)()
+    await expect(onboardingInjected.snapshot()).resolves.toEqual(snapshot)
     const section = b.slots.entries('settings.section')[0]!
     expect(section.component).toBe(UpdateSettings)
     expect(section.options).toMatchObject({ id: 'updates', order: 40 })

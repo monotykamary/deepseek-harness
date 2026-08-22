@@ -13,6 +13,7 @@
 import { execFile } from 'node:child_process'
 import { createConnection } from 'node:net'
 import { promisify } from 'node:util'
+import { portlessCliPath } from './portless.ts'
 
 const execFileAsync = promisify(execFile)
 
@@ -187,10 +188,10 @@ async function resolvePortlessSurface(
   probe: NonNullable<SurfaceProbeOptions['probe']>,
 ): Promise<ProbeSettlement> {
   try {
-    await exec('portless', ['alias', PORTLESS_ALIAS_NAME, String(port), '--force'])
+    await exec(process.execPath, [portlessCliPath(), 'alias', PORTLESS_ALIAS_NAME, String(port), '--force'])
   } catch (error) {
     if (isEnoent(error)) {
-      return { warning: 'portless not installed — install from https://www.npmjs.com/package/portless for named localhost URLs' }
+      return { warning: 'bundled portless CLI is unavailable — reinstall DSH, then run `dsh portless setup`' }
     }
     return { warning: `portless alias registration failed: ${errorText(error)}` }
   }
@@ -199,7 +200,7 @@ async function resolvePortlessSurface(
     probe('::1', PORTLESS_PROXY_PORT),
   ])).some(Boolean)
   if (!live) {
-    return { warning: 'portless proxy not running on :443 — run \`portless service install\` for named localhost URLs' }
+    return { warning: 'portless proxy not running on :443 — run \`dsh portless setup\` for named localhost URLs' }
   }
   return {
     surface: {

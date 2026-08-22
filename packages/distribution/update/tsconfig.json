@@ -8,6 +8,7 @@
     { "path": "../../typert/protocol" },
     { "path": "../../runtime-diagnostics/invariants" },
     { "path": "../../util/atomic-write" },
-    { "path": "../../util/home-paths" }
+    { "path": "../../util/home-paths" },
+    { "path": "../../../native/landlock-run/packages/entry" }
   ]
 }

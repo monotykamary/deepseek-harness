@@ -4,6 +4,10 @@ English | [中文](index.zh.md)
 
 Start the Web UI through the [root README](../../../README.md#run); the command prints its URL. This guide begins after that server is running. The `dsh` process uses its invoking directory as the default filesystem location, but a fresh Web UI has no selected workspace until you add one.
 
+## Resolve host readiness
+
+DSH checks its writable home, shell, sandbox, and desktop handoff at startup. A blocking readiness dialog appears before model setup when reliable tool execution is unavailable; follow its remediation or explicitly continue, and revisit every result under **Settings → Updates → Host readiness**. `dsh doctor` prints the same checks and exits 2 while any blocking result remains.
+
 ## Configure a model
 
 Open **Settings → Models**, enter a [DeepSeek API key](https://platform.deepseek.com/), and save it. The model route becomes usable immediately without restarting the server.

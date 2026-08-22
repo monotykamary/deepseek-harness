@@ -17,6 +17,7 @@ import { ZH_BROWSER_LOCALE, connectFreshWorkspaceZh, saveFailureShot } from './s
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/onboarding-deepseek-config', import.meta.url))
 const WELCOME_EXPECTED = join(SNAPSHOT_DIR, 'welcome.expected.md')
+const READINESS_EXPECTED = join(SNAPSHOT_DIR, 'readiness.expected.md')
 const MISSING_EXPECTED = join(SNAPSHOT_DIR, 'missing.expected.md')
 const MODELS_EXPECTED = join(SNAPSHOT_DIR, 'models.expected.md')
 const MODE = webSnapshotMode()
@@ -29,7 +30,15 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
   const browserConsole: string[] = []
 
   beforeAll(async () => {
-    scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
+    scaffold = await launchWebScaffold({
+      deepSeekMissingCredential: true,
+      installationDiagnostics: [{
+        id: 'sandbox',
+        severity: 'blocking',
+        summary: 'No usable Linux sandbox is available.',
+        remediation: 'Install bubblewrap (`bwrap`) or enable Landlock in the running kernel.',
+      }],
+    })
     browser = await chromium.launch()
     // The scenario asserts the shipped Chinese copy, so the browser asks for it.
     page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: ZH_BROWSER_LOCALE })
@@ -59,6 +68,15 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await compareOrRefreshGolden(WELCOME_EXPECTED, welcome, MODE)
     await welcomeStep.getByRole('button', { name: '继续' }).click()
     await welcomeStep.waitFor({ state: 'detached', timeout: 15_000 })
+
+    const readinessStep = page.getByRole('dialog', { name: '宿主机设置需要处理' })
+    await readinessStep.waitFor({ timeout: 15_000 })
+    const readiness = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
+    await compareOrRefreshGolden(READINESS_EXPECTED, readiness, MODE)
+    await readinessStep.getByRole('button', { name: '仍然继续' }).click()
+    await readinessStep.waitFor({ state: 'detached', timeout: 15_000 })
+    const updateService = scaffold.ctx.get('distributionUpdate') as unknown as { diagnostics: unknown[] }
+    updateService.diagnostics = []
 
     const credentialStep = page.getByRole('dialog', { name: '添加一个 API Key 开始使用' })
     await credentialStep.waitFor({ timeout: 15_000 })
@@ -220,7 +238,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
   it('keeps the fixture inventory closed', async () => {
     await assertFixtureInventory(
       SNAPSHOT_DIR,
-      ['missing.expected.md', 'models.expected.md', 'welcome.expected.md'],
+      ['missing.expected.md', 'models.expected.md', 'readiness.expected.md', 'welcome.expected.md'],
     )
   })
 })
