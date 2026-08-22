@@ -1861,9 +1861,6 @@ importers:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
-      '@monotykamary/dsh-api-remotes':
-        specifier: workspace:^
-        version: link:../../api/remotes
       '@monotykamary/dsh-client-locale':
         specifier: workspace:^
         version: link:../locale

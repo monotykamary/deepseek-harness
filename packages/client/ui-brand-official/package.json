@@ -32,7 +32,6 @@
   "dsh": {
     "client": {
       "inject": [
-        "@monotykamary/dsh-api-remotes",
         "@monotykamary/dsh-client-locale",
         "@monotykamary/dsh-client-runtime",
         "@monotykamary/dsh-client-ui-conversation",
@@ -48,7 +47,6 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@monotykamary/dsh-api-remotes": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
@@ -59,7 +57,6 @@
     "@monotykamary/dsh-client-locale": "workspace:^"
   },
   "devDependencies": {
-    "@monotykamary/dsh-api-remotes": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",

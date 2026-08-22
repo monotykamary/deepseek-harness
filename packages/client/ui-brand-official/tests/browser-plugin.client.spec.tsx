@@ -36,7 +36,12 @@ async function bench(declare = true) {
   await ctx.plugin(SlotRegistry).await()
   const slots = ctx.get('slots') as SlotRegistry
   ctx.provide('locale', new LocaleRuntime(ctx))
-  ctx.provide('connection', { api: {}, isLoopback: false })
+  ctx.provide('settingsScope', { bind: () => ({
+    getSnapshot: () => ({ status: 'unavailable', value: undefined }),
+    subscribe: () => () => {},
+    set: async () => {},
+    unset: async () => {},
+  }) })
   const declareHoles = () => slots.register({
     name: 'root',
     children: Object.fromEntries(HOLES.map(name => [
@@ -49,7 +54,7 @@ async function bench(declare = true) {
 
 describe('official browser-brand plugin', () => {
   it('declares only the slot service it uses', () => {
-    expect(inject).toEqual(['slots', 'locale', 'connection'])
+    expect(inject).toEqual(['slots', 'locale', 'settingsScope'])
   })
 
   it('leaves every slot empty outside the official build profile', async () => {

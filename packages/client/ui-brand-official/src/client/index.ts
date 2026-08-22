@@ -1,6 +1,5 @@
 /** Official DeepSeek Harness occupants for the generic browser-brand slots. */
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
-import type { ConnectionHandle } from '@monotykamary/dsh-api-remotes/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
@@ -20,7 +19,7 @@ declare module '@monotykamary/dsh-client-ui-slots' {
 const NS = 'officialBrand'
 
 /** Required services: the UI slot registry and locale runtime. */
-export const inject = ['slots', 'locale', 'connection']
+export const inject = ['slots', 'locale', 'settingsScope']
 
 /**
  * Fill the shipped brand and welcome slots through declaration-aware registrations.
@@ -28,8 +27,7 @@ export const inject = ['slots', 'locale', 'connection']
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-brand-official: dictionaries')
-  const connection = ctx.get('connection') as ConnectionHandle
-  const controller = new WelcomeController(connection.api, connection.isLoopback ? 'host' : 'memory')
+  const controller = new WelcomeController(ctx.settingsScope.bind({ namespace: 'ui-onboarding' }))
   ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
     name: 'settings.onboarding',
     id: 'official-welcome',
