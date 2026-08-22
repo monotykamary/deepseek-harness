@@ -73,6 +73,7 @@ const SUBAGENT_CONTINUABLE_INHERITANCE_CONFIG = fileURLToPath(
 const LSP_CONFIG = fileURLToPath(new URL('./lsp.cordis.yml', import.meta.url))
 const WEB_CONFIG = fileURLToPath(new URL('../web.cordis.yml', import.meta.url))
 const FS_SEARCH_CONFIG = fileURLToPath(new URL('./fs-search.cordis.yml', import.meta.url))
+const CHANGES_READ_CONFIG = fileURLToPath(new URL('../changes-read.cordis.yml', import.meta.url))
 const PARTIAL_LANDLOCK_CONFIG = fileURLToPath(new URL('../partial-landlock.cordis.yml', import.meta.url))
 const PWSH_CONFIG = fileURLToPath(new URL('./pwsh.cordis.yml', import.meta.url))
 const PERSISTENT_PWSH_CONFIG = fileURLToPath(new URL('./persistent-pwsh.cordis.yml', import.meta.url))
@@ -381,6 +382,15 @@ const SCENARIOS: Scenario[] = [
     headerClass: 'fs-search',
     configPath: FS_SEARCH_CONFIG,
     prepareWorkspace: prepareFsSearchWorkspace,
+  },
+  // Authored keyless replay: write commits a receipt, then the model reads it.
+  {
+    name: 'changes-read',
+    hasModelTurn: true,
+    recorded: false,
+    pinsHeader: true,
+    headerClass: 'changes-read',
+    configPath: CHANGES_READ_CONFIG,
   },
   { name: 'fs-read', hasModelTurn: true, recorded: true },
   { name: 'fs-write', hasModelTurn: true, recorded: true },

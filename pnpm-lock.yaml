@@ -475,6 +475,9 @@ importers:
       '@monotykamary/dsh-bash-sandbox':
         specifier: workspace:*
         version: link:../packages/shell/bash-sandbox
+      '@monotykamary/dsh-client-ui-deliverables':
+        specifier: workspace:*
+        version: link:../packages/client/ui-deliverables
       '@monotykamary/dsh-code-runtime-worker-thread':
         specifier: workspace:*
         version: link:../packages/code-runtime/code-runtime-worker-thread
@@ -2100,6 +2103,10 @@ importers:
         version: 18.3.1
 
   packages/client/ui-deliverables:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -2128,6 +2135,9 @@ importers:
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
       '@monotykamary/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../core/system-prompt

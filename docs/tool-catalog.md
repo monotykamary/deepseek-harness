@@ -38,6 +38,7 @@ This table connects model-visible tool names to the plugin package and service s
 | `@monotykamary/dsh-tool-subagent-report` | `report` | `ctx.subagents`, `ctx.systemPrompt`, `a live continuable in-process child Agent` | `tool/call`, `tool/result`, `a user-role message in the direct parent session` | - | Registered per continuable in-process child rather than globally, so this schema is visible only inside such a child and survives its global `toolFilter`. The same contribution installs the child-scoped `tool:report` prompt section, which this catalog does not render. The parent-facing `send_message` tool is installed independently. |
 | `@monotykamary/dsh-tool-jobs` | `job_kill`, `job_list`, `job_output` | `ctx.tools`, `ctx.jobs`, `ctx.systemPrompt` | `tool/call`, `tool/result`, `user/message via agent.inject() for background completion notices` | - | The kind-agnostic background-job controller: background bash commands, PTY sends, and subagents are read, listed, and killed through the same three tools. Loading the plugin attaches the controller that arms producers' `ctx.jobs.start()`. |
 | `@monotykamary/dsh-experimental-tool-agent-team` | `followup_task`, `interrupt_agent`, `list_agents`, `send_message`, `spawn_teammate`, `team_task_create`, `team_task_get`, `team_task_list`, `team_task_update`, `wait_agent` | `ctx.tools`, `ctx.systemPrompt`, `ctx.agentTeams`, `an exact live Team member Agent` | `tool/call`, `team/member`, `team/message/queued`, `team/message/delivered`, `team/task`, `tool/result` | - | All ten tools are scoped to implicit Team Leads and durable teammates. The shipped dsh-base bundle keeps the package disabled; the documented Agent Teams profile patch enables it while disabling the legacy continuable-child control names. |
+| `@monotykamary/dsh-client-ui-deliverables` | `changes_read` | `ctx.tools`, `ctx.systemPrompt`, `owning Agent session` | `tool/call`, `tool/result` | - | The tool reads durable receipt facts from the complete calling Session; its output is not a Git patch or repository snapshot. |
 | `@monotykamary/dsh-tool-todo` | `todo_write` | `ctx.tools`, `owning Agent session` | `tool/call`, `todo/write`, `tool/result` | - | todo_write is session-owned state; UIs render the latest todo/write event as a checklist. `allowParallelInProgress` is required with no default, so the catalog states its choice: `true`, whose description invites several `in_progress` items. A deployment choosing `false` receives the same tool with a description asking for exactly one active task. |
 | `@monotykamary/dsh-tool-workflow` | `workflow` | `ctx.tools`, `ctx.workflowEngine`, `ctx.systemPrompt`, `a calling Agent (exec.agent parents the script children)` | `tool/call`, `tool/result` | - | - |
 | `@monotykamary/dsh-tool-web` | `web_fetch`, `web_search` | `ctx.tools`, `ctx.web`, `ctx.systemPrompt` | `tool/call`, `tool/result` | - | web_search and web_fetch keep provider selection behind ctx.web so model-visible schemas stay stable across backend swaps. |
@@ -2023,6 +2024,38 @@ Wait for the next teammate status, mailbox, or shared-task change after this cal
 Source: [`packages/experimental/tool-agent-team/src/index.ts`](../packages/experimental/tool-agent-team/src/index.ts)
 
 All ten tools are scoped to implicit Team Leads and durable teammates. The shipped dsh-base bundle keeps the package disabled; the documented Agent Teams profile patch enables it while disabling the legacy continuable-child control names.
+
+<a id="monotykamarydsh-client-ui-deliverables"></a>
+
+## `@monotykamary/dsh-client-ui-deliverables`
+
+### `changes_read`
+
+Read file changes committed by receipt-aware tools in this Session. Call without commit_order to list changes in durable commit order; call with commit_order to read that change's recorded replacement hunks. Use the returned SHA-256 identities and ordinary file reads to reconcile later workspace divergence. Shell and external changes are outside this ledger.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "after_commit_order": {
+      "type": "integer",
+      "description": "List only changes after this commit order."
+    },
+    "commit_order": {
+      "type": "integer",
+      "description": "Read one exact change instead of listing summaries."
+    },
+    "offset": {
+      "type": "integer",
+      "description": "UTF-16 offset for the next page of one exact change; valid only with commit_order."
+    }
+  }
+}
+```
+
+Source: [`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts)
+
+The tool reads durable receipt facts from the complete calling Session; its output is not a Git patch or repository snapshot.
 
 <a id="monotykamarydsh-tool-todo"></a>
 

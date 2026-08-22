@@ -1,0 +1,24 @@
+# Keyless counterpart: retain real filesystem tools and replace only the model adapter.
+- id: base
+  name: '@monotykamary/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: llm-deepseek
+        name: '@monotykamary/dsh-llm-deepseek'
+        disabled: true
+      - insert:
+          - id: ui-deliverables
+            name: '@monotykamary/dsh-client-ui-deliverables'
+            config:
+              maxListItems: 50
+              maxDiffChars: 12000
+          - id: llm-replay
+            name: '@monotykamary/dsh-llm-replay'
+            config:
+              providers:
+                - id: deepseek-official
+                  name: DeepSeek
+                  models:
+                    - id: deepseek-v4-flash
+                    - id: deepseek-v4-pro

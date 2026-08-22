@@ -438,6 +438,24 @@ export interface Config {
 
 来源：[`packages/client/hmr/src/index.ts:31`](../packages/client/hmr/src/index.ts)
 
+<a id="monotykamarydsh-client-ui-deliverables"></a>
+
+## `@monotykamary/dsh-client-ui-deliverables`
+
+需要：`systemPrompt` · `tools`
+
+```ts config-catalog
+/** Deployment-owned output bounds for the mutation-ledger reader. */
+export interface Config {
+  /** Maximum summaries returned by one list call. */
+  maxListItems: number
+  /** Maximum UTF-16 code units of mutation text returned by one detail page. */
+  maxDiffChars: number
+}
+```
+
+来源：[`packages/client/ui-deliverables/src/index.ts:17`](../packages/client/ui-deliverables/src/index.ts)
+
 <a id="monotykamarydsh-client-ui-workspace"></a>
 
 ## `@monotykamary/dsh-client-ui-workspace`
@@ -3413,7 +3431,6 @@ export interface Config {
 - `@monotykamary/dsh-client-ui-commands`（[`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts)）
 - `@monotykamary/dsh-client-ui-conversation`（[`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts)）
 - `@monotykamary/dsh-client-ui-cordis`（[`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts)）
-- `@monotykamary/dsh-client-ui-deliverables` — 需要 `systemPrompt`（[`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts)）
 - `@monotykamary/dsh-client-ui-directory-picker-browse`（[`packages/client/ui-directory-picker-browse/src/index.ts`](../packages/client/ui-directory-picker-browse/src/index.ts)）
 - `@monotykamary/dsh-client-ui-directory-picker-native`（[`packages/client/ui-directory-picker-native/src/index.ts`](../packages/client/ui-directory-picker-native/src/index.ts)）
 - `@monotykamary/dsh-client-ui-files`（[`packages/client/ui-files/src/index.ts`](../packages/client/ui-files/src/index.ts)）

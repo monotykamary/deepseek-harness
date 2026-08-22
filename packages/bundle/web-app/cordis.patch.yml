@@ -272,6 +272,9 @@
     # Remove this entry to turn the surface off; the tail hole renders empty.
     - id: ui-deliverables
       name: '@monotykamary/dsh-client-ui-deliverables'
+      config:
+        maxListItems: 50
+        maxDiffChars: 12000
 
 
     - id: ui-workspace

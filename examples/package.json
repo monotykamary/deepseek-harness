@@ -20,6 +20,7 @@
     "@monotykamary/dsh-bash-local": "workspace:*",
     "@monotykamary/dsh-bash-sandbox": "workspace:*",
     "@monotykamary/dsh-code-runtime-worker-thread": "workspace:*",
+    "@monotykamary/dsh-client-ui-deliverables": "workspace:*",
     "@monotykamary/dsh-command-feedback": "workspace:*",
     "@monotykamary/dsh-command-goal": "workspace:*",
     "@monotykamary/dsh-commands": "workspace:*",

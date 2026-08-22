@@ -1,0 +1,12 @@
+# Isolated mutation-ledger scenario composition.
+- id: base
+  name: '@monotykamary/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: ui-deliverables
+            name: '@monotykamary/dsh-client-ui-deliverables'
+            config:
+              maxListItems: 50
+              maxDiffChars: 12000

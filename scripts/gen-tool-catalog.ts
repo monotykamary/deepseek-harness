@@ -61,6 +61,7 @@ import * as ToolTasks from '@monotykamary/dsh-tool-jobs'
 import type TeamService from '@monotykamary/dsh-experimental-agent-team'
 import * as ToolTeam from '@monotykamary/dsh-experimental-tool-agent-team'
 import * as ToolTodo from '@monotykamary/dsh-tool-todo'
+import * as UiDeliverables from '@monotykamary/dsh-client-ui-deliverables'
 import * as ToolSubagent from '@monotykamary/dsh-tool-subagent'
 import * as ToolWeb from '@monotykamary/dsh-tool-web'
 import VmWorkflowEngine from '@monotykamary/dsh-workflow-worker-thread'
@@ -560,6 +561,17 @@ const TOOL_PACKAGES: ToolPackage[] = [
     scope: ctx => catalogChildScopes.get(ctx) as Agent,
     note:
       'All ten tools are scoped to implicit Team Leads and durable teammates. The shipped dsh-base bundle keeps the package disabled; the documented Agent Teams profile patch enables it while disabling the legacy continuable-child control names.',
+  },
+  {
+    pkg: '@monotykamary/dsh-client-ui-deliverables',
+    dir: 'ui-deliverables',
+    source: 'packages/client/ui-deliverables/src/index.ts',
+    requires: ['ctx.tools', 'ctx.systemPrompt', 'owning Agent session'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(UiDeliverables, { maxListItems: 50, maxDiffChars: 12_000 })
+    },
+    note: 'The tool reads durable receipt facts from the complete calling Session; its output is not a Git patch or repository snapshot.',
   },
   {
     pkg: '@monotykamary/dsh-tool-todo',

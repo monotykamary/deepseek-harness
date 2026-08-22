@@ -1,0 +1,10 @@
+{
+  "steps": [
+    { "op": "initialize" },
+    { "op": "newSession" },
+    {
+      "op": "prompt",
+      "text": "Use the write tool, not bash, to create ledger.txt containing exactly receipt. Then call changes_read with no arguments. After reading its result, reply exactly DONE."
+    }
+  ]
+}
