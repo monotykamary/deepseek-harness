@@ -31,6 +31,15 @@ describe('SettingsRoot mobile sheet styles', () => {
     expect(mobile).toContain('border-radius: 18px')
   })
 
+  it('shows directional edge gradients only inside the mobile sheet', () => {
+    expect(mobile).toContain('.navFadeLeft')
+    expect(mobile).toContain('.navFadeRight')
+    expect(mobile).toContain('linear-gradient(to right, var(--dsw-alias-bg-layer-2), transparent)')
+    expect(mobile).toContain('linear-gradient(to right, transparent, var(--dsw-alias-bg-layer-2))')
+    expect(desktop).not.toContain('.navFadeLeft')
+    expect(desktop).not.toContain('.navFadeRight')
+  })
+
   it('keeps the desktop two-column modal intact outside the compact query', () => {
     // The centered panel and 188px rail rules must stay outside the mobile
     // query, so wide layouts are untouched by the sheet overrides.

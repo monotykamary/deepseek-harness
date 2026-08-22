@@ -188,6 +188,39 @@ describe('SettingsPanel navigation', () => {
     expect(glyphs[4]).toBe(glyphs[0])
   })
 
+  it('shows mobile edge fades only where horizontally hidden items remain', () => {
+    mount()
+    openPanel()
+    const nav = screen.getByRole('navigation')
+    Object.defineProperties(nav, {
+      clientWidth: { configurable: true, value: 200 },
+      scrollWidth: { configurable: true, value: 300 },
+      scrollLeft: { configurable: true, writable: true, value: 0 },
+    })
+    const left = document.querySelector('[data-settings-nav-fade="left"]')!
+    const right = document.querySelector('[data-settings-nav-fade="right"]')!
+
+    fireEvent.scroll(nav)
+    expect(left.getAttribute('data-visible')).toBe('false')
+    expect(right.getAttribute('data-visible')).toBe('true')
+
+    nav.scrollLeft = 50
+    fireEvent.scroll(nav)
+    expect(left.getAttribute('data-visible')).toBe('true')
+    expect(right.getAttribute('data-visible')).toBe('true')
+
+    nav.scrollLeft = 100
+    fireEvent.scroll(nav)
+    expect(left.getAttribute('data-visible')).toBe('true')
+    expect(right.getAttribute('data-visible')).toBe('false')
+
+    Object.defineProperty(nav, 'scrollWidth', { configurable: true, value: 200 })
+    nav.scrollLeft = 0
+    fireEvent.scroll(nav)
+    expect(left.getAttribute('data-visible')).toBe('false')
+    expect(right.getAttribute('data-visible')).toBe('false')
+  })
+
   it('switches the rendered section on nav click', () => {
     mount()
     openPanel()

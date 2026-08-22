@@ -10,7 +10,7 @@
  * Session directory is ready. Visible dialog chrome belongs
  * to the step, so a mounted-but-deciding step paints nothing here.
  */
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   Bot, X, Database,
@@ -25,6 +25,37 @@ function navIcon(id: string) {
   if (id === 'agent-presets') return <Bot className={css.navIcon} size={16} />
   if (id === 'plugins') return <SlidersHorizontal className={css.navIcon} size={16} />
   return <Settings className={css.navIcon} size={16} />
+}
+
+interface HorizontalFadeVisibility {
+  left: boolean
+  right: boolean
+}
+
+/** Track whether the settings chip strip has hidden content at either edge. */
+function useHorizontalScrollFades() {
+  const navRef = useRef<HTMLElement>(null)
+  const [visibility, setVisibility] = useState<HorizontalFadeVisibility>({ left: false, right: false })
+  const update = useCallback(() => {
+    const nav = navRef.current
+    if (nav === null) return
+    const next = {
+      left: nav.scrollLeft > 0,
+      right: nav.scrollLeft < nav.scrollWidth - nav.clientWidth,
+    }
+    setVisibility(current => current.left === next.left && current.right === next.right ? current : next)
+  }, [])
+
+  useLayoutEffect(() => { update() })
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    if (nav === null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(update)
+    observer.observe(nav)
+    return () => { observer.disconnect() }
+  }, [update])
+
+  return { navRef, update, visibility }
 }
 
 type PanelProps = {
@@ -45,6 +76,7 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
   // projection falls back to the first row when the id is gone.
   const active = rows.find(r => r.id === activeId)?.id ?? rows[0]?.id
   const titleId = useId()
+  const fades = useHorizontalScrollFades()
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -62,7 +94,7 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
     <div className={css.overlay} role="presentation">
       <div className={css.mask} aria-hidden="true" onClick={onClose} />
       <div className={css.panel} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <nav className={css.nav}>
+        <nav ref={fades.navRef} className={css.nav} onScroll={fades.update}>
           <div className={css.navTitle} id={titleId}>{renderSlot('settings.header', {})}</div>
           <div className={css.navList}>
             {rows.map(row => (
@@ -79,6 +111,18 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
             ))}
           </div>
         </nav>
+        <span
+          aria-hidden="true"
+          className={clsx(css.navFade, css.navFadeLeft, fades.visibility.left && css.navFadeVisible)}
+          data-settings-nav-fade="left"
+          data-visible={fades.visibility.left}
+        />
+        <span
+          aria-hidden="true"
+          className={clsx(css.navFade, css.navFadeRight, fades.visibility.right && css.navFadeVisible)}
+          data-settings-nav-fade="right"
+          data-visible={fades.visibility.right}
+        />
         <div className={css.content}>
           <div className={css.header}>
             <div className={css.actions}>{renderSlot('settings.action', {})}</div>

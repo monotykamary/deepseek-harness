@@ -159,6 +159,11 @@
   text-overflow: ellipsis;
 }
 
+/* Mobile-only cues for horizontally clipped navigation content. */
+.navFade {
+  display: none;
+}
+
 /* Content column (figma Content 501:29980): header + options. */
 .content {
   flex: 1;
@@ -270,6 +275,30 @@
 
   .nav::-webkit-scrollbar {
     display: none;
+  }
+
+  .navFade {
+    position: absolute;
+    bottom: 0;
+    display: block;
+    width: 24px;
+    height: calc(49px + env(safe-area-inset-bottom, 0px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .navFadeVisible {
+    opacity: 1;
+  }
+
+  .navFadeLeft {
+    left: 0;
+    background: linear-gradient(to right, var(--dsw-alias-bg-layer-2), transparent);
+  }
+
+  .navFadeRight {
+    right: 0;
+    background: linear-gradient(to right, transparent, var(--dsw-alias-bg-layer-2));
   }
 
   .navTitle {

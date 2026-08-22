@@ -181,6 +181,16 @@ describe('web e2e: settings modal and General preferences', () => {
       expect(metrics.navBottom).toBeCloseTo(metrics.panelBottom, 0)
       expect(metrics.optionsBottom).toBeLessThanOrEqual(metrics.navTop)
       expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.viewportWidth)
+      const leftFade = dialog.locator('[data-settings-nav-fade="left"]')
+      const rightFade = dialog.locator('[data-settings-nav-fade="right"]')
+      await expect.poll(() => leftFade.getAttribute('data-visible')).toBe('false')
+      await expect.poll(() => rightFade.getAttribute('data-visible')).toBe('true')
+      await dialog.locator('nav').evaluate((nav) => {
+        nav.scrollLeft = nav.scrollWidth - nav.clientWidth
+        nav.dispatchEvent(new Event('scroll'))
+      })
+      await expect.poll(() => leftFade.getAttribute('data-visible')).toBe('true')
+      await expect.poll(() => rightFade.getAttribute('data-visible')).toBe('false')
       // The rail vocabulary survives in the strip: sections still switch.
       await dialog.getByRole('button', { name: '模型' }).click()
       await expect.poll(() => dialog.getByRole('button', { name: '模型' }).getAttribute('aria-current'), { timeout: 5_000 }).toBe('true')
