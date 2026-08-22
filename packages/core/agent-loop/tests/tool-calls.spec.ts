@@ -109,6 +109,7 @@ describe('tool-call scheduler: grouping and barriers', () => {
       execute(_args, exec) {
         location = exec.location
         exec.recordFileMutation({
+          beforeSha1: null, afterSha1: '1'.repeat(40), beforeSha256: null, afterSha256: '1'.repeat(64),
           path: 'root.ts', operation: 'create', diffs: [{ oldText: null, newText: 'root' }],
         })
         return Promise.resolve([{ type: 'text', text: 'done' }])
@@ -122,6 +123,8 @@ describe('tool-call scheduler: grouping and barriers', () => {
     expect(location).toEqual({ turn: 1, step: 1 })
     const result = events(agent).find(event => event.type === 'tool/result')
     expect(result?.type === 'tool/result' ? result.data.mutations : undefined).toEqual([{
+      version: 1, commitOrder: 0,
+      beforeSha1: null, afterSha1: '1'.repeat(40), beforeSha256: null, afterSha256: '1'.repeat(64),
       path: 'root.ts', operation: 'create', diffs: [{ oldText: null, newText: 'root' }],
     }])
   })

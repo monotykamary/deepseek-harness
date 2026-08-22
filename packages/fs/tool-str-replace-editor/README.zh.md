@@ -49,4 +49,4 @@ schema 提供针对绝对路径的 `view`、`create`、`str_replace` 与 `insert
 
 - 操作面向 UTF-8 文本，不支持二进制文件。
 - `str_replace` 刻意拒绝零匹配或多匹配，且没有 `replace_all` 参数。
-- 每个修改操作都会经过 `fs/write-intent` 或 `fs/edit-intent`，解析当前会话的沙箱策略，交由挂载的文件系统与策略插件实施约束，并且只在文件系统提交成功后记录持久 `FileMutation` receipt。
+- 每个修改操作都会经过 `fs/write-intent` 或 `fs/edit-intent`，解析当前会话的沙箱策略，交由挂载的文件系统与策略插件实施约束，并且只在文件系统提交成功后记录带完整内容 SHA-1／SHA-256 transition 的持久 `FileMutation` receipt。

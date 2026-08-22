@@ -44,6 +44,7 @@ describe('ChangesPanel', () => {
   it('renders loaded mutation groups and distinct file counts', () => {
     render(<ChangesPanel {...props({ changes: [{
       seq: 4,
+      commitOrder: 0,
       turn: 1,
       callId: 'write-1',
       title: 'Write src/a.ts',
@@ -73,11 +74,11 @@ describe('ChangesPanel', () => {
   it('collapses and expands every loaded mutation group', () => {
     render(<ChangesPanel {...props({ changes: [
       {
-        seq: 4, turn: 1, callId: 'write-1', title: 'Write a.ts',
+        seq: 4, commitOrder: 0, turn: 1, callId: 'write-1', title: 'Write a.ts',
         diffs: [{ path: 'a.ts', oldText: null, newText: 'a' }],
       },
       {
-        seq: 8, turn: 2, callId: 'write-2', title: 'Write b.ts',
+        seq: 8, commitOrder: 1, turn: 2, callId: 'write-2', title: 'Write b.ts',
         diffs: [{ path: 'b.ts', oldText: null, newText: 'b' }],
       },
     ] })} />)
@@ -95,7 +96,7 @@ describe('ChangesPanel', () => {
 
   it('localizes diff controls on an English surface', () => {
     render(<ChangesPanel {...props({ changes: [{
-      seq: 1, turn: 1, callId: 'write', title: 'Write a.ts',
+      seq: 1, commitOrder: 0, turn: 1, callId: 'write', title: 'Write a.ts',
       diffs: [{ path: 'a.ts', oldText: null, newText: 'a' }],
     }] }, makeTranslate(en))} />)
     expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy()

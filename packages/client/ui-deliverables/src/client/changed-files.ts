@@ -7,7 +7,7 @@ export interface ChangeStats {
   readonly deletions: number
 }
 
-/** One distinct changed file with all loaded receipt hunks in event order. */
+/** One distinct changed file with all loaded receipt hunks in commit order. */
 export interface ChangedFileSummary extends ChangeStats {
   readonly kind: 'file'
   readonly name: string
@@ -55,12 +55,12 @@ export function changeStats(diffs: readonly DiffHunk[]): ChangeStats {
 
 /**
  * Merge receipt groups into one entry per path.
- * @param changes - Mutation groups in event order.
+ * @param changes - Mutation groups carrying commit order.
  * @returns Distinct files in first-seen order.
  */
 export function changedFiles(changes: readonly DeliverableChange[]): readonly ChangedFileSummary[] {
   const byPath = new Map<string, DiffHunk[]>()
-  for (const change of changes) {
+  for (const change of [...changes].sort((a, b) => a.commitOrder - b.commitOrder)) {
     for (const diff of change.diffs) {
       const diffs = byPath.get(diff.path) ?? []
       diffs.push(diff)

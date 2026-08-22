@@ -13,9 +13,9 @@ function node(turn: number, callId: string, title = callId): DeliverablesViewNod
     target: 'deliverables',
     data: {
       turn,
-      produced: [{ seq: turn, path: `${callId}.ts` }],
+      produced: [{ seq: turn, commitOrder: turn, path: `${callId}.ts` }],
       changes: [{
-        seq: turn, turn, callId, title,
+        seq: turn, commitOrder: turn, turn, callId, title,
         diffs: [{ path: `${callId}.ts`, oldText: null, newText: callId }],
       }],
     },

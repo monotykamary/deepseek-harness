@@ -10,7 +10,7 @@ import { defineTool } from '@monotykamary/dsh-tools'
 import type { DiffCallView, DiffResultView, ToolResult } from '@monotykamary/dsh-tools'
 import type {} from '@monotykamary/dsh-fs'
 import type {} from '@monotykamary/dsh-system-prompt'
-import { computeHunkDiffs, diffsFromMeta } from './diff.ts'
+import { computeHunkDiffs, diffsFromMeta, textSha1, textSha256 } from './diff.ts'
 import { remediateFsError } from './error.ts'
 import { sessionResolveOptions } from './session-cwd.ts'
 import type { FsSandboxController } from './sandbox.ts'
@@ -138,6 +138,10 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
         throw remediateFsError(sandbox.mapError(error, sandboxPolicy))
       }
       exec.recordFileMutation({
+        beforeSha1: textSha1(outcome.before),
+        afterSha1: textSha1(outcome.after),
+        beforeSha256: textSha256(outcome.before),
+        afterSha256: textSha256(outcome.after),
         path: target.displayPath,
         operation: 'modify',
         diffs: computeHunkDiffs(target.displayPath, outcome.before, outcome.after)

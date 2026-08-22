@@ -61,7 +61,7 @@ const turnLocation = (turn: number, deliverables?: DeliverablesTurnData): TurnLo
 }
 
 const produced = (...values: ReadonlyArray<readonly [seq: number, path: string]>): DeliverablesTurnData => ({
-  produced: values.map(([seq, path]) => ({ seq, path })),
+  produced: values.map(([seq, path], commitOrder) => ({ seq, commitOrder, path })),
   changes: [],
 })
 
@@ -147,8 +147,14 @@ function result(
   }, view === undefined ? undefined : { for: 'result', view })
 }
 
-function mutations(...paths: string[]): unknown[] {
-  return paths.map(path => ({
+function mutations(start: number, ...paths: string[]): unknown[] {
+  return paths.map((path, index) => ({
+    version: 1,
+    commitOrder: start + index,
+    beforeSha1: '0'.repeat(40),
+    afterSha1: '1'.repeat(40),
+    beforeSha256: '0'.repeat(64),
+    afterSha256: '1'.repeat(64),
     path,
     operation: 'modify',
     diffs: [{ oldText: 'before', newText: 'after' }],
@@ -198,10 +204,10 @@ describe('produced-file Turn data', () => {
     const changed: DeliverablesTurnData = {
       ...data,
       changes: [{
-        seq: 4, turn: 1, callId: 'write', title: 'Write',
+        seq: 4, commitOrder: 0, turn: 1, callId: 'write', title: 'Write',
         diffs: [{ path: 'out/index.html', oldText: null, newText: 'x' }],
       }, {
-        seq: 8, turn: 1, callId: 'later', title: 'Later',
+        seq: 8, commitOrder: 1, turn: 1, callId: 'later', title: 'Later',
         diffs: [{ path: 'after.txt', oldText: null, newText: 'y' }],
       }],
     }
@@ -210,7 +216,7 @@ describe('produced-file Turn data', () => {
     const deletionOnly: DeliverablesTurnData = {
       produced: [],
       changes: [{
-        seq: 3, turn: 1, callId: 'delete', title: 'Delete',
+        seq: 3, commitOrder: 0, turn: 1, callId: 'delete', title: 'Delete',
         diffs: [{ path: 'removed.txt', oldText: 'old', newText: '' }],
       }],
     }
@@ -225,13 +231,13 @@ describe('produced-file Turn data', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'write', diff('out/index.html', 'out/app.css')),
-      result(3, 'write', false, 1, undefined, mutations('out/index.html', 'out/app.css')),
+      result(3, 'write', false, 1, undefined, mutations(0, 'out/index.html', 'out/app.css')),
       call(4, 'edit', edit('notes.md')),
-      result(5, 'edit', false, 1, undefined, mutations('notes.md')),
+      result(5, 'edit', false, 1, undefined, mutations(2, 'notes.md')),
       call(6, 'read', { card: 'generic', title: 'Read', locations: [{ path: 'input.txt' }] }),
       result(7, 'read'),
       call(8, 'failed', diff('broken.txt')),
-      result(9, 'failed', true, 1, undefined, mutations('broken.txt')),
+      result(9, 'failed', true, 1, undefined, mutations(3, 'broken.txt')),
       call(10, 'locationless', { card: 'diff', title: 'Write', diffs: [] }),
       result(11, 'locationless'),
     ])
@@ -250,11 +256,12 @@ describe('produced-file Turn data', () => {
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'write', diff('src/config.ts')),
       result(3, 'write', false, 1, applied, [{
+        version: 1, commitOrder: 0, beforeSha1: '0'.repeat(40), afterSha1: '1'.repeat(40), beforeSha256: '0'.repeat(64), afterSha256: '1'.repeat(64),
         path: 'src/config.ts', operation: 'modify', diffs: applied.diffs.map(({ oldText, newText }) => ({ oldText, newText })),
       }]),
     ])
     expect(changesOf(value).changes).toEqual([{
-      seq: 3, turn: 1, callId: 'write', title: 'Updated config', diffs: applied.diffs,
+      seq: 3, commitOrder: 0, turn: 1, callId: 'write', title: 'Updated config', diffs: applied.diffs,
     }])
     expect(deliverablesOf(value)?.changes).toEqual(changesOf(value).changes)
 
@@ -275,8 +282,8 @@ describe('produced-file Turn data', () => {
         name: 'write', arguments: {}, isError: false, content: [],
         location: { turn: 2, step: 1 },
         mutations: [
-          { path: 'nested.ts', operation: 'create', diffs: [{ oldText: null, newText: 'nested' }] },
-          { path: 'removed.ts', operation: 'delete', diffs: [{ oldText: 'old', newText: null }] },
+          { version: 1, commitOrder: 0, beforeSha1: null, afterSha1: '1'.repeat(40), beforeSha256: null, afterSha256: '1'.repeat(64), path: 'nested.ts', operation: 'create', diffs: [{ oldText: null, newText: 'nested' }] },
+          { version: 1, commitOrder: 1, beforeSha1: '1'.repeat(40), afterSha1: null, beforeSha256: '1'.repeat(64), afterSha256: null, path: 'removed.ts', operation: 'delete', diffs: [{ oldText: 'old', newText: null }] },
         ],
       }),
     ])
@@ -284,6 +291,7 @@ describe('produced-file Turn data', () => {
     expect(producedForClosing(deliverablesOf(value, 2))).toEqual(['nested.ts'])
     expect(changesOf(value).changes).toEqual([{
       seq: 2,
+      commitOrder: 0,
       turn: 2,
       callId: 'root:code:1',
       title: 'write',
@@ -300,10 +308,10 @@ describe('produced-file Turn data', () => {
       call(2, 'fallback-title', diff('fallback.ts')),
       result(3, 'fallback-title', false, 1, {
         card: 'diff', diffs: [{ path: 'fallback.ts', oldText: null, newText: 'next' }],
-      }, mutations('fallback.ts')),
+      }, mutations(0, 'fallback.ts')),
       result(4, 'orphan-title', false, 1, {
         card: 'diff', diffs: [{ path: 'orphan.ts', oldText: null, newText: 'orphan' }],
-      }, mutations('orphan.ts')),
+      }, mutations(1, 'orphan.ts')),
     ])
     expect(changesOf(value).changes.map(change => change.title)).toEqual([
       'Write fallback.ts', 'orphan-title',
@@ -315,6 +323,13 @@ describe('produced-file Turn data', () => {
       result(3, 'bad', false, 1, { card: 'diff', diffs: [null] } as never, [{ path: 'bad.ts', operation: 'modify', diffs: [null] }]),
     ])
     expect(changesOf(malformed)).toEqual({ changes: [] })
+
+    const badHash = mutations(0, 'bad-hash.ts')[0] as Record<string, unknown>
+    const invalidIntegrity = assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      result(2, 'bad-hash', false, 1, undefined, [{ ...badHash, beforeSha1: 'bad' }]),
+    ])
+    expect(changesOf(invalidIntegrity)).toEqual({ changes: [] })
   })
 
   it('ignores calls without mutation locations, orphan results, and replacement results', () => {
@@ -364,7 +379,7 @@ describe('produced-file Turn data', () => {
   it('replays a tail page once prepend supplies its missing Turn start', () => {
     const value = assembler([
       call(10, 'late', diff('history.txt')),
-      result(11, 'late', false, 1, undefined, mutations('history.txt')),
+      result(11, 'late', false, 1, undefined, mutations(1, 'history.txt')),
     ], true)
     expect(deliverablesOf(value)).toBeUndefined()
 
@@ -377,13 +392,13 @@ describe('produced-file Turn data', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'first', diff('first.txt')),
-      result(3, 'first', false, 1, undefined, mutations('first.txt')),
+      result(3, 'first', false, 1, undefined, mutations(0, 'first.txt')),
     ])
     const first = deliverablesOf(value)
     expect(producedForClosing(first)).toEqual(['first.txt'])
 
     value.append(call(4, 'second', diff('second.txt')))
-    value.append(result(5, 'second', false, 1, undefined, mutations('second.txt')))
+    value.append(result(5, 'second', false, 1, undefined, mutations(1, 'second.txt')))
     value.flush()
     expect(producedForClosing(deliverablesOf(value))).toEqual(['first.txt', 'second.txt'])
   })
@@ -394,6 +409,7 @@ describe('ProducedFiles changed-files card', () => {
 
   const changes = [{
     seq: 4,
+    commitOrder: 0,
     turn: 1,
     callId: 'write',
     title: 'Write files',
@@ -452,7 +468,7 @@ describe('ProducedFiles changed-files card', () => {
 
   it('uses singular English copy for one changed file', () => {
     const one = [{
-      seq: 1, turn: 1, callId: 'write', title: 'Write one',
+      seq: 1, commitOrder: 0, turn: 1, callId: 'write', title: 'Write one',
       diffs: [{ path: 'a.md', oldText: null, newText: 'a' }],
     }]
     const view = render(

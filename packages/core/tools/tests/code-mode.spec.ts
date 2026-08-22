@@ -93,6 +93,7 @@ function fakeAgent(): { agent: Agent; events: { type: string; data: unknown }[] 
   const agent = {
     session: {
       header: { cwd: '/workspace' },
+      events: [],
       append: (type: string, data: unknown) => { events.push({ type, data }) },
     },
   } as unknown as Agent
@@ -982,6 +983,7 @@ describe('the run_code dispatch bridge', () => {
       output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
       execute(_args, exec) {
         exec.recordFileMutation({
+          beforeSha1: null, afterSha1: '1'.repeat(40), beforeSha256: null, afterSha256: '1'.repeat(64),
           path: 'nested.ts', operation: 'create',
           diffs: [{ oldText: null, newText: 'nested' }],
         })
@@ -1002,6 +1004,8 @@ describe('the run_code dispatch bridge', () => {
     expect(settle?.data).toMatchObject({
       location: { turn: 3, step: 2 },
       mutations: [{
+        version: 1, commitOrder: 0,
+        beforeSha1: null, afterSha1: '1'.repeat(40), beforeSha256: null, afterSha256: '1'.repeat(64),
         path: 'nested.ts', operation: 'create', diffs: [{ oldText: null, newText: 'nested' }],
       }],
     })

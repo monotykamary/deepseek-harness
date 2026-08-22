@@ -515,6 +515,68 @@ describe('Session', () => {
     expect(session.events).toHaveLength(1)
   })
 
+
+  it('rejects malformed file mutation receipts on append and seed load', () => {
+    const message = createToolResultMessage({
+      callId: CallId('mutation-call'),
+      content: [{ type: 'text', text: 'done' }],
+      isError: false,
+    })
+    const valid = {
+      version: 1,
+      commitOrder: 0,
+      beforeSha1: '0'.repeat(40),
+      afterSha1: '1'.repeat(40),
+      beforeSha256: '0'.repeat(64),
+      afterSha256: '1'.repeat(64),
+      path: 'file.ts',
+      operation: 'modify',
+      diffs: [{ oldText: 'old', newText: 'new' }],
+    }
+    const invalid = [
+      { ...valid, version: 2 },
+      { ...valid, commitOrder: -1 },
+      { ...valid, beforeSha1: 'bad' },
+      { ...valid, beforeSha256: 'bad' },
+      { ...valid, afterSha256: null },
+      { ...valid, path: ' ' },
+      { ...valid, operation: 'move' },
+      { ...valid, diffs: [] },
+      { ...valid, operation: 'create', beforeSha1: null, beforeSha256: null, diffs: [{ oldText: 'old', newText: 'new' }] },
+      { ...valid, operation: 'delete', afterSha1: null, afterSha256: null, diffs: [{ oldText: 'old', newText: '' }] },
+      { ...valid, diffs: [{ oldText: null, newText: null }] },
+      { ...valid, extra: true },
+    ]
+    for (const [index, mutation] of invalid.entries()) {
+      const data = { turn: 1, step: 1, message, mutations: [mutation] }
+      const session = Session.create(SessionId(`mutation-append-${index}`))
+      const append = session.append.bind(session) as unknown as (
+        type: string, value: unknown, options: { surfaceOp: 'append' },
+      ) => SessionEvent
+      expect(() => append('tool/result', data, { surfaceOp: 'append' })).toThrow(/file mutation/u)
+      expect(session.events).toHaveLength(0)
+      expect(() => Session.create(SessionId(`mutation-seed-${index}`), [{
+        type: 'tool/result', seq: 0, time: 1, data, surfaceOp: 'append',
+      } as unknown as SessionEvent])).toThrow(/file mutation/u)
+    }
+
+    const duplicateData = { turn: 1, step: 1, message, mutations: [valid, { ...valid, path: 'other.ts' }] }
+    const duplicateSession = Session.create(SessionId('mutation-duplicate-append'))
+    const appendDuplicate = duplicateSession.append.bind(duplicateSession) as unknown as (
+      type: string, value: unknown, options: { surfaceOp: 'append' },
+    ) => SessionEvent
+    expect(() => appendDuplicate('tool/result', duplicateData, { surfaceOp: 'append' }))
+      .toThrow(/reuses file mutation commit order 0/u)
+    expect(duplicateSession.events).toHaveLength(0)
+
+    const event = (seq: number, path: string): SessionEvent => ({
+      type: 'tool/code-dispatch', seq, time: seq + 1,
+      data: { mutations: [{ ...valid, path }] },
+    } as unknown as SessionEvent)
+    expect(() => Session.create(SessionId('mutation-duplicate-seed'), [event(0, 'a.ts'), event(1, 'b.ts')]))
+      .toThrow(/reuses file mutation commit order 0/u)
+  })
+
   it('validates seed events: rejects a non-JSON-serializable seed', () => {
     // A replay/fork seed must satisfy the SAME invariant as Session.append, or
     // it builds a live log no backend can persist.

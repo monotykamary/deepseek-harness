@@ -38,7 +38,7 @@ await ctx.plugin(ToolFs)                                  // this package — re
 
 字段名使用 snake_case，与 Claude Code 和现有 harness 工具 schema 一致。
 
-结构化成功值分别为：`read` → `{ path, offset, lines: [{ number, text }], totalLines }`，`read_image` → `{ path, image: { attachmentId, mediaType, bytes, width, height, name?, originalDimensions?: { width, height } } }`，`write` → `{ path, operation: 'create' | 'update', before: string | null, after }`，`edit` → `{ path, before, after }`。`originalDimensions` 只在规范化过程缩小提交光栅时出现，并记录应用方向后的输入尺寸。原生渲染器会保留下方带行号的读取结果和变更确认。`write` 和 `edit` 从这些值派生可回放的 diff 卡片元数据，并在成功提交后记录持久 `FileMutation` receipt；`read` 派生可回放的读取卡片窗口 `{ path, offset, lines, totalLines, lang? }`；仅用于执行的结构化值不会添加到 `tool/result`，图片渲染器则会发出由结果记录的持久图片块。
+结构化成功值分别为：`read` → `{ path, offset, lines: [{ number, text }], totalLines }`，`read_image` → `{ path, image: { attachmentId, mediaType, bytes, width, height, name?, originalDimensions?: { width, height } } }`，`write` → `{ path, operation: 'create' | 'update', before: string | null, after }`，`edit` → `{ path, before, after }`。`originalDimensions` 只在规范化过程缩小提交光栅时出现，并记录应用方向后的输入尺寸。原生渲染器会保留下方带行号的读取结果和变更确认。`write` 和 `edit` 从这些值派生可回放的 diff 卡片元数据，并在成功提交后记录带完整内容 SHA-1／SHA-256 transition 的持久 `FileMutation` receipt；`read` 派生可回放的读取卡片窗口 `{ path, offset, lines, totalLines, lang? }`；仅用于执行的结构化值不会添加到 `tool/result`，图片渲染器则会发出由结果记录的持久图片块。
 
 ## 工具就是执行器；策略是事件门禁
 

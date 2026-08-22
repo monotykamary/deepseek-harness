@@ -4,7 +4,7 @@
 
 已更改文件、可点击文件引用与已载入 Changes 功能的属主。Node 侧向系统提示词 registry 注册最终回复指引；浏览器侧把已完成轮次末尾的产出文件行注册到 chat 视图的 `conversation.chat.turnTail` slot，将收尾正文中匹配的行内代码引用转换为链接，并向 [`ui-workbench`](../ui-workbench/README.zh.md) 贡献 Changes 及其图标与启动器说明。正式提供的组合中只有 Web patch 加载本包；从 cordis.yml 中删去这一项会一并移除提示词、文件行、正文链接、变更投影与 Workbench 标签页。
 
-`deliverablesDefinition` 把每个轮次中已提交的 `FileMutation` receipt 折叠进引擎发布的 `DeliverablesTurnData`；`producedForClosing` 结合收尾 Assistant 的 seq 读取这份数据。直接 `tool/result` receipt 与嵌套 `tool/code-dispatch` receipt 使用同一投影，嵌套事件则由根执行 location 提供轮次归属。呈现元数据可以提供标题，但不能创建修改条目。没有有效 receipt 的调用不贡献任何条目；删除仍会出现在 Changes 中，但不会生成可打开文件条目；产出路径在每个轮次内按首见顺序只出现一次。Conversation Location 索引会在轮次修改文件后不含正文便结束时保持正确归属。
+`deliverablesDefinition` 把每个轮次中已提交的 `FileMutation` receipt 折叠进引擎发布的 `DeliverablesTurnData`；`producedForClosing` 结合收尾 Assistant 的 seq 读取这份数据。直接 `tool/result` receipt 与嵌套 `tool/code-dispatch` receipt 使用同一带版本投影，并按提交顺序而非并行调用的结果顺序折叠，嵌套事件则由根执行 location 提供轮次归属。呈现元数据可以提供标题，但不能创建修改条目。没有有效 receipt 的调用不贡献任何条目；删除仍会出现在 Changes 中，但不会生成可打开文件条目；产出路径在每个轮次内按首见顺序只出现一次。Conversation Location 索引会在轮次修改文件后不含正文便结束时保持正确归属。
 
 `ProducedFiles` 在收尾消息正文与其 IconActions 之间渲染一张 T3 风格的已更改文件卡片。低对比度标题栏报告不同文件数与 receipt 的新增／删除行总数，可统一收起或展开推导出的文件夹，并打开该 Session 的完整 Changes Workbench。始终可见的树按目录汇总工具提供的路径，在目录行显示汇总统计，在文件行显示逐文件统计；每个文件行都会打开 Changes Workbench，因此删除项仍可审阅，但不会成为行内提及目标。Workbench 按不同路径汇总已载入的修改 hunk，把每个文件呈现为默认展开的手风琴行，显示行数统计，并提供独立及全部收起控制。属主本地化的 `DiffBlock` 采用无缝文件外观：手风琴标题栏拥有路径与统计，紧接其下的正文不再重复卡片标题、圆角几何或页脚。它报告不同文件数与汇总行数，随历史页载入增量更新；既不读取仓库，也不声称是 Git 工作树状态。设计原理：[workspace 文件链接 Agent Note](../../../.agents/notes/implemented/feature/2026-07-31-web-workspace-file-links.zh.md)与 [Workbench 决策](../../../.agents/notes/implemented/feature/2026-08-18-web-ui-workbench.zh.md)。
 

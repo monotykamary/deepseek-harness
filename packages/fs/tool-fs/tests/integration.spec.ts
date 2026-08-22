@@ -23,7 +23,7 @@ let dir: string
 let ctx: Context
 let fiber: Awaited<ReturnType<Context['plugin']>>
 // No header cwd: sessionCwd returns undefined and the provider's configured test dir applies.
-const session = { header: {} }
+const session = { header: {}, events: [] }
 
 let callCounter = 0
 function call(name: string, args: unknown) {
@@ -390,14 +390,17 @@ describe('per-session cwd', () => {
   })
   afterEach(async () => { await rm(sessionDir, { recursive: true, force: true }) })
 
-  const callIn = (sessionObj: object, name: string, args: unknown) =>
-    ctx.tools.execute({
+  const callIn = (sessionObj: object, name: string, args: unknown) => {
+    const value = sessionObj as { events?: unknown[] }
+    if (value.events === undefined) value.events = []
+    return ctx.tools.execute({
       signal: testToolSignal,
       callId: CallId(`call-${++callCounter}`),
       name,
       arguments: args,
       agent: { session: sessionObj } as never,
     })
+  }
 
   it('writes a relative path into the SESSION cwd, not config.cwd', async () => {
     const result = await callIn({ header: { cwd: sessionDir } }, 'write', { file_path: 'note.txt', content: 'hi' })
@@ -434,7 +437,7 @@ describe('signal, concurrency, and the fs/observed contract', () => {
     fiber = await ctx.plugin(ToolFs)
   })
 
-  const session = { header: {} }
+  const session = { header: {}, events: [] }
   const callSig = (signal: AbortSignal, name: string, args: unknown) =>
     ctx.tools.execute({ callId: CallId(`c-${++callCounter}`), name, arguments: args, agent: { session } as never, signal })
   const callOwned = (name: string, args: unknown) =>

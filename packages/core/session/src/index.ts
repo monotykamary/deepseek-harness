@@ -19,6 +19,7 @@ import type { TypertLookup } from '@monotykamary/dsh-typert-protocol'
 import type {} from '@monotykamary/dsh-web-identity'
 import type { CreateSessionOptions, EpochHeader, PrepareSessionOptions, RequestContext, SessionEvent, SessionEventMap, SessionEventType, SessionHeader, SurfaceIntent, SurfaceEventType } from './types.ts'
 import { snapshotJsonValue } from './json.ts'
+import { assertFileMutations, fileMutationOrders } from './file-mutations.ts'
 import { deriveEventMessage, SurfaceManager } from './surface.ts'
 import type { SessionSurface } from './surface.ts'
 import { foldRequestHeader } from './request-header.ts'
@@ -28,6 +29,7 @@ export { SessionPreparation } from './preparation.ts'
 export type { SessionPreparationOptions } from './preparation.ts'
 export type { AssistantMessage, ToolResultMessage, UserMessage } from '@monotykamary/dsh-llm'
 export { isJsonValue, snapshotJsonValue } from './json.ts'
+export { assertFileMutations } from './file-mutations.ts'
 export type { JsonValue } from './json.ts'
 export { interruptedTurnClosers, TOOL_NOT_STARTED, TOOL_OUTCOME_UNKNOWN } from './repair.ts'
 export { decodeStorageRecord, packChunkRuns } from './chunk-rows.ts'
@@ -367,12 +369,17 @@ function hasProviderModel(value: unknown): boolean {
 
 /** Reject request-header vocabulary removed with the legacy delta codec. */
 function assertSupportedRequestHeader(type: string, data: unknown, location: string): void {
+  const record = data !== null && typeof data === 'object' && !Array.isArray(data)
+    ? data as Record<string, unknown>
+    : undefined
+  if (type === 'tool/result' || type === 'tool/code-dispatch') {
+    assertFileMutations(record?.['mutations'], location)
+  }
   if (type === 'request/header-delta') {
     throw new Error(`${location} uses unsupported legacy request/header-delta format`)
   }
   if (type === 'request/header'
-    && data !== null && typeof data === 'object' && !Array.isArray(data)
-    && (data as Record<string, unknown>)['reason'] === 'fallback') {
+    && record?.['reason'] === 'fallback') {
     throw new Error(`${location} uses unsupported legacy request/header reason "fallback"`)
   }
 }
@@ -430,6 +437,8 @@ const attachments = new WeakMap<Session, SessionEntry>()
  */
 export class Session {
   private log: SessionEvent[] = []
+  /** Accepted receipt order values; each commit has one durable Session identity. */
+  private readonly fileMutationOrders = new Set<number>()
   /** Single incremental owner of surface acceptance and projection state. */
   private readonly surfaceManager = new SurfaceManager(this.log)
 
@@ -539,6 +548,7 @@ export class Session {
         } catch (error: unknown) {
           throw new Error(`invalid seed event at index ${index}: ${error instanceof Error ? error.message : 'invalid surface metadata'}`)
         }
+        this.acceptFileMutationOrders(snapshot.data, `seed event at index ${index}`)
         this.log.push(mode === 'restore' ? freezeRestoredObject(snapshot) : deepFreeze(snapshot))
       }
     }
@@ -570,6 +580,21 @@ export class Session {
   /** The next event's sequence number — always the log length (the `seq = log.length` contiguity contract). */
   get seq(): number {
     return this.log.length
+  }
+
+  private acceptFileMutationOrders(data: unknown, subject: string): void {
+    const record = data !== null && typeof data === 'object' && !Array.isArray(data)
+      ? data as Record<string, unknown>
+      : undefined
+    const orders = fileMutationOrders(record?.['mutations'])
+    const pending = new Set<number>()
+    for (const order of orders) {
+      if (this.fileMutationOrders.has(order) || pending.has(order)) {
+        throw new Error(`${subject} reuses file mutation commit order ${order}`)
+      }
+      pending.add(order)
+    }
+    for (const order of pending) this.fileMutationOrders.add(order)
   }
 
   /**
@@ -646,6 +671,7 @@ export class Session {
       if (entry !== undefined) {
         callbacks = collectSessionCallbacks(entry.emitCtx, [entry.carrier, 'session/event', ...callbackArgs])
       }
+      this.acceptFileMutationOrders(dataSnapshot, `session event "${type}"`)
       this.log.push(event as SessionEvent)
       this.eventsSnapshot = undefined
       if (callbacks !== undefined && entry !== undefined) {

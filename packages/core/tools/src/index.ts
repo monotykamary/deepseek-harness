@@ -12,7 +12,7 @@ import type { CallId, ContentBlock, ToolSchema } from '@monotykamary/dsh-llm'
 import { assertNever, deepFreeze, HarnessError } from '@monotykamary/dsh-llm'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { snapshotJsonValue } from '@monotykamary/dsh-session'
-import type { FileMutation, JsonValue, UserMessage } from '@monotykamary/dsh-session'
+import type { FileMutation, FileMutationInput, JsonValue, UserMessage } from '@monotykamary/dsh-session'
 import type { ToolProviderResult } from '@monotykamary/dsh-system-prompt'
 import type { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
@@ -423,9 +423,9 @@ export interface ToolRunContext extends ToolExecution {
    * Record one workspace-file mutation after it commits. The receipt is
    * attached to this execution's final result even when later policy replaces
    * the result projection.
-   * @param mutation - committed file operation and its textual hunks.
+   * @param mutation - committed operation, complete-content hashes, and textual hunks.
    */
-  recordFileMutation(mutation: FileMutation): void
+  recordFileMutation(mutation: FileMutationInput): void
   /**
    * Mark a successful final result as terminal for the current agent turn.
    * The marker rides this execution's own result (`concludesTurn` exists only
@@ -825,6 +825,10 @@ export class ToolRuntime extends Service {
   private deferredContexts = new WeakMap<ToolRunContext, UserMessage[]>()
   /** Committed file mutations recorded by a running tool body. */
   private fileMutations = new WeakMap<ToolRunContext, FileMutation[]>()
+  /** Next durable commit order per live Agent, initialized from resumed history. */
+  private fileMutationOrders = new WeakMap<Agent, number>()
+  /** Commit order for executions outside an Agent session. */
+  private standaloneFileMutationOrder = 0
   /** Executions whose tool body declared the current turn complete. */
   private concludingExecutions = new WeakSet<ToolExecution>()
   /** Original caller cancellation, kept outside the wrapper-mutable execution object. */
@@ -1384,6 +1388,21 @@ export class ToolRuntime extends Service {
     }
   }
 
+  private nextFileMutationOrder(agent: Agent | undefined): number {
+    if (agent === undefined) return this.standaloneFileMutationOrder++
+    let next = this.fileMutationOrders.get(agent)
+    if (next === undefined) {
+      let maximum = -1
+      for (const event of agent.session.events) {
+        const data = event.data as { mutations?: readonly FileMutation[] }
+        for (const mutation of data.mutations ?? []) maximum = Math.max(maximum, mutation.commitOrder)
+      }
+      next = maximum + 1
+    }
+    this.fileMutationOrders.set(agent, next + 1)
+    return next
+  }
+
   private createExecution(exec: ToolExecutionInput): ScheduledToolPreparation | { kind: 'ready'; exec: MutableToolRunContext } {
     const deferredContexts: UserMessage[] = []
     const fileMutations: FileMutation[] = []
@@ -1417,8 +1436,14 @@ export class ToolRuntime extends Service {
       deferContext(context: UserMessage): void {
         deferredContexts.push(context)
       },
-      recordFileMutation(mutation: FileMutation): void {
+      recordFileMutation: (mutation: FileMutationInput): void => {
         fileMutations.push(deepFreeze({
+          version: 1,
+          commitOrder: this.nextFileMutationOrder(agent),
+          beforeSha1: mutation.beforeSha1,
+          afterSha1: mutation.afterSha1,
+          beforeSha256: mutation.beforeSha256,
+          afterSha256: mutation.afterSha256,
           path: mutation.path,
           operation: mutation.operation,
           diffs: mutation.diffs.map(diff => ({ ...diff })),

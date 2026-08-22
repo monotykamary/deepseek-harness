@@ -3,6 +3,7 @@
  * validation, formatting, typed errors, intent dispatch, and observation-driven authorization.
  */
 
+import { createHash } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@monotykamary/cordis'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from 'node:fs'
@@ -109,8 +110,15 @@ async function setup() {
   return { ctx, fs }
 }
 
+const digest = (algorithm: 'sha1' | 'sha256', text: string): string =>
+  createHash(algorithm).update(text).digest('hex')
+
 let callCounter = 0
-function call(ctx: Context, name: string, args: unknown, agent?: object) {
+function call(
+  ctx: Context, name: string, args: unknown, agent?: { session?: { events?: unknown[]; header?: unknown } },
+) {
+  const session = agent?.session
+  if (session !== undefined && session.events === undefined) session.events = []
   return ctx.tools.execute({
     signal: testToolSignal,
     callId: CallId(`call-${++callCounter}`),
@@ -399,6 +407,9 @@ describe('write tool', () => {
     if (result.isError) throw new Error('expected write success')
     expect(result.value).toEqual({ path: '/abs/a.txt', operation: 'create', before: null, after: 'hi' })
     expect(result.mutations).toEqual([{
+      version: 1, commitOrder: 0,
+      beforeSha1: null, afterSha1: digest('sha1', 'hi'),
+      beforeSha256: null, afterSha256: digest('sha256', 'hi'),
       path: '/abs/a.txt', operation: 'create', diffs: [{ oldText: null, newText: 'hi' }],
     }])
     expect(text(result)).toContain('Created file')
@@ -432,6 +443,9 @@ describe('edit tool', () => {
     if (result.isError) throw new Error('expected edit success')
     expect(result.value).toEqual({ path: '/abs/a.txt', before: 'a', after: 'b' })
     expect(result.mutations).toEqual([{
+      version: 1, commitOrder: 0,
+      beforeSha1: digest('sha1', 'a'), afterSha1: digest('sha1', 'b'),
+      beforeSha256: digest('sha256', 'a'), afterSha256: digest('sha256', 'b'),
       path: '/abs/a.txt', operation: 'modify', diffs: [{ oldText: 'a', newText: 'b' }],
     }])
     expect(text(result)).toBe('The file /abs/a.txt has been updated successfully.')

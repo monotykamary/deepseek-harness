@@ -27,36 +27,63 @@ interface DeliverablesState extends DeliverablesTurnData {
 }
 
 interface MutationProjection {
-  readonly produced: readonly string[]
+  readonly commitOrder: number
+  readonly produced: readonly { readonly path: string; readonly commitOrder: number }[]
   readonly diffs: readonly DiffHunk[]
 }
 
+const SHA1 = /^[a-f0-9]{40}$/u
+const SHA256 = /^[a-f0-9]{64}$/u
+
 interface ReceiptChange {
-  readonly produced: readonly string[]
+  readonly produced: readonly { readonly path: string; readonly commitOrder: number }[]
   readonly change: DeliverableChange
 }
 
 /** Narrow durable mutation receipts before projecting them into UI primitives. */
 function projectMutations(value: unknown): MutationProjection | null {
   if (!Array.isArray(value) || value.length === 0) return null
-  const produced: string[] = []
+  const produced: Array<{ path: string; commitOrder: number }> = []
   const diffs: DiffHunk[] = []
-  for (const candidate of value) {
+  let commitOrder = Number.POSITIVE_INFINITY
+  const candidates: unknown[] = value
+  const ordered = [...candidates].sort((left, right) => {
+    const a = typeof left === 'object' && left !== null ? (left as Record<string, unknown>).commitOrder : 0
+    const b = typeof right === 'object' && right !== null ? (right as Record<string, unknown>).commitOrder : 0
+    return typeof a === 'number' && typeof b === 'number' ? a - b : 0
+  })
+  for (const candidate of ordered) {
     if (typeof candidate !== 'object' || candidate === null || Array.isArray(candidate)) return null
     const record = candidate as Record<string, unknown>
-    if (typeof record.path !== 'string'
+    if (record.version !== 1
+      || typeof record.commitOrder !== 'number' || !Number.isSafeInteger(record.commitOrder) || record.commitOrder < 0
+      || (record.beforeSha1 !== null && (typeof record.beforeSha1 !== 'string' || !SHA1.test(record.beforeSha1)))
+      || (record.afterSha1 !== null && (typeof record.afterSha1 !== 'string' || !SHA1.test(record.afterSha1)))
+      || (record.beforeSha256 !== null && (typeof record.beforeSha256 !== 'string' || !SHA256.test(record.beforeSha256)))
+      || (record.afterSha256 !== null && (typeof record.afterSha256 !== 'string' || !SHA256.test(record.afterSha256)))
+      || record.operation === 'create'
+        && (record.beforeSha1 !== null || record.afterSha1 === null || record.beforeSha256 !== null || record.afterSha256 === null)
+      || record.operation === 'modify'
+        && (record.beforeSha1 === null || record.afterSha1 === null || record.beforeSha256 === null || record.afterSha256 === null)
+      || record.operation === 'delete'
+        && (record.beforeSha1 === null || record.afterSha1 !== null || record.beforeSha256 === null || record.afterSha256 !== null)
+      || typeof record.path !== 'string' || record.path.trim() === ''
       || (record.operation !== 'create' && record.operation !== 'modify' && record.operation !== 'delete')
-      || !Array.isArray(record.diffs)) return null
-    if (record.operation !== 'delete') produced.push(record.path)
+      || !Array.isArray(record.diffs) || record.diffs.length === 0) return null
+    commitOrder = Math.min(commitOrder, record.commitOrder)
+    if (record.operation !== 'delete') produced.push({ path: record.path, commitOrder: record.commitOrder })
     for (const diff of record.diffs) {
       if (typeof diff !== 'object' || diff === null || Array.isArray(diff)) return null
       const { oldText, newText } = diff as Record<string, unknown>
       if ((oldText !== null && typeof oldText !== 'string')
-        || (newText !== null && typeof newText !== 'string')) return null
+        || (newText !== null && typeof newText !== 'string')
+        || oldText === null && newText === null
+        || record.operation === 'create' && oldText !== null
+        || record.operation === 'delete' && newText !== null) return null
       diffs.push({ path: record.path, oldText, newText: newText ?? '' })
     }
   }
-  return diffs.length === 0 ? null : { produced, diffs }
+  return diffs.length === 0 ? null : { commitOrder, produced, diffs }
 }
 
 /** Build one change from committed mutation receipts. */
@@ -71,7 +98,7 @@ function changeFromMutations(
   if (projection === null) return null
   return {
     produced: projection.produced,
-    change: { seq: match.event.seq, turn, callId, title, diffs: projection.diffs },
+    change: { seq: match.event.seq, commitOrder: projection.commitOrder, turn, callId, title, diffs: projection.diffs },
   }
 }
 
@@ -83,7 +110,7 @@ function appendReceipt(
 ): DeliverablesState {
   return {
     ...state,
-    produced: [...state.produced, ...receipt.produced.map(path => ({ seq: match.event.seq, path }))],
+    produced: [...state.produced, ...receipt.produced.map(item => ({ seq: match.event.seq, ...item }))],
     changes: [...state.changes, receipt.change],
   }
 }
@@ -112,7 +139,7 @@ export function producedForClosing(
   if (data === undefined) return []
   const paths: string[] = []
   const seen = new Set<string>()
-  for (const produced of data.produced) {
+  for (const produced of [...data.produced].sort((a, b) => a.commitOrder - b.commitOrder)) {
     if (produced.seq > seq || seen.has(produced.path)) continue
     seen.add(produced.path)
     paths.push(produced.path)

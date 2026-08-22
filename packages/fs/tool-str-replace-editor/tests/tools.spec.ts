@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,6 +19,15 @@ import * as ToolStrReplaceEditor from '@monotykamary/dsh-tool-str-replace-editor
 
 const contexts: Context[] = []
 const roots: string[] = []
+const digest = (algorithm: 'sha1' | 'sha256', text: string): string =>
+  createHash(algorithm).update(text).digest('hex')
+const integrity = (before: string | null, after: string | null) => ({
+  beforeSha1: before === null ? null : digest('sha1', before),
+  afterSha1: after === null ? null : digest('sha1', after),
+  beforeSha256: before === null ? null : digest('sha256', before),
+  afterSha256: after === null ? null : digest('sha256', after),
+})
+
 let callNumber = 0
 
 afterEach(async () => {
@@ -165,6 +175,7 @@ describe('tool-str-replace-editor', () => {
     })
     expect(text(created)).toBe(`New file created successfully at: ${sample}`)
     expect(created.mutations).toEqual([{
+      version: 1, commitOrder: 0, ...integrity(null, 'one\ntwo\nthree\n'),
       path: sample, operation: 'create',
       diffs: [{ oldText: null, newText: 'one\ntwo\nthree\n' }],
     }])
@@ -189,6 +200,7 @@ describe('tool-str-replace-editor', () => {
     })
     expect(text(replaced)).toBe(`The file ${sample} has been edited successfully.`)
     expect(replaced.mutations).toEqual([{
+      version: 1, commitOrder: 1, ...integrity('one\ntwo\nthree\n', 'one\nTWO\nthree\n'),
       path: sample, operation: 'modify', diffs: [{ oldText: 'two', newText: 'TWO' }],
     }])
     const removed = await call(ctx, owner, {
@@ -198,6 +210,7 @@ describe('tool-str-replace-editor', () => {
     })
     expect(text(removed)).toBe(`The file ${sample} has been edited successfully.`)
     expect(removed.mutations).toEqual([{
+      version: 1, commitOrder: 2, ...integrity('one\nTWO\nthree\n', 'one\n\nthree\n'),
       path: sample, operation: 'modify', diffs: [{ oldText: 'TWO', newText: '' }],
     }])
     const inserted = await call(ctx, owner, {
@@ -208,6 +221,7 @@ describe('tool-str-replace-editor', () => {
     })
     expect(text(inserted)).toBe(`The file ${sample} has been edited successfully.`)
     expect(inserted.mutations).toEqual([{
+      version: 1, commitOrder: 3, ...integrity('one\n\nthree\n', 'one\nbetween\n\nthree\n'),
       path: sample, operation: 'modify',
       diffs: [{ oldText: 'one\n\nthree\n', newText: 'one\nbetween\n\nthree\n' }],
     }])

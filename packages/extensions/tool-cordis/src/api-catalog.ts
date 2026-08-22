@@ -3353,11 +3353,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'FileMutation',
-    declaration: 'export interface FileMutation {\n    path: string;\n    operation: \'create\' | \'modify\' | \'delete\';\n    diffs: FileMutationDiff[];\n}',
+    declaration: 'export interface FileMutation {\n    version: 1;\n    commitOrder: number;\n    beforeSha1: string | null;\n    afterSha1: string | null;\n    beforeSha256: string | null;\n    afterSha256: string | null;\n    path: string;\n    operation: \'create\' | \'modify\' | \'delete\';\n    diffs: FileMutationDiff[];\n}',
   },
   {
     name: 'FileMutationDiff',
     declaration: 'export interface FileMutationDiff {\n    oldText: string | null;\n    newText: string | null;\n}',
+  },
+  {
+    name: 'FileMutationInput',
+    declaration: 'export type FileMutationInput = Omit<FileMutation, \'version\' | \'commitOrder\'>;',
   },
   {
     name: 'FileReferenceCandidate',
@@ -4861,7 +4865,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRunContext',
-    declaration: 'export interface ToolRunContext extends ToolExecution {\n    deferContext(context: UserMessage): void;\n    recordFileMutation(mutation: FileMutation): void;\n    concludeTurn(): void;\n}',
+    declaration: 'export interface ToolRunContext extends ToolExecution {\n    deferContext(context: UserMessage): void;\n    recordFileMutation(mutation: FileMutationInput): void;\n    concludeTurn(): void;\n}',
   },
   {
     name: 'ToolRuntime',

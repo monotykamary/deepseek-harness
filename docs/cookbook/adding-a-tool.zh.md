@@ -66,7 +66,7 @@ producer 提供同步的 `cancel`、在资源清理后 settle 且不 reject 的 
 
 请把 `output.schema` 设计为实用的程序化 API：直接返回句柄与字段；当标量、数组或 null 确实就是结果时，允许采用相应的根类型；将面向人类的解释放入 `output.render`。中间值只存在于执行期间，不会被持久化或按提示词上限截断，也不设字节上限，因此生产方如实声明的采集边界和进程内存仍然重要。只有外层 `run_code` 日志／结果会受到可配置输出上限和面向模型的 spill 流水线约束。
 
-提交工作区文本文件修改的工具只在 provider 操作成功后调用 `exec.recordFileMutation()`。记录文件级操作与有序文本 hunk；registry 会持久保存直接调用和嵌套 Code Mode receipt，并使其独立于 UI 呈现。参见[持久修改 receipt 决策](../../.agents/notes/implemented/feature/2026-08-22-durable-tool-mutation-receipts.zh.md)。
+提交工作区文本文件修改的工具只在 provider 操作成功后调用 `exec.recordFileMutation()`。记录文件级操作、提交前后的完整内容 SHA-1 与 SHA-256，以及有序文本 hunk；registry 会补上 receipt 版本和按 Session 单调递增的提交顺序，再持久保存直接调用与嵌套 Code Mode receipt，并使其独立于 UI 呈现。参见[持久修改 receipt 决策](../../.agents/notes/implemented/feature/2026-08-22-durable-tool-mutation-receipts.zh.md)。
 
 ## 工具在 UI 中的渲染方式
 

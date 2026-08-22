@@ -242,9 +242,9 @@ interface ToolRunContext extends ToolExecution {
    * Record one workspace-file mutation after it commits. The receipt is
    * attached to this execution's final result even when later policy replaces
    * the result projection.
-   * @param mutation - committed file operation and its textual hunks.
+   * @param mutation - committed operation, complete-content hashes, and textual hunks.
    */
-  recordFileMutation(mutation: FileMutation): void
+  recordFileMutation(mutation: FileMutationInput): void
   /**
    * Mark a successful final result as terminal for the current agent turn.
    * The marker rides this execution's own result (`concludesTurn` exists only

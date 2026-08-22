@@ -4,11 +4,30 @@
  * @module @monotykamary/dsh-tool-fs/src/diff
  */
 
+import { createHash } from 'node:crypto'
 import { structuredPatch } from 'diff'
 import type { FileDiff } from '@monotykamary/dsh-tools'
 
 /** Context lines shown on each side of an applied hunk. */
 export const DIFF_CONTEXT = 3
+
+/**
+ * Hash complete UTF-8 file content for repository-baseline interoperability.
+ * @param text - Complete file content on one side of a commit.
+ * @returns Lowercase SHA-1 digest.
+ */
+export function textSha1(text: string): string {
+  return createHash('sha1').update(text, 'utf8').digest('hex')
+}
+
+/**
+ * Hash complete UTF-8 file content with SHA-256 for durable integrity.
+ * @param text - Complete file content on one side of a commit.
+ * @returns Lowercase SHA-256 digest.
+ */
+export function textSha256(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex')
+}
 
 /**
  * The `write`/`edit` tools' private `tool/result` `meta` payload: the applied

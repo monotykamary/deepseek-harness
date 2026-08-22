@@ -30,6 +30,18 @@ interface FileMutationDiff {
 ```ts type-equiv
 /** Durable receipt for one committed workspace-file mutation. */
 interface FileMutation {
+  /** Receipt vocabulary version. */
+  version: 1
+  /** Monotonic per-Session order assigned when the tool reports the commit. */
+  commitOrder: number
+  /** SHA-1 matching repository-index baselines before commit, or null for creation. */
+  beforeSha1: string | null
+  /** SHA-1 matching repository-index baselines after commit, or null for deletion. */
+  afterSha1: string | null
+  /** SHA-256 of complete UTF-8 content before commit, or null for creation. */
+  beforeSha256: string | null
+  /** SHA-256 of complete UTF-8 content after commit, or null for deletion. */
+  afterSha256: string | null
   /** Filesystem target display path recorded by the tool. */
   path: string
   /** File-level operation committed by the tool. */
@@ -38,6 +50,13 @@ interface FileMutation {
   diffs: FileMutationDiff[]
 }
 ```
+
+```ts type-equiv
+/** Commit facts accepted from a tool before the runtime adds receipt metadata. */
+type FileMutationInput = Omit<FileMutation, 'version' | 'commitOrder'>
+```
+
+The Session append and seed-load paths reject unknown receipt versions, invalid or duplicate commit orders, malformed hashes, blank paths, empty hunks, extra fields, and create/delete hash or hunk inconsistencies before the log changes. SHA-1 interoperates with repository baselines; SHA-256 is the durable byte-integrity identity.
 
 ```ts type-equiv
 /**

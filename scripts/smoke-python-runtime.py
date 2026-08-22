@@ -62,9 +62,14 @@ return (ctx) => {
     async execute(args, exec) {
       const content = 'python sdk mutation receipt\n'
       const filePath = `${exec.agent.session.header.cwd}/sdk-mutation.txt`
+      const { createHash } = await import('node:crypto')
       const { writeFile } = await import('node:fs/promises')
       await writeFile(filePath, content, 'utf8')
       exec.recordFileMutation({
+        beforeSha1: null,
+        afterSha1: createHash('sha1').update(content).digest('hex'),
+        beforeSha256: null,
+        afterSha256: createHash('sha256').update(content).digest('hex'),
         path: filePath,
         operation: 'create',
         diffs: [{ oldText: null, newText: content }],

@@ -3,6 +3,7 @@
  * @module @monotykamary/dsh-tool-str-replace-editor
  */
 
+import { createHash } from 'node:crypto'
 import { isAbsolute } from 'node:path'
 import type { Context } from '@monotykamary/cordis'
 import z from '@monotykamary/schemastery'
@@ -13,6 +14,14 @@ import type { SandboxExecutionPolicy } from '@monotykamary/dsh-sandbox'
 import type { SandboxPolicyService } from '@monotykamary/dsh-sandbox-policy'
 import { defineTool } from '@monotykamary/dsh-tools'
 import type { ToolCallView, ToolRunContext } from '@monotykamary/dsh-tools'
+
+function textSha1(text: string): string {
+  return createHash('sha1').update(text, 'utf8').digest('hex')
+}
+
+function textSha256(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex')
+}
 
 const TRUNCATED_MESSAGE = '<response clipped><NOTE>To save on context only part of this file has been shown to you. You should retry this tool after you have searched inside the file with `grep -n` in order to find the line numbers of what you are looking for.</NOTE>'
 
@@ -268,6 +277,10 @@ async function createFile(
     throw policy.mapError(error, sandboxPolicy)
   }
   exec.recordFileMutation({
+    beforeSha1: null,
+    afterSha1: textSha1(outcome.after),
+    beforeSha256: null,
+    afterSha256: textSha256(outcome.after),
     path: target.displayPath,
     operation: 'create',
     diffs: [{ oldText: null, newText: outcome.after }],
@@ -324,6 +337,10 @@ async function replaceInFile(
     throw policy.mapError(error, sandboxPolicy)
   }
   exec.recordFileMutation({
+    beforeSha1: textSha1(before),
+    afterSha1: textSha1(outcome.after),
+    beforeSha256: textSha256(before),
+    afterSha256: textSha256(outcome.after),
     path: target.displayPath,
     operation: 'modify',
     diffs: [{ oldText: oldValue, newText: newValue }],
@@ -371,6 +388,10 @@ async function insertInFile(
     throw policy.mapError(error, sandboxPolicy)
   }
   exec.recordFileMutation({
+    beforeSha1: textSha1(before),
+    afterSha1: textSha1(outcome.after),
+    beforeSha256: textSha256(before),
+    afterSha256: textSha256(outcome.after),
     path: target.displayPath,
     operation: 'modify',
     diffs: [{ oldText: before, newText: after }],

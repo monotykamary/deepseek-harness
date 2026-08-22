@@ -3,6 +3,7 @@ import { Context } from '@monotykamary/cordis'
 import { createUserMessage, CallId, HarnessError, type ContentBlock  } from '@monotykamary/dsh-llm'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import type { Agent } from '@monotykamary/dsh-agent'
+import { Session, SessionId } from '@monotykamary/dsh-session'
 import ApprovalService, { type ApprovalOutcome, type ApprovalRequest } from '@monotykamary/dsh-user-approval'
 import ToolRuntime, {
   defineContentToolFixture, defineTool, JsonSchemaError, parameterSchemaSpecToJsonSchema, validateArgs, ToolArgsError, ToolNotFoundError,
@@ -425,10 +426,15 @@ describe('ToolRuntime', () => {
       output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
       execute(_args, exec) {
         const mutation = {
+          beforeSha1: '0'.repeat(40), afterSha1: '1'.repeat(40), beforeSha256: '0'.repeat(64), afterSha256: '1'.repeat(64),
           path: 'file.ts', operation: 'modify' as const,
           diffs: [{ oldText: 'old', newText: 'new' }],
         }
         exec.recordFileMutation(mutation)
+        exec.recordFileMutation({
+          beforeSha1: null, afterSha1: '2'.repeat(40), beforeSha256: null, afterSha256: '2'.repeat(64),
+          path: 'second.ts', operation: 'create', diffs: [{ oldText: null, newText: 'second' }],
+        })
         mutation.diffs[0]!.newText = 'mutated later'
         return Promise.resolve('written')
       },
@@ -444,9 +450,48 @@ describe('ToolRuntime', () => {
     expect(result).toMatchObject({
       isError: true,
       mutations: [{
+        version: 1, commitOrder: 0,
+        beforeSha1: '0'.repeat(40), afterSha1: '1'.repeat(40), beforeSha256: '0'.repeat(64), afterSha256: '1'.repeat(64),
         path: 'file.ts', operation: 'modify', diffs: [{ oldText: 'old', newText: 'new' }],
+      }, {
+        version: 1, commitOrder: 1,
+        beforeSha1: null, afterSha1: '2'.repeat(40), beforeSha256: null, afterSha256: '2'.repeat(64),
+        path: 'second.ts', operation: 'create', diffs: [{ oldText: null, newText: 'second' }],
       }],
     })
+  })
+
+
+  it('continues commit order after resumed Session receipts', async () => {
+    const ctx = await setup()
+    ctx.tools.register(defineTool({
+      name: 'resume-mutator', description: 'resume mutator', parameters: {},
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(_args, exec) {
+        exec.recordFileMutation({
+          beforeSha1: null, afterSha1: '2'.repeat(40),
+          beforeSha256: null, afterSha256: '2'.repeat(64),
+          path: 'next.ts', operation: 'create', diffs: [{ oldText: null, newText: 'next' }],
+        })
+        return Promise.resolve('done')
+      },
+    }))
+    const session = Session.create(SessionId('resumed-order'))
+    session.append('tool/code-dispatch', {
+      rootCallId: CallId('root'), parentCallId: CallId('root'), subCallId: CallId('prior'),
+      name: 'prior', arguments: {}, isError: false, content: [],
+      mutations: [{
+        version: 1, commitOrder: 7,
+        beforeSha1: null, afterSha1: '1'.repeat(40),
+        beforeSha256: null, afterSha256: '1'.repeat(64),
+        path: 'prior.ts', operation: 'create', diffs: [{ oldText: null, newText: 'prior' }],
+      }],
+    })
+    const result = await ctx.tools.execute({
+      signal: testToolSignal, callId: CallId('resumed'), name: 'resume-mutator', arguments: {},
+      agent: { session } as Agent,
+    })
+    expect(result.mutations?.[0]?.commitOrder).toBe(8)
   })
 
   it('turns a post-execute block into a valueless failure', async () => {

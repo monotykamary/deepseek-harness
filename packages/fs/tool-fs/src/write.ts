@@ -11,7 +11,7 @@ import type { DiffCallView, DiffResultView, ToolResult } from '@monotykamary/dsh
 import type { FsWriteOutcome } from '@monotykamary/dsh-fs'
 import type {} from '@monotykamary/dsh-fs'
 import type {} from '@monotykamary/dsh-system-prompt'
-import { computeHunkDiffs, diffsFromMeta } from './diff.ts'
+import { computeHunkDiffs, diffsFromMeta, textSha1, textSha256 } from './diff.ts'
 import { remediateFsError } from './error.ts'
 import { sessionResolveOptions } from './session-cwd.ts'
 import type { FsSandboxController } from './sandbox.ts'
@@ -124,6 +124,10 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
           .map(({ oldText, newText }) => ({ oldText, newText }))
       if (outcome.operation === 'create' || diffs.length > 0) {
         exec.recordFileMutation({
+          beforeSha1: outcome.before === null ? null : textSha1(outcome.before),
+          afterSha1: textSha1(outcome.after),
+          beforeSha256: outcome.before === null ? null : textSha256(outcome.before),
+          afterSha256: textSha256(outcome.after),
           path: target.displayPath,
           operation: outcome.operation === 'create' ? 'create' : 'modify',
           diffs,

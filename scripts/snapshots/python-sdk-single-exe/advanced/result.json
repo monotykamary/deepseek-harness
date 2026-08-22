@@ -716,6 +716,12 @@
         },
         "mutations": [
           {
+            "version": 1,
+            "commitOrder": 0,
+            "beforeSha1": null,
+            "afterSha1": "62c16ad07d75e5d47f3fc051253b4282bee29d7a",
+            "beforeSha256": null,
+            "afterSha256": "d5a4d35553cf00a95f2d6be5098588119c15b255a4144760ba5adf51bb6034a5",
             "path": "{{cwd}}/sdk-mutation.txt",
             "operation": "create",
             "diffs": [
