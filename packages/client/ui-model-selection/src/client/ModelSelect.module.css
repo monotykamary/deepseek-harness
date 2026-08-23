@@ -66,17 +66,19 @@
 }
 
 .menu {
+  box-sizing: border-box;
   position: absolute;
   right: 0;
   bottom: calc(100% + 8px);
   z-index: 20;
   display: flex;
   flex-direction: column;
-  /* Let the visible pane's rows set the card width, but keep pathological ids
-     and narrow screens inside a bounded card where ellipsis remains. */
-  width: max-content;
-  min-width: min(240px, calc(100vw - 32px));
-  max-width: min(420px, calc(100vw - 32px));
+  /* Cap to the viewport, not remaining space to the left of a trailing
+     trigger — a phone otherwise clips the grouped names off the left edge.
+     Horizontal clamp is finished in JS (`translateX`) so `right: 0` can stay. */
+  width: min(420px, calc(100vw - 24px));
+  min-width: min(240px, calc(100vw - 24px));
+  max-width: min(420px, calc(100vw - 24px));
   max-height: min(360px, calc(100vh - 96px));
   overflow: hidden;
   padding: 4px;
@@ -135,7 +137,31 @@
   cursor: pointer;
 }
 
+.search {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 2px 2px 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--dsw-alias-border-inverted);
+  border-radius: 8px;
+  outline: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.search:focus {
+  border-color: var(--dsw-alias-border-l3);
+}
+
+.search::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
 .groups {
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
 }
@@ -159,10 +185,10 @@
 .option {
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  width: auto;
-  min-width: 100%;
+  width: 100%;
+  min-width: 0;
   min-height: 38px;
   padding: 6px 8px;
   border: none;
@@ -207,6 +233,7 @@
   white-space: nowrap;
 }
 
+.modelId,
 .description {
   overflow: hidden;
   color: var(--dsw-alias-label-tertiary);
@@ -214,6 +241,13 @@
   line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
 }
 
 .check {
@@ -231,8 +265,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: auto;
-  min-width: 100%;
+  width: 100%;
+  min-width: 0;
   height: 40px;
   padding: 0 10px;
   border: none;
