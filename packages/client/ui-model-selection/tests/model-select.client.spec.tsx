@@ -181,4 +181,52 @@ describe('ModelSelect reasoning effort', () => {
     expect(screen.queryByRole('button')).toBeNull()
     expect(load).not.toHaveBeenCalled()
   })
+
+  it('filters the grouped model list by model id and keeps unmatched groups off the page', () => {
+    const directory = createSnapshotStore(state({
+      groups: [
+        {
+          id: 'deepseek-official',
+          name: 'DeepSeek',
+          models: [{ id: 'deepseek-v4-flash', name: 'DeepSeek-V4-Flash', reasoning }],
+        },
+        {
+          id: 'openai',
+          name: 'ChatGPT (Codex)',
+          models: [{
+            id: 'gpt-5.6-codex-terra',
+            name: 'GPT-5.6-Terra',
+            description: 'Balanced agentic coding model for everyday work.',
+          }],
+        },
+      ],
+    }))
+    const select = vi.fn().mockResolvedValue(true)
+    render(<ModelSelect
+      locked={false}
+      available
+      directory={directory}
+      load={vi.fn()}
+      select={select}
+      t={t}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /选择模型|当前/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /模型/ }))
+    const search = screen.getByRole('searchbox', { name: '筛选模型' })
+    expect(document.activeElement).toBe(search)
+
+    fireEvent.change(search, { target: { value: 'no-such-model' } })
+    expect(screen.getByText('没有匹配的模型。')).toBeTruthy()
+    expect(screen.queryByRole('menuitemradio')).toBeNull()
+
+    fireEvent.change(search, { target: { value: 'gpt-5.6-codex-terra' } })
+    expect(screen.getByRole('menuitemradio', { name: /GPT-5.6-Terra/ })).toBeTruthy()
+    expect(screen.getByText('gpt-5.6-codex-terra')).toBeTruthy()
+    expect(screen.queryByRole('menuitemradio', { name: /DeepSeek-V4-Flash/ })).toBeNull()
+    expect(screen.queryByText('DeepSeek')).toBeNull()
+
+    fireEvent.keyDown(search, { key: 'Enter' })
+    expect(select).toHaveBeenCalledWith({ provider: 'openai', model: 'gpt-5.6-codex-terra' })
+  })
 })

@@ -146,6 +146,20 @@ describe('built-in conversation node Definitions', () => {
     expect(settledSnapshot.order).toBe(order)
     expect(settled?.data).toMatchObject({ status: 'settled', blocks: [{ kind: 'text', text: 'settled' }] })
 
+    const historyWithoutChunks = assembler([
+      at(5, 'turn/start', { turn: 1 }),
+      at(6, 'step/start', { turn: 1, step: 1 }),
+      at(7, 'assistant/message', {
+        turn: 1,
+        step: 1,
+        message: assistantMessage('assistant-history', 'from message'),
+      }, { surfaceOp: 'append' }),
+    ])
+    expect(node(snapshot(historyWithoutChunks), 'assistant-step')?.data).toMatchObject({
+      status: 'settled',
+      blocks: [{ kind: 'text', text: 'from message' }],
+    })
+
     const interruptedValue = assembler([
       at(10, 'turn/start', { turn: 2 }),
       at(11, 'step/start', { turn: 2, step: 1 }),

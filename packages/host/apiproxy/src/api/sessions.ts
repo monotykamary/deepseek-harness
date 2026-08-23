@@ -274,8 +274,12 @@ export interface SessionsApi {
 
   /**
    * Reads a window of history events; page boundaries align to append-origin message
-   * boundaries: one page = all raw events owned by a whole number of such messages (including
-   * their chunk / tool events), never cut mid-message. Model-only replacement copies consume no
+   * boundaries: one page = all raw events owned by a whole number of such messages
+   * (including their tool events), never cut mid-message. A (turn, step) with an
+   * append-origin `assistant/message` retains its first token delta for TTFT and the
+   * page's first raw chunk when it carries the next pagination cursor; its remaining
+   * chunks are omitted because Chat and Trajectory settle from the message. In-flight
+   * and interrupted steps retain every chunk. Model-only replacement copies consume no
    * `maxMessages`, so a compaction's `compaction/summary` record stays on the page of its replacement. The tail
    * page (beforeSeq absent) additionally carries the in-flight
    * partial — chunk events already emitted for the last unfinalized message.

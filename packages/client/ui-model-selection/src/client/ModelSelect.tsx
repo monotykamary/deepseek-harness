@@ -12,14 +12,14 @@
  * card; the in-menu strip with Retry remains the catalog-load surface.
  */
 import {
-  useEffect, useId, useMemo, useRef, useState, useSyncExternalStore,
-  type KeyboardEvent, type FocusEvent,
+  useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
+  type KeyboardEvent, type FocusEvent, type RefObject,
 } from 'react'
 import clsx from 'clsx'
-import type { ModelReasoningEffort, ModelSelection } from '@monotykamary/dsh-api-remotes/client'
+import type { ModelProviderGroup, ModelReasoningEffort, ModelSelection } from '@monotykamary/dsh-api-remotes/client'
 import {
   Check, ChevronDown, ChevronRight,
-  TriangleAlert, Toast,
+  TriangleAlert, Toast, useAnchoredMaxHeight,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { PropsLocale } from '@monotykamary/dsh-client-ui-slots'
 import type { ModelSelectInjected } from './slots.ts'
@@ -27,6 +27,80 @@ import css from './ModelSelect.module.css'
 
 /** Which pane the dropdown shows: the two-row root or one drilled-in list. */
 type Pane = 'root' | 'model' | 'effort'
+
+/** Design cap on the dropdown height; `useAnchoredMaxHeight` clamps it to the space above the trigger. */
+const MENU_MAX_HEIGHT = 360
+
+/** Keep this many CSS pixels between the menu and each viewport edge. */
+const VIEWPORT_MARGIN = 12
+
+/**
+ * Keep a right-anchored menu inside the viewport. Long model names would
+ * otherwise size the card to nearly `100vw` while `right: 0` on a trailing
+ * trigger, which clips the left edge on a phone.
+ */
+function useViewportShiftX(
+  open: boolean,
+  menuRef: RefObject<HTMLElement | null>,
+  signal: unknown,
+): number {
+  const [shiftX, setShiftX] = useState(0)
+  const shiftRef = useRef(0)
+  useLayoutEffect(() => {
+    if (!open) {
+      shiftRef.current = 0
+      setShiftX(0)
+      return
+    }
+    const fit = (): void => {
+      const el = menuRef.current
+      if (el === null) return
+      const rect = el.getBoundingClientRect()
+      if (rect.width === 0) return
+      const unshiftedLeft = rect.left - shiftRef.current
+      const unshiftedRight = rect.right - shiftRef.current
+      let next = 0
+      if (unshiftedLeft < VIEWPORT_MARGIN) next = VIEWPORT_MARGIN - unshiftedLeft
+      if (unshiftedRight + next > window.innerWidth - VIEWPORT_MARGIN) {
+        next -= (unshiftedRight + next) - (window.innerWidth - VIEWPORT_MARGIN)
+      }
+      shiftRef.current = next
+      setShiftX(next)
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    window.addEventListener('scroll', fit, true)
+    return () => {
+      window.removeEventListener('resize', fit)
+      window.removeEventListener('scroll', fit, true)
+    }
+  }, [open, menuRef, signal])
+  return shiftX
+}
+
+/** Substring match over model id, display name, group, and description. */
+function modelMatchesQuery(
+  query: string,
+  groupName: string,
+  model: { id: string; name: string; description?: string },
+): boolean {
+  const needle = query.trim().toLowerCase()
+  if (needle === '') return true
+  const haystack = `${model.id}\n${model.name}\n${groupName}\n${model.description ?? ''}`.toLowerCase()
+  return haystack.includes(needle)
+}
+
+/** Drop groups whose models all miss the query; keep group order. */
+function filterModelGroups(
+  groups: readonly ModelProviderGroup[],
+  query: string,
+): ModelProviderGroup[] {
+  if (query.trim() === '') return [...groups]
+  return groups.flatMap((group) => {
+    const models = group.models.filter(model => modelMatchesQuery(query, group.name, model))
+    return models.length === 0 ? [] : [{ ...group, models }]
+  })
+}
 
 /** One dynamic effort row; undefined means preserve the provider default. */
 interface EffortChoice {
@@ -52,6 +126,7 @@ export function ModelSelect(
   )
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<Pane>('root')
+  const [modelQuery, setModelQuery] = useState('')
   // The in-menu error strip serves catalog loads (its Retry re-runs the
   // load); a rejected SELECTION announces through the transient toast
   // instead, so the strip renders only while the latest failure-capable
@@ -61,8 +136,12 @@ export function ModelSelect(
   const toastSeq = useRef(0)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const searchRef = useRef<HTMLInputElement | null>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const id = useId()
+  const menuMaxHeight = useAnchoredMaxHeight(menuRef, MENU_MAX_HEIGHT, open && pane)
+  const menuShiftX = useViewportShiftX(open, menuRef, `${pane}:${modelQuery}`)
 
   const choices = useMemo(() => state.groups.flatMap(group =>
     group.models.map(model => ({
@@ -101,6 +180,11 @@ export function ModelSelect(
       })),
     ], [reasoning, t])
   const busy = state.status === 'selecting'
+  const filteredGroups = useMemo(
+    () => filterModelGroups(state.groups, modelQuery),
+    [state.groups, modelQuery],
+  )
+  const filteredModelCount = filteredGroups.reduce((count, group) => count + group.models.length, 0)
 
   const reload = (): void => {
     lastActionRef.current = 'load'
@@ -118,16 +202,25 @@ export function ModelSelect(
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: MouseEvent): void => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+        setPane('root')
+        setModelQuery('')
+      }
     }
     document.addEventListener('mousedown', closeOutside)
     return () => { document.removeEventListener('mousedown', closeOutside) }
   }, [open])
 
+  useEffect(() => {
+    if (open && pane === 'model') searchRef.current?.focus()
+  }, [open, pane])
+
   if (!available) return null
 
   const show = (): void => {
     setPane('root')
+    setModelQuery('')
     setOpen(true)
     reload()
   }
@@ -135,14 +228,24 @@ export function ModelSelect(
   const close = (restoreFocus = false): void => {
     setOpen(false)
     setPane('root')
+    setModelQuery('')
     if (restoreFocus) queueMicrotask(() => { triggerRef.current?.focus() })
+  }
+
+  const openModelPane = (): void => {
+    setModelQuery('')
+    setPane('model')
   }
 
   const moveFocus = (offset: number): void => {
     const items = itemRefs.current.filter(item => item !== null)
     if (items.length === 0) return
     const active = items.findIndex(item => item === document.activeElement)
-    const next = (Math.max(active, 0) + offset + items.length) % items.length
+    if (active === -1) {
+      items[offset >= 0 ? 0 : items.length - 1]?.focus()
+      return
+    }
+    const next = (active + offset + items.length) % items.length
     items[next]?.focus()
   }
 
@@ -150,7 +253,10 @@ export function ModelSelect(
     if (event.key === 'Escape' && open) {
       event.preventDefault()
       // Escape backs out of a drilled pane first, then closes.
-      if (pane !== 'root') setPane('root')
+      if (pane !== 'root') {
+        setModelQuery('')
+        setPane('root')
+      }
       else close(true)
       return
     }
@@ -243,15 +349,20 @@ export function ModelSelect(
 
       {open && (
         <div
+          ref={menuRef}
           id={`${id}-menu`}
           className={css.menu}
           role="menu"
           aria-label={t('menu.aria')}
           aria-busy={state.status === 'loading' || busy}
+          style={{
+            maxHeight: menuMaxHeight,
+            ...(menuShiftX === 0 ? {} : { transform: `translateX(${String(menuShiftX)}px)` }),
+          }}
         >
           {pane === 'root' && (
             <>
-              <button ref={itemRef()} type="button" role="menuitem" className={css.cell} onClick={() => { setPane('model') }}>
+              <button ref={itemRef()} type="button" role="menuitem" className={css.cell} onClick={openModelPane}>
                 <span className={css.cellLabel}>{t('menu.model')}</span>
                 <span className={css.cellValue}>{modelLabel}</span>
                 <ChevronRight size={14} className={css.cellChevron} />
@@ -268,6 +379,28 @@ export function ModelSelect(
 
           {pane === 'model' && (
             <>
+              <input
+                ref={searchRef}
+                className={css.search}
+                type="text"
+                role="searchbox"
+                value={modelQuery}
+                placeholder={t('search.placeholder')}
+                aria-label={t('search.aria')}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                onChange={(event) => { setModelQuery(event.currentTarget.value) }}
+                onKeyDown={(event) => {
+                  if (event.nativeEvent.isComposing) return
+                  if (event.key !== 'Enter' || filteredModelCount !== 1) return
+                  const only = filteredGroups[0]?.models[0]
+                  const groupId = filteredGroups[0]?.id
+                  if (only === undefined || groupId === undefined) return
+                  event.preventDefault()
+                  choose({ provider: groupId, model: only.id })
+                }}
+              />
               {state.status === 'loading' && (
                 <div className={css.status}>{t('status.loading')}</div>
               )}
@@ -284,13 +417,14 @@ export function ModelSelect(
                 </div>
               ))}
               <div className={clsx(css.groups, 'scrollable')}>
-                {state.groups.map((group) => {
+                {filteredGroups.map((group) => {
                   const headingId = `${id}-${group.id}`
                   return (
                     <section role="group" aria-labelledby={headingId} className={css.group} key={group.id}>
                       <div className={css.groupTitle} id={headingId}>{group.name}</div>
                       {group.models.map((model) => {
                         const selected = state.current?.provider === group.id && state.current.model === model.id
+                        const title = model.id === model.name ? model.name : `${model.name} (${model.id})`
                         return (
                           <button
                             ref={itemRef()}
@@ -299,12 +433,15 @@ export function ModelSelect(
                             aria-checked={selected}
                             className={clsx(css.option, selected && css.selected)}
                             key={model.id}
-                            title={model.name}
+                            title={title}
                             disabled={busy}
                             onClick={() => { choose({ provider: group.id, model: model.id }) }}
                           >
                             <span className={css.optionCopy}>
                               <span className={css.modelName}>{model.name}</span>
+                              {modelQuery.trim() !== '' && model.id !== model.name && (
+                                <span className={css.modelId}>{model.id}</span>
+                              )}
                               {model.description !== undefined && (
                                 <span className={css.description}>{model.description}</span>
                               )}
@@ -321,6 +458,9 @@ export function ModelSelect(
               </div>
               {state.status === 'ready' && choices.length === 0 && (
                 <div className={css.empty}>{t('empty.models')}</div>
+              )}
+              {state.status === 'ready' && choices.length > 0 && filteredModelCount === 0 && (
+                <div className={css.empty}>{t('empty.search')}</div>
               )}
             </>
           )}
