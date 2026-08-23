@@ -42,6 +42,8 @@ const NO_MODEL_EXPERIENCE_SECTION: Readonly<Record<string, string>> = {
  * blocks. A package moves on or off this list with its context behavior.
  */
 const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
+  'packages/workspace/worktree': { kind: 'none', reason: 'The provider registry has no model-facing tool, prompt, context, or event.' },
+  'packages/workspace/worktree-git-local': { kind: 'none', reason: 'The local Git provider delegates model-visible behavior to its Consumers.' },
   'packages/distribution/update': { kind: 'none', reason: 'Operator update state never enters model input.' },
   'packages/client/ui-settings-updates': { kind: 'none', reason: 'Browser Settings state never enters model input.' },
   'packages/attachment/attachment': { kind: 'indirect', reason: 'The storage seam delegates model request rendering to provider adapters.' },

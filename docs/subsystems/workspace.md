@@ -121,6 +121,14 @@ Ownership truth is the record's ordered `sessionIds`, never derived from session
 
 Sessions get their cwd at create time from whoever creates them, not from this registry — the API gateway resolves a new session's cwd from the chosen workspace's `path` (falling back to an explicit or default cwd), creates the session so the cwd lands in its immutable [`SessionHeader`](persistence.md#sessionheader--metadata-beside-the-log), then calls `attachSession`, which re-validates that stored header cwd against the workspace path. On the first successful start, the registry bootstraps history from persisted headers alone (`id`, `cwd`, `createdAt` — never event bodies), grouping sessions with a valid canonical cwd into per-directory workspaces, newest first; the initialized marker is written last so an interrupted bootstrap resumes safely. The bootstrap is one-time: cwd-less legacy sessions stay Ungrouped, and sessions created afterwards join a workspace only through `attachSession`.
 
+<a id="repository-worktrees"></a>
+
+## Repository worktrees
+
+`@monotykamary/dsh-worktree` is the provider registry for repository checkout lifecycles (`ctx.worktrees`). `locate(cwd)` resolves repository identity and its primary path; `list(cwd)` reports primary and linked checkouts, branch/head facts, managed ownership, lock/prune state, and active Session ids; `create`, `remove`, and bounded `sweep` delegate to the configured provider. Consumers select a provider explicitly through composition and never shell out to Git behind this API.
+
+`@monotykamary/dsh-worktree-git-local` is the local provider. It creates linked checkouts only under its configured management root, derives collision-resistant branch names, and copies only configured ignored bootstrap files. Removal and sweeping reject the primary checkout, unmanaged paths, dirty state, and any checkout whose canonical cwd is held by a live Session; neither path forces deletion. Provider registrations are Cordis effects, so HMR removes the exact implementation before a replacement becomes visible. Task graphs, queues, publishing, and branch policy remain Consumer concerns rather than Worktree state.
+
 ## Consumers
 
 [dsh-host-apiproxy](../../packages/host/apiproxy) is the product consumer: it serves workspace CRUD to GUI clients over `ctx.workspaceRegistry` and performs the create-session-then-attach flow above. [dsh-agent-instructions](../../packages/context/agent-instructions) is **not** a consumer despite the name: it discovers AGENTS.md-style instruction files under an agent's own cwd and never touches `ctx.workspaceRegistry` — the shared word refers to the user's working directory, not to this registry's entities.
@@ -225,4 +233,90 @@ async resolveByPath(path: string): Promise<Workspace | undefined>
 Types: [SessionId](core.md)
 
 Source: [`packages/workspace/workspace/src/index.ts`](../../packages/workspace/workspace/src/index.ts)
+
+<a id="ctxworktrees--worktreeregistry"></a>
+
+### `ctx.worktrees` — `WorktreeRegistry`
+
+Registry and dispatcher for repository worktree providers.
+
+```ts cordis-catalog
+/**
+ * Register one provider until the calling fiber is disposed.
+ * @param provider - Exact implementation and unique provider name.
+ * @returns disposer for this registration.
+ */
+registerProvider(provider: WorktreeProvider): () => void
+
+/**
+ * Return provider names in registration order.
+ * @returns fresh ordered provider-name list.
+ */
+listProviders(): readonly string[]
+
+/**
+ * Resolve a request's provider without performing work.
+ * @param request - Provider-optional operation request.
+ * @returns detached request carrying the selected provider.
+ */
+resolve<T extends WorktreeProviderRequest>(request: T): ResolvedWorktreeRequest<T>
+
+/**
+ * Resolve the repository containing a directory.
+ * @param request - Directory and optional provider selection.
+ * @returns repository facts, or `undefined` outside a repository.
+ */
+locate(request: WorktreeLocateRequest): Promise<WorktreeRepository | undefined>
+
+/**
+ * List repository checkouts.
+ * @param request - Directory inside the target repository.
+ * @returns provider-neutral primary and linked checkout facts.
+ */
+list(request: WorktreeListRequest): Promise<readonly WorktreeCheckout[]>
+
+/**
+ * Create one managed linked checkout.
+ * @param request - Repository, label, base, and optional caller identity.
+ * @returns created checkout facts after provider setup completes.
+ */
+create(request: WorktreeCreateRequest): Promise<WorktreeCheckout>
+
+/**
+ * Remove one managed linked checkout without forcing dirty state.
+ * @param request - Repository and exact checkout path.
+ * @returns removed checkout facts retained for audit output.
+ */
+remove(request: WorktreeRemoveRequest): Promise<WorktreeCheckout>
+
+/**
+ * Sweep bounded stale managed linked checkouts.
+ * @param request - Repository, age threshold, and removal limit.
+ * @returns checkouts safely removed by the provider.
+ */
+sweep(request: WorktreeSweepRequest): Promise<WorktreeSweepResult>
+```
+
+Source: [`packages/workspace/worktree/src/index.ts`](../../packages/workspace/worktree/src/index.ts)
+
+<a id="worktrees-events"></a>
+
+### `worktrees/*` events
+
+<a id="worktreesprovider-change--emit"></a>
+
+#### `worktrees/provider-change` — emit
+
+One provider registration was committed or removed.
+
+```ts cordis-catalog
+/**
+ * One provider registration was committed or removed.
+ * @param change - provider name and whether it is now present.
+ * @mode emit
+ */
+'worktrees/provider-change'(change: { readonly provider: string; readonly present: boolean }): void
+```
+
+Source: [`packages/workspace/worktree/src/index.ts`](../../packages/workspace/worktree/src/index.ts)
 <!-- END GENERATED cordis-surface -->

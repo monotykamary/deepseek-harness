@@ -102,9 +102,11 @@ Sources: [`packages/core/session/src/types.ts:384`](../packages/core/session/src
 
 ```ts persistence-catalog
 /**
- * One normalized mutation of an agent's durable pending-message lists.
- * Live dispatch precedes projection mutation, so synchronous observers may
- * read the pre-splice inbox to recover the removed messages.
+ * One normalized mutation of an agent's durable pending-message lists. A
+ * remove-and-reinsert of the same identities in another order is a queue
+ * move, not a claim, replacement, or discard. Live dispatch precedes
+ * projection mutation, so synchronous observers may read the pre-splice
+ * inbox to recover the removed messages.
  */
 'agent/inbox/spliced': {
   target: InboxTarget
@@ -115,7 +117,7 @@ Sources: [`packages/core/session/src/types.ts:384`](../packages/core/session/src
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:19`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:21`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 

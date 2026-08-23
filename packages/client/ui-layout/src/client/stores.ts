@@ -13,6 +13,7 @@ import {
   SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN,
 } from './columns.ts'
 import { BOTTOM_DEFAULT, BOTTOM_MAX, BOTTOM_MIN, clampHeight } from './rows.ts'
+import type { ApplicationSurfaceId } from './index.ts'
 
 /**
  * Layout store state: panel width preferences in px (0 = closed), plus the
@@ -22,6 +23,7 @@ import { BOTTOM_DEFAULT, BOTTOM_MAX, BOTTOM_MIN, clampHeight } from './rows.ts'
  * sidebar over the squeezed center without rewriting the width preference.
  */
 type LayoutState = {
+  applicationSurface: ApplicationSurfaceId
   sidebar: number
   details: number
   bottom: number
@@ -35,6 +37,7 @@ type LayoutState = {
  * return type); drift fails assignability at the defineStore call.
  */
 type LayoutActions = {
+  openApplicationSurface: (draft: LayoutState, id: ApplicationSurfaceId) => void
   setSidebar: (draft: LayoutState, px: number) => void
   setDetails: (draft: LayoutState, px: number) => void
   setBottom: (draft: LayoutState, px: number) => void
@@ -61,10 +64,12 @@ type LayoutActions = {
 export function createLayoutStore(): EngineStoreHandle<LayoutState, LayoutActions>  {
   const handle = defineStore({
     init: (): LayoutState => ({
+      applicationSurface: 'conversation',
       sidebar: SIDEBAR_DEFAULT, details: 0, bottom: 0, bottomRestore: BOTTOM_DEFAULT,
       narrow: false, narrowExpanded: false,
     }),
     actions: {
+      openApplicationSurface: (d, id: ApplicationSurfaceId) => { d.applicationSurface = id },
       setSidebar: (d, px: number) => { d.sidebar = clampWidth(px, SIDEBAR_MIN, SIDEBAR_MAX) },
       setDetails: (d, px: number) => { d.details = clampWidth(px, DETAILS_MIN, DETAILS_MAX) },
       setBottom: (d, px: number) => {

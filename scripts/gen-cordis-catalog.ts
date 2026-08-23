@@ -113,6 +113,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   web: 'web.md',
   workflowEngine: 'workflow.md',
   workspaceRegistry: 'workspace.md',
+  worktrees: 'workspace.md',
 }
 
 /**
@@ -195,6 +196,7 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'tools': 'tools.md',
   'webserver': 'web-server.md',
   'workflow': 'workflow.md',
+  'worktrees': 'workspace.md',
 }
 
 /**
@@ -517,6 +519,17 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   DomainFacility: 'storage.md',
   Workspace: 'workspace.md',
   WorkspaceId: 'workspace.md',
+  ResolvedWorktreeRequest: 'workspace.md',
+  WorktreeCheckout: 'workspace.md',
+  WorktreeCreateRequest: 'workspace.md',
+  WorktreeListRequest: 'workspace.md',
+  WorktreeLocateRequest: 'workspace.md',
+  WorktreeProvider: 'workspace.md',
+  WorktreeProviderRequest: 'workspace.md',
+  WorktreeRemoveRequest: 'workspace.md',
+  WorktreeRepository: 'workspace.md',
+  WorktreeSweepRequest: 'workspace.md',
+  WorktreeSweepResult: 'workspace.md',
   WebBootGraph: 'client-modules.md',
   SessionTelemetryRecord: 'session-telemetry.md',
   WorkflowRunInfo: 'workflow.md',

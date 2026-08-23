@@ -66,7 +66,7 @@ inbox 的实时通知刻意采用逐消息的最小载荷：`agent/inbox/inserte
 
 每个插件面向的 handle：
 
-- `agent.inbox`：agent 所拥有的持久 `agent/inbox/spliced` 事件投影。`nextTurn` 与 `nextStep` 暴露待处理的 `UserMessage` 值。`append`、`prepend`、`replace`、`remove`、`clear`、`splice` 与 `claim` 用于变更队列；`replace(messageId, newMessage)` 与 `remove(messageId)` 通过 `MessageId` 跨两份列表定位待处理消息。替换可以改变标识，并先将旧消息作为 discarded 发布，再将新消息作为 inserted 发布。普通删除和 `clear()` 都是持久取消，并发出 `agent/inbox/discarded`。`claim(target)` 通过纯删除 splice 移除下一个候选批次，随后由循环发出 `agent/inbox/claimed`。`MessageId` 是唯一的入队项标识，在消息待处理期间必须保持唯一。
+- `agent.inbox`：agent 所拥有的持久 `agent/inbox/spliced` 事件投影。`nextTurn` 与 `nextStep` 暴露待处理的 `UserMessage` 值。`append`、`prepend`、`replace`、`remove`、`moveNextTurn`、`clear`、`splice` 与 `claim` 用于变更队列；`replace(messageId, newMessage)` 与 `remove(messageId)` 通过 `MessageId` 跨两份列表定位待处理消息。`moveNextTurn(messageId, direction)` 通过一次可重放 splice 交换相邻的 `next-turn` 行，保留标识且不发出插入或丢弃通知；边缘移动是已接受的无操作，非 queued 标识返回 false。替换可以改变标识，并先将旧消息作为 discarded 发布，再将新消息作为 inserted 发布。普通删除和 `clear()` 都是持久取消，并发出 `agent/inbox/discarded`。`claim(target)` 通过纯删除 splice 移除下一个候选批次，随后由循环发出 `agent/inbox/claimed`。`MessageId` 是唯一的入队项标识，在消息待处理期间必须保持唯一。
 - `agent.followup(message)`：将一条普通 `next-turn` 消息排队并唤醒驱动器。它不返回完成 handle；消息 id 标识 inbox 的插入、领取与丢弃事实，而不标识之后的输出或 `turn/end`。
 - `agent.steer(message)`：将会唤醒的 `next-step` steering（中途引导）输入排队。agent 空闲时会同步启动一个轮次；驱动器运行期间收到的后续 steering 会在下一个步骤边界被消费。
 - `agent.inject(message)`：将不会唤醒的 `next-step` 上下文排队。运行中的驱动器会在最近的后续 pre-step 边界领取它；idle 驱动器则会让它保持待处理，直至 `followup()` 或 `steer()` 唤醒驱动器。若某次请求的 pre-step 已经领取完批次，它可能赶不上该请求。
@@ -92,11 +92,11 @@ inbox 的实时通知刻意采用逐消息的最小载荷：`agent/inbox/inserte
 
 #### Token 影响
 
-已接受内容成为保留历史，或成为每次请求都会重复的会话前缀；被阻止内容不贡献请求 token。大小取决于调用方与插件。
+已接受内容成为保留历史，或成为每次请求都会重复的会话前缀；被阻止内容不贡献请求 token。移动待处理 turn 在认领前不贡献 token，并决定它们之后进入历史的顺序。大小取决于调用方与插件。
 
 #### KV Cache 影响
 
-已接受历史与 steering 只追加；被阻止的提交不发送请求。会话前缀在循环实例内保持稳定，而新建或恢复的实例可能建立不同前缀。
+已接受历史与 steering 只追加；被阻止的提交不发送请求。移动待处理 turn 不改变任何既有请求或 cache，之后的认领会按用户选定的顺序追加。会话前缀在循环实例内保持稳定，而新建或恢复的实例可能建立不同前缀。
 
 ### Agent 作用域的请求组合
 

@@ -116,6 +116,8 @@
     "@monotykamary/dsh-web": "workspace:^",
     "@monotykamary/dsh-web-search-deepseek": "workspace:^",
     "@monotykamary/dsh-workflow-worker-thread": "workspace:^",
+    "@monotykamary/dsh-worktree": "workspace:^",
+    "@monotykamary/dsh-worktree-git-local": "workspace:^",
     "@monotykamary/dsh-agent-instructions": "workspace:^"
   },
   "peerDependencies": {

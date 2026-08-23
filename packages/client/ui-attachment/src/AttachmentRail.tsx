@@ -1,10 +1,10 @@
-/** Draft-attachment thumbnail rail: scrollbar-less horizontal overflow paged
- * by edge arrows, hover-revealed per-item remove, single-click open. */
+/** Image/video thumbnail rail: scrollbar-less horizontal overflow paged by
+ * edge arrows, optional hover-revealed remove, and single-click open. */
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  ChevronLeft, ChevronRight, CircleX,
+  ChevronLeft, ChevronRight, CircleX, Play,
 } from '@monotykamary/dsh-client-ui-primitives'
 import css from './AttachmentRail.module.css'
 
@@ -14,10 +14,12 @@ export interface AttachmentRailItem {
   id: string
   /** Object or data URL rendered as the thumbnail. */
   previewUrl: string
-  /** Image alt text (display name with the owner's fallback applied). */
+  /** Media element used inside the thumbnail; omitted values remain images. */
+  previewKind?: 'image' | 'video'
+  /** Media accessible name (display name with the owner's fallback applied). */
   alt: string
-  /** Accessible label of the item's remove control. */
-  removeLabel: string
+  /** Accessible label of the item's remove control; omitted for read-only rails. */
+  removeLabel?: string
 }
 
 /** Rail-level strings the owner resolves from its own locale namespace. */
@@ -55,20 +57,20 @@ function pageBehavior(): ScrollBehavior {
  * newly added item is revealed at the rail's end while a rail that mounts
  * over an existing draft keeps its start position, and each thumbnail opens
  * on a single click while its remove control sits inside the card and
- * reveals on hover or focus. The owner decides mounting; it renders the rail
+ * reveals on hover or focus when removal is enabled. The owner decides mounting; it renders the rail
  * only while items exist.
  *
  * @param props.items - resolved thumbnails in draft order.
  * @param props.labels - rail-level strings (group name, open tooltip, arrows).
  * @param props.onOpen - single-click open of one item's original image.
- * @param props.onRemove - remove one item from the draft.
+ * @param props.onRemove - optional remove action; omit it for read-only media rails.
  * @returns the rail group with its paging arrows.
  */
 export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, onOpen, onRemove }: {
   items: readonly T[]
   labels: AttachmentRailLabels
   onOpen: (item: T) => void
-  onRemove: (item: T) => void
+  onRemove?: (item: T) => void
 }) {
   const railRef = useRef<HTMLDivElement | null>(null)
   // null marks the first layout pass: a rail that MOUNTS over an existing
@@ -170,18 +172,23 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
               type="button"
               className={css.thumbnail}
               title={labels.open}
+              aria-label={item.alt}
               onClick={() => { onOpen(item) }}
             >
-              <img src={item.previewUrl} alt={item.alt} />
+              {item.previewKind === 'video'
+                ? <><video src={item.previewUrl} muted playsInline preload="metadata" /><span className={css.videoIndicator} aria-hidden="true"><Play size={14} /></span></>
+                : <img src={item.previewUrl} alt={item.alt} />}
             </button>
-            <button
-              type="button"
-              className={css.remove}
-              aria-label={item.removeLabel}
-              onClick={() => { onRemove(item) }}
-            >
-              <CircleX size={12} />
-            </button>
+            {onRemove === undefined || item.removeLabel === undefined ? null : (
+              <button
+                type="button"
+                className={css.remove}
+                aria-label={item.removeLabel}
+                onClick={() => { onRemove(item) }}
+              >
+                <CircleX size={12} />
+              </button>
+            )}
           </div>
         ))}
       </div>

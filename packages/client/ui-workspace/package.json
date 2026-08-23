@@ -36,6 +36,7 @@
         "@monotykamary/dsh-client-locale",
         "@monotykamary/dsh-client-runtime",
         "@monotykamary/dsh-client-ui-conversation",
+        "@monotykamary/dsh-client-ui-layout",
         "@monotykamary/dsh-client-ui-sidebar",
         "@monotykamary/dsh-api-remotes",
         "@monotykamary/dsh-client-ui-settings"
@@ -60,6 +61,7 @@
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-layout": "workspace:^",
     "@monotykamary/dsh-client-ui-sidebar": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
@@ -73,6 +75,7 @@
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-test-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-layout": "workspace:^",
     "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-sidebar": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",

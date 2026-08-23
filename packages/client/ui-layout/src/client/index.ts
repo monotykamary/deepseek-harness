@@ -1,7 +1,7 @@
 /**
  * Layout plugin, browser half: one register() call contributes AppFrame into
  * the runtime's built-in 'root' slot and, in the same breath, declares the
- * five child slots (declaration = exclusive render authority), seats the
+ * six child slots (declaration = exclusive render authority), seats the
  * layout store (panel geometry), and wires the panel-action service face.
  * ctx.layout is the cross-plugin panel-action contract; navigation state lives
  * with the runtime sessions service. A second effect seats the theme
@@ -47,6 +47,12 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * and is expected to render the compact control rail while collapsed.
      */
     'sidebar': { kind: 'single'; scope: 'root'; owner: SidebarOwnerProps }
+    /**
+     * Root application takeover chain for the center column. The owner keeps
+     * one selected id; the first matching contribution replaces the default
+     * Conversation entry without taking over the sidebar or frame overlays.
+     */
+    'application.surface': { kind: 'chain'; scope: 'root'; owner: ApplicationSurfaceOwnerProps }
     /**
      * The whole center column, across both the no-session hero and a live
      * conversation. OCCUPIED by ui-conversation's ConversationRoot, which
@@ -96,8 +102,29 @@ declare module '@monotykamary/dsh-client-ui-slots' {
 // PropsStore & I). Conversation business state and actions arrive through
 // framework-standard hooks and each registrant's inject face, not owner props.
 
-/** Sidebar owner share: live column state from the frame's concession solve. */
+/** Merge-extensible ids for root application takeover entries. */
+export interface ApplicationSurfaceMap {
+  /** The shipped Session conversation. */
+  conversation: never
+}
+
+/** Id of one application surface contributed through declaration merging. */
+export type ApplicationSurfaceId = Extract<keyof ApplicationSurfaceMap, string>
+
+/** Owner currency dispatched through the root application takeover chain. */
+export interface ApplicationSurfaceOwnerProps {
+  /** Currently selected application surface. */
+  activeSurface: ApplicationSurfaceId
+  /** Select another registered application surface. */
+  openSurface: (id: ApplicationSurfaceId) => void
+}
+
+/** Sidebar owner share: application routing plus live column geometry. */
 export interface SidebarOwnerProps {
+  /** Currently selected root application surface. */
+  applicationSurface: ApplicationSurfaceId
+  /** Select another registered root application surface. */
+  openApplicationSurface: (id: ApplicationSurfaceId) => void
   /** True when the sidebar is closed (the column renders the compact control rail). */
   collapsed: boolean
   /** Rendered column width in px (SIDEBAR_COLLAPSED when collapsed). */
@@ -138,7 +165,7 @@ export const inject = ['slots', 'theme']
 
 /**
  * Client plugin body: provide ctx.layout, then one register() call — AppFrame
- * into 'root' with the five child-slot declarations, the layout store seat,
+ * into 'root' with the six child-slot declarations, the layout store seat,
  * and the inject hook that hands the store's bound actions to the service.
  * @param ctx - client root context.
  */
@@ -150,6 +177,7 @@ export function apply(ctx: ClientContext): void {
       name: 'root',
       children: {
         'sidebar': { kind: 'single', scope: 'root' },
+        'application.surface': { kind: 'chain', scope: 'root' },
         'conversation': { kind: 'single', scope: 'session-maybe' },
         'bottom-panel': { kind: 'single', scope: 'session' },
         'details': { kind: 'single', scope: 'session' },

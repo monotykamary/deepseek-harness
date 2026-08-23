@@ -10,6 +10,7 @@ import { makeTranslate, SlotTestRuntime } from '@monotykamary/dsh-client-test-ru
 import type { QueuedMessage, SessionFace } from '@monotykamary/dsh-client-runtime/client'
 import { ComposerBlockRegistry } from '../src/client/input/blocks.ts'
 import { InputHub } from '../src/client/input/hub.ts'
+import { ComposerSubmissionRegistry } from '../src/client/input/submissions.ts'
 import { ConversationController, UnsupportedImageMediaTypeError } from '../src/client/service.ts'
 import { zh } from '../src/client/locales.ts'
 
@@ -23,12 +24,14 @@ async function bench(readAttachment?: SessionFace['readAttachment']) {
     id: 's1',
     session: { prompt, updateQueue, cancel, loadOlder, ...(readAttachment === undefined ? {} : { readAttachment }) },
   })
-  // config.input is required (the apply shares its hub with the inject
-  // factories); the bench passes its own instance explicitly.
-  const hub = new InputHub(runtime.ctx, makeTranslate(zh, {}))
+  // Apply shares all three registries between the service and input wiring;
+  // the bench constructs the same relationship explicitly.
+  const submissions = new ComposerSubmissionRegistry()
+  const hub = new InputHub(runtime.ctx, makeTranslate(zh, {}), submissions)
   const fiber = runtime.ctx.plugin(ConversationController, {
     input: hub,
     blocks: new ComposerBlockRegistry(),
+    submissions,
   })
   await fiber.await()
   const root = runtime.ctx.get('conversation') as ConversationController
@@ -48,6 +51,49 @@ describe('ConversationController', () => {
     expect(b.updateQueue).toHaveBeenCalledWith('item-1', { kind: 'remove' })
     expect(b.cancel).toHaveBeenCalledOnce()
     expect(b.loadOlder).toHaveBeenCalledOnce()
+    await b.runtime.dispose()
+  })
+
+  it('wraps the real ordinary composer sink before Host admission', async () => {
+    const b = await bench()
+    const calls: string[] = []
+    b.root.submissions.register({
+      async submit(request, next) {
+        calls.push(`before:${request.sessionId}:${request.text}`)
+        const outcome = await next()
+        calls.push(`after:${outcome.kind}`)
+        return outcome
+      },
+    })
+    b.shell.setDraft('Track this work')
+
+    b.shell.submit('queue')
+
+    await vi.waitFor(() => { expect(b.prompt).toHaveBeenCalledWith([{ type: 'text', text: 'Track this work' }], 'queue', expect.any(AbortSignal)) })
+    expect(calls).toEqual(['before:s1:Track this work', 'after:success'])
+    await b.runtime.dispose()
+  })
+
+  it('lets middleware consume a submit and releases its browser-owned images', async () => {
+    const b = await bench()
+    const [image] = b.root.createDraftImages([new File(['image'], 'intent.png', { type: 'image/png' })])
+    if (image === undefined) throw new Error('draft image was not created')
+    const seen = vi.fn()
+    b.root.submissions.register({
+      submit(request) {
+        seen(request.images)
+        return Promise.resolve({ kind: 'success' })
+      },
+    })
+    b.shell.setDraft('Create tracked work')
+    b.shell.addImages([image.id])
+
+    b.shell.submit('queue')
+
+    await vi.waitFor(() => { expect(b.shell.snapshot.draft).toBe('') })
+    expect(seen).toHaveBeenCalledWith([image.file])
+    expect(b.prompt).not.toHaveBeenCalled()
+    expect(b.root.draftImages([image.id])).toEqual([])
     await b.runtime.dispose()
   })
 
@@ -137,9 +183,11 @@ describe('ConversationController', () => {
     await b.runtime.dispose()
     // No SessionRuntime at all: a bare context (the runtime always provides one).
     const bare = new Context()
+    const submissions = new ComposerSubmissionRegistry()
     await bare.plugin(ConversationController, {
-      input: new InputHub(bare, makeTranslate(zh, {})),
+      input: new InputHub(bare, makeTranslate(zh, {}), submissions),
       blocks: new ComposerBlockRegistry(),
+      submissions,
     }).await()
     const orphan = bare.get('conversation') as ConversationController
     await expect(orphan.send('x')).rejects.toThrow(/sessions service unavailable/)

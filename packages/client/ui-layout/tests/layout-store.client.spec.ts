@@ -23,9 +23,17 @@ describe('createLayoutStore', () => {
   it('initializes the sidebar at its default width, details closed, wide viewport assumed', () => {
     const { store } = createLayoutStore().create()
     expect(store.getSnapshot()).toEqual({
+      applicationSurface: 'conversation',
       sidebar: SIDEBAR_DEFAULT, details: 0, bottom: 0,
       bottomRestore: BOTTOM_DEFAULT, narrow: false, narrowExpanded: false,
     })
+  })
+
+  it('selects a root application surface without changing panel preferences', () => {
+    const { store, actions } = createLayoutStore().create()
+    actions.openDetails()
+    actions.openApplicationSurface('factory' as never)
+    expect(store.getSnapshot()).toMatchObject({ applicationSurface: 'factory', details: DETAILS_DEFAULT })
   })
 
   it('each create() is an independent instance (factory is not a singleton)', () => {
@@ -62,6 +70,7 @@ describe('createLayoutStore', () => {
     actions.setNarrow(true)
     actions.toggleSidebar()
     expect(store.getSnapshot()).toEqual({
+      applicationSurface: 'conversation',
       sidebar: 400, details: 0, bottom: 0,
       bottomRestore: BOTTOM_DEFAULT, narrow: true, narrowExpanded: true,
     })
@@ -123,6 +132,7 @@ describe('createLayoutStore', () => {
 
     const second = createLayoutStore().create()
     expect(second.store.getSnapshot()).toEqual({
+      applicationSurface: 'conversation',
       sidebar: SIDEBAR_DEFAULT,
       details: 0,
       bottom: 0,

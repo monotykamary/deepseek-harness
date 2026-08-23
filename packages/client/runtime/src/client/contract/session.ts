@@ -52,7 +52,7 @@ export interface ISession {
     attachmentId: AttachmentIdType,
   ): Promise<RpcResult<{ attachment: ImageAttachmentRef; data: Uint8Array }>>
   /**
-   * Apply one edit, remove, or strict steer action to a still-pending queue occurrence.
+   * Apply one edit, removal, adjacent move, or strict steer action to a still-pending queue occurrence.
    * @param itemId - agent-owned inbox occurrence identity.
    * @param action - requested queue operation.
    * @returns acceptance, or a business/transport error.

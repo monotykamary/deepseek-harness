@@ -240,6 +240,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns WorkspaceId-branded records over the domain facility; stable sessionIds accounts drive Host RPC and GUI projections.',
   },
   {
+    key: 'worktrees',
+    pkg: 'worktree',
+    title: 'Repository checkout lifecycle',
+    mode: 'seam',
+    implementations: ['worktree-git-local'],
+    note: 'Providers own repository discovery, managed checkout allocation, occupancy-aware removal, and bounded sweeping; external orchestration bundles are direct Consumers.',
+  },
+  {
     key: 'sessionQuery',
     pkg: 'session-query',
     title: 'Session reads, traces, filters, and search',

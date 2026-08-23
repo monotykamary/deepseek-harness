@@ -64,7 +64,7 @@ Turn and step boundaries and the model token stream are durable `session/event` 
 
 The handle every plugin programs against:
 
-- `agent.inbox` — the agent-owned projection of durable `agent/inbox/spliced` events. `nextTurn` and `nextStep` expose pending `UserMessage` values. `append`, `prepend`, `replace`, `remove`, `clear`, `splice`, and `claim` mutate them; `replace(messageId, newMessage)` and `remove(messageId)` locate the pending message across both lists. Replacement may change identity and publishes the old message as discarded followed by the new message as inserted. Ordinary removals and `clear()` are durable cancellations and emit `agent/inbox/discarded`. `claim(target)` removes the next proposed batch with pure deletion splices; the loop then emits `agent/inbox/claimed`. `MessageId` is the only occurrence identity and must remain unique while pending.
+- `agent.inbox` — the agent-owned projection of durable `agent/inbox/spliced` events. `nextTurn` and `nextStep` expose pending `UserMessage` values. `append`, `prepend`, `replace`, `remove`, `moveNextTurn`, `clear`, `splice`, and `claim` mutate them; `replace(messageId, newMessage)` and `remove(messageId)` locate the pending message across both lists. `moveNextTurn(messageId, direction)` exchanges adjacent `next-turn` rows through one replayable splice while preserving identities and emitting no insertion or discard notification; an edge move is an accepted no-op, and a non-queued identity returns false. Replacement may change identity and publishes the old message as discarded followed by the new message as inserted. Ordinary removals and `clear()` are durable cancellations and emit `agent/inbox/discarded`. `claim(target)` removes the next proposed batch with pure deletion splices; the loop then emits `agent/inbox/claimed`. `MessageId` is the only occurrence identity and must remain unique while pending.
 - `agent.followup(message)` — queue an ordinary `next-turn` message and wake the driver. It returns no completion handle; the message id identifies inbox insertion, claim, and discard facts, not a later output or `turn/end`.
 - `agent.steer(message)` — queue waking `next-step` input. An idle agent starts a turn synchronously; a running driver consumes later steering at its next step boundary.
 - `agent.inject(message)` — queue non-waking `next-step` context. A running driver claims it at the nearest later pre-step boundary; an idle driver leaves it pending until `followup()` or `steer()` wakes the driver. It may miss a request whose pre-step already claimed its batch.
@@ -90,11 +90,11 @@ The handle every plugin programs against:
 
 #### Token effect
 
-Accepted content becomes retained history or a repeated session prefix; blocked content contributes no request tokens. Size is caller- and plugin-dependent.
+Accepted content becomes retained history or a repeated session prefix; blocked content contributes no request tokens. Moving pending turns contributes no tokens until claim and determines their later history order. Size is caller- and plugin-dependent.
 
 #### KV Cache effect
 
-Accepted history and steering are append-only; a blocked submission sends no request. A session prefix remains stable within its loop instance, while a new or resumed instance may establish a different prefix.
+Accepted history and steering are append-only; a blocked submission sends no request. Moving pending turns changes no existing request or cache, while later claims append in the chosen order. A session prefix remains stable within its loop instance, while a new or resumed instance may establish a different prefix.
 
 ### Agent-scoped request composition
 

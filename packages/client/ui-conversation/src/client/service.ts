@@ -18,6 +18,7 @@ import type { ImageAttachmentRef, ImageMediaType } from '@monotykamary/dsh-attac
 import type { ComposerAttachment } from './contract/slots.ts'
 import type { QueueAction, QueueItemId } from './contract/queue.ts'
 import type { ComposerBlocks } from './input/blocks.ts'
+import type { ComposerSubmissions } from './input/submissions.ts'
 import type { DraftAttachmentId, SessionInputResolver } from './input/contract.ts'
 import type { InputSubmitMode } from './contract/composer-submission.ts'
 
@@ -34,6 +35,8 @@ export interface IConversation {
    * cannot import makes a session's input inert with its own reason.
    */
   readonly blocks: ComposerBlocks
+  /** Ordinary composer submission middleware registered by feature plugins. */
+  readonly submissions: ComposerSubmissions
   /**
    * Send a prompt into the caller scope's session (queued turn).
    * @param text - prompt text, sent verbatim as one text block.
@@ -41,7 +44,7 @@ export interface IConversation {
    */
   send(text: string): Promise<void>
   /**
-   * Apply one edit, remove, or strict steer operation to a pending queue occurrence.
+   * Apply one edit, removal, adjacent move, or strict steer operation to a pending queue occurrence.
    * @param itemId - agent-owned inbox occurrence identity.
    * @param action - requested queue operation.
    * @returns completion; converged strict-steer races resolve, while other failures reject.
@@ -94,6 +97,8 @@ export class ConversationController extends Service implements IConversation {
   readonly input: SessionInputResolver
   /** The per-session composer-block registry. */
   readonly blocks: ComposerBlocks
+  /** Ordinary composer submission middleware registry. */
+  readonly submissions: ComposerSubmissions
   private readonly draftAttachments = new Map<DraftAttachmentId, ComposerAttachment>()
   private readonly imageUrls = new Map<string, ImageUrlEntry>()
   private readonly imageGenerations = new Map<SessionId, number>()
@@ -103,14 +108,14 @@ export class ConversationController extends Service implements IConversation {
   /**
    * @param ctx - owning root context (the plugin apply context; the service
    * registers itself and follows that fiber's lifetime).
-   * @param config - carries the SessionInputResolver and composer-block registry
-   * constructed by the plugin apply (the same instances the slot inject
-   * factories close over).
+   * @param config - input, blocking, and submission registries constructed by
+   * plugin apply and shared with the composer wiring.
    */
-  constructor(ctx: Context, config: { input: SessionInputResolver; blocks: ComposerBlocks }) {
+  constructor(ctx: Context, config: { input: SessionInputResolver; blocks: ComposerBlocks; submissions: ComposerSubmissions }) {
     super(ctx, 'conversation')
     this.input = config.input
     this.blocks = config.blocks
+    this.submissions = config.submissions
     ctx.effect(() => () => {
       this.disposed = true
       for (const url of this.createdImageUrls) revokePreview(url)

@@ -12,6 +12,7 @@ import type { HostObservable } from '@monotykamary/dsh-client-ui-slots'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 // Type-only: pulls the settingsScope service Context merge.
 import type {} from '@monotykamary/dsh-client-ui-settings/client'
+import type {} from '@monotykamary/dsh-client-ui-layout/client'
 import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@monotykamary/dsh-client-locale/client'
@@ -51,7 +52,7 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'connection', 'settingsScope',
+  'slots', 'sessions', 'workspaces', 'locale', 'connection', 'settingsScope', 'layout',
 ]
 
 /**
@@ -80,11 +81,18 @@ export function apply(ctx: ClientContext): void {
   })
   const browserFlowSource = flowSource('sidebar.workspaces.directoryFlow')
   const pickerFlowSource = flowSource('conversation.hero.workspace.directoryFlow')
+  const showConversation = (): void => { ctx.layout.openApplicationSurface('conversation') }
   const browserInjected = (): WorkspaceBrowserInjected => ({
     // Explicit group actions keep their target; unscoped New Session inherits
     // the current Session Workspace before the recent-Workspace fallback.
-    startSession: (workspaceId) => { ctx.workspaces.startSession(workspaceId) },
-    open: (sessionId) => { ctx.sessions.open(sessionId) },
+    startSession: (workspaceId) => {
+      showConversation()
+      ctx.workspaces.startSession(workspaceId)
+    },
+    open: (sessionId) => {
+      showConversation()
+      ctx.sessions.open(sessionId)
+    },
     searchSessions,
     searchResultLimit: ctx.sessions.searchResultLimit,
     renameSession: async (sessionId, title) => {
@@ -97,7 +105,7 @@ export function apply(ctx: ClientContext): void {
     },
     forkSession: (sessionId) => {
       ctx.sessions.fork({ sessionId, increaseTitle: true })
-        .then((childId) => { ctx.sessions.open(childId) })
+        .then((childId) => { showConversation(); ctx.sessions.open(childId) })
         .catch(() => {
           // Fork or child-rename failure keeps the current selection.
         })

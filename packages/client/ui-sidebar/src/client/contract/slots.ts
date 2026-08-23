@@ -10,7 +10,7 @@
 import type { PropsLocale, PropsRenderSlots, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 // Type-only: pulls ui-layout's SlotMap merge (the 'sidebar' entry) into every
 // program that sees this contract, so PropsRuntime<'sidebar'> resolves.
-import type {} from '@monotykamary/dsh-client-ui-layout/client'
+import type { ApplicationSurfaceId } from '@monotykamary/dsh-client-ui-layout/client'
 import type { WorkspaceId } from '@monotykamary/dsh-client-runtime/client'
 
 declare module '@monotykamary/dsh-client-ui-slots' {
@@ -33,6 +33,8 @@ declare module '@monotykamary/dsh-client-ui-slots' {
      * registers the browser.
      */
     'sidebar.workspaces': { kind: 'single'; scope: 'root'; owner: SidebarSectionOwnerProps }
+    /** Additive root-application navigation rows between New Session and Workspace browsing. */
+    'sidebar.navigation': { kind: 'list'; scope: 'root'; owner: SidebarNavigationOwnerProps }
     /**
      * The settings seat at the sidebar foot. Declared by this package's
      * 'sidebar' entry; ui-settings registers its trigger row + modal panel.
@@ -63,6 +65,16 @@ export interface SidebarBrandNameOwnerProps {
  * Owner share of the browser hole — the only facts crossing the shell/region
  * boundary. Business data and actions arrive through the region's own inject.
  */
+export interface SidebarNavigationOwnerProps {
+  /** Whether the sidebar renders expanded labels or its compact rail. */
+  wide: boolean
+  /** Currently selected root application surface. */
+  activeSurface: ApplicationSurfaceId
+  /** Select one root application surface. */
+  openSurface: (id: ApplicationSurfaceId) => void
+}
+
+/** Workspace browser geometry and rail expansion action supplied by the shell. */
 export interface SidebarSectionOwnerProps {
   /** Shell fold-state output: wide renders the full browser, rail the icon column. */
   wide: boolean
@@ -111,6 +123,7 @@ export type SidebarRootComponentProps =
   & PropsRenderSlots<
     | 'sidebar.brand.mark'
     | 'sidebar.brand.name'
+    | 'sidebar.navigation'
     | 'sidebar.workspaces'
     | 'sidebar.settings'
     | 'sidebar.footer.action'

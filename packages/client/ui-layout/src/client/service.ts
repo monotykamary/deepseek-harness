@@ -10,6 +10,7 @@
  */
 import type { BoundActions } from '@monotykamary/dsh-client-ui-slots'
 import type { createLayoutStore } from './stores.ts'
+import type { ApplicationSurfaceId } from './index.ts'
 
 /** The layout store's bound action set (framework-baked, draft params peeled). */
 export type PanelActions = BoundActions<ReturnType<typeof createLayoutStore>>
@@ -21,6 +22,8 @@ export type PanelActions = BoundActions<ReturnType<typeof createLayoutStore>>
  * only).
  */
 export interface ILayout {
+  /** Select one registered root application surface. */
+  openApplicationSurface(id: ApplicationSurfaceId): void
   /** Toggle the sidebar panel (closed ⟷ contract default width). */
   toggleSidebar(): void
   /** Open the details panel (no-op when already open). */
@@ -48,6 +51,11 @@ export class LayoutController implements ILayout {
    */
   attachPanels(actions: PanelActions): void {
     this.#panels = actions
+  }
+
+  /** Select one registered root application surface. */
+  openApplicationSurface(id: ApplicationSurfaceId): void {
+    this.#require().openApplicationSurface(id)
   }
 
   /** Toggle the sidebar panel (closed ⟷ contract default width). */

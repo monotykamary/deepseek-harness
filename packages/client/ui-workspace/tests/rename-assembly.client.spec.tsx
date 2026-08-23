@@ -37,6 +37,7 @@ async function createRuntime(): Promise<SlotTestRuntime> {
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.provide('locale', locale)
   runtime.provide('remote', {})
+  runtime.provide('layout', { openApplicationSurface: vi.fn() })
   runtime.provide('settingsScope', {
     bind: () => ({
       getSnapshot: () => ({

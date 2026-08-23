@@ -208,10 +208,16 @@ describe('QueueDock', () => {
     fireEvent.click(getByRole('button', { name: '2 条排队消息' }))
     expect([...container.querySelectorAll('li')].map(item => item.textContent))
       .toEqual(['第一条排队消息', 'image [image]'])
-    expect(container.querySelectorAll('button')).toHaveLength(7)
+    expect(container.querySelectorAll('button')).toHaveLength(11)
     expect(container.querySelectorAll('[aria-label="编辑排队消息"]')).toHaveLength(2)
     expect(container.querySelectorAll('[aria-label="删除排队消息"]')).toHaveLength(2)
     expect(container.querySelectorAll('[aria-label="插话发送"]')).toHaveLength(2)
+    expect(container.querySelectorAll('[aria-label="提前排队消息"]')).toHaveLength(2)
+    expect(container.querySelectorAll('[aria-label="延后排队消息"]')).toHaveLength(2)
+    expect((container.querySelectorAll('[aria-label="提前排队消息"]')[0] as HTMLButtonElement).disabled).toBe(true)
+    expect((container.querySelectorAll('[aria-label="提前排队消息"]')[1] as HTMLButtonElement).disabled).toBe(false)
+    expect((container.querySelectorAll('[aria-label="延后排队消息"]')[0] as HTMLButtonElement).disabled).toBe(false)
+    expect((container.querySelectorAll('[aria-label="延后排队消息"]')[1] as HTMLButtonElement).disabled).toBe(true)
     expect((container.querySelectorAll('[aria-label="编辑排队消息"]')[0] as HTMLButtonElement).disabled).toBe(false)
     expect((container.querySelectorAll('[aria-label="编辑排队消息"]')[1] as HTMLButtonElement).disabled).toBe(true)
     expect(container.querySelectorAll('[aria-label="编辑排队消息"]')[1]?.getAttribute('title'))
@@ -279,6 +285,25 @@ describe('QueueDock', () => {
     expect(getByLabelText('编辑排队消息')).toBeTruthy()
   })
 
+  it('moves the addressed row one position in either direction', async () => {
+    const snap = snapshotWith([row('i-1', 'one'), row('i-2', 'two'), row('i-3', 'three')])
+    const source = liveSession(snap)
+    const updateQueue = vi.fn(() => Promise.resolve())
+    const { getAllByLabelText, getByRole } = render(
+      <QueueDock {...kitFor(snap, { updateQueue })} useSession={source.useSession} />,
+    )
+
+    fireEvent.click(getByRole('button', { name: '3 条排队消息' }))
+    fireEvent.click(getAllByLabelText('提前排队消息')[2]!)
+    await waitFor(() => {
+      expect(updateQueue).toHaveBeenNthCalledWith(1, iid('i-3'), { kind: 'move', direction: 'earlier' })
+    })
+    fireEvent.click(getAllByLabelText('延后排队消息')[0]!)
+    await waitFor(() => {
+      expect(updateQueue).toHaveBeenNthCalledWith(2, iid('i-1'), { kind: 'move', direction: 'later' })
+    })
+  })
+
   it('removes the addressed row', async () => {
     const snap = snapshotWith([row('i-1', 'one'), row('i-2', 'two')])
     const source = liveSession(snap)
@@ -335,6 +360,23 @@ describe('QueueDock', () => {
     expect(view.queryByLabelText('编辑排队消息')).toBeNull()
     expect(view.queryByLabelText('删除排队消息')).toBeNull()
     expect(view.queryByLabelText('插话发送')).toBeNull()
+  })
+
+  it('keeps the row and reports a reorder failure', async () => {
+    const snap = snapshotWith([row('i-1', 'one'), row('i-2', 'two')])
+    const source = liveSession(snap)
+    const notify = vi.fn()
+    const updateQueue = vi.fn(() => Promise.reject(new Error('not found')))
+    const view = render(
+      <QueueDock {...kitFor(snap, { updateQueue, notify })} useSession={source.useSession} />,
+    )
+
+    fireEvent.click(view.getByRole('button', { name: '2 条排队消息' }))
+    fireEvent.click(view.getAllByLabelText('提前排队消息')[1]!)
+    await waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('error', '排序失败：这条消息可能已经开始发送。')
+    })
+    expect(view.getByText('two')).toBeTruthy()
   })
 
   it('keeps the row and reports a genuine steer failure', async () => {

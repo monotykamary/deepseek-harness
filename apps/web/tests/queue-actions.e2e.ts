@@ -1,7 +1,7 @@
 // Keyless browser coverage for pending queue actions through the shipped Web
 // composition and real HTTP/SSE wire. Replay overrides park consecutive turns
-// so the page can edit and remove exact occurrences, then stop the active turn
-// while proving the preserved Queue advances in FIFO order.
+// so the page can edit, remove, and reorder exact occurrences, then stop the
+// active turn while proving the preserved Queue advances in the chosen order.
 import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -31,6 +31,7 @@ const ACTIVE_PROMPT = 'Reply with a one-sentence description of event sourcing, 
 const REMOVE = 'Queue item to remove'
 const EDIT = 'Queue item to edit'
 const EDITED = 'Edited queue item'
+const MOVE = 'Queue item moved to the front'
 const TAIL = 'Queue item preserved after stop'
 const WAKE = 'Wake the preserved queue'
 
@@ -61,6 +62,18 @@ async function settleComposerGeometry(page: Page): Promise<void> {
   }
 }
 
+/** Dismiss product onboarding that is orthogonal to queue behavior. */
+async function dismissFirstRunOverlays(page: Page): Promise<void> {
+  for (const name of ['Continue', 'Configure later']) {
+    const button = page.getByRole('button', { name, exact: true })
+    const visible = await button.waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true, () => false)
+    if (!visible) continue
+    await button.click()
+    await button.waitFor({ state: 'hidden' })
+  }
+}
+
 describe('web e2e: queue row actions', () => {
   let scaffold: WebScaffold | undefined
   let browser: Browser | undefined
@@ -83,7 +96,7 @@ describe('web e2e: queue row actions', () => {
     if (failures.length > 1) throw new AggregateError(failures, 'queue-actions teardown failed')
   })
 
-  it.skipIf(MODE === 'record')('edits and removes exact occurrences and preserves Queue across stop', async () => {
+  it.skipIf(MODE === 'record')('edits, removes, and reorders exact occurrences and preserves Queue across stop', async () => {
     overrideDir = await mkdtemp(join(tmpdir(), 'dsh-web-queue-actions-'))
     const readyFile = join(overrideDir, '.hang-ready')
     const overridePath = join(overrideDir, 'replay.override.json')
@@ -91,6 +104,7 @@ describe('web e2e: queue row actions', () => {
     expect(recorded).toHaveLength(1)
     const replay: ReplayEntry[] = [
       { kind: 'hang', readyFile },
+      recorded[0]!,
       recorded[0]!,
       recorded[0]!,
       recorded[0]!,
@@ -105,6 +119,7 @@ describe('web e2e: queue row actions', () => {
     const tripwire = watchConsole(page)
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await dismissFirstRunOverlays(page)
     await connectFreshWorkspace(page, scaffold.workspaceCwd)
     onTestFailed(() => saveFailureShot(page, 'web-e2e-queue-actions'))
 
@@ -114,11 +129,11 @@ describe('web e2e: queue row actions', () => {
     await input.press('Enter')
     await expect.poll(() => existsSync(readyFile), { timeout: 15_000 }).toBe(true)
 
-    for (const text of [REMOVE, EDIT]) {
+    for (const text of [REMOVE, EDIT, MOVE]) {
       await input.fill(text)
       await input.press('Enter')
     }
-    const queueHeader = page.getByRole('button', { name: '2 queued messages' })
+    const queueHeader = page.getByRole('button', { name: '3 queued messages' })
     await expect.poll(() => queueHeader.getAttribute('aria-expanded'), { timeout: 10_000 })
       .toBe('false')
     const collapsedSnapshot = await captureStableAria(
@@ -131,7 +146,7 @@ describe('web e2e: queue row actions', () => {
     await expect.poll(
       () => page.getByRole('button', { name: 'Remove queued message' }).count(),
       { timeout: 10_000 },
-    ).toBe(2)
+    ).toBe(3)
 
     await page.setViewportSize({ width: 640, height: 1000 })
     await settleComposerGeometry(page)
@@ -153,6 +168,14 @@ describe('web e2e: queue row actions', () => {
     expect(queueLeftInset).toBeCloseTo(composerMetrics.dockInset, 1)
     expect(queueRightInset).toBeCloseTo(composerMetrics.dockInset, 1)
     await page.setViewportSize({ width: 1680, height: 1000 })
+
+    const moveRow = page.getByText(MOVE, { exact: true }).locator('..')
+    await moveRow.getByRole('button', { name: 'Move queued message earlier' }).click()
+    await expect.poll(() => page.locator('[data-queue-dock] li').allTextContents())
+      .toEqual([REMOVE, MOVE, EDIT])
+    await moveRow.getByRole('button', { name: 'Move queued message earlier' }).click()
+    await expect.poll(() => page.locator('[data-queue-dock] li').allTextContents())
+      .toEqual([MOVE, REMOVE, EDIT])
 
     const editRow = page.getByText(EDIT, { exact: true }).locator('..')
     await editRow.getByRole('button', { name: 'Edit queued message' }).click()
@@ -178,14 +201,14 @@ describe('web e2e: queue row actions', () => {
     await expect.poll(
       () => page.getByRole('button', { name: 'Remove queued message' }).count(),
       { timeout: 10_000 },
-    ).toBe(2)
+    ).toBe(3)
 
     await page.getByRole('button', { name: 'Stop generating' }).click()
     await firstSettled
     await expect.poll(() => page.getByRole('button', { name: 'Stop generating' }).count())
       .toBe(0)
     await expect.poll(() => page.getByRole('button', { name: 'Remove queued message' }).count())
-      .toBe(2)
+      .toBe(3)
 
     const preservedSnapshot = await captureStableAria(page, '[class*="centerCol"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(PRESERVED_EXPECTED, preservedSnapshot, MODE)
@@ -195,10 +218,10 @@ describe('web e2e: queue row actions', () => {
     await input.press('Enter')
     await settled
     await expect.poll(() => turnEndReasons(sessionEvents), { timeout: 15_000 })
-      .toEqual(['aborted', 'completed', 'completed', 'completed'])
+      .toEqual(['aborted', 'completed', 'completed', 'completed', 'completed'])
     expect(sessionEvents.flatMap(event => event.type === 'user/message' && event.data.source.kind === 'user'
       ? event.data.content.flatMap(block => block.type === 'text' ? [block.text] : [])
-      : [])).toEqual([ACTIVE_PROMPT, EDITED, TAIL, WAKE])
+      : [])).toEqual([ACTIVE_PROMPT, MOVE, EDITED, TAIL, WAKE])
     await expect.poll(() => page.locator('[data-queue-dock]').count()).toBe(0)
   }, 120_000)
 
@@ -216,6 +239,7 @@ describe('web e2e: queue row actions', () => {
     const tripwire = watchConsole(page)
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await dismissFirstRunOverlays(page)
     await connectFreshWorkspace(page, scaffold.workspaceCwd)
     onTestFailed(() => saveFailureShot(page, 'web-e2e-context-layout'))
 

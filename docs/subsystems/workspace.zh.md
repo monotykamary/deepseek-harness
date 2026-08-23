@@ -121,6 +121,14 @@ interface Workspace {
 
 会话的 cwd 在创建时由创建者赋予，而不是由本注册表赋予——API 网关从所选工作区的 `path` 解析新会话的 cwd（回退到显式或默认 cwd），先创建会话使 cwd 落入其不可变的 [`SessionHeader`](persistence.zh.md#sessionheader--metadata-beside-the-log)，再调用 `attachSession`，后者会把已存储的 header cwd 与工作区路径重新校验一遍。首次成功启动时，注册表仅凭已持久化的 header（`id`、`cwd`、`createdAt`——绝不读事件正文）引导历史：把规范 cwd 有效的会话按目录分组为工作区，最新的排在最前；「已初始化」标记最后写入，因此被中断的引导可以安全续跑。引导只发生这一次：没有 cwd 的历史遗留会话保持 Ungrouped，此后创建的会话只能通过 `attachSession` 加入工作区。
 
+<a id="repository-worktrees"></a>
+
+## 仓库 worktree
+
+`@monotykamary/dsh-worktree` 是仓库 checkout 生命周期的提供方注册表（`ctx.worktrees`）。`locate(cwd)` 解析仓库标识及其主路径；`list(cwd)` 报告主 checkout 与链接 checkout、branch/head 信息、受管归属、锁定／可修剪状态和活跃 Session id；`create`、`remove` 与有界 `sweep` 委派给已配置的提供方。Consumer 通过组合显式选择提供方，绝不在该 API 背后自行调用 Git shell 命令。
+
+`@monotykamary/dsh-worktree-git-local` 是本地提供方。它只在已配置的管理根目录下创建链接 checkout，生成抗冲突的分支名，并且只复制配置中列出的被忽略引导文件。删除与清扫会拒绝主 checkout、非受管路径、脏状态，以及其规范 cwd 被活跃 Session 持有的任何 checkout；两条路径都不会强制删除。提供方注册是 Cordis effect，因此 HMR 会先移除那个精确实现，再让替代实现可见。任务图、队列、发布和分支策略仍属于 Consumer，而不是 Worktree 状态。
+
 ## 消费方
 
 [dsh-host-apiproxy](../../packages/host/apiproxy) 是产品消费方：它经 `ctx.workspaceRegistry` 向 GUI 客户端提供工作区的 CRUD，并执行上文「先建会话再 attach」的流程。[dsh-agent-instructions](../../packages/context/agent-instructions) 尽管名字如此，却**不是**消费方：它在 agent 自己的 cwd 下发现 AGENTS.md 风格的指令文件，从不触碰 `ctx.workspaceRegistry`——两者共用的这个词指的是用户的工作目录，而非本注册表的实体。
@@ -225,4 +233,90 @@ async resolveByPath(path: string): Promise<Workspace | undefined>
 Types: [SessionId](core.zh.md)
 
 Source: [`packages/workspace/workspace/src/index.ts`](../../packages/workspace/workspace/src/index.ts)
+
+<a id="ctxworktrees--worktreeregistry"></a>
+
+### `ctx.worktrees` — `WorktreeRegistry`
+
+Registry and dispatcher for repository worktree providers.
+
+```ts cordis-catalog
+/**
+ * Register one provider until the calling fiber is disposed.
+ * @param provider - Exact implementation and unique provider name.
+ * @returns disposer for this registration.
+ */
+registerProvider(provider: WorktreeProvider): () => void
+
+/**
+ * Return provider names in registration order.
+ * @returns fresh ordered provider-name list.
+ */
+listProviders(): readonly string[]
+
+/**
+ * Resolve a request's provider without performing work.
+ * @param request - Provider-optional operation request.
+ * @returns detached request carrying the selected provider.
+ */
+resolve<T extends WorktreeProviderRequest>(request: T): ResolvedWorktreeRequest<T>
+
+/**
+ * Resolve the repository containing a directory.
+ * @param request - Directory and optional provider selection.
+ * @returns repository facts, or `undefined` outside a repository.
+ */
+locate(request: WorktreeLocateRequest): Promise<WorktreeRepository | undefined>
+
+/**
+ * List repository checkouts.
+ * @param request - Directory inside the target repository.
+ * @returns provider-neutral primary and linked checkout facts.
+ */
+list(request: WorktreeListRequest): Promise<readonly WorktreeCheckout[]>
+
+/**
+ * Create one managed linked checkout.
+ * @param request - Repository, label, base, and optional caller identity.
+ * @returns created checkout facts after provider setup completes.
+ */
+create(request: WorktreeCreateRequest): Promise<WorktreeCheckout>
+
+/**
+ * Remove one managed linked checkout without forcing dirty state.
+ * @param request - Repository and exact checkout path.
+ * @returns removed checkout facts retained for audit output.
+ */
+remove(request: WorktreeRemoveRequest): Promise<WorktreeCheckout>
+
+/**
+ * Sweep bounded stale managed linked checkouts.
+ * @param request - Repository, age threshold, and removal limit.
+ * @returns checkouts safely removed by the provider.
+ */
+sweep(request: WorktreeSweepRequest): Promise<WorktreeSweepResult>
+```
+
+Source: [`packages/workspace/worktree/src/index.ts`](../../packages/workspace/worktree/src/index.ts)
+
+<a id="worktrees-events"></a>
+
+### `worktrees/*` events
+
+<a id="worktreesprovider-change--emit"></a>
+
+#### `worktrees/provider-change` — emit
+
+One provider registration was committed or removed.
+
+```ts cordis-catalog
+/**
+ * One provider registration was committed or removed.
+ * @param change - provider name and whether it is now present.
+ * @mode emit
+ */
+'worktrees/provider-change'(change: { readonly provider: string; readonly present: boolean }): void
+```
+
+Source: [`packages/workspace/worktree/src/index.ts`](../../packages/workspace/worktree/src/index.ts)
 <!-- END GENERATED cordis-surface -->

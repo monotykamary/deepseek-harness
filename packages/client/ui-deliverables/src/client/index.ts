@@ -26,8 +26,10 @@ declare module '@monotykamary/dsh-client-ui-slots' {
   }
 }
 
-export { ProducedFiles, type ProducedFilesProps } from './ProducedFiles.tsx'
-export { producedForClosing } from './turn-deliverables.ts'
+export {
+  ProducedFiles, ProducedFilesCard, type ProducedFilesCardLabels, type ProducedFilesCardProps, type ProducedFilesProps,
+} from './ProducedFiles.tsx'
+export { producedForClosing, type DeliverableChange } from './turn-deliverables.ts'
 
 const CHANGES_SURFACE_ID = 'changes' as WorkbenchSurfaceId
 

@@ -76,6 +76,14 @@ describe('Menu', () => {
     expect(onSelect).toHaveBeenCalledWith('a')
   })
 
+  it('renders an interactive header above selectable rows', () => {
+    render(
+      <Menu open anchor={<span>trigger</span>} header={<input aria-label="Filter choices" />} items={items} onSelect={() => {}} onClose={() => {}} />)
+    const menu = screen.getByRole('menu')
+    expect(menu.querySelector('input')).toBe(screen.getByLabelText('Filter choices'))
+    expect(screen.getByRole('menuitem', { name: 'Alpha' })).toBeDefined()
+  })
+
   it('disabled item does not select; Escape and outside pointerdown close', () => {
     const onSelect = vi.fn()
     const onClose = vi.fn()
@@ -97,7 +105,7 @@ describe('Menu', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
-  it('selected item shows the trailing check; align=end, side=top, and className apply', () => {
+  it('places the selected check before a trailing adornment; align=end, side=top, and className apply', () => {
     const { container } = render(
       <Menu
         open
@@ -105,7 +113,7 @@ describe('Menu', () => {
         side="top"
         className="x"
         anchor={<span>trigger</span>}
-        items={items}
+        items={[{ id: 'a', label: 'Alpha', trailing: <svg data-testid="trailing" /> }, items[1]!]}
         selectedId="a"
         onSelect={() => {}}
         onClose={() => {}}
@@ -114,7 +122,9 @@ describe('Menu', () => {
     const menu = screen.getByRole('menu')
     expect(menu.className).toMatch(/sideTop|alignEnd/)
     const selected = screen.getByRole('menuitem', { name: 'Alpha' })
-    expect(selected.querySelector('svg')).not.toBeNull()
+    const selectedIcons = selected.querySelectorAll('svg')
+    expect(selectedIcons).toHaveLength(2)
+    expect(selectedIcons[1]).toBe(screen.getByTestId('trailing'))
     const other = screen.getByRole('menuitem', { name: 'Beta' })
     expect(other.querySelector('svg')).toBeNull()
     fireEvent.keyDown(document, { key: 'a' })

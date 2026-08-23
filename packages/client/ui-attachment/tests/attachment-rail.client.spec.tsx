@@ -69,6 +69,17 @@ describe('AttachmentRail', () => {
     expect(onRemove).toHaveBeenCalledWith(items[1])
   })
 
+  it('renders a read-only video thumbnail without remove chrome', () => {
+    const media = { id: 'clip', previewUrl: 'data:video/mp4;base64,YQ==', previewKind: 'video' as const, alt: 'review.mp4' }
+    const onOpen = vi.fn()
+    const view = render(<AttachmentRail items={[media]} labels={labels} onOpen={onOpen} />)
+
+    expect(view.container.querySelector('video')?.getAttribute('src')).toBe(media.previewUrl)
+    expect(view.queryByLabelText(/移除图片/u)).toBeNull()
+    fireEvent.click(view.getByRole('button', { name: 'review.mp4' }))
+    expect(onOpen).toHaveBeenCalledWith(media)
+  })
+
   it('shows edge arrows from scroll geometry and pages a viewport at a time', () => {
     const view = render(
       <AttachmentRail items={[item('a'), item('b'), item('c')]} labels={labels} onOpen={vi.fn()} onRemove={vi.fn()} />,

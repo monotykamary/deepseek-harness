@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type {
-  SidebarFooterActionOwnerProps, SidebarRootComponentProps, SidebarSectionOwnerProps,
-  SidebarSettingsOwnerProps,
+  SidebarFooterActionOwnerProps, SidebarNavigationOwnerProps, SidebarRootComponentProps,
+  SidebarSectionOwnerProps, SidebarSettingsOwnerProps,
 } from '../src/client/contract/slots.ts'
 import { SidebarRoot } from '../src/client/SidebarRoot.tsx'
 import { en } from '../src/client/locales.ts'
@@ -29,6 +29,8 @@ function mountShell({
 }: { collapsed?: boolean; width?: number; drawerClose?: () => void } = {}) {
   const startSession = vi.fn()
   const toggleSidebar = vi.fn()
+  const openApplicationSurface = vi.fn()
+  let navigationOwner: SidebarNavigationOwnerProps | undefined
   let regionOwner: SidebarSectionOwnerProps | undefined
   let settingsOwner: SidebarSettingsOwnerProps | undefined
   let footerActionOwner: SidebarFooterActionOwnerProps | undefined
@@ -37,6 +39,7 @@ function mountShell({
   let current = { collapsed, width }
   const root = () => (
     <SidebarRoot
+      applicationSurface="conversation" openApplicationSurface={openApplicationSurface}
       collapsed={current.collapsed} width={current.width}
       // exactOptionalPropertyTypes: only spread the owner key when a test supplies it.
       {...(drawerClose !== undefined ? { drawerClose } : {})}
@@ -44,10 +47,14 @@ function mountShell({
       startSession={startSession} toggleSidebar={toggleSidebar} t={t}
       renderSlot={((
         key: string,
-        owner: SidebarFooterActionOwnerProps | SidebarSectionOwnerProps | SidebarSettingsOwnerProps,
+        owner: SidebarFooterActionOwnerProps | SidebarNavigationOwnerProps | SidebarSectionOwnerProps | SidebarSettingsOwnerProps,
       ) => {
         if (key === 'sidebar.brand.mark') return brandMark
         if (key === 'sidebar.brand.name') return brandName
+        if (key === 'sidebar.navigation') {
+          navigationOwner = owner as SidebarNavigationOwnerProps
+          return <div data-testid="navigation-seat" data-wide={owner.wide} />
+        }
         if (key === 'sidebar.settings') {
           settingsOwner = owner
           return <div data-testid="settings-seat" data-wide={owner.wide} />
@@ -65,6 +72,11 @@ function mountShell({
   return {
     startSession,
     toggleSidebar,
+    openApplicationSurface,
+    navigationOwner: () => {
+      if (navigationOwner === undefined) throw new Error('navigation owner not rendered')
+      return navigationOwner
+    },
     regionOwner: () => {
       if (regionOwner === undefined) throw new Error('region owner not rendered')
       return regionOwner
@@ -107,8 +119,9 @@ describe('SidebarRoot shell', () => {
     expect(b.toggleSidebar).not.toHaveBeenCalled()
   })
 
-  it('hands the region its wide flag and clamps expandSidebar to the collapsed state', () => {
+  it('hands navigation and the region their owner state, and clamps expandSidebar to collapsed', () => {
     const b = mountShell()
+    expect(b.navigationOwner()).toMatchObject({ wide: true, activeSurface: 'conversation' })
     expect(b.regionOwner().wide).toBe(true)
     // The settings seat rides the same wide flag (ui-settings renders the row).
     expect(b.settingsOwner().wide).toBe(true)

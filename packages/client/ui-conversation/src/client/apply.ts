@@ -22,6 +22,7 @@ import { ConversationController, UnsupportedImageMediaTypeError } from './servic
 import type { IConversation } from './service.ts'
 import { ComposerBlockRegistry } from './input/blocks.ts'
 import type { ComposerBlock } from './input/blocks.ts'
+import { ComposerSubmissionRegistry } from './input/submissions.ts'
 import { InputHub } from './input/hub.ts'
 import { ComposerSubmissionPolicy } from './input/submission-policy.ts'
 import { InputBar } from './skeleton/InputBar.tsx'
@@ -168,9 +169,13 @@ export function apply(ctx: Context): void {
     version: () => slots.getVersion('conversation.view'),
   }
 
+  // Ordinary-send wrappers are product-neutral middleware: feature plugins
+  // register through ctx.conversation, while InputHub remains the sole sink owner.
+  const composerSubmissions = new ComposerSubmissionRegistry()
+
   // The per-session input machine registry (SessionInputResolver face; published as
   // ctx.conversation.input by the service below sharing this one instance).
-  const inputHub = new InputHub(ctx, t)
+  const inputHub = new InputHub(ctx, t, composerSubmissions)
 
   // The composer-block registry: a plugin that knows a session cannot send —
   // ui-model-selection, when no adapter serves the session's route — raises a block
@@ -459,7 +464,7 @@ export function apply(ctx: Context): void {
   // registers itself as `conversation` and lives on its own child fiber.
   // Presentation registrants depend directly on their slot declarations;
   // this service remains only where conversation actions are required.
-  ctx.plugin(ConversationController, { input: inputHub, blocks: composerBlocks })
+  ctx.plugin(ConversationController, { input: inputHub, blocks: composerBlocks, submissions: composerSubmissions })
 
   // The plan strip rides the input dock above the queue rows (same posture).
   ctx.plugin(todoDockEntry)

@@ -12,7 +12,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { AppFrame } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
 import type { AppFrameProps } from '@monotykamary/dsh-client-ui-layout/src/client/AppFrame.tsx'
 import {
@@ -68,6 +68,12 @@ function mountFrame() {
     if (key === 'conversation.empty') return <div data-testid="empty-content" />
     return <div data-testid="other-content" />
   }) as AppFrameProps['renderSlot']
+  const renderSlotChain = ((key: string, owner: { activeSurface: string }, options: { fallback: ReactNode }) => {
+    slotCalls.push({ key, props: owner })
+    return owner.activeSurface === 'factory'
+      ? <div data-testid="factory-content" />
+      : options.fallback
+  }) as AppFrameProps['renderSlotChain']
   const useSessions = ((sel: (s: SessionListState) => unknown) => {
     const current = selectedSession.current
     const sessionState = {
@@ -89,6 +95,7 @@ function mountFrame() {
       useStore={hookOf(instance)}
       actions={instance.actions}
       renderSlot={renderSlot}
+      renderSlotChain={renderSlotChain}
       useSessions={useSessions}
       useWorkspaces={((sel: (s: WorkspaceListState) => unknown) => sel(workspaceState)) as never}
       SessionProvider={SessionProviderStub}
@@ -176,6 +183,27 @@ describe('AppFrame', () => {
     } | undefined
     expect(detailsOwner?.mode).toBe('column')
     expect(detailsOwner?.closePanel).toBeTypeOf('function')
+  })
+
+  it('shows a selected application takeover and preserves hidden Session panel preferences', () => {
+    const { frame, instance, getByTestId, slotCalls } = mountFrame()
+    act(() => {
+      instance.actions.openDetails()
+      instance.actions.openBottom()
+      instance.actions.openApplicationSurface('factory' as never)
+    })
+    expect(getByTestId('factory-content')).toBeTruthy()
+    expect(frame.getAttribute('data-application-surface')).toBe('factory')
+    expect(tracks(frame)).toEqual([280, 0])
+    expect(frame.hasAttribute('data-bottom-collapsed')).toBe(true)
+    expect(instance.getSnapshot()).toMatchObject({ details: 360, bottom: 280 })
+    expect(slotCalls.filter(call => call.key === 'application.surface').at(-1)?.props)
+      .toMatchObject({ activeSurface: 'factory' })
+
+    act(() => { instance.actions.openApplicationSurface('conversation') })
+    expect(getByTestId('center-content')).toBeTruthy()
+    expect(tracks(frame)).toEqual([280, 360])
+    expect(frame.hasAttribute('data-bottom-collapsed')).toBe(false)
   })
 
   it('keeps the conversation slot mounted while no session is current', () => {
@@ -279,7 +307,9 @@ describe('AppFrame', () => {
 
   it('sidebar slot receives live concession output as owner props', () => {
     const { slotCalls } = mountFrame()
-    expect(slotCalls.find(c => c.key === 'sidebar')!.props).toEqual({ collapsed: false, width: 280 })
+    expect(slotCalls.find(c => c.key === 'sidebar')!.props).toMatchObject({
+      applicationSurface: 'conversation', collapsed: false, width: 280,
+    })
   })
 
   it('sidebar drag widens through rAF-batched pointer moves', () => {
@@ -327,7 +357,9 @@ describe('AppFrame', () => {
     expect(getByTestId('sidebar-content')).toBeTruthy()
     expect(frame.hasAttribute('data-sidebar-collapsed')).toBe(true)
     const lastSidebarCall = slotCalls.filter(c => c.key === 'sidebar').at(-1)!
-    expect(lastSidebarCall.props).toEqual({ collapsed: true, width: SIDEBAR_COLLAPSED })
+    expect(lastSidebarCall.props).toMatchObject({
+      applicationSurface: 'conversation', collapsed: true, width: SIDEBAR_COLLAPSED,
+    })
   })
 
   it('viewport shrink triggers the concession chain via ResizeObserver', () => {
@@ -359,7 +391,9 @@ describe('AppFrame — narrow-viewport auto-collapse', () => {
     const { frame, slotCalls } = mountFrame()
     expect(tracks(frame)).toEqual([SIDEBAR_COLLAPSED, 0])
     expect(frame.hasAttribute('data-sidebar-collapsed')).toBe(true)
-    expect(slotCalls.filter(c => c.key === 'sidebar').at(-1)!.props).toEqual({ collapsed: true, width: SIDEBAR_COLLAPSED })
+    expect(slotCalls.filter(c => c.key === 'sidebar').at(-1)!.props).toMatchObject({
+      applicationSurface: 'conversation', collapsed: true, width: SIDEBAR_COLLAPSED,
+    })
     expect(frame.querySelectorAll('[class*="handle"]')).toHaveLength(0)
   })
 

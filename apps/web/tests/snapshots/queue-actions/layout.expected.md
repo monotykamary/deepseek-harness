@@ -1,54 +1,31 @@
 - banner:
   - navigation "Session hierarchy":
     - button "workspace" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - group "Command input": /goal Keep the composer context panels aligned
-- 'button "goal Goal created Status: active Objective: Keep the composer context panels aligned Rounds: 0/256 Activation: armed Commands: /goal edit <objective>, /goal pause, /goal clear"':
-  - img
-  - img
-  - text: "goal Goal created Status: active Objective: Keep the composer context panels aligned Rounds: 0/256 Activation: armed Commands: /goal edit <objective>, /goal pause, /goal clear"
-- button "Context injection goal":
-  - img
-  - img
-  - text: Context injection goal
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
+- 'button "goal Goal created Status: active Objective: Keep the composer context panels aligned Rounds: 0/256 Activation: armed Commands: /goal edit <objective>, /goal pause, /goal clear"'
+- button "Context injection goal"
+- button "Context injection @monotykamary/dsh-system-prompt"
 - paragraph: partial
 - status: Deep diving...
 - region "To-dos":
   - button "To-dos 1 completed · 1 in progress"
-- img
 - text: Ongoing Goal Keep the composer context panels aligned
-- button "Pause goal":
-  - img
-- button "Edit goal":
-  - img
-- button "Clear goal":
-  - img
+- button "Pause goal"
+- button "Edit goal"
+- button "Clear goal"
 - button "2 queued messages"
 - textbox "Cmd/Ctrl+Enter steers all queued messages"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Stop generating"
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

@@ -52,6 +52,10 @@ flowchart LR
   cfg --> plugin_dsh_base_session_projection
   plugin_dsh_base_subprocess["subprocess<br/>@monotykamary/dsh-subprocess-local"]
   cfg --> plugin_dsh_base_subprocess
+  plugin_dsh_base_worktrees["worktrees<br/>@monotykamary/dsh-worktree"]
+  cfg --> plugin_dsh_base_worktrees
+  plugin_dsh_base_worktree_git_local["worktree-git-local<br/>@monotykamary/dsh-worktree-git-local"]
+  cfg --> plugin_dsh_base_worktree_git_local
   plugin_dsh_base_sandbox["sandbox<br/>@monotykamary/dsh-sandbox-local"]
   cfg --> plugin_dsh_base_sandbox
   plugin_dsh_base_sandbox_policy["sandbox-policy<br/>@monotykamary/dsh-sandbox-policy"]
@@ -194,6 +198,8 @@ flowchart LR
 | `session-query-sqlite` | `@monotykamary/dsh-session-query-sqlite` |
 | `session-projection` | `@monotykamary/dsh-session-projection` |
 | `subprocess` | `@monotykamary/dsh-subprocess-local` |
+| `worktrees` | `@monotykamary/dsh-worktree` |
+| `worktree-git-local` | `@monotykamary/dsh-worktree-git-local` |
 | `sandbox` | `@monotykamary/dsh-sandbox-local` |
 | `sandbox-policy` | `@monotykamary/dsh-sandbox-policy` |
 | `terminals` | `@monotykamary/dsh-terminal` |

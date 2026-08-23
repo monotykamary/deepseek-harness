@@ -1,0 +1,40 @@
+{
+  "name": "@monotykamary/dsh-worktree-git-local",
+  "description": "Local Git provider for first-class DSH worktrees",
+  "version": "0.1.0-rc.11",
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/workspace/worktree-git-local"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": { "types": "./lib/types/index.d.ts", "default": "./lib/index.js" },
+    "./invariant": { "types": "./lib/types/invariant.d.ts", "default": "./lib/invariant.js" },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib/index.js", "lib/invariant.js", "lib/types/**/*.d.ts"],
+  "license": "MIT",
+  "dependencies": {
+    "@monotykamary/schemastery": "workspace:^"
+  },
+  "peerDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-subprocess": "workspace:^",
+    "@monotykamary/dsh-worktree": "workspace:^"
+  },
+  "devDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-agent": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-subprocess": "workspace:^",
+    "@monotykamary/dsh-subprocess-local": "workspace:^",
+    "@monotykamary/dsh-worktree": "workspace:^"
+  }
+}

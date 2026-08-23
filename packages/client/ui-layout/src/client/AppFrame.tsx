@@ -25,7 +25,7 @@ import css from './AppFrame.module.css'
 /** Full composed props: runtime share + child-slot render share + store share. */
 export type AppFrameProps =
   & PropsRuntime<'root'>
-  & PropsRenderSlots<'sidebar' | 'conversation' | 'bottom-panel' | 'details' | 'shell.overlay'>
+  & PropsRenderSlots<'sidebar' | 'application.surface' | 'conversation' | 'bottom-panel' | 'details' | 'shell.overlay'>
   & PropsStore<ReturnType<typeof createLayoutStore>>
 
 /** Center column grid item with a resident zero-height bottom-panel host. */
@@ -141,14 +141,21 @@ function BottomDragHandle(props: DragCallbacks & { readonly bottom: number }) {
   )
 }
 
+/** Keep the runtime check open to declaration-merged application ids absent from this package's own program. */
+function isConversationSurface(id: string): boolean {
+  return id === 'conversation'
+}
+
 /** The three-column frame (see module doc). */
 export function AppFrame({
   useStore,
   useSessions,
   actions,
   renderSlot,
+  renderSlotChain,
 }: AppFrameProps) {
   const panels = useStore(s => s)
+  const conversationActive = isConversationSurface(panels.applicationSurface)
   // Any current Session owns the details region — a blank New Session page
   // included, so its workbench stays reachable before the first message.
   const currentSession = useSessions(s => s.current)
@@ -200,13 +207,20 @@ export function AppFrame({
   const sidebarPreference = sidebarCollapsed
     ? 0
     : panels.sidebar === 0 ? SIDEBAR_DEFAULT : panels.sidebar
-  const cols = computeColumns(viewport, sidebarPreference, detailsSession === undefined ? 0 : panels.details)
+  const cols = computeColumns(
+    viewport,
+    sidebarPreference,
+    !conversationActive || detailsSession === undefined ? 0 : panels.details,
+  )
   const detailsContentWidth = useRef(DETAILS_DEFAULT)
   if (cols.details > 0) detailsContentWidth.current = cols.details
   // A requested Details panel that the concession chain cannot fit moves into
   // its occupant-owned right Sheet instead of becoming unreachable at zero width.
-  const detailsAsSheet = detailsSession !== undefined && panels.details > 0 && cols.details === 0
-  const bottomHeight = currentSession === undefined ? 0 : resolveBottomHeight(frameSize.height, panels.bottom)
+  const detailsAsSheet = conversationActive && detailsSession !== undefined
+    && panels.details > 0 && cols.details === 0
+  const bottomHeight = !conversationActive || currentSession === undefined
+    ? 0
+    : resolveBottomHeight(frameSize.height, panels.bottom)
   const closeDetails = useCallback(() => { actions.closeDetails() }, [actions])
   const colsRef = useRef(cols)
   colsRef.current = cols
@@ -256,6 +270,7 @@ export function AppFrame({
       data-bottom-collapsed={bottomHeight === 0 || undefined}
       data-dragging={dragging || undefined}
       data-sidebar-drawer={compact || undefined}
+      data-application-surface={panels.applicationSurface}
     >
       <div className={css.sidebarCol}>
         {/* Render-site slot call with live concession output: a closed
@@ -264,6 +279,8 @@ export function AppFrame({
             (collapsed follows the resolved rail, so a derived auto-collapse
             renders the rail UI too). */}
         {compact ? null : renderSlot('sidebar', {
+          applicationSurface: panels.applicationSurface,
+          openApplicationSurface: actions.openApplicationSurface,
           collapsed: sidebarCollapsed,
           width: cols.sidebar,
         })}
@@ -290,8 +307,13 @@ export function AppFrame({
             />
           ) : null}
         >
-          {renderSlot('conversation', {
-            detailsOpen: detailsSession !== undefined && panels.details > 0,
+          {renderSlotChain('application.surface', {
+            activeSurface: panels.applicationSurface,
+            openSurface: actions.openApplicationSurface,
+          }, {
+            fallback: renderSlot('conversation', {
+              detailsOpen: detailsSession !== undefined && panels.details > 0,
+            }),
           })}
         </CenterColumn>
         <DetailsColumn contentWidth={detailsContentWidth.current}>{renderSlot('details', {
@@ -326,6 +348,8 @@ export function AppFrame({
             {/* Same slot, mobile-expanded owner share: always open at the
                 fixed drawer width regardless of the persisted rail state. */}
             {renderSlot('sidebar', {
+              applicationSurface: panels.applicationSurface,
+              openApplicationSurface: actions.openApplicationSurface,
               collapsed: false, width: SIDEBAR_DRAWER_WIDTH,
               drawerClose: () => { setDrawerOpen(false) },
             })}

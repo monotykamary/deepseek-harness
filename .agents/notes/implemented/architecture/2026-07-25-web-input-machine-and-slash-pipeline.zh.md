@@ -72,7 +72,7 @@ occurrence 表与 chip 三投影：
 - 每个实体会话只有一个 `SessionInputShell`（facade），随会话作用域创建和拆除；无会话时不造 input machine。`ConversationRoot` 自身是 `session-maybe` 常驻外壳，持有 HeroShell、Workspace picker、composer stack 与 chain fallback 外框。它始终拥有同一个 scrollport 与 composer seat；会话出现后，彼此独立的严格会话 header 和 body outlet 只填入这些固定区域。
 - composer bar 是一个无条件渲染的 `session-maybe` slot entry：无会话时同一个 InputBar 以惰性态渲染（machine face 缺席、`disabled` owner prop），`connectWorkspace` 返回 blank 会话后同一实例转为 live——textarea DOM 在无会话 → blank 切换及其后每次 phase 翻转中都不重建；`ConversationRoot`、Hero 与布局骨架全程保持。
 - ConversationRoot 的 Hero 判据是 `sessionId === undefined || (composerPhase === 'blank' && (openState === 'open' || summaryBlank === true))`：summary 已证实为空的会话在任何 open state 下都保持 Hero，未经证实的会话则在 loading 期间进入 settling。首次 submit 同步进入 engaging，失败也保留 composer 与错误上下文，不退回 blank Hero；sidebar 的 blank 位只在提示词成功受理后翻 false。
-- 发送统一在 hub defaultSink：乐观清稿后只走 `session.prompt` 且固定 `mode:'queue'`（Web UI 无 steer 入口；host 线缆上的 `mode:'steer'` 不经此 machine）；失败且 live draft 仍为空才回填，用户已经继续输入则不覆盖。不存在 Draft materialize 或 attach 事务。
+- 发送统一在 hub defaultSink：引用序列化后，由 effect 持有的 `ctx.conversation.submissions` 注册表使用选定的 Queue／Steer 模式与仍存活的浏览器图片文件环绕普通发送，未改变的 `sendSession` 调用是末端 `next()`。middleware 拒绝仍留在提交事务内，因此只有 live draft 仍为空时才回填，用户已经继续输入则绝不覆盖。不存在 Draft materialize 或 attach 事务。
 - blank Hero 改选 Workspace 时，外壳调用 `connectWorkspace`；目标会话不同时把非空 draft 从当前 shell 搬到目标 shell，再 open 新 id，旧 blank 会话留存但不再 current。
 - Notifier 双位约定：`dirty`（快照新鲜度，`ensureFresh` 拉取可清）与 `notifyPending`（通知欠账，只有 flush 清）各自独立——拉取不得吞推送，对象层推订阅者（watchTransaction）依赖这一保证。
 
@@ -107,7 +107,7 @@ skill/@subagent 引用不走占位符 + occurrence 身份链——纯文本引�
 
 ### 测试纪律
 
-状态机全部行为由纯 JS 单测覆盖（事件序列进、断言状态与效果，零浏览器 DOM）；交互矩阵逐行投影测试。这一要求正是纯核 + 服务壳分层的成因。
+状态机全部行为由纯 JS 单测覆盖（事件序列进、断言状态与效果，零浏览器 DOM）；交互矩阵逐行投影测试。注册表测试钉住顺序、消费、恰好一次继续与释放，InputHub 编排测试则证明 wrapper 环绕真实 Session 提示词 sink。这一要求正是纯核 + 服务壳分层的成因。
 
 ## 曾考虑的替代方案
 
@@ -131,5 +131,5 @@ skill/@subagent 引用不走占位符 + occurrence 身份链——纯文本引�
 
 - 一个常驻 conversation 外壳承接无会话/blank/active：无会话 → blank 保持 ConversationRoot、Hero、root scope Workspace picker、scrollport、composer seat、InputBar 与 textarea；只有严格会话 header 和 body outlet 开始承载内容。同一 blank 会话 → engaging/active 也保持 InputBar 与 textarea。EmptyState 与受控 intent 链（`sessions.updateIntent`/`updatePendingPrompt`/`workspaces.sendSession`）随最后消费方一并删除。
 - 输入面对命令零知识 + 可选依赖：无命令包时纯输入可用；`@` 引用与 skill 引用免费复用同一菜单/pick 流水线。代价是空格/回车裁决是逐 source 轮询协议，其应答语义（同步/异步、undefined 含义）为冻结约定。
-- 提交事务化（attempt seq + 漂移守卫）使晚到结果回灌、会话切换、concurrent 重放三类缺陷结构性不可能，由矩阵测试钉住。
+- 提交事务化（attempt seq + 漂移守卫）使晚到结果回灌、会话切换、concurrent 重放三类缺陷结构性不可能，由矩阵测试钉住。middleware 可以延迟或消费普通发送；保留发送需要恰好调用一次 `next()`，Consumer 加入的模型可见上下文必须通过其 Host 能力记录。
 - 已知欠账：chip 跨刷新保真（可复用粘贴匹配）未立项；subagent 引用的模型表示待业务立项。

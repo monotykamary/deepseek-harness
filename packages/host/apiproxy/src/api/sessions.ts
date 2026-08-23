@@ -167,10 +167,14 @@ export interface SessionModels {
   failures: ModelCatalogFailure[]
 }
 
-/** A client-requested mutation of one still-pending queue item. */
+/**
+ * A client-requested mutation of one still-pending queue item. `move` exchanges
+ * one queued turn with its adjacent neighbor; an edge move is an accepted no-op.
+ */
 export type QueueAction =
   | { kind: 'edit'; content: ContentBlock[] }
   | { kind: 'remove' }
+  | { kind: 'move'; direction: 'earlier' | 'later' }
   | { kind: 'steer' }
 
 /** One Session list entry. */
@@ -364,7 +368,7 @@ export interface SessionsApi {
   Promise<RpcResponse<{ attachment: ImageAttachmentRef; data: string }>>
 
   /**
-   * Edits, removes, or strictly steers one pending queued occurrence on an ordinary session.
+   * Edits, removes, moves, or strictly steers one pending queued occurrence on an ordinary session.
    * Session-backed subagents reject with `agent-busy`.
    */
   updateQueue(request: RpcRequest<{ sessionId: SessionId; itemId: MessageId; action: QueueAction }>):

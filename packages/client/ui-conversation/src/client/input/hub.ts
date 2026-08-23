@@ -14,6 +14,7 @@ import type { TranslateNS } from '@monotykamary/dsh-client-locale/client'
 import { queueReadFaceOf } from '../queue/store.ts'
 import type { ComposerKeyboard, DraftAttachmentId, SessionInputResolver, SessionInput } from './contract.ts'
 import type { InputSubmitMode } from '../contract/composer-submission.ts'
+import type { ComposerSubmissionRegistry } from './submissions.ts'
 import type { PopupDismissFace } from './facade.ts'
 import { SessionInputShell } from './facade.ts'
 
@@ -24,6 +25,10 @@ interface CommandFace {
 
 /** Attachment-send face resolved lazily to keep hub/service construction acyclic. */
 interface ConversationAttachmentFace {
+  /** Resolve browser-owned draft images without transferring ownership. */
+  draftImages(imageIds: readonly DraftAttachmentId[]): readonly { readonly file: File }[]
+  /** Release one browser-owned draft image after successful send or middleware consumption. */
+  releaseDraftImage(imageId: DraftAttachmentId): void
   sendSession(
     session: SessionFace,
     text: string,
@@ -46,6 +51,7 @@ export class InputHub implements SessionInputResolver {
   constructor(
     private readonly rootCtx: ClientContext,
     private readonly t: TranslateNS<'conversation'>,
+    private readonly submissions: ComposerSubmissionRegistry,
   ) {}
 
   /**
@@ -170,7 +176,20 @@ export class InputHub implements SessionInputResolver {
     signal: AbortSignal,
   ): Promise<SubmitOutcome> {
     if (text === '' && imageIds.length === 0) return Promise.resolve({ kind: 'success' })
-    return this.conversation().sendSession(session, text, imageIds, mode, signal)
+    const conversation = this.conversation()
+    const images = conversation.draftImages(imageIds)
+    if (images.length !== imageIds.length) {
+      return Promise.reject(new Error('conversation submission middleware: one or more draft images are no longer available'))
+    }
+    return this.submissions.dispatch(
+      { sessionId: session.sessionId, text, images: images.map(image => image.file), mode, signal },
+      () => conversation.sendSession(session, text, imageIds, mode, signal),
+    ).then((outcome) => {
+      if (outcome.kind === 'success') {
+        for (const imageId of imageIds) conversation.releaseDraftImage(imageId)
+      }
+      return outcome
+    })
   }
 
   /**

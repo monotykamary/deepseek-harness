@@ -2367,6 +2367,61 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
     ],
   },
+  {
+    key: 'worktrees',
+    summary: 'Registry and dispatcher for repository worktree providers.',
+    description: 'Registry and dispatcher for repository worktree providers.',
+    methods: [
+      {
+        signature: 'registerProvider(provider: WorktreeProvider): () => void',
+        description: 'Register one provider until the calling fiber is disposed.',
+        parameters: [{ name: 'provider', description: 'Exact implementation and unique provider name.' }],
+        returns: 'disposer for this registration.',
+      },
+      {
+        signature: 'listProviders(): readonly string[]',
+        description: 'Return provider names in registration order.',
+        parameters: [],
+        returns: 'fresh ordered provider-name list.',
+      },
+      {
+        signature: 'resolve<T extends WorktreeProviderRequest>(request: T): ResolvedWorktreeRequest<T>',
+        description: 'Resolve a request\'s provider without performing work.',
+        parameters: [{ name: 'request', description: 'Provider-optional operation request.' }],
+        returns: 'detached request carrying the selected provider.',
+      },
+      {
+        signature: 'locate(request: WorktreeLocateRequest): Promise<WorktreeRepository | undefined>',
+        description: 'Resolve the repository containing a directory.',
+        parameters: [{ name: 'request', description: 'Directory and optional provider selection.' }],
+        returns: 'repository facts, or `undefined` outside a repository.',
+      },
+      {
+        signature: 'list(request: WorktreeListRequest): Promise<readonly WorktreeCheckout[]>',
+        description: 'List repository checkouts.',
+        parameters: [{ name: 'request', description: 'Directory inside the target repository.' }],
+        returns: 'provider-neutral primary and linked checkout facts.',
+      },
+      {
+        signature: 'create(request: WorktreeCreateRequest): Promise<WorktreeCheckout>',
+        description: 'Create one managed linked checkout.',
+        parameters: [{ name: 'request', description: 'Repository, label, base, and optional caller identity.' }],
+        returns: 'created checkout facts after provider setup completes.',
+      },
+      {
+        signature: 'remove(request: WorktreeRemoveRequest): Promise<WorktreeCheckout>',
+        description: 'Remove one managed linked checkout without forcing dirty state.',
+        parameters: [{ name: 'request', description: 'Repository and exact checkout path.' }],
+        returns: 'removed checkout facts retained for audit output.',
+      },
+      {
+        signature: 'sweep(request: WorktreeSweepRequest): Promise<WorktreeSweepResult>',
+        description: 'Sweep bounded stale managed linked checkouts.',
+        parameters: [{ name: 'request', description: 'Repository, age threshold, and removal limit.' }],
+        returns: 'checkouts safely removed by the provider.',
+      },
+    ],
+  },
 ]
 
 /** Every harness event, sorted by name. */
@@ -2842,6 +2897,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     summary: 'A workflow run started — the script\'s meta block validated, the body about to execute.',
     description: 'A workflow run started — the script\'s meta block validated, the body about to execute. Paired with Events[\'workflow/end\'].',
     parameters: [{ name: 'info', description: 'the run\'s identity snapshot (id + meta).' }],
+  },
+  {
+    name: 'worktrees/provider-change',
+    mode: 'emit',
+    signature: '\'worktrees/provider-change\'(change: { readonly provider: string; readonly present: boolean }): void',
+    summary: 'One provider registration was committed or removed.',
+    description: 'One provider registration was committed or removed.',
+    parameters: [{ name: 'change', description: 'provider name and whether it is now present.' }],
   },
 ]
 
@@ -3489,7 +3552,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Inbox',
-    declaration: 'export class Inbox {\n    constructor(private readonly session: Session, private readonly notifications: InboxNotifications);\n    get nextTurn(): readonly UserMessage[];\n    get nextStep(): readonly UserMessage[];\n    get hasPending(): boolean;\n    clear(): void;\n    claim(target: InboxTarget, turn: number): UserMessage[];\n    append(target: InboxTarget, message: UserMessage): void;\n    prepend(target: InboxTarget, message: UserMessage): void;\n    replace(messageId: MessageId, newMessage: UserMessage): boolean;\n    remove(messageId: MessageId): boolean;\n    splice(target: InboxTarget, start: number, deleteCount: number, inserted: UserMessage[]): UserMessage[];\n}',
+    declaration: 'export class Inbox {\n    constructor(private readonly session: Session, private readonly notifications: InboxNotifications);\n    get nextTurn(): readonly UserMessage[];\n    get nextStep(): readonly UserMessage[];\n    get hasPending(): boolean;\n    clear(): void;\n    claim(target: InboxTarget, turn: number): UserMessage[];\n    append(target: InboxTarget, message: UserMessage): void;\n    prepend(target: InboxTarget, message: UserMessage): void;\n    replace(messageId: MessageId, newMessage: UserMessage): boolean;\n    remove(messageId: MessageId): boolean;\n    moveNextTurn(messageId: MessageId, direction: \'earlier\' | \'later\'): boolean;\n    splice(target: InboxTarget, start: number, deleteCount: number, inserted: UserMessage[]): UserMessage[];\n}',
   },
   {
     name: 'InboxNotifications',
@@ -3978,6 +4041,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ResolvedSubagentStartRequest',
     declaration: 'export interface ResolvedSubagentStartRequest extends SubagentStartRequest {\n    readonly descriptor: SubagentDescriptorData;\n}',
+  },
+  {
+    name: 'ResolvedWorktreeRequest',
+    declaration: 'export type ResolvedWorktreeRequest<T extends WorktreeProviderRequest> = Omit<T, \'provider\'> & {\n    readonly provider: string;\n};',
   },
   {
     name: 'RestoredSessionOptions',
@@ -5078,6 +5145,58 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowStopReason',
     declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\';',
+  },
+  {
+    name: 'WorktreeBaseRef',
+    declaration: 'export type WorktreeBaseRef = \'fresh\' | \'head\' | {\n    readonly ref: string;\n};',
+  },
+  {
+    name: 'WorktreeCheckout',
+    declaration: 'export interface WorktreeCheckout {\n    readonly id: WorktreeCheckoutId;\n    readonly repositoryId: WorktreeRepositoryId;\n    readonly path: string;\n    readonly branch: string | null;\n    readonly head: string | null;\n    readonly kind: \'main\' | \'linked\';\n    readonly managed: boolean;\n    readonly current: boolean;\n    readonly locked: boolean;\n    readonly prunable: boolean;\n    readonly activeSessionIds: readonly SessionId[];\n    readonly copiedFiles?: readonly string[];\n}',
+  },
+  {
+    name: 'WorktreeCheckoutId',
+    declaration: 'export type WorktreeCheckoutId = Branded<\'WorktreeCheckoutId\'>;',
+  },
+  {
+    name: 'WorktreeCreateRequest',
+    declaration: 'export interface WorktreeCreateRequest extends WorktreeLocateRequest {\n    readonly checkoutId?: WorktreeCheckoutId;\n    readonly label: string;\n    readonly baseRef: WorktreeBaseRef;\n}',
+  },
+  {
+    name: 'WorktreeListRequest',
+    declaration: 'export interface WorktreeListRequest extends WorktreeLocateRequest {\n}',
+  },
+  {
+    name: 'WorktreeLocateRequest',
+    declaration: 'export interface WorktreeLocateRequest extends WorktreeProviderRequest {\n    readonly cwd: string;\n    readonly signal?: AbortSignal;\n}',
+  },
+  {
+    name: 'WorktreeProvider',
+    declaration: 'export interface WorktreeProvider {\n    readonly name: string;\n    locate(request: ResolvedWorktreeRequest<WorktreeLocateRequest>): Promise<WorktreeRepository | undefined>;\n    list(request: ResolvedWorktreeRequest<WorktreeListRequest>): Promise<readonly WorktreeCheckout[]>;\n    create(request: ResolvedWorktreeRequest<WorktreeCreateRequest>): Promise<WorktreeCheckout>;\n    remove(request: ResolvedWorktreeRequest<WorktreeRemoveRequest>): Promise<WorktreeCheckout>;\n    sweep(request: ResolvedWorktreeRequest<WorktreeSweepRequest>): Promise<WorktreeSweepResult>;\n}',
+  },
+  {
+    name: 'WorktreeProviderRequest',
+    declaration: 'export interface WorktreeProviderRequest {\n    readonly provider?: string;\n}',
+  },
+  {
+    name: 'WorktreeRemoveRequest',
+    declaration: 'export interface WorktreeRemoveRequest extends WorktreeLocateRequest {\n    readonly path: string;\n}',
+  },
+  {
+    name: 'WorktreeRepository',
+    declaration: 'export interface WorktreeRepository {\n    readonly id: WorktreeRepositoryId;\n    readonly provider: string;\n    readonly name: string;\n    readonly mainPath: string;\n}',
+  },
+  {
+    name: 'WorktreeRepositoryId',
+    declaration: 'export type WorktreeRepositoryId = Branded<\'WorktreeRepositoryId\'>;',
+  },
+  {
+    name: 'WorktreeSweepRequest',
+    declaration: 'export interface WorktreeSweepRequest extends WorktreeLocateRequest {\n    readonly olderThanMs: number;\n    readonly limit: number;\n    readonly now?: number;\n}',
+  },
+  {
+    name: 'WorktreeSweepResult',
+    declaration: 'export interface WorktreeSweepResult {\n    readonly removed: readonly WorktreeCheckout[];\n}',
   },
 ]
 

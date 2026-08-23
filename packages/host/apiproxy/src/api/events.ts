@@ -84,8 +84,8 @@ export type MuxFrame =
   /**
    * Complete transient inbox state after every enqueue, mutation, claim, or
    * discard. Pending work is not model-visible and therefore has no durable
-   * session event; the whole snapshot makes edit, deletion, cancel, and
-   * reconnect converge through one authoritative signal. `session/queue`
+   * session event; the whole snapshot makes edit, deletion, reorder, cancel,
+   * and reconnect converge through one authoritative signal. `session/queue`
    * covers both resolved placements: queued items render
    * in QueueDock, while pending steering renders at the conversation tail.
    */

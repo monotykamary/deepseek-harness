@@ -126,6 +126,30 @@ export class Inbox {
   }
 
   /**
+   * Move one queued turn by one position without publishing insertion or
+   * discard notifications. The stable message identity and delivery class do
+   * not change; an edge move succeeds without writing a redundant event.
+   * @param messageId - identity of the queued turn to move.
+   * @param direction - adjacent queue position to exchange with the message.
+   * @returns whether the message remains in the queued-turn list.
+   */
+  moveNextTurn(messageId: MessageId, direction: 'earlier' | 'later'): boolean {
+    const index = this.nextTurn.findIndex(message => message.id === messageId)
+    if (index < 0) return false
+    const adjacent = direction === 'earlier' ? index - 1 : index + 1
+    if (adjacent < 0 || adjacent >= this.nextTurn.length) return true
+    const start = Math.min(index, adjacent)
+    const pair = this.nextTurn.slice(start, start + 2)
+    const splice = {
+      target: 'next-turn' as const, start, removedCount: 2, inserted: pair.toReversed(),
+    }
+    this.validate(splice)
+    const event = this.session.append('agent/inbox/spliced', splice)
+    this.state['next-turn'].splice(start, 2, ...event.data.inserted)
+    return true
+  }
+
+  /**
    * Apply standard splice semantics and durably record the normalized result.
    * The durable event commits before the live projection mutates, so synchronous
    * `session/event` observers see the pre-splice lists and can reconstruct the

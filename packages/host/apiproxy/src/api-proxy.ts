@@ -15,7 +15,7 @@ import type { Agent, ModelSelection, ModelSelectionRef, AgentOptions, AgentStatu
 import type {} from '@monotykamary/dsh-agent-presets/types'
 import { AttachmentError, admitEncodedImages } from '@monotykamary/dsh-attachment'
 import type { ImageAttachmentRef } from '@monotykamary/dsh-attachment'
-import { createUserMessage, freezeMessage, ReasoningEffortId } from '@monotykamary/dsh-llm'
+import { assertNever, createUserMessage, freezeMessage, ReasoningEffortId } from '@monotykamary/dsh-llm'
 import { errorChain } from '@monotykamary/dsh-llm'
 import type { ContentBlock, MessageSource } from '@monotykamary/dsh-llm'
 import { isAppendSurfaceEvent, isJsonValue } from '@monotykamary/dsh-session'
@@ -2594,11 +2594,29 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             details: { itemId },
           }))
         }
-        if (action.kind === 'edit') {
-          agent.inbox.replace(itemId, freezeMessage({ ...message, content: action.content }))
-        } else {
-          agent.inbox.remove(itemId)
-          if (action.kind === 'steer') agent.steer(message)
+        if (action.kind === 'move' && target !== 'next-turn') {
+          return Promise.resolve(err(request, {
+            code: 'queue-item-not-found',
+            message: 'queued item is no longer pending',
+            details: { itemId },
+          }))
+        }
+        switch (action.kind) {
+          case 'edit':
+            agent.inbox.replace(itemId, freezeMessage({ ...message, content: action.content }))
+            break
+          case 'remove':
+            agent.inbox.remove(itemId)
+            break
+          case 'move':
+            agent.inbox.moveNextTurn(itemId, action.direction)
+            break
+          case 'steer':
+            agent.inbox.remove(itemId)
+            agent.steer(message)
+            break
+          default:
+            assertNever(action, 'QueueAction')
         }
         return Promise.resolve(ok(request, { accepted: true as const }))
       },

@@ -95,7 +95,7 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
           </button>
         )}
         <ul id={listId} className={css.list} hidden={!listVisible}>
-          {listVisible && queue.map(row => (
+          {listVisible && queue.map((row, index) => (
             <li key={row.id} className={css.row}>
               {/* Single-item strip has no count header, so the row itself carries the queue glyph. */}
               {queue.length === 1 && <span className={css.lead} aria-hidden><ListPlus size={14} /></span>}
@@ -150,6 +150,40 @@ export function QueueDock({ useSession, updateQueue, notify, t }: QueueDockProps
                   )
                   : (
                     <>
+                      <Tooltip label={t('queue.moveEarlier')} side="bottom" delayMs={500}>
+                        <button
+                          type="button"
+                          className={css.action}
+                          aria-label={t('queue.moveEarlier')}
+                          disabled={busy !== null || index === 0}
+                          onClick={() => {
+                            void applyAction(
+                              row.id,
+                              { kind: 'move', direction: 'earlier' },
+                              t('queue.moveFailed'),
+                            )
+                          }}
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('queue.moveLater')} side="bottom" delayMs={500}>
+                        <button
+                          type="button"
+                          className={css.action}
+                          aria-label={t('queue.moveLater')}
+                          disabled={busy !== null || index === queue.length - 1}
+                          onClick={() => {
+                            void applyAction(
+                              row.id,
+                              { kind: 'move', direction: 'later' },
+                              t('queue.moveFailed'),
+                            )
+                          }}
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                      </Tooltip>
                       <Tooltip label={t('queue.edit')} side="bottom" delayMs={500} disabled={row.text === null}>
                         <button
                           type="button"

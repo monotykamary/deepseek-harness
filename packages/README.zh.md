@@ -49,7 +49,7 @@ npm scope 为 `@monotykamary/dsh-*`；Cordis `Service` 子类和函数插件通�
 | [`settings/`](settings/README.zh.md) | 用户设置 seam + 基于文件的提供方 | 产品：稳定 API |
 | [`credentials/`](credentials/README.zh.md) | 凭据引用/记录 seam + 环境变量优先于 `.env` 的提供方 + 授权 flow | 产品：稳定 API |
 | [`storage/`](storage/README.zh.md) | 非会话存储中枢 + 后端 + 领域形式 | 产品：稳定 API |
-| [`workspace/`](workspace/README.zh.md) | Workspace 实体 | 产品：稳定 API |
+| [`workspace/`](workspace/README.zh.md) | Workspace 实体与仓库 worktree provider | 产品：稳定 API |
 | [`sdk/`](sdk/README.zh.md) | 进程外运行时 SDK：JSON-RPC 协议、TypeScript 客户端和服务器插件 | 产品：稳定 API |
 | [`acp/`](acp/README.zh.md) | 仅面向自动化的 ACP（Agent Client Protocol）服务器 | 产品：稳定 API |
 | [`interaction/`](interaction/README.zh.md) | 人机协作平面：批准／交互 seam、权限预设、命令、询问用户的工具 | 产品：稳定 API |

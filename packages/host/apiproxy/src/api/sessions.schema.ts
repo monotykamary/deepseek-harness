@@ -335,6 +335,7 @@ export const sessionUpdateQueueRequestSchema = z.object({
   action: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('edit'), content: z.array(contentBlockSchema) }),
     z.object({ kind: z.literal('remove') }),
+    z.object({ kind: z.literal('move'), direction: z.union([z.literal('earlier'), z.literal('later')]) }),
     z.object({ kind: z.literal('steer') }),
   ]),
 }) as unknown as z.ZodType<RequestPayload<'session.updateQueue'>>

@@ -8,7 +8,8 @@ import { en, zh, type SidebarKey } from './locales.ts'
 
 export type {
   SidebarBrandMarkOwnerProps, SidebarBrandNameOwnerProps, SidebarFooterActionOwnerProps,
-  SidebarRootComponentProps, SidebarRootInjected, SidebarSectionOwnerProps, SidebarSettingsOwnerProps,
+  SidebarNavigationOwnerProps, SidebarRootComponentProps, SidebarRootInjected, SidebarSectionOwnerProps,
+  SidebarSettingsOwnerProps,
 } from './contract/slots.ts'
 export type { SidebarKey } from './locales.ts'
 
@@ -34,7 +35,10 @@ export function apply(ctx: ClientContext): void {
   const injectProps = (): SidebarRootInjected => ({
     // The shell's New Session button rides the runtime's shared action
     // (current Session Workspace, then recent Workspace).
-    startSession: (workspaceId) => { ctx.workspaces.startSession(workspaceId) },
+    startSession: (workspaceId) => {
+      ctx.layout.openApplicationSurface('conversation')
+      ctx.workspaces.startSession(workspaceId)
+    },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
   })
   ctx.effect(
@@ -47,6 +51,7 @@ export function apply(ctx: ClientContext): void {
       children: {
         'sidebar.brand.mark': { kind: 'single', scope: 'root' },
         'sidebar.brand.name': { kind: 'single', scope: 'root' },
+        'sidebar.navigation': { kind: 'list', scope: 'root' },
         'sidebar.workspaces': { kind: 'single', scope: 'root' },
         'sidebar.settings': { kind: 'single', scope: 'root' },
         'sidebar.footer.action': { kind: 'list', scope: 'root' },

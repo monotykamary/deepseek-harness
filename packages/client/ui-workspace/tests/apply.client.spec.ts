@@ -20,6 +20,7 @@ async function bench() {
   const insertSessionBefore = vi.fn(async () => ({}))
   const open = vi.fn()
   const clear = vi.fn()
+  const openApplicationSurface = vi.fn()
   const search = vi.fn(async () => ({
     ok: true as const,
     value: { items: [{ sessionId: 'session' as never, snippet: 'match' }], hasMore: false },
@@ -42,6 +43,7 @@ async function bench() {
     hostDescription: { getSnapshot: () => undefined, subscribe: () => () => {} },
   } as never)
   ctx.provide('settingsScope', { bind: bindSettlement } as never)
+  ctx.provide('layout', { openApplicationSurface } as never)
   ctx.provide('workspaces', {
     create, startSession, rename, insertSessionBefore,
   } as never)
@@ -55,7 +57,7 @@ async function bench() {
   return {
     ctx, slots: ctx.get('slots') as SlotRegistry, locale, create, startSession, rename,
     insertSessionBefore, open, clear, search, renameSession, binding, fork,
-    settlement, bindSettlement,
+    settlement, bindSettlement, openApplicationSurface,
   }
 }
 
@@ -70,7 +72,7 @@ function declare(slots: SlotRegistry, ...names: HoleName[]): () => void {
 describe('ui-workspace apply', () => {
   it('declares the services it drives', () => {
     expect(inject).toEqual([
-      'slots', 'sessions', 'workspaces', 'locale', 'connection', 'settingsScope',
+      'slots', 'sessions', 'workspaces', 'locale', 'connection', 'settingsScope', 'layout',
     ])
   })
 
@@ -107,6 +109,8 @@ describe('ui-workspace apply', () => {
     expect(b.startSession).toHaveBeenLastCalledWith(undefined)
     browser.open('session' as never)
     expect(b.open).toHaveBeenCalledWith('session')
+    expect(b.openApplicationSurface).toHaveBeenCalledTimes(3)
+    expect(b.openApplicationSurface).toHaveBeenLastCalledWith('conversation')
     const signal = new AbortController().signal
     await expect(browser.searchSessions('match', signal)).resolves.toEqual({
       items: [{ sessionId: 'session', snippet: 'match' }],
@@ -120,6 +124,7 @@ describe('ui-workspace apply', () => {
     browser.forkSession('session' as never)
     await vi.waitFor(() => {
       expect(b.open).toHaveBeenCalledWith('forked')
+      expect(b.openApplicationSurface).toHaveBeenCalledTimes(4)
     })
     expect(b.fork).toHaveBeenCalledWith({ sessionId: 'session', increaseTitle: true })
     await browser.renameWorkspace('ws' as never, 'renamed')

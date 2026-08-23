@@ -318,6 +318,35 @@ describe('session.list projections column', () => {
   })
 })
 
+describe('session queue movement', () => {
+  it('moves only queued turns and preserves the authoritative stable identities', async () => {
+    const { ctx, session } = await harness(false)
+    const agent = ctx.agents.get(session.id)
+    if (agent === undefined) throw new Error('missing fixture agent')
+    const first = createUserMessage({ content: [{ type: 'text', text: 'first' }], source: { kind: 'user' } })
+    const second = createUserMessage({ content: [{ type: 'text', text: 'second' }], source: { kind: 'user' } })
+    const steering = createUserMessage({ content: [{ type: 'text', text: 'steering' }], source: { kind: 'user' } })
+    agent.inbox.append('next-turn', first)
+    agent.inbox.append('next-turn', second)
+    agent.inbox.append('next-step', steering)
+    const proxy = api(ctx)
+
+    const moved = await proxy.sessions.updateQueue(request({
+      sessionId: session.id, itemId: second.id, action: { kind: 'move' as const, direction: 'earlier' as const },
+    }))
+    expect(moved.result).toEqual({ ok: true, value: { accepted: true } })
+    expect(agent.inbox.nextTurn.map(message => message.id)).toEqual([second.id, first.id])
+
+    const unavailable = await proxy.sessions.updateQueue(request({
+      sessionId: session.id, itemId: steering.id, action: { kind: 'move' as const, direction: 'later' as const },
+    }))
+    expect(unavailable.result).toMatchObject({
+      ok: false, error: { code: 'queue-item-not-found', details: { itemId: steering.id } },
+    })
+    expect(agent.inbox.nextStep).toEqual([steering])
+  })
+})
+
 describe('session/projection push frame', () => {
   /** Drain frames until `count` session/projection frames arrived. */
   async function collect(iterable: AsyncIterable<RpcRequest<MuxFrame>>, count: number, abort: AbortController): Promise<MuxFrame[]> {

@@ -3411,6 +3411,58 @@ export interface Config {
 
 Source: [`packages/workflow/workflow-worker-thread/src/index.ts:32`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
+<a id="monotykamarydsh-worktree"></a>
+
+## `@monotykamary/dsh-worktree`
+
+```ts config-catalog
+/** Worktree provider selection. */
+export interface Config {
+  /** Provider used when a request omits `provider`. */
+  readonly provider: string
+}
+```
+
+Source: [`packages/workspace/worktree/src/index.ts:43`](../packages/workspace/worktree/src/index.ts)
+
+<a id="monotykamarydsh-worktree-git-local"></a>
+
+## `@monotykamary/dsh-worktree-git-local`
+
+Requires: `worktrees` · `subprocess` · `agents`
+
+```ts config-catalog
+/** Local Git provider configuration. */
+export interface Config {
+  /** Absolute directory that exclusively contains provider-managed linked checkouts. */
+  readonly root: string
+  /** Git executable name or absolute path. */
+  readonly gitCommand?: string
+  /** Maximum milliseconds for each foreground Git command. */
+  readonly commandTimeoutMs?: number
+  /** Maximum captured bytes per Git output stream. */
+  readonly outputMaxBytes?: number
+  /** Milliseconds allowed for process-tree termination after cancellation. */
+  readonly terminationGraceMs?: number
+  /** Fetch the remote default branch before resolving a `fresh` base. */
+  readonly fetchFreshBase?: boolean
+  /** Maximum normalized label characters retained before the checkout id suffix. */
+  readonly branchLabelMaxLength?: number
+  /** Single repository-root filename containing ignored-file copy patterns. */
+  readonly includeFilename?: string
+  /** Maximum bytes read from the ignored-file copy pattern file. */
+  readonly includeFileMaxBytes?: number
+  /** Maximum accepted patterns from the ignored-file copy pattern file. */
+  readonly includeMaxPatterns?: number
+  /** Maximum ignored regular files copied into one new checkout. */
+  readonly includeMaxFiles?: number
+  /** Maximum aggregate bytes copied into one new checkout. */
+  readonly includeMaxTotalBytes?: number
+}
+```
+
+Source: [`packages/workspace/worktree-git-local/src/index.ts:33`](../packages/workspace/worktree-git-local/src/index.ts)
+
 ## Loadable plugins with no config
 
 These load from a `cordis.yml` entry with no `config:` block; they declare no configuration API.

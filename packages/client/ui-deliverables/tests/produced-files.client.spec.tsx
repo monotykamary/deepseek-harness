@@ -5,6 +5,8 @@
  * and opener wiring, and the plugin registrations' fiber-teardown removal
  * (HMR safety) against the real SlotRegistry.
  */
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { Context } from '@monotykamary/cordis'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -20,7 +22,7 @@ import { apply as applyLocale, inject as localeInject } from '@monotykamary/dsh-
 import type { ChatFileMentions, TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import { makeTranslate, stubSettingsScope } from '@monotykamary/dsh-client-test-runtime'
-import { ProducedFiles, type ProducedFilesInjected } from '../src/client/ProducedFiles.tsx'
+import { ProducedFiles, ProducedFilesCard, type ProducedFilesInjected } from '../src/client/ProducedFiles.tsx'
 import {
   basename, deliverablesDefinition, producedFileMentions, producedForClosing, selectProducedFiles,
   type DeliverablesTurnData,
@@ -28,6 +30,14 @@ import {
 import { apply, inject } from '../src/client/index.ts'
 import { deliverablesViewDefinition } from '../src/client/deliverables-view.ts'
 import type { DeliverablesSnapshot } from '../src/client/contract.ts'
+
+const producedFilesCss = readFileSync(resolve('packages/client/ui-deliverables/src/client/ProducedFiles.module.css'), 'utf8')
+
+function cssRule(selector: string): string {
+  const start = producedFilesCss.indexOf(`${selector} {`)
+  if (start < 0) throw new Error(`missing CSS rule ${selector}`)
+  return producedFilesCss.slice(start, producedFilesCss.indexOf('}', start) + 1)
+}
 import { apply as applyInvariant } from '../src/invariant.ts'
 import { en, zh } from '../src/client/locales.ts'
 
@@ -480,6 +490,48 @@ describe('ProducedFiles changed-files card', () => {
     )
     expect(view.getByText('Changed files (1)')).toBeTruthy()
     expect(view.getByRole('button', { name: 'View diff' })).toBeTruthy()
+  })
+
+  it('contains nested paths and line totals inside the card width', () => {
+    const view = render(
+      <ProducedFiles matched={{ paths: ['src/nested/b.ts'], changes }} openChanges={() => {}} t={t} />,
+    )
+    const root = view.container.querySelector<HTMLElement>('[data-changed-files-card]')
+    const row = view.getByRole('button', { name: '查看 src/nested/b.ts 的差异' })
+    expect(root).not.toBeNull()
+    for (const rule of [cssRule('.root'), cssRule('.tree,\n.treeGroup')]) {
+      expect(rule).toContain('width: 100%')
+      expect(rule).toContain('max-width: 100%')
+      expect(rule).toContain('box-sizing: border-box')
+      expect(rule).toContain('overflow: hidden')
+    }
+    const rowRule = cssRule('.treeRow')
+    expect(rowRule).toContain('width: 100%')
+    expect(rowRule).toContain('box-sizing: border-box')
+    expect(rowRule).toContain('overflow: hidden')
+    expect(row).toBeTruthy()
+  })
+
+  it('renders a read-only hierarchy when its owner has no complete-diff destination', () => {
+    const view = render(
+      <ProducedFilesCard
+        changes={changes}
+        labels={{
+          changed: count => `${String(count)} files changed`,
+          viewFileDiff: path => `View ${path}`,
+          expandFolders: 'Expand all',
+          collapseFolders: 'Collapse all',
+          viewDiff: 'View diff',
+        }}
+      />,
+    )
+
+    expect(view.getByText('3 files changed')).toBeTruthy()
+    expect(view.queryByRole('button', { name: 'View diff' })).toBeNull()
+    expect(view.queryByRole('button', { name: 'View src/a.ts' })).toBeNull()
+    expect(view.getByTitle('src/a.ts')).toBeTruthy()
+    fireEvent.click(view.getByRole('button', { name: /^src/u }))
+    expect(view.queryByTitle('src/a.ts')).toBeNull()
   })
 })
 

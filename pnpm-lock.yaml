@@ -1261,6 +1261,12 @@ importers:
       '@monotykamary/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../workflow/workflow-worker-thread
+      '@monotykamary/dsh-worktree':
+        specifier: workspace:^
+        version: link:../../workspace/worktree
+      '@monotykamary/dsh-worktree-git-local':
+        specifier: workspace:^
+        version: link:../../workspace/worktree-git-local
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -3645,6 +3651,9 @@ importers:
       '@monotykamary/dsh-client-ui-conversation':
         specifier: workspace:^
         version: link:../ui-conversation
+      '@monotykamary/dsh-client-ui-layout':
+        specifier: workspace:^
+        version: link:../ui-layout
       '@monotykamary/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
@@ -9310,6 +9319,50 @@ importers:
       '@monotykamary/dsh-storage-domain':
         specifier: workspace:^
         version: link:../../storage/storage-domain
+
+  packages/workspace/worktree:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+
+  packages/workspace/worktree-git-local:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-subprocess':
+        specifier: workspace:^
+        version: link:../../subprocess/subprocess
+      '@monotykamary/dsh-subprocess-local':
+        specifier: workspace:^
+        version: link:../../subprocess/subprocess-local
+      '@monotykamary/dsh-worktree':
+        specifier: workspace:^
+        version: link:../worktree
 
   python/sdk-runtime:
     dependencies:

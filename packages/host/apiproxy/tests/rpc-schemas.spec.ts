@@ -281,9 +281,14 @@ describe('sessions domain schemas', () => {
     expect(sessionUpdateQueueRequestSchema.parse({
       sessionId: 's1', itemId: 'i1', action: { kind: 'remove' },
     }).action.kind).toBe('remove')
-    expect(() => sessionUpdateQueueRequestSchema.parse({
-      sessionId: 's1', itemId: 'i1', action: { kind: 'promote' },
-    })).toThrow()
+    for (const direction of ['earlier', 'later']) {
+      expect(sessionUpdateQueueRequestSchema.parse({
+        sessionId: 's1', itemId: 'i1', action: { kind: 'move', direction },
+      }).action).toEqual({ kind: 'move', direction })
+    }
+    for (const action of [{ kind: 'promote' }, { kind: 'move', direction: 'first' }]) {
+      expect(() => sessionUpdateQueueRequestSchema.parse({ sessionId: 's1', itemId: 'i1', action })).toThrow()
+    }
     expect(sessionCancelValueSchema.parse({ accepted: true }).accepted).toBe(true)
     expect(sessionUpdateQueueValueSchema.parse({ accepted: true }).accepted).toBe(true)
     expect(contentBlockSchema.parse({ type: 'text', text: 'x', extra: 1 })).toMatchObject({ extra: 1 })

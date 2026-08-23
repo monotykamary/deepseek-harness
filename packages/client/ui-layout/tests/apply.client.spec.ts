@@ -40,7 +40,7 @@ describe('ui-layout client apply', () => {
     expect(inject).toEqual(['slots', 'theme'])
   })
 
-  it('provides ctx.layout and registers AppFrame into root with the three child declarations', async () => {
+  it('provides ctx.layout and registers AppFrame into root with its child declarations', async () => {
     const { ctx, slots } = await bench()
     const fiber = ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
@@ -49,6 +49,7 @@ describe('ui-layout client apply', () => {
     expect(slots.entries('root')).toHaveLength(1)
     // …and declared the three children in the ledger.
     expect(slots.spec('sidebar')).toEqual({ kind: 'single', scope: 'root' })
+    expect(slots.spec('application.surface')).toEqual({ kind: 'chain', scope: 'root' })
     expect(slots.spec('conversation')).toEqual({ kind: 'single', scope: 'session-maybe' })
     expect(slots.spec('details')).toEqual({ kind: 'single', scope: 'session' })
   })
@@ -58,12 +59,16 @@ describe('ui-layout client apply', () => {
     const fiber = ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
     const actions = {
-      setSidebar: vi.fn(), setDetails: vi.fn(), toggleSidebar: vi.fn(), openDetails: vi.fn(), closeDetails: vi.fn(),
+      openApplicationSurface: vi.fn(), setSidebar: vi.fn(), setDetails: vi.fn(), setBottom: vi.fn(),
+      toggleSidebar: vi.fn(), setNarrow: vi.fn(), openDetails: vi.fn(), closeDetails: vi.fn(),
+      openBottom: vi.fn(), closeBottom: vi.fn(), toggleBottom: vi.fn(),
     }
     const injected = (slots.entries('root')[0]!.inject as (actions: never) => object)(actions as never)
     expect(injected).toEqual({})
     const layout = ctx.get('layout') as LayoutController
+    layout.openApplicationSurface('conversation')
     layout.toggleSidebar()
+    expect(actions.openApplicationSurface).toHaveBeenCalledWith('conversation')
     expect(actions.toggleSidebar).toHaveBeenCalledOnce()
   })
 
@@ -100,6 +105,7 @@ describe('ui-layout client apply', () => {
     expect(ctx.get('layout')).toBeUndefined()
     expect(slots.entries('root')).toHaveLength(0)
     expect(slots.spec('sidebar')).toBeUndefined()
+    expect(slots.spec('application.surface')).toBeUndefined()
     // The built-in root declaration survives entry teardown (runtime-owned).
     expect(slots.spec('root')).toEqual({ kind: 'single', scope: 'root' })
   })

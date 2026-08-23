@@ -135,6 +135,18 @@
     - id: subprocess
       name: '@monotykamary/dsh-subprocess-local'
 
+    # Repository checkouts are a provider seam; the shipped local provider
+    # keeps managed linked worktrees below the Harness home.
+    - id: worktrees
+      name: '@monotykamary/dsh-worktree'
+      config:
+        provider: git-local
+
+    - id: worktree-git-local
+      name: '@monotykamary/dsh-worktree-git-local'
+      config:
+        root: !!js dshHomePath('worktrees')
+
     # Every shipped CLI mode starts with the same file-effect boundary.
     # The environment remains an explicit deployment override; otherwise fresh
     # sessions pin workspace-write + ask through the permission service below.

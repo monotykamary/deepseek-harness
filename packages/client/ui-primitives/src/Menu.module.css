@@ -77,6 +77,11 @@
   overflow-y: auto;
 }
 
+.header {
+  flex: none;
+  min-width: 0;
+}
+
 /* Pinned rows below the scroll region; l2 hairline (l1 is near-invisible on
  * the menu surface) mirrors the .separator spacing. */
 .footer {
@@ -218,9 +223,20 @@
   white-space: nowrap;
 }
 
-.check {
+.check,
+.itemTrailing {
   flex: none;
+}
+
+.check {
   color: var(--dsw-alias-label-primary);
+}
+
+.itemTrailing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-tertiary);
 }
 
 /* Selected cell keeps the plain fill (marker is the trailing check); the

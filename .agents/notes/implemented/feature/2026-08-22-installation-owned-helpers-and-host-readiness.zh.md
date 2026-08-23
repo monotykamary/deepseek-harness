@@ -1,8 +1,8 @@
 # Agent Note: 安装持有的辅助程序与宿主机就绪状态
 
-[English](2026-08-22-installation-owned-helpers-and-host-readiness.md) | 中文
-
 Status: implemented
+
+[English](2026-08-22-installation-owned-helpers-and-host-readiness.md) | 中文
 
 ## Problem
 

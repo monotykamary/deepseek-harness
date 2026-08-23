@@ -4,10 +4,14 @@ import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import { ComposerAttachments } from './ComposerAttachments.tsx'
 import { MessageImages } from './MessageImages.tsx'
 
+export { AttachmentRail, type AttachmentRailItem, type AttachmentRailLabels } from '../AttachmentRail.tsx'
+export { ImageLightbox, type ImageLightboxLabels } from '../ImageLightbox.tsx'
+export { ImageGallery, MessageImage, type ImageLoader, type MessageImageLabels } from '../MessageImage.tsx'
+
 /** Slot registry required by this presentation plugin. */
 export const inject = ['slots']
 
-/** Register attachment presentation without exporting React components as package values. */
+/** Register attachment presentation; reusable pure atoms are exported without Cordis state. */
 export function apply(ctx: ClientContext): void {
   ctx.slots.inject('conversation.input.attachments', () => ctx.slots.register({
     name: 'conversation.input.attachments',

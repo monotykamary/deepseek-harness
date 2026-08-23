@@ -112,6 +112,46 @@ describe('Inbox', () => {
     expect(() => { inbox.append('next-step', first) }).toThrow(`message "${first.id}" is already pending`)
   })
 
+  it('reorders queued turns durably without insertion or discard notifications', () => {
+    const session = Session.create(SessionId('move-inbox'))
+    const inserted: UserMessage[] = []
+    const discarded: UserMessage[] = []
+    const inbox = new Inbox(session, {
+      claimed: () => {},
+      inserted: message => void inserted.push(message),
+      discarded: message => void discarded.push(message),
+    })
+    const first = createUserMessage({ content: [{ type: 'text', text: 'first' }], source: { kind: 'user' } })
+    const second = createUserMessage({ content: [{ type: 'text', text: 'second' }], source: { kind: 'user' } })
+    const step = createUserMessage({ content: [{ type: 'text', text: 'step' }], source: { kind: 'user' } })
+    inbox.append('next-turn', first)
+    inbox.append('next-turn', second)
+    inbox.append('next-step', step)
+    inserted.length = 0
+    const beforeMove = session.events.length
+
+    expect(inbox.moveNextTurn(step.id, 'earlier')).toBe(false)
+    expect(inbox.moveNextTurn(first.id, 'earlier')).toBe(true)
+    expect(session.events).toHaveLength(beforeMove)
+    expect(inbox.moveNextTurn(second.id, 'earlier')).toBe(true)
+    expect(inbox.nextTurn).toEqual([second, first])
+    expect(inbox.moveNextTurn(second.id, 'later')).toBe(true)
+    expect(inbox.nextTurn).toEqual([first, second])
+    expect(inbox.moveNextTurn(second.id, 'later')).toBe(true)
+    expect(session.events).toHaveLength(beforeMove + 2)
+    expect(inserted).toEqual([])
+    expect(discarded).toEqual([])
+    expect(session.events.slice(beforeMove).map(event => event.type === 'agent/inbox/spliced'
+      ? { ...event.data, inserted: event.data.inserted.map(message => message.id) }
+      : event.type)).toEqual([
+      { target: 'next-turn', start: 0, removedCount: 2, inserted: [second.id, first.id] },
+      { target: 'next-turn', start: 0, removedCount: 2, inserted: [first.id, second.id] },
+    ])
+    const replayed = new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} })
+    expect(replayed.nextTurn).toEqual([first, second])
+    expect(replayed.nextStep).toEqual([step])
+  })
+
   it('clears both pending lists as durable cancellations', () => {
     const session = Session.create(SessionId('clear-inbox'))
     const discarded: UserMessage[] = []

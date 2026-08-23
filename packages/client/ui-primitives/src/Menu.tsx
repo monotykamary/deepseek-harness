@@ -35,6 +35,8 @@ export interface MenuItem {
   danger?: boolean
   /** Nested card opened to the right on hover/focus. */
   submenu?: readonly MenuItem[]
+  /** Optional adornment rendered after the selection marker. */
+  trailing?: ReactNode
   /** Optional icon action that does not select the row. */
   action?: MenuItemAction
 }
@@ -94,14 +96,16 @@ const MEASURE_STYLE: CSSProperties = { visibility: 'hidden', left: 0, top: 0 }
  * the trigger (render-prop anchors, effect-positioned proxies — measuring the
  * wrapper there races the host's layout effects). Called on open and on every
  * scroll/resize; return null to skip placement for that frame.
+ * @param props.header - non-selectable controls pinned above the scrolling items area.
  * @param props.footer - rows pinned below the scrolling items area, separated
  * by a hairline; they stay visible while the items above scroll.
  * @returns anchor wrapper with the conditional list.
  */
-export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, onAction, onClose, align = 'start', side = 'bottom', portal = false, closeOnPointerLeave = false, dense = false, compact = false, getAnchorRect, footer, className }: {
+export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, onAction, onClose, align = 'start', side = 'bottom', portal = false, closeOnPointerLeave = false, dense = false, compact = false, getAnchorRect, header, footer, className }: {
   open: boolean
   anchor: ReactNode
   items: readonly MenuEntry[]
+  header?: ReactNode | undefined
   footer?: readonly MenuEntry[]
   selectedId?: string | undefined
   selectedIds?: readonly string[] | undefined
@@ -251,8 +255,9 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
         >
           {entry.icon !== undefined && <span className={css.itemIcon}>{entry.icon}</span>}
           <span className={css.itemLabel}>{entry.label}</span>
-          {/* Selection marker is a trailing check (figma .Menu_cell), not a fill. */}
+          {/* Keep the selection marker immediately before any drilldown adornment. */}
           {selected && <Check size={16} className={css.check} />}
+          {entry.trailing !== undefined && <span className={css.itemTrailing}>{entry.trailing}</span>}
         </button>
         {entry.action !== undefined && (
           <button
@@ -281,6 +286,7 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
               >
                 {sub.icon !== undefined && <span className={css.itemIcon}>{sub.icon}</span>}
                 <span className={css.itemLabel}>{sub.label}</span>
+                {sub.trailing !== undefined && <span className={css.itemTrailing}>{sub.trailing}</span>}
               </button>
             ))}
           </div>
@@ -304,6 +310,7 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
       // (open/toggle) after onSelect.
       onClick={(e) => { e.stopPropagation() }}
     >
+      {header === undefined ? null : <div className={css.header} role="presentation">{header}</div>}
       <div className={css.viewport} role="presentation">
         {items.map(renderEntry)}
       </div>

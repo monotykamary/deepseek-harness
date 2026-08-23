@@ -1,8 +1,8 @@
 # Agent Note: Installation-owned helpers and host readiness
 
-English | [中文](2026-08-22-installation-owned-helpers-and-host-readiness.zh.md)
-
 Status: implemented
+
+English | [中文](2026-08-22-installation-owned-helpers-and-host-readiness.zh.md)
 
 ## Problem
 

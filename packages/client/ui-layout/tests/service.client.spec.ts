@@ -10,6 +10,7 @@ import type { PanelActions } from '@monotykamary/dsh-client-ui-layout/src/client
 
 function fakePanels(): PanelActions {
   return {
+    openApplicationSurface: vi.fn(),
     setSidebar: vi.fn(),
     setDetails: vi.fn(),
     setBottom: vi.fn(),
@@ -24,11 +25,12 @@ function fakePanels(): PanelActions {
 }
 
 describe('LayoutController', () => {
-  it('forwards the six panel actions to the attached set', () => {
+  it('forwards application selection and the six panel actions to the attached set', () => {
     const service = new LayoutController()
     const panels = fakePanels()
     service.attachPanels(panels)
 
+    service.openApplicationSurface('conversation')
     service.toggleSidebar()
     service.openDetails()
     service.closeDetails()
@@ -36,6 +38,7 @@ describe('LayoutController', () => {
     service.closeBottom()
     service.toggleBottom()
 
+    expect(panels.openApplicationSurface).toHaveBeenCalledWith('conversation')
     expect(panels.toggleSidebar).toHaveBeenCalledTimes(1)
     expect(panels.openDetails).toHaveBeenCalledTimes(1)
     expect(panels.closeDetails).toHaveBeenCalledTimes(1)
@@ -49,6 +52,7 @@ describe('LayoutController', () => {
 
   it('fails loud before the root entry wired its actions', () => {
     const service = new LayoutController()
+    expect(() => { service.openApplicationSurface('conversation') }).toThrow(/panel actions not wired/)
     expect(() => { service.toggleSidebar() }).toThrow(/panel actions not wired/)
     expect(() => { service.openDetails() }).toThrow(/panel actions not wired/)
     expect(() => { service.closeDetails() }).toThrow(/panel actions not wired/)
@@ -64,6 +68,7 @@ describe('LayoutController', () => {
     service.attachPanels(stale)
     service.attachPanels(fresh)
 
+    service.openApplicationSurface('conversation')
     service.toggleSidebar()
 
     expect(stale.toggleSidebar).not.toHaveBeenCalled()

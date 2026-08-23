@@ -1,67 +1,53 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Reply with a one-sentence description" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Reply with a one-sentence description of event sourcing, then stop. {{clock}}
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
 - paragraph: partial
 - text: Stopped
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}}
-- button "2 queued messages" [expanded]
+- button "3 queued messages" [expanded]
 - list:
   - listitem:
+    - text: Queue item moved to the front
+    - button "Move queued message earlier" [disabled]
+    - button "Move queued message later"
+    - button "Edit queued message"
+    - button "Remove queued message"
+    - button "Steer queued message" [disabled]
+  - listitem:
     - text: Edited queue item
-    - button "Edit queued message":
-      - img
-    - tooltip "Edit queued message"
-    - button "Remove queued message":
-      - img
-    - button "Steer queued message" [disabled]:
-      - img
+    - button "Move queued message earlier"
+    - tooltip "Move queued message earlier"
+    - button "Move queued message later"
+    - button "Edit queued message"
+    - button "Remove queued message"
+    - button "Steer queued message" [disabled]
   - listitem:
     - text: Queue item preserved after stop
-    - button "Edit queued message":
-      - img
-    - button "Remove queued message":
-      - img
-    - button "Steer queued message" [disabled]:
-      - img
+    - button "Move queued message earlier"
+    - button "Move queued message later" [disabled]
+    - button "Edit queued message"
+    - button "Remove queued message"
+    - button "Steer queued message" [disabled]
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
-- text: 1 turns · 1 steps
-- textbox "Terminal input"
-- button "Show terminal actions":
-  - img
 - text: 1 turns · 1 steps LLM {{duration}} TTFT avg {{duration}}
+- textbox "Terminal input"
+- button "Show terminal actions"

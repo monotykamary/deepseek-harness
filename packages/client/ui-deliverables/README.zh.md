@@ -6,13 +6,13 @@
 
 `deliverablesDefinition` 把每个轮次中已提交的 `FileMutation` receipt 折叠进引擎发布的 `DeliverablesTurnData`；`producedForClosing` 结合收尾 Assistant 的 seq 读取这份数据。直接 `tool/result` receipt 与嵌套 `tool/code-dispatch` receipt 使用同一带版本投影，并按提交顺序而非并行调用的结果顺序折叠，嵌套事件则由根执行 location 提供轮次归属。呈现元数据可以提供标题，但不能创建修改条目。没有有效 receipt 的调用不贡献任何条目；删除仍会出现在 Changes 中，但不会生成可打开文件条目；产出路径在每个轮次内按首见顺序只出现一次。Conversation Location 索引会在轮次修改文件后不含正文便结束时保持正确归属。
 
-`ProducedFiles` 在收尾消息正文与其 IconActions 之间渲染一张 T3 风格的已更改文件卡片。低对比度标题栏报告不同文件数与 receipt 的新增／删除行总数，可统一收起或展开推导出的文件夹，并打开该 Session 的完整 Changes Workbench。始终可见的树按目录汇总工具提供的路径，在目录行显示汇总统计，在文件行显示逐文件统计；每个文件行都会打开 Changes Workbench，因此删除项仍可审阅，但不会成为行内提及目标。Workbench 按不同路径汇总已载入的修改 hunk，把每个文件呈现为默认展开的手风琴行，显示行数统计，并提供独立及全部收起控制。属主本地化的 `DiffBlock` 采用无缝文件外观：手风琴标题栏拥有路径与统计，紧接其下的正文不再重复卡片标题、圆角几何或页脚。它报告不同文件数与汇总行数，随历史页载入增量更新；既不读取仓库，也不声称是 Git 工作树状态。设计原理：[workspace 文件链接 Agent Note](../../../.agents/notes/implemented/feature/2026-07-31-web-workspace-file-links.zh.md)与 [Workbench 决策](../../../.agents/notes/implemented/feature/2026-08-18-web-ui-workbench.zh.md)。
+`ProducedFiles` 在收尾消息正文与其 IconActions 之间渲染一张 T3 风格的已更改文件卡片。client 入口也会导出 `ProducedFilesCard`：它使用相同的 receipt-backed 层级，标签由持有方解析，完整 diff 导航可选，供已经持有修改组的非 chat 应用复用。低对比度标题栏报告不同文件数与 receipt 的新增／删除行总数，可统一收起或展开推导出的文件夹，并打开该 Session 的完整 Changes Workbench。始终可见的树按目录汇总工具提供的路径，在目录行显示汇总统计，在文件行显示逐文件统计；每个文件行都会打开 Changes Workbench，因此删除项仍可审阅，但不会成为行内提及目标。每一层递归 tree／group 都受可用宽度约束，因此更深的缩进会压缩路径列，而不会把行数统计推到卡片外。Workbench 按不同路径汇总已载入的修改 hunk，把每个文件呈现为默认展开的手风琴行，显示行数统计，并提供独立及全部收起控制。属主本地化的 `DiffBlock` 采用无缝文件外观：手风琴标题栏拥有路径与统计，紧接其下的正文不再重复卡片标题、圆角几何或页脚。它报告不同文件数与汇总行数，随历史页载入增量更新；既不读取仓库，也不声称是 Git 工作树状态。设计原理：[workspace 文件链接 Agent Note](../../../.agents/notes/implemented/feature/2026-07-31-web-workspace-file-links.zh.md)与 [Workbench 决策](../../../.agents/notes/implemented/feature/2026-08-18-web-ui-workbench.zh.md)。
 
 收尾正文承载同一份词表。本插件提供供 chat 视图按收尾消息查询的 `chatFileMentions` 服务：`producedFileMentions` 按精确路径解析行内代码 token，或当 token 恰好等于某条产出路径的 basename，且这样的路径仅有一条时解析——两条路径共享同一 basename 时，文本保持不可点击而不作猜测，因此提及链接永远不会打开错误的文件，也不会导致 404。解析成功的提及保留代码标签，并采用 Markdown 样式表的链接样式：静止时为链接蓝色，悬停时显示下划线，与 URL 提升的行内代码完全一致——完整路径作为其 `title`；提及绝不会渲染在链接内部或流式文本中。决策记录：[行内文件提及 Agent Note](../../../.agents/notes/implemented/feature/2026-08-07-web-inline-file-mentions.zh.md)。
 
 Node 侧注册静态系统提示词段落 `ui:deliverable-file-references`。它要求模型点名成功创建或修改的主要文件，并将这些文件以及正文中提到的其他本轮变更文件写成 Markdown 行内代码：使用文件工具采用的精确路径，或仅在 basename 能唯一指代本轮文件时使用 basename。该提示词只向模型说明渲染器接受的语法；它不约束无关的路径讨论，也不会扩大渲染器的成功修改词表。
 
-同一个 Node 插件还会为调用 agent 的完整 live Session 注册 `changes_read`。列表调用返回可选 cursor 之后按提交顺序排列的修改摘要；指定 `commit_order` 的调用则分页返回已记录的 replacement hunk。必需配置 `maxListItems` 与 `maxDiffChars` 会约束结果。该工具永远不读取工作区，并会标明其仅覆盖 receipt，因此模型会用普通当前文件读取对比已记录意图，再向前写入对账结果，而不会把输出当作 patch 或仓库 snapshot。
+纯 `./ledger` 入口会导出同一套按提交顺序排列的 `mutationLedger`、`renderMutation` 与有界文本投影，且不会执行 Node 插件。同一个 Node 插件还会为调用 agent 的完整 live Session 注册 `changes_read`。列表调用返回可选 cursor 之后按提交顺序排列的修改摘要；指定 `commit_order` 的调用则分页返回已记录的 replacement hunk。必需配置 `maxListItems` 与 `maxDiffChars` 会约束结果。该工具永远不读取工作区，并会标明其仅覆盖 receipt，因此模型会用普通当前文件读取对比已记录意图，再向前写入对账结果，而不会把输出当作 patch 或仓库 snapshot。
 
 ## 配置
 

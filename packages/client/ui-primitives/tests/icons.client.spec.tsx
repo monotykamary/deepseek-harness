@@ -2,17 +2,20 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as primitives from '@monotykamary/dsh-client-ui-primitives'
-import { Archive, Braces, Folder, Send, Target } from '@monotykamary/dsh-client-ui-primitives'
+import { Archive, Braces, Circle, Diamond, Folder, Send, Target, Triangle } from '@monotykamary/dsh-client-ui-primitives'
 
 afterEach(cleanup)
 
 describe('Lucide icon exports', () => {
   it('renders canonical Lucide SVGs', () => {
     const { container } = render(
-      <><Archive size={16} /><Braces size={16} /><Folder size={16} /><Send size={16} /><Target size={16} /></>,
+      <>
+        <Archive size={16} /><Braces size={16} /><Circle size={16} /><Diamond size={16} />
+        <Folder size={16} /><Send size={16} /><Target size={16} /><Triangle size={16} />
+      </>,
     )
     const icons = container.querySelectorAll('svg')
-    expect(icons).toHaveLength(5)
+    expect(icons).toHaveLength(8)
     expect([...icons].every(icon => icon.classList.contains('lucide'))).toBe(true)
     expect(container.innerHTML).toContain('currentColor')
   })

@@ -39,6 +39,8 @@ const SCROLLBAR_LINGER_MS = 2000
  * @returns the sidebar element tree.
  */
 export function SidebarRoot({
+  applicationSurface,
+  openApplicationSurface,
   collapsed,
   width,
   drawerClose,
@@ -192,6 +194,14 @@ export function SidebarRoot({
           {wide && <span className={clsx(css.newSessionLabel, css.wide)}>{t('session.new')}</span>}
         </button>
       </Tooltip>
+
+      <div className={css.navigationArea}>
+        {renderSlot('sidebar.navigation', {
+          wide,
+          activeSurface: applicationSurface,
+          openSurface: openApplicationSurface,
+        })}
+      </div>
 
       {/* The browser owns persistent search, Workspace scope, and rows; its
           rail controls ride the same slot during collapse. */}

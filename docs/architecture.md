@@ -99,7 +99,7 @@ The session log is the source of the context the model sees. `deriveMessages()` 
 
 A **seam** is a swappable capability with three roles: a **Service Definition** declaring the interface, a **Service Provider** implementing it, and a **Consumer** using it, commonly a model-facing tool. A package may combine roles, but one role alone is not a seam; adding a capability means designing all three ([capability graph](capability-seams.md)).
 
-Seams are why one provider swap changes the whole product. Filesystem and subprocess providers share one execution world, so pointing them at a remote sandbox moves Bash, PTY, and LSP with them, with no provider forks. [Subagent providers](subsystems/subagent.md) vary just as widely behind one interface, from a fresh child agent to a delegated turn in another product.
+Seams are why one provider swap changes the whole product. Filesystem and subprocess providers share one execution world, so pointing them at a remote sandbox moves Bash, PTY, and LSP with them, with no provider forks. [Subagent providers](subsystems/subagent.md) vary just as widely behind one interface, from a fresh child agent to a delegated turn in another product. The [Worktree capability](subsystems/workspace.md#repository-worktrees) gives repository automation the same separation: Consumers allocate and inspect checkout lanes through `ctx.worktrees`, while providers own Git or remote-workspace mechanics and safe cleanup.
 
 [Experimental Agent Teams](subsystems/agent-team.md) is a private opt-in coordination seam on `ctx.agentTeams`, with a durable roster, task board, and mailbox layered over continuable subagents.
 
@@ -118,11 +118,14 @@ New behavior attaches to a documented extension point. Changing the loop itself 
 | Add a human command | register on `ctx.commands`; it dispatches without a model turn |
 | Add background work | register on `ctx.jobs`; `job_*` tools collect or stop it |
 | Add filesystem access or policy | register a `ctx.fs` provider or listen to `fs/*` events |
+| Add repository checkout automation | register a provider on `ctx.worktrees`; Consumers call the provider-neutral lifecycle |
 | Confine spawned processes | use a `ctx.sandbox` backend; consumers wrap argv before spawning |
 | Intercept a request, tool, or turn | use its `agent/*` or `tools/*` event; `agent/turn-stopping` stops a turn |
 | Add model-facing context | call `agent.inject()`; it lands in the next admitted request |
+| Prepare an ordinary Web composer send | register effect-owned middleware on `ctx.conversation.submissions`; call `next()` exactly once to preserve Host admission |
 | Add UI or editor integration | drive `ctx.agents` and render from `session/event` |
 | Add a Web Client Chat node | register a `ConversationNodeDefinition` + keyed renderer |
+| Add a root Web application | add a `sidebar.navigation` row and a selector-routed `application.surface` entry; the layout store owns the selected application id |
 | Add durable session state | extend `SessionEventMap`; render and replay from the log |
 | Generate session titles | register the sole `ctx.sessionTitle` provider |
 | Manage a same-session objective | use `ctx.goals`; continue through `agent/*` |

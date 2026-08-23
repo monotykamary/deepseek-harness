@@ -1,0 +1,46 @@
+{
+  "name": "@monotykamary/dsh-worktree",
+  "description": "Provider registry and portable vocabulary for repository worktrees",
+  "version": "0.1.0-rc.11",
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/workspace/worktree"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": { "types": "./lib/types/index.d.ts", "default": "./lib/index.js" },
+    "./types": { "types": "./lib/types/types.d.ts", "default": "./lib/types/types.js" },
+    "./invariant": { "types": "./lib/types/invariant.d.ts", "default": "./lib/invariant.js" },
+    "./typert": { "types": "./lib/typert.host.d.ts", "default": "./lib/typert.host.js" },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@monotykamary/schemastery": "workspace:^"
+  },
+  "peerDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-brand": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^"
+  },
+  "devDependencies": {
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-brand": "workspace:^",
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^"
+  }
+}
