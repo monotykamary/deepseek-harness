@@ -285,6 +285,43 @@ describe('mux live view computation', () => {
     expect(page.map(event => event.seq)).toEqual(page.map((_event, index) => third.seq + index))
   })
 
+  it('omits assembled assistant chunks and keeps in-flight and interrupted ones', async () => {
+    const { ctx } = await harness()
+    const api = createApiProxy(ctx, { defaultModelSelection: () => ({ provider: 'p', model: 'm' }), cwd: '/tmp' })
+    const session = ctx.sessions.create()
+    ctx.agents.register({ id: session.id, session, status: 'idle', ctx } as Agent)
+    session.append('turn/start', { turn: 1 })
+    session.append('step/start', { turn: 1, step: 1 })
+    for (let i = 0; i < 40; i++) {
+      session.append('assistant/chunk', {
+        turn: 1, step: 1, chunk: { type: 'text-delta', index: 0, text: 'x' },
+      })
+    }
+    appendAssistantText(session, 'done', 1)
+    session.append('step/end', { turn: 1, step: 1 })
+    session.append('step/start', { turn: 1, step: 2 })
+    const interrupted = session.append('assistant/chunk', {
+      turn: 1, step: 2, chunk: { type: 'text-delta', index: 0, text: 'partial' },
+    })
+    session.append('step/end', { turn: 1, step: 2 })
+    session.append('step/start', { turn: 1, step: 3 })
+    const inflight = session.append('assistant/chunk', {
+      turn: 1, step: 3, chunk: { type: 'text-delta', index: 0, text: 'live' },
+    })
+
+    const response = await api.sessions.history({
+      rpcId: RpcId('t-hist-chunks'),
+      payload: { sessionId: session.id, maxMessages: 50 },
+    })
+    if (!response.result.ok) throw new Error('unreachable')
+    const types = response.result.value.events.map(entry => entry.event.type)
+    expect(types.filter(type => type === 'assistant/chunk')).toEqual(['assistant/chunk', 'assistant/chunk'])
+    expect(types).toContain('assistant/message')
+    const chunks = response.result.value.events.filter(entry => entry.event.type === 'assistant/chunk')
+    expect(chunks.map(entry => entry.event.seq)).toEqual([interrupted.seq, inflight.seq])
+    expect(chunks.map(entry => (entry.event as SessionEvent<'assistant/chunk'>).data.step)).toEqual([2, 3])
+  })
+
   it('paginates a message with many provenance sources without variadic argument expansion', async () => {
     const { ctx } = await harness()
     const api = createApiProxy(ctx, { defaultModelSelection: () => ({ provider: 'p', model: 'm' }), cwd: '/tmp' })
@@ -317,7 +354,9 @@ describe('mux live view computation', () => {
         payload: { sessionId: session.id, maxMessages: 1 },
       })
       if (!response.result.ok) throw new Error('unreachable')
-      expect(response.result.value.events.map(entry => entry.event.seq)).toEqual([...sources, message.seq])
+      // Pagination still owns the 128 chunk seqs, so hasMore stays true and Math.min
+      // never sees a spread. Assembled chunks are omitted from the wire.
+      expect(response.result.value.events.map(entry => entry.event.seq)).toEqual([message.seq])
       expect(response.result.value.hasMore).toBe(true)
     } finally {
       min.mockRestore()

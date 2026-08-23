@@ -78,6 +78,7 @@ export interface SubagentsApi {
    * Reads one healthy catalog child's transcript — the in-memory snapshot of
    * a live child, the persisted log of a cold one — with ordinary
    * message-aligned pagination and render intents, without Agent activation.
+   * Assembled `assistant/chunk` events are omitted the same way as `session.history`.
    */
   history(
     request: RpcRequest<SubagentAddress & { beforeSeq?: number; maxMessages?: number }>,

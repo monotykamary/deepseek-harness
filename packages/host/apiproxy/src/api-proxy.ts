@@ -257,6 +257,33 @@ function paginate(
   return { events: page, hasMore: cut > 0 }
 }
 
+/**
+ * Drop `assistant/chunk` events whose (turn, step) already has an
+ * append-origin `assistant/message` on the same page.
+ *
+ * Completed Chat and Trajectory rows fold from that message's content
+ * (`toAssistantBlocks`); the token tape is live-stream and durable-log
+ * material, not required to reopen a settled transcript. In-flight and
+ * interrupted steps have no such message, so their chunks stay on the
+ * page. Pagination still cuts on the full raw range, including the
+ * omitted chunks' seqs, so `hasMore` and compaction contiguity are
+ * unchanged.
+ * @param events - one history page after message-boundary pagination.
+ * @returns the same events with assembled-step chunks removed.
+ */
+function elideAssembledAssistantChunks(events: readonly SessionEvent[]): SessionEvent[] {
+  const completed = new Set<string>()
+  for (const event of events) {
+    if (event.type !== 'assistant/message' || !isAppendSurfaceEvent(event)) continue
+    completed.add(`${String(event.data.turn)}:${String(event.data.step)}`)
+  }
+  if (completed.size === 0) return [...events]
+  return events.filter((event) => {
+    if (event.type !== 'assistant/chunk') return true
+    return !completed.has(`${String(event.data.turn)}:${String(event.data.step)}`)
+  })
+}
+
 /** Wrap an ok result echoing the request's rpcId. */
 function ok<T>(request: RpcRequest<unknown>, value: T): RpcResponse<T> {
   return { rpcId: request.rpcId, result: { ok: true, value } }
@@ -761,9 +788,10 @@ function historyPage(
   scope?: ScopeKey,
 ): { events: HistoryEntry[]; hasMore: boolean } {
   const page = paginate(events, beforeSeq, maxMessages ?? DEFAULT_MAX_MESSAGES)
+  const eventsOnWire = elideAssembledAssistantChunks(page.events)
   return {
-    events: page.events.map((event) => {
-      const view = viewFor(ctx, event, callId => backscanArgs(page.events, callId), scope)
+    events: eventsOnWire.map((event) => {
+      const view = viewFor(ctx, event, callId => backscanArgs(eventsOnWire, callId), scope)
       return { event, ...view === undefined ? {} : { view } }
     }),
     hasMore: page.hasMore,
