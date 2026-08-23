@@ -342,7 +342,7 @@ class DshFamily extends ReleaseFamily {
     const distribution = (app.manifest.dsh as { distribution?: { companions?: Record<string, unknown> } } | undefined)
       ?.distribution?.companions
     const dependencies = app.manifest.dependencies as Record<string, unknown> | undefined
-    for (const companion of ['dsh-fabric', 'dsh-fovea']) {
+    for (const companion of ['dsh-fabric', 'dsh-fovea', 'dsh-factory']) {
       const tested = distribution?.[companion]
       const installed = dependencies?.[companion]
       if (typeof tested !== 'string' || tested !== installed || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tested)) {

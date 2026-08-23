@@ -6,7 +6,7 @@
 
 欢迎界面和由三个标记组成的事务组通过声明感知的 `slots.inject()` 安装。因此，无论本包的 row 在设置、侧边栏与会话 declarer 之前还是之后激活，都能正常工作；每项 contribution 会随其声明撤回，HMR 期间不会留下部分标记组合。Node 侧是空 Loader seat；浏览器标题仍是本包之外的构建环境职责。
 
-欢迎界面在 Session 目录就绪后以阻塞式弹窗渲染，并在已有 Session 加载后继续挂载。具备设置资格的浏览器（包括受信任的 tailnet 访问）将当前版本持久化到 `ui-onboarding.welcomeNoticeVersion`；不具备资格的浏览器仅在当前进程内确认。它完全使用设计 token，通过卡片说明相对于上游外壳的主要扩展：受 T3 启发的 Workspace 与 Session 导航、持久终端和文件工作台、Fovea 代码图导航，以及 Fabric 类型化执行。T3 派生 UI 的归属信息继续保存在 [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 中。
+欢迎界面在 Session 目录就绪后以阻塞式弹窗渲染，并在已有 Session 加载后继续挂载。具备设置资格的浏览器（包括受信任的 tailnet 访问）将当前版本持久化到 `ui-onboarding.welcomeNoticeVersion`；不具备资格的浏览器仅在当前进程内确认。它完全使用设计 token，通过卡片说明相对于上游外壳的主要扩展：受 T3 启发的 Workspace 与 Session 导航、持久终端和文件工作台、Factory 任务编排、Fovea 代码图导航，以及 Fabric 类型化执行。T3 派生 UI 的归属信息继续保存在 [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md) 中。
 
 ## 模型体验
 

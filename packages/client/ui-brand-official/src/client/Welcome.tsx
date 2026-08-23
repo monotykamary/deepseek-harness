@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { PropsLocale, PropsRuntime } from '@monotykamary/dsh-client-ui-slots'
 import {
-  Button, CodeXml, FolderOpen, GitBranch, Modal, Plug,
+  Button, CodeXml, FolderOpen, GitBranch, ListTodo, Modal, Plug,
 } from '@monotykamary/dsh-client-ui-primitives'
 import type { WelcomeController } from './welcome-controller.ts'
 import css from './Welcome.module.css'
@@ -15,13 +15,14 @@ export interface WelcomeInjected {
 
 type WelcomeProps = PropsRuntime<'settings.onboarding'> & PropsLocale<'officialBrand'> & WelcomeInjected
 
-const FEATURES = ['navigation', 'workbench', 'fovea', 'fabric'] as const
+const FEATURES = ['navigation', 'workbench', 'fovea', 'fabric', 'factory'] as const
 type FeatureKey = typeof FEATURES[number]
 
 function featureIcon(key: FeatureKey): ReactNode {
   switch (key) {
     case 'navigation': return <GitBranch size={16} />
     case 'workbench': return <FolderOpen size={16} />
+    case 'factory': return <ListTodo size={16} />
     case 'fovea': return <CodeXml size={16} />
     case 'fabric': return <Plug size={16} />
   }

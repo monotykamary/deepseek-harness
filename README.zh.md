@@ -20,7 +20,7 @@ _一条命令即可本地运行；所有能力均可组合，经过测试的发�
 npx @monotykamary/dsh@latest web
 ```
 
-DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默认浏览器打开页面，通过 SSH 启动时则只打印宿主机 URL，传入 `--no-open` 可仅运行服务器。npm 包携带完整且经过测试的依赖闭包，包括 [dsh-fabric](https://github.com/monotykamary/dsh-fabric) 与 [dsh-fovea](https://github.com/monotykamary/dsh-fovea)；配置档不会固定它们的独立副本。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
+DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默认浏览器打开页面，通过 SSH 启动时则只打印宿主机 URL，传入 `--no-open` 可仅运行服务器。npm 包携带完整且经过测试的依赖闭包：[dsh-fabric](https://github.com/monotykamary/dsh-fabric) 与 [dsh-fovea](https://github.com/monotykamary/dsh-fovea) 会加入每个随附 profile，长生命周期 Web profile 还包含 [dsh-factory](https://github.com/monotykamary/dsh-factory)；profile 不会固定它们的独立副本。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
 
 ## 为什么选择 DSH？
 

@@ -20,7 +20,7 @@ English | [中文](README.zh.md)
 npx @monotykamary/dsh@latest web
 ```
 
-DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure, including [dsh-fabric](https://github.com/monotykamary/dsh-fabric) and [dsh-fovea](https://github.com/monotykamary/dsh-fovea); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
+DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure: [dsh-fabric](https://github.com/monotykamary/dsh-fabric) and [dsh-fovea](https://github.com/monotykamary/dsh-fovea) join every shipped profile, while the long-lived Web profile also includes [dsh-factory](https://github.com/monotykamary/dsh-factory); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
 
 ## Why DSH?
 

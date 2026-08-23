@@ -130,6 +130,7 @@ External packages that a workspace package resolves at runtime. The tier covers 
 | [`commander`](https://github.com/tj/commander.js) | MIT |
 | [`diff`](https://github.com/kpdecker/jsdiff) | BSD-3-Clause |
 | [`dsh-fabric`](https://github.com/monotykamary/dsh-fabric) | MIT |
+| [`dsh-factory`](https://github.com/monotykamary/dsh-factory) | MIT |
 | [`dsh-fovea`](https://github.com/monotykamary/dsh-fovea) | MIT |
 | [`e2b`](https://github.com/e2b-dev/e2b) | MIT |
 | [`eventsource-parser`](https://github.com/rexxars/eventsource-parser) | MIT |

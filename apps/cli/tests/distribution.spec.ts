@@ -8,11 +8,13 @@ function manifest(): string {
   const root = mkdtempSync(join(tmpdir(), 'dsh-cli-distribution-'))
   mkdirSync(join(root, 'node_modules', 'dsh-fabric'), { recursive: true })
   mkdirSync(join(root, 'node_modules', 'dsh-fovea'), { recursive: true })
+  mkdirSync(join(root, 'node_modules', 'dsh-factory'), { recursive: true })
   writeFileSync(join(root, 'package.json'), JSON.stringify({
-    name: '@monotykamary/dsh', version: '1.0.0', dependencies: { 'dsh-fabric': '2.0.0', 'dsh-fovea': '3.0.0' },
+    name: '@monotykamary/dsh', version: '1.0.0', dependencies: { 'dsh-fabric': '2.0.0', 'dsh-fovea': '3.0.0', 'dsh-factory': '4.0.0' },
   }))
   writeFileSync(join(root, 'node_modules', 'dsh-fabric', 'package.json'), JSON.stringify({ version: '2.0.0' }))
   writeFileSync(join(root, 'node_modules', 'dsh-fovea', 'package.json'), JSON.stringify({ version: '3.0.0' }))
+  writeFileSync(join(root, 'node_modules', 'dsh-factory', 'package.json'), JSON.stringify({ version: '4.0.0' }))
   return join(root, 'package.json')
 }
 
@@ -42,7 +44,7 @@ describe('distribution CLI', () => {
     vi.spyOn(process.stdout, 'write').mockReturnValue(true)
     vi.spyOn(process.stderr, 'write').mockReturnValue(true)
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
-      version: '9.0.0', dependencies: { 'dsh-fabric': '9.0.0', 'dsh-fovea': '9.0.0' },
+      version: '9.0.0', dependencies: { 'dsh-fabric': '9.0.0', 'dsh-fovea': '9.0.0', 'dsh-factory': '9.0.0' },
     }))))
     expect(await runDistribution('check', false, manifest())).toBe(10)
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline') }))

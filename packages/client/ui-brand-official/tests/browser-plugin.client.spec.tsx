@@ -96,6 +96,7 @@ describe('official browser-brand plugin', () => {
     expect(await screen.findByRole('dialog', { name: 'A complete coding-agent workbench' })).toBeTruthy()
     expect(screen.getByText('T3-inspired navigation')).toBeTruthy()
     expect(screen.getByText('Terminal + file workbench')).toBeTruthy()
+    expect(screen.getByText('Factory task orchestration')).toBeTruthy()
     expect(screen.getByText('Fovea code intelligence')).toBeTruthy()
     expect(screen.getByText('Fabric execution')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))

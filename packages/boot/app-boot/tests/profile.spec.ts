@@ -152,7 +152,7 @@ describe('loadProfile', () => {
     // cannot be asserted to fail here: the source-plane test runner resolves
     // @monotykamary/* through tsconfig paths regardless of the staged anchor.
     expect(PROFILE_TEMPLATES.web).toContain('@monotykamary/dsh-base')
-    expect(PROFILE_TEMPLATES.web).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'])
+    expect(PROFILE_TEMPLATES.web).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory'])
     expect(PROFILE_TEMPLATES.headless).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'])
     try {
       loadProfile('t', 'web', anchor, home)
@@ -198,6 +198,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
+      'dsh-factory': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
     })
     const home = tmp()
@@ -209,7 +210,9 @@ describe('loadProfile', () => {
 
     const customHome = tmp()
     const custom = resolveProfileDir('web', customHome)
-    initProfile(custom, ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'custom-bundle'])
+    initProfile(custom, [
+      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'custom-bundle',
+    ])
     loadProfile('t', 'web', anchor, customHome)
     expect(readProfileManifest('t', custom).dsh?.profile).toEqual({
       template: 'web', bundles: ['custom-bundle'],
@@ -222,6 +225,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
+      'dsh-factory': { patch: '[]\n' },
     })
     const home = tmp()
     const dir = resolveProfileDir('demo', home)

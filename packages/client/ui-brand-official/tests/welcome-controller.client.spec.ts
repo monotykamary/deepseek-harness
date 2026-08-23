@@ -30,14 +30,14 @@ function scope(status: 'ready' | 'unavailable', version?: string) {
 
 describe('WelcomeController', () => {
   it('persists and recognizes only the current welcome version on eligible settings transport', async () => {
-    const current = new WelcomeController(scope('ready', '2026-08-22.1'))
+    const current = new WelcomeController(scope('ready', '2026-08-23.1'))
     await expect(current.acknowledged()).resolves.toBe(true)
 
     const stale = scope('ready', '2026-08-11.1')
     const controller = new WelcomeController(stale)
     await expect(controller.acknowledged()).resolves.toBe(false)
     await controller.acknowledge()
-    expect(stale.set).toHaveBeenCalledWith('welcomeNoticeVersion', '2026-08-22.1')
+    expect(stale.set).toHaveBeenCalledWith('welcomeNoticeVersion', '2026-08-23.1')
     await expect(controller.acknowledged()).resolves.toBe(true)
   })
 

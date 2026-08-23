@@ -2,7 +2,7 @@
 import type { SettingsScope, SettingsScopeSnapshot } from '@monotykamary/dsh-client-runtime/client'
 
 const ACK_FIELD = 'welcomeNoticeVersion'
-const WELCOME_VERSION = '2026-08-22.1'
+const WELCOME_VERSION = '2026-08-23.1'
 
 interface WelcomeSettings {
   welcomeNoticeVersion?: string

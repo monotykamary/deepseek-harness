@@ -28,11 +28,12 @@ overrides:
   '@monotykamary/cosmokit': 'link:vendor/cosmokit'
   '@monotykamary/schemastery': 'link:vendor/schemastery'
   # The custom-flavor bundles resolve from npm (published dsh-fabric,
-  # dsh-fovea), so a single clone installs and boots on its own.
+  # dsh-fovea, and dsh-factory), so a single clone installs and boots on its own.
   # Co-developing them is opt-in: with sibling checkouts beside this
   # repository, re-add the link overrides below without committing them —
   #   'dsh-fabric': 'link:../dsh-fabric'
   #   'dsh-fovea': 'link:../dsh-fovea'
+  #   'dsh-factory': 'link:../dsh-factory'
   # Each sibling workspace carries the symmetric @monotykamary/* overrides
   # back to this checkout, so its own install sees this repo, not npm.
 
@@ -84,15 +85,24 @@ minimumReleaseAgeExclude:
   - node-addon-require-builtin-win32-x64-msvc@0.1.4
   - node-addon-require-builtin@0.1.4
   - '@monotykamary/dsh-agent-presets@0.1.0-rc.7'
-  - dsh-fabric-client-ui@0.1.0
-  - dsh-fabric-code-runtime-quickjs@0.1.0
-  - dsh-fabric-compaction@0.1.0
-  - dsh-fabric-host@0.1.0
-  - dsh-fabric-mesh@0.1.0
-  - dsh-fabric-protocol@0.1.0
-  - dsh-fabric-system-prompt@0.1.0
-  - dsh-fabric@0.1.0
-  - dsh-fovea@0.2.0
+  - dsh-fabric-client-ui@0.1.4
+  - dsh-fabric-code-runtime-quickjs@0.1.4
+  - dsh-fabric-compaction@0.1.4
+  - dsh-fabric-host@0.1.4
+  - dsh-fabric-mesh@0.1.4
+  - dsh-fabric-protocol@0.1.4
+  - dsh-fabric-schema@0.1.4
+  - dsh-fabric-system-prompt@0.1.4
+  - dsh-fabric@0.1.4
+  - dsh-fovea@0.4.3
+  - dsh-factory-client-ui@0.1.0
+  - dsh-factory-domain@0.1.0
+  - dsh-factory-protocol@0.1.0
+  - dsh-factory-scheduler@0.1.0
+  - dsh-factory-store-sqlite@0.1.0
+  - dsh-factory-store@0.1.0
+  - dsh-factory-tools@0.1.0
+  - dsh-factory@0.1.0
   - framer-motion@13.1.1
   - motion-dom@13.1.1
   - motion@13.1.1

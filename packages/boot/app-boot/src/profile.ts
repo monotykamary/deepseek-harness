@@ -115,14 +115,14 @@ export function resolveProfileDir(name: string, home: string = resolveDshHome())
 /**
  * The shipped profile templates auto-initialized on first use, by name.
  *
- * Every template layers the custom-flavor bundles on top of the upstream
- * composition: `dsh-fabric` (deterministic compaction, QuickJS code runtime,
- * mesh, and live topology) and `dsh-fovea` (foveated repository
- * intelligence). Both are installation dependencies of the `dsh` app, so
- * they resolve from the installation anchor like every in-box bundle.
+ * Every template layers Fabric and Fovea on top of the upstream composition.
+ * The long-lived Web template also mounts Factory as its task-graph control
+ * application and scheduler; the one-shot Headless template deliberately does
+ * not start that background scheduler. All three are installation dependencies
+ * of the `dsh` app and resolve from the installation anchor.
  */
 export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
-  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'],
+  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory'],
   headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'],
 }
 
@@ -130,6 +130,7 @@ export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
 const LEGACY_PROFILE_TUPLES: Record<string, readonly (readonly string[])[]> = {
   web: [
     ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
+    ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'],
     PROFILE_TEMPLATES.web ?? [],
   ],
   headless: [

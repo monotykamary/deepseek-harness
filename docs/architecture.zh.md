@@ -22,7 +22,7 @@
 
 两者都在各自的 `package.json` 中通过 `dsh` 字段声明自己：`dsh.profile.template` 选择由安装拥有的模板，`dsh.profile.bundles` 列出用户管理的层，`dsh.bundle` 指向一个组合包的 patch 文件。
 
-[`dsh-base`](../packages/bundle/base/README.zh.md) 是每个 profile 的第一层：模型适配器、工具、持久化、沙箱与审批策略、设置、凭据、遥测。[`dsh-web-app`](../packages/bundle/web-app/README.zh.md) 增加浏览器应用；[`dsh-headless`](../packages/bundle/headless/README.zh.md) 增加一次性运行器，且完全不带服务器。本定制风味再增加两层：`dsh-fabric`（确定性压缩、QuickJS 代码运行时、持久 mesh 与实时拓扑）与 `dsh-fovea`（fovea 化的仓库智能），两者都作为 `dsh` 应用的安装依赖交付。
+[`dsh-base`](../packages/bundle/base/README.zh.md) 是每个 profile 的第一层：模型适配器、工具、持久化、沙箱与审批策略、设置、凭据、遥测。[`dsh-web-app`](../packages/bundle/web-app/README.zh.md) 增加浏览器应用；[`dsh-headless`](../packages/bundle/headless/README.zh.md) 增加一次性运行器，且完全不带服务器。本定制风味在每个随附模板中增加 `dsh-fabric`（确定性压缩、QuickJS 代码运行时、持久 mesh 与实时拓扑）和 `dsh-fovea`（fovea 化的仓库智能）。长生命周期 Web 模板还增加 `dsh-factory`（持久依赖图、周期性 Agent 工作、checkout lane 与 Triage）；Headless 保持一次性运行，不启动其后台调度器。三者都作为 `dsh` 应用的安装依赖交付。
 
 各层按此顺序应用在空条目列表之上：先按 profile 列出的顺序应用每个组合包，然后是 profile 的 `cordis.patch.yml`，然后是 home 级的那份，最后是任意 `--patch` overlay。一条 patch 按 id 定位某个条目并替换其整个 config，或插入新条目。
 

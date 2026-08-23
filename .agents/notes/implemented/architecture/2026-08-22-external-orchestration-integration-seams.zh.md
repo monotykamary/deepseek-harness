@@ -22,7 +22,7 @@ DeepSeek Harness 持有两项与产品无关的集成机制，持久任务／流
 
 Factory Consumer 在空白 Session 上暂存 Session、Task、新流程或现有流程放置方式。Session 会原样调用 `next()`。Task 与 Flow 在 Factory 提交一个链接到该空白 Session 的幂等草稿后消费本次提交；它们不启动任务 Agent run，也不通过空白 Session 发送提示词；它们经输入状态机返回成功以清除共享草稿图片，并打开准确的任务卡。Factory 仍是投影／控制应用；其持久图留在外部，共享 Session 工作流持有人工入口。
 
-配套的 `dsh-factory` bundle 消费这些机制以及既有的 Agent、Session、ToolRuntime、Skill、Shell、Attachment、Typert Remote 与 preset 服务。它的 SQLite 图和调度器留在本仓库之外，因为它们是一套产品策略，而不是 harness 原语。Factory 分配和完成工具调用使用普通 Session 日志；外部调度器不会增加第二个 Agent loop。
+配套的 `dsh-factory` bundle 消费这些机制以及既有的 Agent、Session、ToolRuntime、Skill、Shell、Attachment、Typert Remote 与 preset 服务。它的 SQLite 图和调度器留在本仓库之外，因为它们是一套产品策略，而不是 harness 原语。Factory 分配和完成工具调用使用普通 Session 日志；外部调度器不会增加第二个 Agent loop。应用精确固定的 Web 模板会在 Fabric 与 Fovea 之后组合 Factory，因此默认 Web profile 含有完整控制应用。Headless 保持一次性运行并省略 Factory，因为其后台调度器需要长生命周期 host。
 
 ## 验证
 
@@ -42,6 +42,6 @@ Worktree 包测试覆盖提供方选择、生命周期释放、真实 Git 的创
 
 ## 结果
 
-外部产品可以添加根应用和仓库自动化，而无需修改 Agent loop 或替换随产品交付的 UI 持有方。Worktree 安全性由一份提供方实现统一持有，并可在以后增加非 Git 或远程提供方。Conversation 仍是默认应用，并按照 frame 的 chain 渲染行为在被选中时保留自身状态。
+外部产品可以添加根应用和仓库自动化，而无需修改 Agent loop 或替换随产品交付的 UI 持有方。定制 Web 风味通过精确固定的 Factory companion 默认采用这条扩展路径，而 Headless 保留有界的单任务生命周期。Worktree 安全性由一份提供方实现统一持有，并可在以后增加非 Git 或远程提供方。Conversation 仍是默认应用，并按照 frame 的 chain 渲染行为在被选中时保留自身状态。
 
 主 bundle 增加一个小型提供方注册表、一个本地 Git 提供方、一个所选应用 id、两个根应用 UI slot，以及一个普通发送 middleware 注册表。middleware 可以延迟或消费接纳，因此每个 Consumer 都要持有可见失败行为；保留发送时恰好调用一次 `next()`，并通过 Host 记录任何模型可见输入。Consumer 仍须设计持久协调、队列公平性、重试策略、发布与清理时机。本地提供方在安全性不确定时会有意保留工作，因此保留下来的受管 checkout 需要后续显式删除或有界清扫。

@@ -70,6 +70,7 @@ describe('web e2e: startup auto-selection', () => {
     await page.locator(`${ROOT_PHASE}[data-phase="hero"]`).waitFor({ timeout: 15_000 })
     const headline = page.getByText('Into the Unknown', { exact: true })
     await page.getByRole('heading', { name: 'A complete coding-agent workbench' }).waitFor()
+    expect(await page.getByText('Factory task orchestration', { exact: true }).isVisible()).toBe(true)
     expect(await page.getByText('Fovea code intelligence', { exact: true }).isVisible()).toBe(true)
     expect(await page.getByText('Fabric execution', { exact: true }).isVisible()).toBe(true)
     const fishHitbox = headline.locator('xpath=preceding-sibling::span[1]')

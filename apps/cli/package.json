@@ -82,8 +82,9 @@
     "@monotykamary/cordis": "workspace:^",
     "js-yaml": "^4.2.0",
     "node-addon-require-builtin": "^0.1.4",
-    "dsh-fabric": "0.1.0",
-    "dsh-fovea": "0.2.0",
+    "dsh-fabric": "0.1.4",
+    "dsh-fovea": "0.4.3",
+    "dsh-factory": "0.1.0",
     "@monotykamary/dsh-distribution-update": "workspace:^"
   },
   "devDependencies": {
@@ -105,8 +106,9 @@
   "dsh": {
     "distribution": {
       "companions": {
-        "dsh-fabric": "0.1.0",
-        "dsh-fovea": "0.2.0"
+        "dsh-fabric": "0.1.4",
+        "dsh-fovea": "0.4.3",
+        "dsh-factory": "0.1.0"
       }
     }
   }
