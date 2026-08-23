@@ -17,6 +17,7 @@ import { AttachmentError, admitEncodedImages } from '@monotykamary/dsh-attachmen
 import type { ImageAttachmentRef } from '@monotykamary/dsh-attachment'
 import { createUserMessage, freezeMessage, ReasoningEffortId } from '@monotykamary/dsh-llm'
 import { errorChain } from '@monotykamary/dsh-llm'
+import { isTokenDelta } from '@monotykamary/dsh-llm/message'
 import type { ContentBlock, MessageSource } from '@monotykamary/dsh-llm'
 import { isAppendSurfaceEvent, isJsonValue } from '@monotykamary/dsh-session'
 import type { JsonValue, Session, SessionEvent, SessionEventMap, SessionHeader, SessionId, UserMessage } from '@monotykamary/dsh-session'
@@ -255,6 +256,39 @@ function paginate(
   }
   const page = window.filter(event => event.seq >= cut)
   return { events: page, hasMore: cut > 0 }
+}
+
+/**
+ * Reduce each assembled assistant step to its first token delta and final
+ * append-origin message. The first raw page event also stays when it is a
+ * chunk: the browser uses that seq as its next `beforeSeq` cursor, so dropping
+ * it would make a later page request fetch the omitted tape again.
+ *
+ * Chat and Trajectory settle content and usage from the message. The retained
+ * token delta preserves historical first-token timing; in-flight and
+ * interrupted steps have no final message and retain every chunk. Pagination
+ * still cuts on the full raw range, so `hasMore` and compaction grouping are
+ * unchanged.
+ * @param events - one history page after message-boundary pagination.
+ * @returns the bounded browser projection of that page.
+ */
+function elideAssembledAssistantChunks(events: readonly SessionEvent[]): SessionEvent[] {
+  const completed = new Set<string>()
+  for (const event of events) {
+    if (event.type !== 'assistant/message' || !isAppendSurfaceEvent(event)) continue
+    completed.add(`${String(event.data.turn)}:${String(event.data.step)}`)
+  }
+  if (completed.size === 0) return [...events]
+  const firstSeq = events[0]?.seq
+  const keptFirstToken = new Set<string>()
+  return events.filter((event) => {
+    if (event.type !== 'assistant/chunk') return true
+    const key = `${String(event.data.turn)}:${String(event.data.step)}`
+    if (!completed.has(key)) return true
+    const firstToken = isTokenDelta(event.data.chunk) && !keptFirstToken.has(key)
+    if (firstToken) keptFirstToken.add(key)
+    return event.seq === firstSeq || firstToken
+  })
 }
 
 /** Wrap an ok result echoing the request's rpcId. */
@@ -761,9 +795,10 @@ function historyPage(
   scope?: ScopeKey,
 ): { events: HistoryEntry[]; hasMore: boolean } {
   const page = paginate(events, beforeSeq, maxMessages ?? DEFAULT_MAX_MESSAGES)
+  const eventsOnWire = elideAssembledAssistantChunks(page.events)
   return {
-    events: page.events.map((event) => {
-      const view = viewFor(ctx, event, callId => backscanArgs(page.events, callId), scope)
+    events: eventsOnWire.map((event) => {
+      const view = viewFor(ctx, event, callId => backscanArgs(eventsOnWire, callId), scope)
       return { event, ...view === undefined ? {} : { view } }
     }),
     hasMore: page.hasMore,
