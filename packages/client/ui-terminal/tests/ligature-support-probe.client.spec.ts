@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { LIGATURE_SUPPORT_CACHE_MAX_ENTRIES_COUNT, LIGATURE_SUPPORT_PROBE_MAX_CHARACTERS_COUNT } from '../src/client/performance/constants.ts'
-import { createLigatureSupportProbe } from '../src/client/performance/ligature-support-probe.ts'
+import { LIGATURE_SUPPORT_CACHE_MAX_ENTRIES_COUNT, LIGATURE_SUPPORT_PROBE_MAX_CHARACTERS_COUNT } from '../src/client/constants.ts'
+import { createLigatureSupportProbe } from '../src/client/ligature-support-probe.ts'
 
 interface Metrics {
   width: number

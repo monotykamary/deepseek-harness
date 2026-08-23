@@ -289,6 +289,24 @@ async function createFile(
   return `New file created successfully at: ${target.displayPath}`
 }
 
+function recordModification(
+  exec: ToolRunContext,
+  path: string,
+  before: string,
+  after: string,
+  diffs: Array<{ oldText: string; newText: string }>,
+): void {
+  exec.recordFileMutation({
+    beforeSha1: textSha1(before),
+    afterSha1: textSha1(after),
+    beforeSha256: textSha256(before),
+    afterSha256: textSha256(after),
+    path,
+    operation: 'modify',
+    diffs,
+  })
+}
+
 async function replaceInFile(
   ctx: Context,
   policy: MutationPolicy,
@@ -336,15 +354,10 @@ async function replaceInFile(
   } catch (error: unknown) {
     throw policy.mapError(error, sandboxPolicy)
   }
-  exec.recordFileMutation({
-    beforeSha1: textSha1(before),
-    afterSha1: textSha1(outcome.after),
-    beforeSha256: textSha256(before),
-    afterSha256: textSha256(outcome.after),
-    path: target.displayPath,
-    operation: 'modify',
-    diffs: [{ oldText: oldValue, newText: newValue }],
-  })
+  recordModification(
+    exec, target.displayPath, before, outcome.after,
+    [{ oldText: oldValue, newText: newValue }],
+  )
   ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
   return `The file ${target.displayPath} has been edited successfully.`
 }
@@ -387,15 +400,10 @@ async function insertInFile(
   } catch (error: unknown) {
     throw policy.mapError(error, sandboxPolicy)
   }
-  exec.recordFileMutation({
-    beforeSha1: textSha1(before),
-    afterSha1: textSha1(outcome.after),
-    beforeSha256: textSha256(before),
-    afterSha256: textSha256(outcome.after),
-    path: target.displayPath,
-    operation: 'modify',
-    diffs: [{ oldText: before, newText: after }],
-  })
+  recordModification(
+    exec, target.displayPath, before, outcome.after,
+    [{ oldText: before, newText: after }],
+  )
   ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
   return `The file ${target.displayPath} has been edited successfully.`
 }

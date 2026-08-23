@@ -18,7 +18,7 @@ import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/clien
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from './contract/slots.ts'
 import { createWorkspaceViewStore } from './stores.ts'
-import { WorkspaceBrowser } from './WorkspaceBrowser.tsx'
+import { WorkspaceBrowser } from './rows/WorkspaceBrowser.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
 import {
   WORKSPACE_SETTINGS_NAMESPACE, type WorkspaceSettings,

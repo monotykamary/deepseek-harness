@@ -4,7 +4,7 @@
 
 import { isTokenDelta } from '@monotykamary/dsh-llm/message'
 import type { SessionEvent } from '@monotykamary/dsh-session/types'
-import type { AssistantTiming } from './conversation.ts'
+import type { AssistantTiming } from '../conversation-state.ts'
 
 // The first-token predicate lives beside the StreamChunk type in dsh-llm;
 // re-exported here so Chat Definitions keep their client-runtime import.

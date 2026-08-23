@@ -6,9 +6,25 @@
  * the concrete class. Widening this interface is the explicit act of
  * widening what features may do to the workspaces domain.
  */
-import type { DirectoryListing, SessionId, WorkspaceId, WorkspaceView } from '@monotykamary/dsh-api-remotes/client'
-import type { WorkspaceListState } from '../workspaces/service.ts'
+import type { DirectoryListing, RpcError, SessionId, WorkspaceId, WorkspaceView } from '@monotykamary/dsh-api-remotes/client'
 import type { ObservableSnapshot } from './store.ts'
+
+/** Monotone workspace-list arrival lifecycle. */
+export type WorkspaceListPhase = 'pending' | 'ready'
+
+/** Workspace list plus baseline readiness and default-target projection. */
+export interface WorkspaceListState {
+  items: readonly WorkspaceView[]
+  /** Registry-global archive set in Host order. */
+  archivedSessionIds: readonly SessionId[]
+  state: 'idle' | 'loading' | 'error'
+  phase: WorkspaceListPhase
+  error: RpcError | null
+  /** True only after both workspace.list and session.list have succeeded. */
+  baselinesReady: boolean
+  /** Most recently active Workspace. */
+  recentWorkspaceId: WorkspaceId | undefined
+}
 
 /** The workspaces-service face injected as `ctx.workspaces`. */
 export interface IWorkspaces {

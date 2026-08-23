@@ -44,13 +44,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "clsx": "^2.0.0",
-    "@monotykamary/dsh-client-connection": "workspace:^",
-    "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0"
+    "clsx": "^2.0.0"
   },
   "peerDependencies": {
     "@monotykamary/cordis": "workspace:^",
@@ -58,7 +52,8 @@
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
-    "@monotykamary/dsh-client-ui-conversation": "workspace:^"
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-connection": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",
@@ -69,7 +64,13 @@
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
     "@monotykamary/dsh-user-questions": "workspace:^",
-    "@types/react": "~18.3.1"
+    "@types/react": "~18.3.1",
+    "@monotykamary/dsh-client-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "react": "^18.2.0",
+    "@monotykamary/dsh-client-connection": "workspace:^"
   },
   "files": [
     "lib/index.js",

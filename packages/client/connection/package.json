@@ -39,13 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@monotykamary/schemastery": "workspace:^",
-    "ws": "^8.21.0",
-    "@monotykamary/dsh-attachment": "workspace:^",
-    "@monotykamary/dsh-host-apiproxy": "workspace:^",
-    "@monotykamary/dsh-commands": "workspace:^",
-    "@monotykamary/dsh-llm": "workspace:^",
-    "@monotykamary/dsh-session": "workspace:^",
-    "@monotykamary/dsh-tools": "workspace:^"
+    "ws": "^8.21.0"
   },
   "files": [
     "lib/index.js",
@@ -68,6 +62,12 @@
     "@monotykamary/dsh-host-webserver": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/ws": "^8.18.1",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/cordis": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^",
+    "@monotykamary/dsh-commands": "workspace:^",
+    "@monotykamary/dsh-host-apiproxy": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^"
   }
 }

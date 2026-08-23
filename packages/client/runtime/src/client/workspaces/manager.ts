@@ -4,11 +4,11 @@ import type {
   HostFrame, IApiClient, RpcError, RpcRequest, RpcResult, SessionId, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-api-remotes/client'
 import { transportError } from '@monotykamary/dsh-host-apiproxy/api'
-import { Notifier } from '../sessions/notifier.ts'
+import type { WorkspaceListPhase } from '../contract/workspaces.ts'
+import { Notifier } from '../notifier.ts'
 import { Workspace, type WorkspaceCreateInput } from './workspace.ts'
 
-/** Monotone workspace-list arrival lifecycle. */
-export type WorkspaceListPhase = 'pending' | 'ready'
+export type { WorkspaceListPhase } from '../contract/workspaces.ts'
 
 /** Immutable workspace-list snapshot. */
 export interface WorkspaceListSnapshot {

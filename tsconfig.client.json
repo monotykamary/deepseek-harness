@@ -101,7 +101,6 @@
     { "path": "./packages/client/ui-settings-updates" },
     { "path": "./packages/client/locale" },
     { "path": "./packages/client/ui-renderer" },
-    { "path": "./packages/client/web-react" },
     { "path": "./packages/client/web" },
     { "path": "./apps/web" }
   ]

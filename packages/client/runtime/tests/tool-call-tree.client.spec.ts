@@ -1,6 +1,6 @@
 import type { SessionEvent } from '@monotykamary/dsh-session/types'
 import { describe, expect, it } from 'vitest'
-import type { RunningToolCall, ToolCallBlock } from '../src/client/sessions/conversation.ts'
+import type { RunningToolCall, ToolCallBlock } from '../src/client/conversation-state.ts'
 import {
   MAX_TOOL_CALL_TREE_DEPTH, ToolCallTree,
 } from '../src/client/sessions/tool-call-tree.ts'

@@ -89,20 +89,20 @@ vi.doMock('@xterm/addon-unicode-graphemes', () => ({ UnicodeGraphemesAddon: clas
 vi.doMock('@xterm/addon-web-links', () => ({ WebLinksAddon: class { readonly fake = true } }))
 vi.doMock('@xterm/addon-webgl/lib/addon-webgl.mjs', () => ({ WebglAddon: FakeWebglAddon }))
 vi.doMock('@xterm/xterm', () => ({ Terminal: FakeTerminal }))
-vi.doMock('../src/client/performance/output-batcher.ts', () => ({ OutputBatcher: FakeBatcher }))
-vi.doMock('../src/client/performance/output-scroll-controller.ts', () => ({
+vi.doMock('../src/client/output-batcher.ts', () => ({ OutputBatcher: FakeBatcher }))
+vi.doMock('../src/client/output-scroll-controller.ts', () => ({
   createTerminalOutputScrollController: () => mocks.scroll,
 }))
-vi.doMock('../src/client/performance/emoji-width-unicode-provider.ts', () => ({
+vi.doMock('../src/client/emoji-width-unicode-provider.ts', () => ({
   EmojiWidthUnicodeProvider: class {
     readonly fake = true
     constructor(_provider: unknown, normal: () => boolean) { mocks.emojiNormal = normal }
   },
 }))
-vi.doMock('../src/client/performance/ligature-joiner.ts', () => ({
+vi.doMock('../src/client/ligature-joiner.ts', () => ({
   findLigatureRanges: () => [[0, 2], [3, 5]],
 }))
-vi.doMock('../src/client/performance/ligature-support-probe.ts', () => ({
+vi.doMock('../src/client/ligature-support-probe.ts', () => ({
   createLigatureSupportProbe: () => {
     const probe = { supports: vi.fn((text: string) => text === 'ok'), dispose: vi.fn() }
     mocks.probes.push(probe)

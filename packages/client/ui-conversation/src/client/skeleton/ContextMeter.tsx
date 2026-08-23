@@ -10,7 +10,7 @@ import type { UseProjection } from '@monotykamary/dsh-client-runtime/client'
 import type {} from '@monotykamary/dsh-token-meter/client'
 import { Tooltip } from '@monotykamary/dsh-client-ui-primitives'
 import type { ComposerBarProps } from '../contract/slots.ts'
-import { contextOccupancy, formatTokens } from '../chat/StatsLine.tsx'
+import { contextOccupancy, formatTokens } from '../context-metrics.ts'
 import css from './ContextMeter.module.css'
 
 /** Ring geometry: 14px viewBox, 2px stroke. */

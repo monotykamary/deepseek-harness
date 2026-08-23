@@ -55,10 +55,7 @@
     "@monotykamary/dsh-client-ui-input-trigger": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "clsx": "^2.1.1",
-    "react": "^18.2.0"
+    "clsx": "^2.1.1"
   },
   "devDependencies": {
     "@monotykamary/dsh-api-remotes": "workspace:^",
@@ -74,15 +71,13 @@
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
     "@monotykamary/cordis": "workspace:^",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "clsx": "^2.1.1"
   },
   "files": [
     "lib/index.js",
     "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
-  ],
-  "dependencies": {
-    "clsx": "^2.1.1"
-  }
+  ]
 }

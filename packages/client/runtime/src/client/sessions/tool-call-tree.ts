@@ -2,7 +2,7 @@ import type { SessionEvent } from '@monotykamary/dsh-session/types'
 import type {} from '@monotykamary/dsh-tools/types'
 import type {
   ConversationNode, RunningToolCall, ToolCallBlock, ToolResultNode,
-} from './conversation.ts'
+} from '../conversation-state.ts'
 
 interface ProjectedBlock {
   source: ToolCallBlock

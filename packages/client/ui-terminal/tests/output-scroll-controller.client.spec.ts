@@ -1,6 +1,6 @@
 import type { Terminal as XtermTerminal } from '@xterm/xterm'
 import { describe, expect, it, vi } from 'vitest'
-import { createTerminalOutputScrollController } from '../src/client/performance/output-scroll-controller.ts'
+import { createTerminalOutputScrollController } from '../src/client/output-scroll-controller.ts'
 
 interface FakeTerminalBuffer {
   baseY: number

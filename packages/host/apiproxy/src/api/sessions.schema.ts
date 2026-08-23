@@ -48,17 +48,22 @@ export const sessionEventSchema = z.object({
   ignorable: z.literal(true).optional(),
 }) as unknown as z.ZodType<SessionEvent>
 
-/** SessionSummary row of session.list (`projections` reuses the history block's shape and schema). */
-export const sessionSummarySchema = z.object({
+/** Session identity fields shared by list rows and host add frames. */
+export const sessionSummaryIdentityShape = {
   sessionId: sessionIdSchema,
-  updatedAt: z.number(),
-  running: z.boolean(),
   blank: z.boolean(),
   parentSessionId: sessionIdSchema.optional(),
   origin: z.literal('subagent').optional(),
   cwd: z.string().optional(),
   agentPreset: z.string().optional(),
   branch: z.string().optional(),
+}
+
+/** SessionSummary row of session.list (`projections` reuses the history block's shape and schema). */
+export const sessionSummarySchema = z.object({
+  ...sessionSummaryIdentityShape,
+  updatedAt: z.number(),
+  running: z.boolean(),
   projections: z.lazy(() => sessionProjectionsBlockSchema).optional(),
 }) as unknown as z.ZodType<Wire<SessionSummary>>
 

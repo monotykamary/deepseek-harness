@@ -1,9 +1,9 @@
-/** Assistant block classifier (moved here with sessions/conversation.ts). */
+/** Assistant block classifier (moved here with conversation-state.ts). */
 
 import { describe, expect, it } from 'vitest'
 import { AttachmentId } from '@monotykamary/dsh-attachment'
 import type { ContentBlock } from '@monotykamary/dsh-api-remotes/client'
-import { toAssistantBlock, toAssistantBlocks } from '../src/client/sessions/conversation.ts'
+import { toAssistantBlock, toAssistantBlocks } from '../src/client/conversation-state.ts'
 
 describe('toAssistantBlock', () => {
   it('classifies the four block shapes', () => {

@@ -11,7 +11,7 @@ import { CodeBlock } from '@monotykamary/dsh-client-ui-primitives'
 import { shallowEqual } from '@monotykamary/dsh-client-runtime/client'
 import type { ConversationSnapshot, RunningToolCall, ToolCallBlock, ToolResultNode } from '@monotykamary/dsh-client-runtime/client'
 import type { DetailsSurfaceProps } from '../contract/slots.ts'
-import { findToolCall } from '../chat/tool-node-reader.ts'
+import { findToolCall } from '../tool-node-reader.ts'
 import css from './DetailsPanel.module.css'
 
 /** Full props composed by reference from the contract (automatic shares & injected share). */

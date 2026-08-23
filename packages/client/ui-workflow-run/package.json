@@ -58,9 +58,7 @@
     "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-tool-workflow": "workspace:^",
     "@monotykamary/dsh-workflow": "workspace:^",
-    "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^"
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
@@ -74,9 +72,7 @@
     "@monotykamary/dsh-tool-workflow": "workspace:^",
     "@monotykamary/dsh-workflow": "workspace:^",
     "@types/react": "~18.3.1",
-    "@monotykamary/cordis": "workspace:^"
-  },
-  "dependencies": {
+    "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0"
   }
 }

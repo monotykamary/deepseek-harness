@@ -51,10 +51,7 @@
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-plan-mode": "workspace:^",
-    "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-api-remotes": "workspace:^",
@@ -68,8 +65,7 @@
     "@monotykamary/dsh-plan-mode": "workspace:^",
     "@types/react": "~18.3.1",
     "@monotykamary/cordis": "workspace:^",
-    "react": "^18.2.0",
-    "@monotykamary/dsh-client-web-react": "workspace:^"
+    "react": "^18.2.0"
   },
   "files": [
     "lib/index.js",

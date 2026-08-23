@@ -10,8 +10,6 @@ The boot page uses plain DOM and local CSS, so client-bundle and plugin-activati
 
 The optional override parameter `seams` forwards the module system's `loadBundle` transport override (`BootSeams`) for environments where external `<script>` execution cannot reach the page context; ordinary browser callers omit it. A pre-injected page transport is the default ahead of it: when `globalThis.__DSH_TRANSPORT__` (the connection package's `ClientTransportHooks`) carries `loadBundle`, the module stage adopts it as the bundle transport and skips the immediate-tier HTTP prefetch — explicit `seams` still win.
 
-The shell owns browser-title projection. With a selected session carrying a durable title, it renders `<session title> — <existing HTML title>` and reacts to later title revisions; no selection or a selected untitled session preserves the existing title, and shell unmount restores it. The existing HTML title remains the configurable product suffix. The non-reloadable kernel observes its shell-owned `#root` child list and document visibility: when a visible root loses its required AppRoot child, it reloads the complete document immediately; a root emptied while hidden reloads when the document becomes visible, while a mounted child never triggers recovery.
-
 ## Model Experience
 
 None, as the entry shell boots the browser plugin tree; nothing here reaches a model request.

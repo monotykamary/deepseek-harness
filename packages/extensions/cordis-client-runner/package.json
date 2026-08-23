@@ -67,8 +67,7 @@
     "@monotykamary/dsh-invariants": "workspace:^",
     "@types/react": "~18.3.1",
     "@monotykamary/cordis": "workspace:^",
-    "react": "^18.2.0",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^"
+    "react": "^18.2.0"
   },
   "files": [
     "lib/index.js",

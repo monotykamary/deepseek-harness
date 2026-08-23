@@ -1,8 +1,8 @@
 import type { IUnicodeVersionProvider, Terminal } from '@xterm/xterm'
 import { UnicodeGraphemesAddon } from '@xterm/addon-unicode-graphemes'
 import { describe, expect, it } from 'vitest'
-import { EmojiWidthUnicodeProvider } from '../src/client/performance/emoji-width-unicode-provider.ts'
-import { bunWidthOverride, isWideJoiningMarkOverride } from '../src/client/performance/bun-width-overrides.ts'
+import { EmojiWidthUnicodeProvider } from '../src/client/emoji-width-unicode-provider.ts'
+import { bunWidthOverride, isWideJoiningMarkOverride } from '../src/client/bun-width-overrides.ts'
 
 const extractWidth = (props: number): number => (props >> 1) & 0x3
 const extractShouldJoin = (props: number): boolean => (props & 1) !== 0

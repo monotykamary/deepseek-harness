@@ -53,10 +53,7 @@
     "@monotykamary/dsh-client-connection": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/dsh-settings": "workspace:^",
-    "@monotykamary/dsh-client-schema-form": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",

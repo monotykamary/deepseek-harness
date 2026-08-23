@@ -14,7 +14,7 @@ English | [中文](2026-07-30-bounded-overwrite-diff-basis.zh.md)
 
 The local provider owns this decision because `before` is its optional, best-effort basis: it can avoid acquiring prior content that the configured pair limit has already made ineligible. `tool-fs` continues to own diff computation, retention, and presentation. The setting is independent of `tool-fs.readStreamMinSize`; read routing and overwrite presentation are different policies and need not share a value.
 
-`before: null` asks consumers to use their existing whole-file fallback. The limit bounds only the extra prior-content acquisition and eligibility for a contextual pair. It does not bound the caller-owned replacement, the returned `after` value, or a consumer's fallback rendering.
+`before: null` asks presentation consumers to use their existing whole-file fallback. A successful update with that value emits no durable mutation receipt because the prior hashes and textual hunks are unavailable; the `operation: 'update'` discriminant prevents a consumer from fabricating a create receipt. A true create still emits its whole-file receipt. The limit bounds only the extra prior-content acquisition and eligibility for a contextual pair. It does not bound the caller-owned replacement, the returned `after` value, or fallback rendering.
 
 ## Alternatives considered
 
@@ -28,4 +28,4 @@ The local provider owns this decision because `before` is its optional, best-eff
 
 ## Consequences
 
-Deployments can tune the extra overwrite-basis cost without changing read routing. At or above the exclusive limit, overwrites still succeed and remain visible through the whole-file fallback, but lose contextual hunks. Below the limit, the provider can still hold almost `diffBasisMaxBytes` of prior text in addition to the caller's replacement. The bounded descriptor read adds an open/stat/read sequence for eligible overwrites, while preventing a stale path probe from turning that sequence into an unbounded allocation.
+Deployments can tune the extra overwrite-basis cost without changing read routing. At or above the exclusive limit, overwrites still succeed and remain visible through the whole-file presentation fallback, but lose contextual hunks and receipt-ledger attribution. Below the limit, the provider can still hold almost `diffBasisMaxBytes` of prior text in addition to the caller's replacement. The bounded descriptor read adds an open/stat/read sequence for eligible overwrites, while preventing a stale path probe from turning that sequence into an unbounded allocation.

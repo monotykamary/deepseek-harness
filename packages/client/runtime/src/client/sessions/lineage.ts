@@ -4,7 +4,7 @@
 
 import type { SessionId, SessionSummary } from '@monotykamary/dsh-api-remotes/client'
 import type { SessionProjectionMap } from '@monotykamary/dsh-session-projection/types'
-import type { PendingInteractionStatus } from './pending.ts'
+import type { PendingInteractionStatus } from '../pending.ts'
 
 /** Host list summary enriched with the latest mux-projected durable title. */
 export interface TitledSessionSummary extends SessionSummary {

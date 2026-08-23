@@ -17,9 +17,9 @@ import type { SubmitImageAttachment, SubmitOutcome } from '@monotykamary/dsh-cli
 import type { ImageAttachmentRef, ImageMediaType } from '@monotykamary/dsh-attachment'
 import type { ComposerAttachment } from './contract/slots.ts'
 import type { QueueAction, QueueItemId } from './contract/queue.ts'
-import type { ComposerBlocks } from './input/blocks.ts'
-import type { ComposerSubmissions } from './input/submissions.ts'
-import type { DraftAttachmentId, SessionInputResolver } from './input/contract.ts'
+import type {
+  ComposerBlocks, ComposerSubmissions, DraftAttachmentId, SessionInputResolver,
+} from './contract/input.ts'
 import type { InputSubmitMode } from './contract/composer-submission.ts'
 
 /**

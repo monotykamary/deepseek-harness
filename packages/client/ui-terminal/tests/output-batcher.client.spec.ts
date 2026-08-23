@@ -6,9 +6,9 @@ import {
   OUTPUT_KEEP_WARM_MS,
   OUTPUT_PENDING_WRITE_COMPACTION_THRESHOLD_WRITES,
   SYNCHRONIZED_OUTPUT_END_SEQUENCE,
-} from '../src/client/performance/constants.ts'
-import { createTerminalOutputScrollController } from '../src/client/performance/output-scroll-controller.ts'
-import { OutputBatcher } from '../src/client/performance/output-batcher.ts'
+} from '../src/client/constants.ts'
+import { createTerminalOutputScrollController } from '../src/client/output-scroll-controller.ts'
+import { OutputBatcher } from '../src/client/output-batcher.ts'
 
 interface OutputScrollBuffer {
   baseY: number

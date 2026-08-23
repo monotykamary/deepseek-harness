@@ -56,10 +56,7 @@
     "@monotykamary/cordis": "workspace:^",
     "@monotykamary/dsh-compaction": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
-    "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@monotykamary/dsh-client-ui-conversation": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-agent": "workspace:^",

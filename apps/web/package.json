@@ -43,7 +43,6 @@
     "vite": "^6.0.0",
     "vitest": "^4.1.8",
     "fflate": "^0.8.2",
-    "@monotykamary/dsh-client-web-react": "workspace:^",
     "@tailwindcss/vite": "4.1.14",
     "tailwindcss": "4.1.14"
   },

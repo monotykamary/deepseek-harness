@@ -1,7 +1,7 @@
 import type { ContentBlock } from '@monotykamary/dsh-llm/types'
 import type { MuxFrame } from '@monotykamary/dsh-api-remotes/client'
 import type { SessionEvent } from '@monotykamary/dsh-session/types'
-import type { QueuedMessage } from './conversation.ts'
+import type { QueuedMessage } from '../conversation-state.ts'
 
 const QUEUE_PREVIEW_CHARS = 200
 

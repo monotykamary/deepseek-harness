@@ -52,11 +52,8 @@
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^",
-    "@monotykamary/dsh-invariants": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/dsh-invariants": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",

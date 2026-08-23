@@ -27,18 +27,6 @@
       "path": "../ui-renderer"
     },
     {
-      "path": "../ui-attachment"
-    },
-    {
-      "path": "../schema-form"
-    },
-    {
-      "path": "../web-react"
-    },
-    {
-      "path": "../runtime"
-    },
-    {
       "path": "../../runtime-diagnostics/invariants"
     }
   ],

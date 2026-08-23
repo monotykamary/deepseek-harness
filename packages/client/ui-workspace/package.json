@@ -51,7 +51,6 @@
   "license": "MIT",
   "dependencies": {
     "clsx": "^2.0.0",
-    "@monotykamary/dsh-settings": "workspace:^",
     "@monotykamary/schemastery": "workspace:^"
   },
   "peerDependencies": {
@@ -63,11 +62,9 @@
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-layout": "workspace:^",
     "@monotykamary/dsh-client-ui-sidebar": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0",
     "@monotykamary/dsh-api-remotes": "workspace:^",
-    "@monotykamary/dsh-client-ui-settings": "workspace:^"
+    "@monotykamary/dsh-client-ui-settings": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-connection": "workspace:^",
@@ -84,7 +81,8 @@
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
     "@monotykamary/dsh-api-remotes": "workspace:^",
-    "@monotykamary/dsh-client-ui-settings": "workspace:^"
+    "@monotykamary/dsh-client-ui-settings": "workspace:^",
+    "@monotykamary/dsh-settings": "workspace:^"
   },
   "files": [
     "lib/index.js",

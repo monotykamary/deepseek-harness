@@ -3003,6 +3003,13 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
           applies: 'live',
           secrets: [{ path: ['apiKey'], set: false }],
           revision: 0,
+        }, {
+          ns: 'ui-onboarding',
+          schema: {},
+          value: { welcomeNoticeVersion: '2026-08-23.1' },
+          applies: 'live',
+          secrets: [],
+          revision: 0,
         }],
       }),
       // Native opens are deterministic no-op successes in this fixture, as is host.openPath.

@@ -16,7 +16,7 @@ import type {
   ComposerChainProps, ConversationInjected, ConversationSessionHeaderInjected, ConversationSessionInjected,
   DetailsSurfaceInjected,
 } from './contract/slots.ts'
-import type { InputNotice } from './input/contract.ts'
+import type { InputNotice } from './contract/input.ts'
 import { createChatStore } from './stores.ts'
 import { ConversationController, UnsupportedImageMediaTypeError } from './service.ts'
 import type { IConversation } from './service.ts'

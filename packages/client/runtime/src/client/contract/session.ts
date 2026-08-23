@@ -12,7 +12,7 @@ import type {
   MessageId, PromptContentPart, QueueAction, RpcResult, SessionId,
 } from '@monotykamary/dsh-api-remotes/client'
 import type { RemoteResult } from '@monotykamary/dsh-typert-protocol'
-import type { ConversationSnapshot } from '../sessions/conversation.ts'
+import type { ConversationSnapshot } from '../conversation-state.ts'
 import type { ObservableSnapshot } from './store.ts'
 
 /** Key-addressed projection read face (the useProjection resolution path; see ProjectionValueStore). */

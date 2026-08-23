@@ -5,7 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { bindSnapshotSelector } from '@monotykamary/dsh-client-web-react'
+import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import { createSnapshotStore, type SessionListState, type WorkspaceListState } from '@monotykamary/dsh-client-runtime/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { SessionTitleRow } from '../src/client/SessionTitleRow.tsx'

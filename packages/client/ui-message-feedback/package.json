@@ -54,10 +54,7 @@
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/dsh-message-feedback": "workspace:^",
     "@monotykamary/dsh-typert-protocol": "workspace:^",
-    "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-api-remotes": "workspace:^",

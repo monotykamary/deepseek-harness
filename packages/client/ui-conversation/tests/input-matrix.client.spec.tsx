@@ -15,7 +15,7 @@ import type { ClientContext, ConversationSnapshot, SessionId } from '@monotykama
 import type { SubmitImageAttachment, SubmitOutcome } from '@monotykamary/dsh-client-ui-input-trigger/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
-import type { DraftAttachmentId } from '../src/client/input/contract.ts'
+import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
 import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'

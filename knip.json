@@ -708,9 +708,7 @@
     "packages/client/web": {
       "project": [
         "src/**/*.ts",
-        "tests/**/*.ts",
-        "src/**/*.tsx",
-        "tests/**/*.tsx"
+        "tests/**/*.ts"
       ]
     },
     "packages/client/ui-renderer": {
@@ -760,7 +758,6 @@
         "@types/react-dom",
         "react",
         "react-dom",
-        "@monotykamary/dsh-client-web-react",
         "tailwindcss"
       ]
     },
@@ -777,7 +774,8 @@
       "ignoreDependencies": [
         "@monotykamary/.+",
         "dsh-fabric",
-        "dsh-fovea"
+        "dsh-fovea",
+        "dsh-factory"
       ]
     },
     "packages/client/modules": {
@@ -824,16 +822,6 @@
     "packages/bundle/web-app": {
       "ignoreDependencies": [
         "@monotykamary/.+"
-      ]
-    },
-    "packages/client/web-react": {
-      "entry": [
-        "tests/**/*.spec.tsx"
-      ],
-      "project": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "tests/**/*.tsx"
       ]
     }
   }

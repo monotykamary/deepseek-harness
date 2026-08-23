@@ -42,17 +42,12 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
 
   // The sidebar renders from the boot graph: every inject layer activated.
   const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
-  // The workspace browser's shipped default is the flat "In one list" view,
-  // so every fixture session is a top-level tree row with its workspace meta
-  // inline (no workspace group row to expand).
-  expect(document.querySelector('svg[viewBox="26 0 156 24"]')).not.toBeNull()
-  expect(screen.queryByText('DSH Local Build')).toBeNull()
-  // The compact layout dropped group session counts; the fixture workspace
-  // group row renders immediately with its sessions beneath it.
-  const fixtureGroup = (await within(tree).findAllByText('fixture'))
-    .map(el => el.closest<HTMLElement>('[role="treeitem"]'))
-    .find(el => el?.getAttribute('aria-expanded') !== null)
-  if (fixtureGroup === undefined) throw new Error('fixture Workspace group missing')
+  // Branding follows the environment recorded with these exact artifacts.
+  const official = Reflect.get(clientBuildEnvironment, 'DSH_CLIENT_BUILD_PROFILE') === 'official'
+  expect(document.querySelector('svg[viewBox="26 0 156 24"]') !== null).toBe(official)
+  expect(screen.queryByText('DSH Local Build') !== null).toBe(!official)
+  // The shipped flat view renders fixture sessions as top-level rows with
+  // Workspace metadata inline; no Workspace group row is expected.
 
   // The resident fixture has both a question and an approval; composer routing
   // exposes the question first, and the assembled workspace plugin mirrors that

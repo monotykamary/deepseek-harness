@@ -43,11 +43,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "clsx": "^2.0.0",
-    "@monotykamary/dsh-attachment": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "clsx": "^2.0.0"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",
@@ -56,7 +52,11 @@
     "@types/react-dom": "~18.3.0",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^"
+    "@monotykamary/dsh-client-ui-slots": "workspace:^",
+    "@monotykamary/dsh-attachment": "workspace:^",
+    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "files": [
     "lib/index.js",

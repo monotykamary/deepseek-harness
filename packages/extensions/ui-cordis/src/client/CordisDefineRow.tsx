@@ -158,10 +158,10 @@ export function CordisDefineRow({
             </section>
           )}
           {card.pluginId !== null && <div className={css.panelHint}>{t('panel.hint')}</div>}
-          {inspect !== undefined && (
+          {inspect === undefined ? null : (
             <button type="button" className={css.inspectButton} onClick={inspect}>
-              <ScanSearch size={12} />
-              Inspect
+              <ScanSearch size={12} aria-hidden />
+              <span>Inspect</span>
             </button>
           )}
         </div>

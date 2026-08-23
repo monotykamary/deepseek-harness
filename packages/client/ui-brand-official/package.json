@@ -49,7 +49,6 @@
   "peerDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
     "@monotykamary/dsh-client-ui-settings": "workspace:^",
     "@monotykamary/dsh-client-ui-sidebar": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
@@ -69,7 +68,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@monotykamary/dsh-client-locale": "workspace:^",
-    "@monotykamary/dsh-client-test-runtime": "workspace:^"
+    "@monotykamary/dsh-client-test-runtime": "workspace:^",
+    "@monotykamary/dsh-client-ui-slots": "workspace:^"
   },
   "files": [
     "lib/index.js",

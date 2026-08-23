@@ -118,10 +118,12 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
         // model-facing remedy; anything else passes through.
         throw remediateFsError(sandbox.mapError(error, sandboxPolicy))
       }
-      const diffs = outcome.before === null
+      const diffs = outcome.operation === 'create'
         ? [{ oldText: null, newText: outcome.after }]
-        : computeHunkDiffs(target.displayPath, outcome.before, outcome.after)
-          .map(({ oldText, newText }) => ({ oldText, newText }))
+        : outcome.before === null
+          ? []
+          : computeHunkDiffs(target.displayPath, outcome.before, outcome.after)
+            .map(({ oldText, newText }) => ({ oldText, newText }))
       if (outcome.operation === 'create' || diffs.length > 0) {
         exec.recordFileMutation({
           beforeSha1: outcome.before === null ? null : textSha1(outcome.before),

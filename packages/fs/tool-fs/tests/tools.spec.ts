@@ -40,6 +40,7 @@ class FakeFs extends FileSystem {
   files = new Map<string, string>()
   rejectWith?: FsError
   writeIntents: (FsWriteIntent | undefined)[] = []
+  omitWriteBasis = false
   editIntents: ({ version: FsVersion } | undefined)[] = []
 
   private throwIfArmed(): void {
@@ -86,8 +87,9 @@ class FakeFs extends FileSystem {
     this.throwIfArmed()
     this.writeIntents.push(expected)
     const before = this.files.get(target.targetKey) ?? null
+    const operation = before !== null ? 'update' : 'create'
     this.files.set(target.targetKey, content)
-    return { operation: before !== null ? 'update' : 'create', version: FsVersion('v2'), before, after: content }
+    return { operation, version: FsVersion('v2'), before: operation === 'update' && this.omitWriteBasis ? null : before, after: content }
   }
   override async editText(target: FsTarget, edit: FsEditRequest, expected?: { version: FsVersion }): Promise<FsEditOutcome> {
     this.throwIfArmed()
@@ -414,6 +416,16 @@ describe('write tool', () => {
     }])
     expect(text(result)).toContain('Created file')
     expect(fs.writeIntents).toEqual([{ kind: 'createIfAbsent' }])
+  })
+
+  it('does not fabricate a receipt when an overwrite has no safe diff basis', async () => {
+    const { ctx, fs } = await setup()
+    fs.files.set('key:a.txt', 'existing')
+    fs.omitWriteBasis = true
+    const result = await call(ctx, 'write', { file_path: 'a.txt', content: 'replacement' })
+    if (result.isError) throw new Error('expected write success')
+    expect(result.value).toEqual({ path: '/abs/a.txt', operation: 'update', before: null, after: 'replacement' })
+    expect(result.mutations).toBeUndefined()
   })
 
   it('rejects a blank file_path', async () => {

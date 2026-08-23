@@ -12,7 +12,16 @@ import { installAssembledBootEnv, mountAssembledApp } from './assembled-boot.ts'
 
 installAssembledBootEnv()
 
-/** Open the fixture history session (the alpha log carrying the turn-72 image pair) and wait for its gallery. */
+/** Start a blank session through the flat browser's labeled sidebar action. */
+async function startFixtureSession(): Promise<void> {
+  await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
+  const label = screen.getByText('New Session')
+  const button = label.closest<HTMLButtonElement>('button')
+  if (button === null) throw new Error('global new-session action missing')
+  fireEvent.click(button)
+}
+
+/** Open the fixture history session and wait for its image gallery. */
 async function openFixtureSession(): Promise<void> {
   const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
   // The workspace browser's shipped default is the flat "In one list" view:
@@ -73,11 +82,8 @@ it('renders the history image pair through the authorized attachment route and o
 it('accepts pasted images into the composer rail in order and removes them', async () => {
   mountAssembledApp()
 
-  await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
-  // Flat view: the global sidebar New session button starts a session in the
-  // fixture workspace (the grouped per-workspace action is not rendered).
-  const start = screen.getByRole('button', { name: 'New session' })
-  fireEvent.click(start)
+  // Flat view: the labeled sidebar action starts a session in the fixture Workspace.
+  await startFixtureSession()
 
   // Image-only send arming is pinned at package level (input-bar.spec.tsx);
   // this assembled lane pins the intake chain over the built graph.
@@ -146,9 +152,7 @@ it('accepts pasted images into the composer rail in order and removes them', asy
 it('accepts a whole-page drop under the limits-labeled overlay and refuses an over-limit batch at intake', async () => {
   mountAssembledApp()
 
-  await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
-  // Flat view: the global sidebar New session button (see the paste test).
-  fireEvent.click(screen.getByRole('button', { name: 'New session' }))
+  await startFixtureSession()
   const textarea = await screen.findByPlaceholderText('Describe what you want to build', {}, { timeout: 10_000 })
 
   // A file drag anywhere over the page raises the full-viewport overlay whose
@@ -193,10 +197,7 @@ it('accepts a whole-page drop under the limits-labeled overlay and refuses an ov
 it('renders a host dimension rejection with the projected 2000px limit', async () => {
   mountAssembledApp('?fixture&fixturePrompt=reject')
 
-  const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
-  const start = tree.querySelector<HTMLButtonElement>('button[aria-label="New session in fixture"]')
-  if (start === null) throw new Error('fixture Workspace new-session action missing')
-  fireEvent.click(start)
+  await startFixtureSession()
 
   const textarea = await screen.findByPlaceholderText('Describe what you want to build', {}, { timeout: 10_000 })
   const image = new File([new Uint8Array([137, 80, 78, 71])], 'too-wide.png', { type: 'image/png' })

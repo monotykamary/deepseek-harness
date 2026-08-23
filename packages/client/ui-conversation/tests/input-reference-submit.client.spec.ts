@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
 import type { InputTriggerController, SubmitOutcome } from '@monotykamary/dsh-client-ui-input-trigger/client'
 import { SessionInputShell } from '../src/client/input/facade.ts'
-import type { DraftAttachmentId } from '../src/client/input/contract.ts'
+import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 
 const mention = '@[Research](dsh-session:InNvdXJjZSI)'
 const spacedMention = '@[Research notes](dsh-session:InNvdXJjZSI)'

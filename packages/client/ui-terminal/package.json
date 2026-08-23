@@ -72,13 +72,10 @@
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-layout": "workspace:^",
-    "@monotykamary/dsh-client-ui-primitives": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-client-ui-theme": "workspace:^",
     "@monotykamary/dsh-client-ui-workbench": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/dsh-terminal-web": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/dsh-terminal-web": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/cordis": "workspace:^",

@@ -14,10 +14,9 @@ import type { MarkdownFileMentions } from '@monotykamary/dsh-client-ui-primitive
 import type { MessageId } from '@monotykamary/dsh-client-connection/client'
 import type {} from '@monotykamary/dsh-client-ui-layout/client'
 import type {} from '@monotykamary/dsh-client-ui-workbench/client'
-import type { ComposerBlock } from '../input/blocks.ts'
 import type {
-  ComposerKeyboard, DraftAttachmentId, EditSelection, InputActions, InputNotice, InputState,
-} from '../input/contract.ts'
+  ComposerBlock, ComposerKeyboard, DraftAttachmentId, EditSelection, InputActions, InputNotice, InputState,
+} from './input.ts'
 import type { createChatStore } from '../stores.ts'
 import type { ComposerSubmitGesture, InputSubmitMode } from './composer-submission.ts'
 import type { ChatNode, ChatNodeKind } from './chat-nodes.ts'

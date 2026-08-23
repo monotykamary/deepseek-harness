@@ -6,7 +6,7 @@ import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
 import {
   createSnapshotStore, EMPTY_CHAT_SNAPSHOT, EMPTY_CONVERSATION_VIEWS,
 } from '@monotykamary/dsh-client-runtime/client'
-import type { UseSession } from '@monotykamary/dsh-client-web-react'
+import type { UseSession } from '@monotykamary/dsh-client-ui-renderer/client'
 import type { ConversationSnapshot, SessionId, SessionListState, WorkspaceListState } from '@monotykamary/dsh-client-runtime/client'
 import type { SessionProviderComponent } from '@monotykamary/dsh-client-ui-slots'
 import type { DetailsSurfaceProps, DetailsToolOwnerProps, SelectionTarget } from '@monotykamary/dsh-client-ui-conversation/client'

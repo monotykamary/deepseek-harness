@@ -39,8 +39,7 @@
     "@monotykamary/dsh-invariants": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@monotykamary/dsh-client-web-react": "workspace:^"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",

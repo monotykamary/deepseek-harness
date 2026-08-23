@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { ContextMessageNode } from '@monotykamary/dsh-client-runtime/client'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { DisclosureRow, File } from '@monotykamary/dsh-client-ui-primitives'
-import { ReferenceIcon } from '../reference/ReferenceIcon.tsx'
+import { ReferenceIcon } from '../ReferenceIcon.tsx'
 import { contextBody } from './ContextBody.tsx'
 import css from './ContextInjectionRow.module.css'
 

@@ -4,7 +4,7 @@ import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import { apply, inject } from '@monotykamary/dsh-client-ui-workspace/client'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from '@monotykamary/dsh-client-ui-workspace/client'
-import { WorkspaceBrowser } from '../src/client/WorkspaceBrowser.tsx'
+import { WorkspaceBrowser } from '../src/client/rows/WorkspaceBrowser.tsx'
 import { WorkspacePicker } from '../src/client/WorkspacePicker.tsx'
 
 async function bench() {

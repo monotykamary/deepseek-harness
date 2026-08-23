@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findLigatureRanges } from '../src/client/performance/ligature-joiner.ts'
+import { findLigatureRanges } from '../src/client/ligature-joiner.ts'
 
 describe('findLigatureRanges — operator runs', () => {
   it('returns no ranges for text without any operator run', () => {

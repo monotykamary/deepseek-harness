@@ -14,6 +14,19 @@ installAssembledBootEnv()
 
 describe('assembled POSIX home-path display', () => {
   it('shows the home-descendant Workspace path as ~ and copies the full path', async () => {
+    localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({
+      workspaceScope: null,
+      groupBy: 'workspace',
+      orderBy: 'manual',
+      groupExpansion: {},
+      settledShelfExpanded: false,
+      explicitlySettledSessionIds: [],
+      pinnedActiveSessionIds: [],
+      snoozedUntilBySession: {},
+      snoozedShelfExpanded: false,
+      sessionOrderByAccount: {},
+      sessionUpdatedAtByAccount: {},
+    }))
     mountAssembledApp()
 
     const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })

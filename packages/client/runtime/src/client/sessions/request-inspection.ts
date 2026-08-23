@@ -1,11 +1,11 @@
 import type { ContentBlock, ToolSchema } from '@monotykamary/dsh-llm/types'
 import type {
   AssistantProvenanceView, AssistantRequestConfig,
-} from './conversation.ts'
+} from '../conversation-state.ts'
 
 export type {
   AssistantProvenanceView, AssistantRequestConfig,
-} from './conversation.ts'
+} from '../conversation-state.ts'
 
 /** Complete model-visible request header in force for an ordinary generation. */
 export interface ConversationPromptSnapshot {

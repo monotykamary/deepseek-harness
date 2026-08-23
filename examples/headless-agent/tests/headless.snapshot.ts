@@ -109,21 +109,13 @@ async function deepseekDefaultsServer(): Promise<DeepSeekDefaultsServer> {
     request.on('end', () => {
       requests.push(JSON.parse(body) as JsonObject)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
-      let keepAlives = 3
-      const write = (): void => {
-        if (keepAlives-- > 0) {
-          response.write(': keep-alive\n\n')
-          setTimeout(write, 60)
-          return
-        }
-        response.end([
-          'data: {"choices":[{"delta":{"content":"DEFAULTS_OK"}}]}',
-          'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":1}}',
-          'data: [DONE]',
-          '',
-        ].join('\n\n'))
-      }
-      setTimeout(write, 60)
+      response.write(': keep-alive\n\n'.repeat(3))
+      response.end([
+        'data: {"choices":[{"delta":{"content":"DEFAULTS_OK"}}]}',
+        'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":1}}',
+        'data: [DONE]',
+        '',
+      ].join('\n\n'))
     })
   })
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))

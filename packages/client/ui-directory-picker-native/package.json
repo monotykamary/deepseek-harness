@@ -47,9 +47,7 @@
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-workspace": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/cordis": "workspace:^",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^",
-    "react": "^18.2.0"
+    "@monotykamary/cordis": "workspace:^"
   },
   "devDependencies": {
     "@monotykamary/dsh-client-runtime": "workspace:^",
@@ -59,8 +57,7 @@
     "@types/react": "~18.3.1",
     "@monotykamary/cordis": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@monotykamary/dsh-client-ui-slots": "workspace:^"
+    "react-dom": "^18.2.0"
   },
   "files": [
     "lib/index.js",
