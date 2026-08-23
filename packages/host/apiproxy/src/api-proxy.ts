@@ -17,6 +17,7 @@ import { AttachmentError, admitEncodedImages } from '@monotykamary/dsh-attachmen
 import type { ImageAttachmentRef } from '@monotykamary/dsh-attachment'
 import { createUserMessage, freezeMessage, ReasoningEffortId } from '@monotykamary/dsh-llm'
 import { errorChain } from '@monotykamary/dsh-llm'
+import { isTokenDelta } from '@monotykamary/dsh-llm/message'
 import type { ContentBlock, MessageSource } from '@monotykamary/dsh-llm'
 import { isAppendSurfaceEvent, isJsonValue } from '@monotykamary/dsh-session'
 import type { JsonValue, Session, SessionEvent, SessionEventMap, SessionHeader, SessionId, UserMessage } from '@monotykamary/dsh-session'
@@ -258,18 +259,18 @@ function paginate(
 }
 
 /**
- * Drop `assistant/chunk` events whose (turn, step) already has an
- * append-origin `assistant/message` on the same page.
+ * Reduce each assembled assistant step to its first token delta and final
+ * append-origin message. The first raw page event also stays when it is a
+ * chunk: the browser uses that seq as its next `beforeSeq` cursor, so dropping
+ * it would make a later page request fetch the omitted tape again.
  *
- * Completed Chat and Trajectory rows fold from that message's content
- * (`toAssistantBlocks`); the token tape is live-stream and durable-log
- * material, not required to reopen a settled transcript. In-flight and
- * interrupted steps have no such message, so their chunks stay on the
- * page. Pagination still cuts on the full raw range, including the
- * omitted chunks' seqs, so `hasMore` and compaction contiguity are
+ * Chat and Trajectory settle content and usage from the message. The retained
+ * token delta preserves historical first-token timing; in-flight and
+ * interrupted steps have no final message and retain every chunk. Pagination
+ * still cuts on the full raw range, so `hasMore` and compaction grouping are
  * unchanged.
  * @param events - one history page after message-boundary pagination.
- * @returns the same events with assembled-step chunks removed.
+ * @returns the bounded browser projection of that page.
  */
 function elideAssembledAssistantChunks(events: readonly SessionEvent[]): SessionEvent[] {
   const completed = new Set<string>()
@@ -278,9 +279,15 @@ function elideAssembledAssistantChunks(events: readonly SessionEvent[]): Session
     completed.add(`${String(event.data.turn)}:${String(event.data.step)}`)
   }
   if (completed.size === 0) return [...events]
+  const firstSeq = events[0]?.seq
+  const keptFirstToken = new Set<string>()
   return events.filter((event) => {
     if (event.type !== 'assistant/chunk') return true
-    return !completed.has(`${String(event.data.turn)}:${String(event.data.step)}`)
+    const key = `${String(event.data.turn)}:${String(event.data.step)}`
+    if (!completed.has(key)) return true
+    const firstToken = isTokenDelta(event.data.chunk) && !keptFirstToken.has(key)
+    if (firstToken) keptFirstToken.add(key)
+    return event.seq === firstSeq || firstToken
   })
 }
 

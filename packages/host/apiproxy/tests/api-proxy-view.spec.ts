@@ -292,10 +292,12 @@ describe('mux live view computation', () => {
     ctx.agents.register({ id: session.id, session, status: 'idle', ctx } as Agent)
     session.append('turn/start', { turn: 1 })
     session.append('step/start', { turn: 1, step: 1 })
+    let firstToken: SessionEvent | undefined
     for (let i = 0; i < 40; i++) {
-      session.append('assistant/chunk', {
+      const chunk = session.append('assistant/chunk', {
         turn: 1, step: 1, chunk: { type: 'text-delta', index: 0, text: 'x' },
       })
+      firstToken ??= chunk
     }
     appendAssistantText(session, 'done', 1)
     session.append('step/end', { turn: 1, step: 1 })
@@ -315,11 +317,13 @@ describe('mux live view computation', () => {
     })
     if (!response.result.ok) throw new Error('unreachable')
     const types = response.result.value.events.map(entry => entry.event.type)
-    expect(types.filter(type => type === 'assistant/chunk')).toEqual(['assistant/chunk', 'assistant/chunk'])
+    expect(types.filter(type => type === 'assistant/chunk')).toEqual([
+      'assistant/chunk', 'assistant/chunk', 'assistant/chunk',
+    ])
     expect(types).toContain('assistant/message')
     const chunks = response.result.value.events.filter(entry => entry.event.type === 'assistant/chunk')
-    expect(chunks.map(entry => entry.event.seq)).toEqual([interrupted.seq, inflight.seq])
-    expect(chunks.map(entry => (entry.event as SessionEvent<'assistant/chunk'>).data.step)).toEqual([2, 3])
+    expect(chunks.map(entry => entry.event.seq)).toEqual([firstToken?.seq, interrupted.seq, inflight.seq])
+    expect(chunks.map(entry => (entry.event as SessionEvent<'assistant/chunk'>).data.step)).toEqual([1, 2, 3])
   })
 
   it('paginates a message with many provenance sources without variadic argument expansion', async () => {
@@ -354,10 +358,20 @@ describe('mux live view computation', () => {
         payload: { sessionId: session.id, maxMessages: 1 },
       })
       if (!response.result.ok) throw new Error('unreachable')
-      // Pagination still owns the 128 chunk seqs, so hasMore stays true and Math.min
-      // never sees a spread. Assembled chunks are omitted from the wire.
-      expect(response.result.value.events.map(entry => entry.event.seq)).toEqual([message.seq])
+      // The first raw event remains as the browser's beforeSeq cursor and the
+      // same token delta preserves TTFT; the other 127 chunks stay off the wire.
+      expect(response.result.value.events.map(entry => entry.event.seq)).toEqual([sources[0], message.seq])
       expect(response.result.value.hasMore).toBe(true)
+
+      const pageStart = sources[0]
+      if (pageStart === undefined) throw new Error('provenance fixture has no first seq')
+      const older = await api.sessions.history({
+        rpcId: RpcId('t-hist-large-provenance-older'),
+        payload: { sessionId: session.id, beforeSeq: pageStart, maxMessages: 1 },
+      })
+      if (!older.result.ok) throw new Error('unreachable')
+      expect(older.result.value.events.some(entry => entry.event.type === 'assistant/chunk')).toBe(false)
+      expect(older.result.value.hasMore).toBe(false)
     } finally {
       min.mockRestore()
     }
