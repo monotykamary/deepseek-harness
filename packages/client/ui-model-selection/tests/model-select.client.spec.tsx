@@ -201,26 +201,32 @@ describe('ModelSelect reasoning effort', () => {
         },
       ],
     }))
+    const select = vi.fn().mockResolvedValue(true)
     render(<ModelSelect
       locked={false}
       available
       directory={directory}
       load={vi.fn()}
-      select={vi.fn().mockResolvedValue(true)}
+      select={select}
       t={t}
     />)
 
     fireEvent.click(screen.getByRole('button', { name: /选择模型|当前/ }))
     fireEvent.click(screen.getByRole('menuitem', { name: /模型/ }))
     const search = screen.getByRole('searchbox', { name: '筛选模型' })
+    expect(document.activeElement).toBe(search)
+
+    fireEvent.change(search, { target: { value: 'no-such-model' } })
+    expect(screen.getByText('没有匹配的模型。')).toBeTruthy()
+    expect(screen.queryByRole('menuitemradio')).toBeNull()
+
     fireEvent.change(search, { target: { value: 'gpt-5.6-codex-terra' } })
     expect(screen.getByRole('menuitemradio', { name: /GPT-5.6-Terra/ })).toBeTruthy()
     expect(screen.getByText('gpt-5.6-codex-terra')).toBeTruthy()
     expect(screen.queryByRole('menuitemradio', { name: /DeepSeek-V4-Flash/ })).toBeNull()
     expect(screen.queryByText('DeepSeek')).toBeNull()
 
-    fireEvent.change(search, { target: { value: 'no-such-model' } })
-    expect(screen.getByText('没有匹配的模型。')).toBeTruthy()
-    expect(screen.queryByRole('menuitemradio')).toBeNull()
+    fireEvent.keyDown(search, { key: 'Enter' })
+    expect(select).toHaveBeenCalledWith({ provider: 'openai', model: 'gpt-5.6-codex-terra' })
   })
 })

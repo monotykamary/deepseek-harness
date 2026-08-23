@@ -31,7 +31,7 @@ import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import type {} from '@monotykamary/dsh-plan-mode'
 import type { SessionEvent } from '@monotykamary/dsh-session'
 import {
-  assertFixtureInventory, compareOrRefreshGolden,
+  assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import { connectFreshWorkspace, newEnglishPage, saveFailureShot } from './support.ts'
@@ -39,10 +39,14 @@ import { connectFreshWorkspace, newEnglishPage, saveFailureShot } from './suppor
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/plan-narrow-viewport', import.meta.url))
 const FIXTURE = join(SNAPSHOT_DIR, 'session.jsonl')
 const LAYOUT_EXPECTED = join(SNAPSHOT_DIR, 'layout.expected.md')
+const MODEL_PICKER_EXPECTED = join(SNAPSHOT_DIR, 'model-picker-mobile.expected.md')
 const MODE = webSnapshotMode()
 
 /** The reported viewport: 800×720, where the composer card is 448px wide at 0.0.1. */
 const VIEWPORT = { width: 800, height: 720 } as const
+
+/** Phone viewport that exposed the trailing model picker's left-edge clipping. */
+const MOBILE_VIEWPORT = { width: 390, height: 844 } as const
 
 /** Chip aria-label on the English page; the seat renders only while plan is the effective target. */
 const CHIP_ARIA = 'Plan mode on, press to turn off'
@@ -66,6 +70,11 @@ describe('web e2e: plan chip click area at the narrow viewport', () => {
     tripwire = watchConsole(page)
     await page.goto(scaffold.baseUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    const welcome = page.getByRole('dialog', { name: 'A complete coding-agent workbench' })
+    if (await welcome.count() > 0) {
+      await welcome.getByRole('button', { name: 'Continue' }).click()
+      await welcome.waitFor({ state: 'detached', timeout: 15_000 })
+    }
     await connectFreshWorkspace(page, scaffold.workspaceCwd)
     await page.setViewportSize(VIEWPORT)
   }, 120_000)
@@ -142,7 +151,62 @@ describe('web e2e: plan chip click area at the narrow viewport', () => {
     expect(tripwire.warnings).toEqual([])
   }, 200_000)
 
+  it('keeps the searchable model pane inside a phone viewport', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-model-picker-mobile'))
+    await page.setViewportSize(MOBILE_VIEWPORT)
+    const trigger = page.getByRole('button', { name: /^Select model, current/ })
+    await trigger.click()
+    await page.getByRole('menuitem', { name: /^Model/ }).click()
+
+    const menu = page.getByRole('menu', { name: 'Model and reasoning effort' })
+    const search = menu.getByRole('searchbox', { name: 'Filter models' })
+    await search.fill('deepseek-v4-flash')
+    const option = menu.getByRole('menuitemradio', { name: /DeepSeek-V4-Flash/ })
+    await option.waitFor()
+    await menu.getByText('deepseek-v4-flash', { exact: true }).waitFor()
+
+    const [menuBox, searchBox, optionBox] = await Promise.all([
+      menu.boundingBox(), search.boundingBox(), option.boundingBox(),
+    ])
+    expect(menuBox).not.toBeNull()
+    expect(searchBox).not.toBeNull()
+    expect(optionBox).not.toBeNull()
+    const menuInViewport = menuBox!.x >= 0
+      && menuBox!.x + menuBox!.width <= MOBILE_VIEWPORT.width
+      && menuBox!.y >= 0
+      && menuBox!.y + menuBox!.height <= MOBILE_VIEWPORT.height
+    const searchInMenu = searchBox!.x >= menuBox!.x
+      && searchBox!.x + searchBox!.width <= menuBox!.x + menuBox!.width
+      && searchBox!.y >= menuBox!.y
+      && searchBox!.y + searchBox!.height <= menuBox!.y + menuBox!.height
+    const optionInMenu = optionBox!.x >= menuBox!.x
+      && optionBox!.x + optionBox!.width <= menuBox!.x + menuBox!.width
+      && optionBox!.y >= menuBox!.y
+      && optionBox!.y + optionBox!.height <= menuBox!.y + menuBox!.height
+    const aria = await captureStableAria(page, '[role="menu"]', scaffold.workspaceCwd)
+    const golden = [
+      '# Searchable model picker at the 390×844 viewport',
+      '',
+      aria,
+      '',
+      `- Menu fully in viewport: ${String(menuInViewport)}`,
+      `- Search fully in menu: ${String(searchInMenu)}`,
+      `- Matching option fully in menu: ${String(optionInMenu)}`,
+    ].join('\n').trimEnd()
+    await compareOrRefreshGolden(MODEL_PICKER_EXPECTED, golden, MODE)
+    expect(menuInViewport).toBe(true)
+    expect(searchInMenu).toBe(true)
+    expect(optionInMenu).toBe(true)
+
+    await search.press('Enter')
+    await menu.waitFor({ state: 'detached' })
+    expect(tripwire.pageErrors).toEqual([])
+    expect(tripwire.warnings).toEqual([])
+  }, 200_000)
+
   it('keeps the snapshot inventory closed', async () => {
-    await assertFixtureInventory(SNAPSHOT_DIR, ['session.jsonl', 'layout.expected.md'])
+    await assertFixtureInventory(SNAPSHOT_DIR, [
+      'session.jsonl', 'layout.expected.md', 'model-picker-mobile.expected.md',
+    ])
   })
 })
