@@ -10,13 +10,13 @@ The Web Changes view presents committed `FileMutation` receipts, but the model c
 
 ## Decision
 
-The Node half of `@monotykamary/dsh-client-ui-deliverables`, which owns the Web Changes feature, registers `changes_read`. The tool reads the calling agent's complete in-memory Session log, combines direct `tool/result` and nested `tool/code-dispatch` receipts, and sorts each mutation by its durable `commitOrder`; it does not derive from the browser's paged Changes projection.
+The Host package `@monotykamary/dsh-tool-session-mutations` registers `changes_read` and exports the pure `./ledger` projection for external automation. The tool reads the calling agent's complete in-memory Session log, combines direct `tool/result` and nested `tool/code-dispatch` receipts, and sorts each mutation by its durable `commitOrder`; it does not derive from the browser's paged Changes projection. The shipped Web patch mounts it beside the Client-owned `@monotykamary/dsh-client-ui-deliverables` Changes feature without adding that Client package to the Host compiler face.
 
 A call without `commit_order` lists bounded summaries after an optional `after_commit_order`. Each summary reports path, operation, added and removed receipt lines, and available complete-content SHA-256 identities. A call with `commit_order` returns that mutation's recorded replacement hunks, hashes, and path in bounded pages selected by an opaque UTF-16 `offset`. Deployment-required `maxListItems` and `maxDiffChars` values control both bounds.
 
 Every result states that the ledger covers receipt-aware tool mutations only. The output is recorded intent, not unified-patch syntax, repository state, or proof that no shell or external edit occurred. The model uses ordinary filesystem reads to inspect current content and writes any reconciliation as another normal file mutation; `changes_read` never reads or writes the workspace.
 
-The tool is loaded only with the Web deliverables plugin. Headless compositions without the Changes feature pay no schema cost. Tool results follow ordinary Session logging, so a model-visible ledger page remains reconstructable without a new Session event type.
+The shipped Web composition loads the tool beside the deliverables plugin. Headless compositions without the reader pay no schema cost. Tool results follow ordinary Session logging, so a model-visible ledger page remains reconstructable without a new Session event type.
 
 ## Alternatives considered
 
@@ -30,4 +30,4 @@ The tool is loaded only with the Web deliverables plugin. Headless compositions 
 
 ## Consequences
 
-The model can list and revisit changes across the complete live Session, including nested Code Mode mutations, then reconcile against current files by writing forward. The feature adds one fixed tool schema to Web model requests and bounded result text only when called. Existing receipt limitations remain explicit: paths are producer display paths, hunk text is presentation-oriented rather than an applicable patch, terminal and external mutations are absent, and persisted sessions must be loaded as a live agent before the tool can inspect them.
+The model can list and revisit changes across the complete live Session, including nested Code Mode mutations, then reconcile against current files by writing forward. The Host-owned package adds one fixed tool schema to Web model requests and bounded result text only when called; external schedulers can consume `./ledger` after the complete DSH package is built. Existing receipt limitations remain explicit: paths are producer display paths, hunk text is presentation-oriented rather than an applicable patch, terminal and external mutations are absent, and persisted sessions must be loaded as a live agent before the tool can inspect them.

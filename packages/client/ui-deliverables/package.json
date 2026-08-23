@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/dsh-client-ui-deliverables",
-  "description": "Changed-files UI, file references, and model-readable mutation ledger for Web",
+  "description": "Changed-files turn card, file references, and loaded mutation Changes surface for Web",
   "version": "0.1.0-rc.11",
   "publishConfig": {
     "access": "public"
@@ -27,11 +27,7 @@
       "default": "./lib/client.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json",
-    "./ledger": {
-      "types": "./lib/types/ledger.d.ts",
-      "default": "./lib/ledger.js"
-    }
+    "./package.json": "./package.json"
   },
   "dsh": {
     "client": {
@@ -49,15 +45,11 @@
     "watch": "tsdown --watch"
   },
   "license": "MIT",
-  "dependencies": {
-    "@monotykamary/schemastery": "workspace:^"
-  },
   "peerDependencies": {
     "@monotykamary/dsh-client-locale": "workspace:^",
     "@monotykamary/dsh-client-runtime": "workspace:^",
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
     "@monotykamary/cordis": "workspace:^",
@@ -70,7 +62,6 @@
     "@monotykamary/dsh-client-ui-conversation": "workspace:^",
     "@monotykamary/dsh-client-ui-slots": "workspace:^",
     "@monotykamary/dsh-invariants": "workspace:^",
-    "@monotykamary/dsh-session": "workspace:^",
     "@monotykamary/dsh-system-prompt": "workspace:^",
     "@monotykamary/dsh-tools": "workspace:^",
     "@types/react": "~18.3.1",
@@ -83,7 +74,6 @@
     "lib/index.js",
     "lib/invariant.js",
     "lib/client.js",
-    "lib/ledger.js",
     "lib/types/**/*.d.ts"
   ]
 }

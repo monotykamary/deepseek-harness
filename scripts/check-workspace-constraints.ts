@@ -147,8 +147,8 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   // The glob covers whichever sheets a package emits; sourcemaps stay
   // unpublished, as everywhere else in the repository.
   '@monotykamary/dsh-client-ui-primitives': ['lib/**/*.css'],
-  // Automation imports the pure receipt ledger without evaluating the deliverables plugin.
-  '@monotykamary/dsh-client-ui-deliverables': ['lib/ledger.js'],
+  // Automation imports the pure receipt ledger without evaluating the model-facing Consumer.
+  '@monotykamary/dsh-tool-session-mutations': ['lib/ledger.js'],
   '@monotykamary/dsh-client-web': ['lib/**/*.css'],
   '@monotykamary/dsh-client-ui-theme': ['lib/styles'],
   // Explicit system-service setup resolves through the Web bundle's installation-owned helper entry.

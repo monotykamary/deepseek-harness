@@ -47,7 +47,7 @@ packages/api/remotes/
 
 两个 project 使用互不重叠的 `files` 和不同的 `.tsbuildinfo`，因此可以共享 `lib/types` 而不重复发射任何源码。若未来需要两侧共用一份实现，应把实现移入中立 package，不能把同一源码同时交给两个 emitting project。
 
-这个例外由生成约定的真实先后关系决定，不是可供普通 package 选择的模板。新增 package 仍只能登记进一个 aggregate；只有修改本决策并证明存在另一条不可消除的生成依赖，才能增加例外。
+这个例外由生成约定的真实先后关系决定，不是可供普通 package 选择的模板。Package subpath 不会创建另一 compiler face：`@monotykamary/dsh-client-ui-deliverables` 仍由 Client 持有，其 Host consumer 与纯 `./ledger` artifact 则位于 `@monotykamary/dsh-tool-session-mutations`。新增 package 仍只能登记进一个 aggregate；只有修改本决策并证明存在另一条不可消除的生成依赖，才能增加例外。
 
 ## Typert 与 tsdown
 

@@ -100,6 +100,7 @@
     "@monotykamary/dsh-tool-pwsh-persistent": "workspace:*",
     "@monotykamary/dsh-tool-ralph": "workspace:*",
     "@monotykamary/dsh-tool-session-query": "workspace:*",
+    "@monotykamary/dsh-tool-session-mutations": "workspace:*",
     "@monotykamary/dsh-tool-skill": "workspace:*",
     "@monotykamary/dsh-tool-str-replace-editor": "workspace:*",
     "@monotykamary/dsh-tool-subagent": "workspace:*",

@@ -10,5 +10,6 @@
 | [`session-query-sqlite/`](session-query-sqlite/README.zh.md) | 使用 SQLite 全文搜索实现会话查询 | `ctx.sessionQuery` |
 | [`session-log-export/`](session-log-export/README.zh.md) | 在 Host ZIP 端点之上增加 Web `/export` 命令、共享浏览器下载状态和结果弹窗 | `ctx.sessionLogDownload` |
 | [`tool-session-query/`](tool-session-query/README.zh.md) | 向模型公开经过工作区授权的会话查询 | 注册到 `ctx.tools` |
+| [`tool-session-mutations/`](tool-session-mutations/README.zh.md) | 向模型与外部自动化公开有界的当前 Session 修改 receipt | 注册到 `ctx.tools` |
 
 子系统参考——逻辑记录、有界读取、追踪、筛选器、结果页——见 [docs/subsystems/session-query.md](../../docs/subsystems/session-query.zh.md)。

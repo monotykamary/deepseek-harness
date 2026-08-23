@@ -8,8 +8,8 @@
 // each frame. Reduced-motion renders nothing, and callers keep resting colors.
 
 import { memo } from 'react'
-import type { CSSProperties } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
+import type { MotionStyle } from 'motion/react'
 import css from './TextShimmer.module.css'
 
 /** One sweep, band entering from off-left to off-right, at row pace. */
@@ -36,11 +36,14 @@ export const TextShimmer = memo(function TextShimmer(
 ) {
   const reduceMotion = useReducedMotion()
   if (reduceMotion || duration <= 0) return null
+  const style: MotionStyle & { '--dsw-text-shimmer-color': string } = {
+    '--dsw-text-shimmer-color': color,
+  }
   return (
     <motion.span
       aria-hidden
       className={css.band}
-      style={{ '--dsw-text-shimmer-color': color } as CSSProperties}
+      style={style}
       initial={false}
       animate={{
         x: [

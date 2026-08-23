@@ -110,6 +110,7 @@
     "@monotykamary/dsh-session-reference": "workspace:^",
     "@monotykamary/dsh-session-log-export": "workspace:^",
     "@monotykamary/dsh-session-stats": "workspace:^",
+    "@monotykamary/dsh-tool-session-mutations": "workspace:^",
     "@monotykamary/dsh-storage": "workspace:^",
     "@monotykamary/dsh-storage-domain": "workspace:^",
     "@monotykamary/dsh-storage-json": "workspace:^",

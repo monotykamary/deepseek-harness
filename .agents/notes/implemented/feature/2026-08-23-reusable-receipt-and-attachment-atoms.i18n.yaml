@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-23-reusable-receipt-and-attachment-atoms.md
-2026-08-23-reusable-receipt-and-attachment-atoms.md: c88813406d2f0b850567eea1b37916098dc66bf9
-2026-08-23-reusable-receipt-and-attachment-atoms.zh.md: 953e22e43ce478a294654942a6cbed69c925a367
+2026-08-23-reusable-receipt-and-attachment-atoms.md: a31fc54522d80948b3071967ebfb994ede8a91f6
+2026-08-23-reusable-receipt-and-attachment-atoms.zh.md: 1afb7b2c288d3147891eed37f19331fc125d6873

@@ -10,6 +10,8 @@
       - insert:
           - id: ui-deliverables
             name: '@monotykamary/dsh-client-ui-deliverables'
+          - id: tool-session-mutations
+            name: '@monotykamary/dsh-tool-session-mutations'
             config:
               maxListItems: 50
               maxDiffChars: 12000

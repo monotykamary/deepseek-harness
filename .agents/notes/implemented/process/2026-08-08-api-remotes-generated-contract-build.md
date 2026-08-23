@@ -47,7 +47,7 @@ The package-root `tsconfig.json` is a solution that only references the two conc
 
 The two projects use disjoint `files` and separate `.tsbuildinfo` files, so they can share `lib/types` without emitting any source file twice. If both sides later need a shared implementation, move that implementation into a neutral package instead of giving the same source to two emitting projects.
 
-This exception follows from the real generated-contract ordering and is not a template available to ordinary packages. New packages remain restricted to one aggregate; adding another exception requires changing this decision and proving another generated dependency that cannot be eliminated.
+This exception follows from the real generated-contract ordering and is not a template available to ordinary packages. A package subpath does not create another compiler face: `@monotykamary/dsh-client-ui-deliverables` remains Client-owned, while its Host consumer and pure `./ledger` artifact live in `@monotykamary/dsh-tool-session-mutations`. New packages remain restricted to one aggregate; adding another exception requires changing this decision and proving another generated dependency that cannot be eliminated.
 
 ## Typert and tsdown
 

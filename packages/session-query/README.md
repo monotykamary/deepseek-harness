@@ -10,5 +10,6 @@ This family provides authorized retrieval over live and durable session logs, in
 | [`session-query-sqlite/`](session-query-sqlite/README.md) | Implements session queries with SQLite full-text search | `ctx.sessionQuery` |
 | [`session-log-export/`](session-log-export/README.md) | Adds the Web `/export` command, shared browser download state, and result modal over the Host ZIP endpoint | `ctx.sessionLogDownload` |
 | [`tool-session-query/`](tool-session-query/README.md) | Exposes workspace-authorized session queries to the model | registers on `ctx.tools` |
+| [`tool-session-mutations/`](tool-session-mutations/README.md) | Exposes bounded current-Session mutation receipts to the model and external automation | registers on `ctx.tools` |
 
 The subsystem reference — logical records, bounded reads, traces, filters, result pages — is [docs/subsystems/session-query.md](../../docs/subsystems/session-query.md).

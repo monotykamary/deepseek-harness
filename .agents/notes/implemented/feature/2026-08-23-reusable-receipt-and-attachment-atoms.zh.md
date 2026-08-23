@@ -18,7 +18,7 @@ conversation 树之外的已组合应用可以拥有图片草稿与 receipt-back
 
 `Menu` 接受可选的非选择型 `header`，位于内部滚动的条目视口上方。搜索 consumer 拥有查询、焦点、过滤、指针／键盘高亮与空状态行为；Menu 继续拥有 portal 定位、视口钳制、关闭与选中行为。
 
-`@monotykamary/dsh-client-ui-deliverables/ledger` 是提供 `mutationLedger`、`renderMutation`、`boundedText` 及其类型的纯 Node 入口。自动化可从已 settled 的 Session 捕获 receipt，而不会执行 deliverables 插件。每个 consumer 自行拥有持久化与模型上下文上限；ledger 仍只覆盖 receipt，不会声称包含 shell 或外部变更。
+`@monotykamary/dsh-tool-session-mutations/ledger` 是提供 `mutationLedger`、`renderMutation`、`boundedText` 及其类型的纯 Node 入口。自动化可从已 settled 的 Session 捕获 receipt，而不会执行 deliverables 插件。每个 consumer 自行拥有持久化与模型上下文上限；ledger 仍只覆盖 receipt，不会声称包含 shell 或外部变更。
 
 ## Alternatives considered
 

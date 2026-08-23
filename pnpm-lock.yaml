@@ -724,6 +724,9 @@ importers:
       '@monotykamary/dsh-tool-ralph':
         specifier: workspace:*
         version: link:../packages/workflow/tool-ralph
+      '@monotykamary/dsh-tool-session-mutations':
+        specifier: workspace:*
+        version: link:../packages/session-query/tool-session-mutations
       '@monotykamary/dsh-tool-session-query':
         specifier: workspace:*
         version: link:../packages/session-query/tool-session-query
@@ -1542,6 +1545,9 @@ importers:
       '@monotykamary/dsh-terminal-web':
         specifier: workspace:^
         version: link:../../terminal/terminal-web
+      '@monotykamary/dsh-tool-session-mutations':
+        specifier: workspace:^
+        version: link:../../session-query/tool-session-mutations
       '@monotykamary/dsh-web-frontend':
         specifier: workspace:^
         version: link:../../../apps/web
@@ -2109,10 +2115,6 @@ importers:
         version: 18.3.1
 
   packages/client/ui-deliverables:
-    dependencies:
-      '@monotykamary/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
     devDependencies:
       '@monotykamary/cordis':
         specifier: workspace:^
@@ -2141,9 +2143,6 @@ importers:
       '@monotykamary/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
-      '@monotykamary/dsh-session':
-        specifier: workspace:^
-        version: link:../../core/session
       '@monotykamary/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../core/system-prompt
@@ -6837,6 +6836,31 @@ importers:
       '@monotykamary/dsh-session-query':
         specifier: workspace:^
         version: link:../session-query
+
+  packages/session-query/tool-session-mutations:
+    dependencies:
+      '@monotykamary/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@monotykamary/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@monotykamary/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@monotykamary/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@monotykamary/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@monotykamary/dsh-system-prompt':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@monotykamary/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
 
   packages/session-query/tool-session-query:
     dependencies:

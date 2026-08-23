@@ -1,0 +1,56 @@
+{
+  "name": "@monotykamary/dsh-tool-session-mutations",
+  "description": "Bounded model reader over durable file-mutation receipts in the current Session",
+  "version": "0.1.0-rc.11",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/session-query/tool-session-mutations"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./ledger": {
+      "types": "./lib/types/ledger.d.ts",
+      "default": "./lib/ledger.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/ledger.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@monotykamary/schemastery": "workspace:^"
+  },
+  "peerDependencies": {
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@monotykamary/dsh-invariants": "workspace:^",
+    "@monotykamary/dsh-llm": "workspace:^",
+    "@monotykamary/dsh-session": "workspace:^",
+    "@monotykamary/dsh-system-prompt": "workspace:^",
+    "@monotykamary/dsh-tools": "workspace:^",
+    "@monotykamary/cordis": "workspace:^"
+  }
+}

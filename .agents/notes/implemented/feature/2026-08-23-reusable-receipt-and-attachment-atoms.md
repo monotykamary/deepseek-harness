@@ -18,7 +18,7 @@ A composed application outside the conversation tree can own image drafts and re
 
 `Menu` accepts an optional non-selectable `header` above its internally scrolling item viewport. Search consumers own query, focus, filtering, pointer/keyboard highlight, and empty-state behavior; Menu retains portal placement, viewport clamping, dismissal, and selection.
 
-`@monotykamary/dsh-client-ui-deliverables/ledger` is a pure Node entry for `mutationLedger`, `renderMutation`, `boundedText`, and their types. Automation captures receipts from a settled Session without evaluating the deliverables plugin. Each consumer owns persistence and model-context bounds; the ledger remains receipt-only and does not claim shell or external changes.
+`@monotykamary/dsh-tool-session-mutations/ledger` is a pure Node entry for `mutationLedger`, `renderMutation`, `boundedText`, and their types. Automation captures receipts from a settled Session without evaluating the deliverables plugin. Each consumer owns persistence and model-context bounds; the ledger remains receipt-only and does not claim shell or external changes.
 
 ## Alternatives considered
 

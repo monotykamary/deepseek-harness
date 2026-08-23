@@ -36,13 +36,7 @@
       "path": "../../core/system-prompt"
     },
     {
-      "path": "../../core/session"
-    },
-    {
       "path": "../../core/tools"
-    },
-    {
-      "path": "../../../vendor/schemastery"
     }
   ]
 }
