@@ -16,7 +16,7 @@ A call without `commit_order` lists bounded summaries after an optional `after_c
 
 Every result states that the ledger covers receipt-aware tool mutations only. The output is recorded intent, not unified-patch syntax, repository state, or proof that no shell or external edit occurred. The model uses ordinary filesystem reads to inspect current content and writes any reconciliation as another normal file mutation; `changes_read` never reads or writes the workspace.
 
-The shipped Web composition loads the tool beside the deliverables plugin. Headless compositions without the reader pay no schema cost. Tool results follow ordinary Session logging, so a model-visible ledger page remains reconstructable without a new Session event type.
+The shipped Web composition loads the tool at process scope beside the deliverables plugin, so every Web preset sees its schema and execution resolves the owning Session. Headless compositions without the reader pay no schema cost. Tool results follow ordinary Session logging, so a model-visible ledger page remains reconstructable without a new Session event type.
 
 ## Alternatives considered
 

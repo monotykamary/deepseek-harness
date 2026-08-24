@@ -16,7 +16,7 @@ Host package `@monotykamary/dsh-tool-session-mutations` 注册 `changes_read`，
 
 每个结果都会说明 ledger 只覆盖 receipt-aware 工具修改。输出是记录的意图，不是 unified-patch 语法、仓库状态，也不能证明没有 shell 或外部编辑。模型使用普通文件系统读取检查当前内容，并把任何对账结果写成另一条普通文件修改；`changes_read` 永远不读写工作区。
 
-正式 Web 组合会在 deliverables 插件旁加载该工具。没有此读取器的 headless 组合不承担 schema 成本。工具结果沿用普通 Session 记录，因此模型可见 ledger 页面无需新增 Session event 类型即可重建。
+正式 Web 组合会在 deliverables 插件旁按 process scope 加载该工具，因此每个 Web preset 都会看到它的 schema，执行时再解析所属 Session。没有此读取器的 headless 组合不承担 schema 成本。工具结果沿用普通 Session 记录，因此模型可见 ledger 页面无需新增 Session event 类型即可重建。
 
 ## Alternatives considered
 

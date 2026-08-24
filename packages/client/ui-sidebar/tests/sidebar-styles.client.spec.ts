@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const css = readFileSync(fileURLToPath(new URL('../src/client/SidebarRoot.module.css', import.meta.url)), 'utf8')
-const browserCss = readFileSync(fileURLToPath(new URL('../../ui-workspace/src/client/WorkspaceBrowser.module.css', import.meta.url)), 'utf8')
+const browserCss = readFileSync(fileURLToPath(new URL('../../ui-workspace/src/client/rows/WorkspaceBrowser.module.css', import.meta.url)), 'utf8')
 const rowsCss = readFileSync(fileURLToPath(new URL('../../ui-workspace/src/client/rows/Rows.module.css', import.meta.url)), 'utf8')
 const rowsSource = readFileSync(fileURLToPath(new URL('../../ui-workspace/src/client/rows/Rows.tsx', import.meta.url)), 'utf8')
 const themeCss = readFileSync(fileURLToPath(new URL('../../ui-theme/src/styles/design-platform.css', import.meta.url)), 'utf8')
