@@ -48,6 +48,8 @@ function renderGolden(values: {
   changedTree: string
   changesSummary: string
   changesAccordion: string
+  changesStickyGap: number
+  changesCopy: string
   compactConversation: number
   compactSide: string | null
   closed: boolean
@@ -64,6 +66,8 @@ function renderGolden(values: {
     `- changed-files tree: ${values.changedTree}`,
     `- Changes summary: ${values.changesSummary}`,
     `- Changes accordion: ${values.changesAccordion}`,
+    `- Changes filename sticky gap after scroll: ${String(values.changesStickyGap)}px`,
+    `- Changes copy control: ${values.changesCopy}`,
     `- compact conversation width: ${String(values.compactConversation)}px`,
     `- compact workbench side: ${values.compactSide ?? 'missing'}`,
     `- compact close returns to Chat: ${String(values.closed)}`,
@@ -102,7 +106,7 @@ describe('web e2e: UI workbench', () => {
     const changedFolder = changedFilesCard.getByRole('button', { name: /^src/u })
     expect(await changedFolder.getAttribute('aria-expanded')).toBe('true')
     await changedFilesCard.getByRole('button', { name: 'View diff for src/workbench.ts', exact: true }).waitFor()
-    const changedCard = 'Changed files (1) · +1 −0'
+    const changedCard = 'Changed files (1) · +121 −0'
     const changedTree = 'src → workbench.ts'
     await changedFilesCard.getByRole('button', { name: 'View diff', exact: true }).click()
     const workbench = page.locator('[data-workbench]')
@@ -110,7 +114,7 @@ describe('web e2e: UI workbench', () => {
     await page.waitForTimeout(350)
     const inlineConversation = await conversationWidth(page)
     const inlineWorkbench = await workbench.evaluate(element => Math.round(element.getBoundingClientRect().width))
-    const changesSummary = await workbench.getByText(/1 changed file · \+1 −0/u).innerText()
+    const changesSummary = await workbench.getByText(/1 changed file · \+121 −0/u).innerText()
     await workbench.getByText('export const workbench = true', { exact: true }).waitFor({ timeout: 10_000 })
     const changeDisclosure = workbench.getByRole('button', { name: /^src\/workbench\.ts/u })
     expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('true')
@@ -119,6 +123,26 @@ describe('web e2e: UI workbench', () => {
     await changeDisclosure.click()
     expect(await changeDisclosure.getAttribute('aria-expanded')).toBe('true')
     const changesAccordion = 'expanded → collapsed → expanded'
+    await workbench.getByRole('button', { name: /Expand the remaining/u }).click()
+    const changesSticky = await changeDisclosure.evaluate((header) => {
+      let scroller = header.parentElement
+      while (scroller !== null && !['auto', 'scroll'].includes(getComputedStyle(scroller).overflowY)) {
+        scroller = scroller.parentElement
+      }
+      if (scroller === null) throw new Error('Changes scrollport missing')
+      scroller.scrollTop = Math.min(300, scroller.scrollHeight - scroller.clientHeight)
+      return {
+        gap: Math.round(header.getBoundingClientRect().top - scroller.getBoundingClientRect().top),
+        scrollTop: scroller.scrollTop,
+      }
+    })
+    expect(changesSticky.scrollTop).toBeGreaterThan(0)
+    const diffCopy = workbench.getByRole('button', { name: 'Copy', exact: true })
+    expect(await diffCopy.locator('.lucide-copy').count()).toBe(1)
+    const copyBackground = await diffCopy.evaluate(element => getComputedStyle(element).backgroundColor)
+    await diffCopy.hover()
+    expect(await diffCopy.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(copyBackground)
+    const changesCopy = 'lucide-copy + hover fill'
 
     const call = page.locator('[data-chat-call-id="call-workbench-write"]')
     const disclosure = call.locator('[data-expandable]')
@@ -162,7 +186,7 @@ describe('web e2e: UI workbench', () => {
     await compareOrRefreshGolden(EXPECTED, renderGolden({
       inlineConversation, inlineWorkbench, tabs, inspectTitle,
       inspectorStickyGap: inspectorSticky.gap, changedCard, changedTree, changesSummary, changesAccordion,
-      compactConversation, compactSide, closed,
+      changesStickyGap: changesSticky.gap, changesCopy, compactConversation, compactSide, closed,
     }), MODE)
     await assertFixtureInventory(SNAPSHOT_DIR, ['seed.jsonl', 'workbench.expected.md'])
     expect(tripwire.pageErrors).toEqual([])

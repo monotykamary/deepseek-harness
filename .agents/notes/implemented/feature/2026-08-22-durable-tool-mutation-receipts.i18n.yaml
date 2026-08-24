@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-22-durable-tool-mutation-receipts.md
-2026-08-22-durable-tool-mutation-receipts.md: d82a936c46501c3142f7a8514f8c38a8b5427424
-2026-08-22-durable-tool-mutation-receipts.zh.md: b12ac72b7658dc8d9b547b26102ed0d6da455f91
+2026-08-22-durable-tool-mutation-receipts.md: b0bdb3030575c85a296ce7c64e50847bc08d554c
+2026-08-22-durable-tool-mutation-receipts.zh.md: 47f1fafc0e89a412946e934530e73a9bfa2adbbe

@@ -123,6 +123,10 @@ export function QuestionComposer(props: QuestionComposerProps) {
     : <PlanReviewPanel key={question.key} pending={question} review={review} t={props.t} />
 }
 
+function scrollsQuestionText(text: string): boolean {
+  return text.includes('\n') || text.length > 240
+}
+
 function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<QuestionComposerProps, 't'>) {
   const questions = pending.questions
   const [index, setIndex] = useState(0)
@@ -144,6 +148,8 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
   // oxlint-disable-next-line typescript/no-non-null-assertion
   const draft = drafts[index]!
   const hasOptions = (question.options?.length ?? 0) > 0
+  const questionInBody = scrollsQuestionText(question.question)
+  const heading = questionInBody ? question.header ?? t('question.header') : question.question
 
   const cancelFlow = (): void => {
     setBusy('cancel')
@@ -259,9 +265,9 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
       >
         <header className={css.header}>
           <div className={css.headingBlock}>
-            {question.header !== undefined && <div className={css.eyebrow}>{question.header}</div>}
+            {!questionInBody && question.header !== undefined && <div className={css.eyebrow}>{question.header}</div>}
             <h2 className={css.title} id={`question-${pending.key}-${String(index)}`}>
-              {question.question}
+              {heading}
             </h2>
           </div>
           <div className={css.headerActions}>
@@ -288,6 +294,9 @@ function QuestionFlow({ pending, t }: { pending: PendingQuestion } & Pick<Questi
         {!minimized && (
           <>
             <div className={css.body} data-question-scroll>
+              {questionInBody && (
+                <div className={css.questionText}><MarkdownText text={question.question} /></div>
+              )}
               {question.detail !== undefined && (
                 <div className={css.detail}><MarkdownText text={question.detail} /></div>
               )}

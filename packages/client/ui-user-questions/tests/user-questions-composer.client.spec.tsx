@@ -144,6 +144,29 @@ describe('QuestionComposer', () => {
     expect(view.container.querySelectorAll('li')).toHaveLength(2)
   })
 
+  it('moves long markdown question copy into the capped scrolling body', () => {
+    const carrier = new PendingWait(
+      'question',
+      RpcId('long-markdown-question'),
+      SID,
+      {
+        questions: [{
+          id: 'review',
+          header: 'Review required',
+          question: '# Audit policy\n\n- **Keep** approved entries\n- Quarantine invalid entries',
+        }],
+      },
+      vi.fn(),
+    )
+    const view = render(<QuestionComposer matched={carrier} interactions={[carrier]} {...kit} t={seatOver(en, commonEn)} />)
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Review required' })).toBeTruthy()
+    const markdownHeading = screen.getByRole('heading', { level: 1, name: 'Audit policy' })
+    const scrollRegion = markdownHeading.closest('[data-question-scroll]')
+    expect(scrollRegion).toBeTruthy()
+    expect(view.container.querySelectorAll('li')).toHaveLength(2)
+  })
+
   it('skips individual questions without discarding earlier answers', () => {
     const { carrier, respond } = wait()
     render(<QuestionComposer matched={carrier} interactions={[carrier]} {...kit} />)

@@ -14,13 +14,13 @@ Web Changes 面板曾从工具呈现元数据推断文件修改。这会把 UI �
 
 agent loop 为每个根执行提供所属 `{ turn, step }` location。直接调用的 receipt 存入 `tool/result`；Code Mode 把根 location 传给子分发，并把每个嵌套调用的 receipt 存入其自身 `tool/code-dispatch` 事件。外层 `run_code` 结果不会重复嵌套 receipt。
 
-收尾轮次会把 receipt 呈现为低对比度的已更改文件卡片，而非 basename 标签 lane。卡片报告汇总行数统计，保持目录树可见，报告逐目录与逐文件统计，通过克制的文字操作统一收起文件夹，并可从标题栏或任一文件行打开完整 Changes Workbench。Workbench 把每个 disclosure 标题栏直接连接到无缝 diff 正文，不再重复路径、嵌套圆角卡片或页脚。Diff chrome 的标签由 locale 属主提供；英文界面不再继承 primitive 的中文默认值。
+收尾轮次会把 receipt 呈现为低对比度的已更改文件卡片，而非 basename 标签 lane。卡片报告汇总行数统计，保持目录树可见，报告逐目录与逐文件统计，通过克制的文字操作统一收起文件夹，并可从标题栏或任一文件行打开完整 Changes Workbench。绝对路径从最近的公共目录开始显示，操作仍保留完整 receipt 路径。Workbench 把每个文件名标题栏直接连接到无缝 diff 正文，不再重复路径、嵌套圆角卡片或页脚。反向 flex 轨道在视觉上先呈现标题栏，同时让它在 DOM 绘制顺序中靠后，因此无需再增加 z-index 就能 sticky 在所属区段之上。Diff chrome 的标签由 locale 属主提供，仅含图标的复制操作在悬停和聚焦时显示底色；英文界面不会继承 primitive 的中文默认值。
 
 `@monotykamary/dsh-client-ui-deliverables` 只从这些持久 receipt 派生产出文件与已载入 Changes。呈现元数据仍可提供显示标题，但不能创建修改条目。删除会继续显示在 Changes 中，但不会生成可打开文件标签。第一方 `write`、`edit` 与 `str_replace_editor` 修改工具会在具备完整 receipt 证据时，于文件系统成功提交点发出 receipt。提供方返回 `before: null` 的 `write` 更新仍会成功，但不会发出 receipt，因为它无法提供旧内容哈希或文本 hunk；操作判别字段可防止把该更新当作创建。已链接的 dsh-fabric `schema_commit` 集成会在权威工作区 generation 前进后记录每个已提交事务的净文本变更。
 
 ## Verification
 
-工具 runtime 测试固定 receipt 分离，以及 receipt 在阻止型 post-execute 决定后仍被保留。agent loop 与 Code Mode 测试固定直接和嵌套事件的持久记录及 Turn／step 归属。文件系统工具测试固定创建、完整写入、字面替换、文本删除和插入的 receipt，并固定没有安全 diff 基础的更新会省略 receipt。Deliverables 测试固定直接与嵌套 receipt 投影、删除处理、畸形 wire 数据拒绝、回放和增量更新。
+工具 runtime 测试固定 receipt 分离，以及 receipt 在阻止型 post-execute 决定后仍被保留。agent loop 与 Code Mode 测试固定直接和嵌套事件的持久记录及 Turn／step 归属。文件系统工具测试固定创建、完整写入、字面替换、文本删除和插入的 receipt，并固定没有安全 diff 基础的更新会省略 receipt。Deliverables 测试固定直接与嵌套 receipt 投影、删除处理、畸形 wire 数据拒绝、回放、增量更新、绝对路径根目录裁剪和 sticky 标题栏绘制顺序。Primitive 测试固定无障碍的纯图标 diff 复制操作。无密钥组装 Workbench 快照会展开一份 121 行 receipt，并固定 sticky 文件名间隙以及 Lucide 复制／悬停处理。
 
 ## Alternatives considered
 

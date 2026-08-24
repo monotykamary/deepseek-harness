@@ -56,14 +56,30 @@
 }
 
 .change {
+  isolation: isolate;
+  display: flex;
+  flex-direction: column-reverse;
   border-bottom: 1px solid var(--dsw-specific-workbench-divider);
 }
 
 .changeRow {
+  position: sticky;
+  top: 0;
   box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
   height: 38px;
   padding: 0 12px;
-  background: transparent;
+  overflow: hidden;
+  border: 0;
+  background: var(--dsw-specific-workbench-canvas);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
 }
 
 .changeRow:hover {

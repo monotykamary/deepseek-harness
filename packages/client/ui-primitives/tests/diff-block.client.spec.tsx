@@ -160,6 +160,8 @@ describe('DiffBlock copy', () => {
     ]
     render(<DiffBlock diffs={diffs} />)
     const copy = screen.getByRole('button', { name: 'Copy' })
+    expect(copy.querySelector('svg')).toBeTruthy()
+    expect(copy.textContent).toBe('')
     await act(async () => { fireEvent.click(copy) })
     // Path header, del/add prefixes, and the same-file gap all reach the clipboard.
     expect(writeText).toHaveBeenCalledWith('a.ts\n- old\n+ new\n⋯\n- p\n+ q')

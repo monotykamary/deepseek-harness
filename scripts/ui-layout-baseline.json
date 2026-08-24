@@ -112,7 +112,7 @@
     "zindexes": 1
   },
   "packages/client/ui-primitives/src/DiffBlock.module.css": {
-    "margins": 2,
+    "margins": 1,
     "zindexes": 1
   },
   "packages/client/ui-primitives/src/DisclosureRow.module.css": {

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   Button,
   DiffBlock,
-  DisclosureRow,
   ChevronDown,
   SquareMinus,
   SquarePlus,
@@ -81,44 +80,40 @@ export function ChangesPanel({ sessionId, useSession, t }: ChangesPanelProps) {
             const open = !collapsedKeys.has(file.path)
             const { additions, deletions } = file
             return (
-              <DisclosureRow
-                key={file.path}
-                className={css.change}
-                rowClassName={css.changeRow}
-                titleClassName={css.changeTitle}
-                chevronClassName={css.changeChevron}
-                icon={<ChevronDown size={14} className={css.changeChevron} />}
-                title={file.path}
-                open={open}
-                expandable
-                expandOnRowClick
-                previewChevron={false}
-                keepContentWhenOpen
-                onToggle={() => { toggleChange(file.path) }}
-                collapsedContent={(
+              <div key={file.path} className={css.change} data-open={open || undefined}>
+                {open && (
+                  <div className={css.diffWrap}>
+                    <DiffBlock
+                      diffs={[...file.diffs]}
+                      appearance="file"
+                      labels={{
+                        copy: t('changes.copy'),
+                        copied: t('changes.copied'),
+                        collapseAria: t('changes.collapseDiff'),
+                        expandAria: count => t('changes.expandDiff', { count: String(count) }),
+                        collapse: t('changes.collapse'),
+                        expand: count => t('changes.showDiff', { count: String(count) }),
+                        file: t('changes.file'),
+                        files: t('changes.files'),
+                      }}
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={css.changeRow}
+                  title={file.path}
+                  aria-expanded={open}
+                  onClick={() => { toggleChange(file.path) }}
+                >
+                  <ChevronDown size={14} className={css.changeChevron} />
+                  <span className={css.changeTitle}>{file.path}</span>
                   <span className={css.changeStats}>
                     <span className={css.additions}>+{additions}</span>
                     <span className={css.deletions}>−{deletions}</span>
                   </span>
-                )}
-              >
-                <div className={css.diffWrap}>
-                  <DiffBlock
-                    diffs={[...file.diffs]}
-                    appearance="file"
-                    labels={{
-                      copy: t('changes.copy'),
-                      copied: t('changes.copied'),
-                      collapseAria: t('changes.collapseDiff'),
-                      expandAria: count => t('changes.expandDiff', { count: String(count) }),
-                      collapse: t('changes.collapse'),
-                      expand: count => t('changes.showDiff', { count: String(count) }),
-                      file: t('changes.file'),
-                      files: t('changes.files'),
-                    }}
-                  />
-                </div>
-              </DisclosureRow>
+                </button>
+              </div>
             )
           })}
       </div>

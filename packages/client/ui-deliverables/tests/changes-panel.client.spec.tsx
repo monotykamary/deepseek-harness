@@ -61,6 +61,7 @@ describe('ChangesPanel', () => {
     expect(screen.getByText('+2')).toBeTruthy()
     expect(screen.getByText('−1')).toBeTruthy()
     expect(screen.getByText('export const a = 1')).toBeTruthy()
+    expect(change.parentElement?.lastElementChild).toBe(change)
 
     fireEvent.click(change)
     expect(change.getAttribute('aria-expanded')).toBe('false')

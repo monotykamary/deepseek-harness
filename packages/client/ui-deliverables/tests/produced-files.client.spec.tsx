@@ -458,6 +458,27 @@ describe('ProducedFiles changed-files card', () => {
     expect(view.queryByRole('button', { name: '查看 src/a.ts 的差异' })).toBeNull()
   })
 
+  it('starts absolute multi-root paths at their nearest common directory', () => {
+    const absoluteChanges = [{
+      seq: 5, commitOrder: 0, turn: 1, callId: 'absolute', title: 'Write repositories',
+      diffs: [
+        { path: '/Users/example/VCS/open-source/deepseek-harness/src/a.ts', oldText: null, newText: 'a' },
+        { path: '/Users/example/VCS/open-source/dsh-factory/src/b.ts', oldText: null, newText: 'b' },
+        { path: 'notes/local.md', oldText: null, newText: 'local' },
+      ],
+    }]
+    const view = render(
+      <ProducedFiles matched={{ paths: [], changes: absoluteChanges }} openChanges={() => {}} t={t} />,
+    )
+
+    expect(view.getByRole('button', { name: /^open-source/u })).toBeTruthy()
+    expect(view.getByRole('button', { name: /^deepseek-harness/u })).toBeTruthy()
+    expect(view.getByRole('button', { name: /^dsh-factory/u })).toBeTruthy()
+    expect(view.queryByText('Users')).toBeNull()
+    expect(view.queryByText('example')).toBeNull()
+    expect(view.getByRole('button', { name: '查看 /Users/example/VCS/open-source/deepseek-harness/src/a.ts 的差异' })).toBeTruthy()
+  })
+
   it('toggles every directory while keeping the hierarchy visible', () => {
     const view = render(
       <ProducedFiles

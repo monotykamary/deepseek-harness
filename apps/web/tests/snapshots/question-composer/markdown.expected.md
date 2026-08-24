@@ -1,0 +1,14 @@
+- region "More":
+  - heading "More" [level=2]
+  - button "Collapse the question card" [expanded]
+  - button "Dismiss all questions"
+  - heading "Additional context" [level=1]
+  - paragraph: Anything else?
+  - radiogroup:
+    - textbox "Type your answer"
+  - button "Previous question" [disabled]
+  - text: 1 / 1
+  - button "Next question" [disabled]
+  - status
+  - button "Skip this question"
+  - button "Submit" [disabled]

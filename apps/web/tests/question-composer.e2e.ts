@@ -29,6 +29,7 @@ const COMPOSED_EXPECTED = join(SNAPSHOT_DIR, 'composed.expected.md')
 // Final golden: the answered transcript — the question resolved into its tool
 // round trip and the final reply, the state the composer goldens cannot see.
 const ANSWERED_EXPECTED = join(SNAPSHOT_DIR, 'answered.expected.md')
+const MARKDOWN_EXPECTED = join(SNAPSHOT_DIR, 'markdown.expected.md')
 const MODE = webSnapshotMode()
 
 // The composer's own growth cap, in text lines (QuestionComposer.module.css
@@ -242,12 +243,16 @@ describe('web e2e: resident question composer round trip', () => {
     expect(agent).toBeDefined()
     const asked = scaffold.ctx.userQuestions.ask({
       agent: agent as NonNullable<typeof agent>,
-      questions: [{ id: 'free', header: 'More', question: 'Anything else?' }],
+      questions: [{ id: 'free', header: 'More', question: '# Additional context\n\nAnything else?' }],
     })
 
     const composer = page.locator('[data-question-key]')
     await composer.waitFor({ timeout: 30_000 })
     const field = composer.getByRole('textbox')
+    expect(await composer.getByRole('heading', { level: 2, name: 'More' }).count()).toBe(1)
+    expect(await composer.getByRole('heading', { level: 1, name: 'Additional context' }).count()).toBe(1)
+    const markdownSnapshot = await captureStableAria(page, '[data-question-key]', scaffold.workspaceCwd)
+    await compareOrRefreshGolden(MARKDOWN_EXPECTED, markdownSnapshot, MODE)
     // The empty field reserves its two lines AND the textarea fills that frame:
     // a reserved box the control does not fill leaves a strip that looks like
     // the field but takes no click.
@@ -277,6 +282,7 @@ describe('web e2e: resident question composer round trip', () => {
       'sidebar.expected.md',
       'composed.expected.md',
       'answered.expected.md',
+      'markdown.expected.md',
     ])
   })
 })

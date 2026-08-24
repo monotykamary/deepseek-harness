@@ -11,6 +11,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { writeClipboard } from './clipboard.ts'
+import { Check, Copy } from './icons/index.tsx'
 import css from './DiffBlock.module.css'
 
 /**
@@ -205,8 +206,14 @@ export function DiffBlock({
 
   return (
     <div className={clsx(css.block, className)} data-diff="" data-appearance={appearance}>
-      <button type="button" className={css.copyButton} onClick={onCopy}>
-        {copied ? labels.copied : labels.copy}
+      <button
+        type="button"
+        className={css.copyButton}
+        aria-label={copied ? labels.copied : labels.copy}
+        title={copied ? labels.copied : labels.copy}
+        onClick={onCopy}
+      >
+        {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
       </button>
       <div className={css.body}>
         {head.map((row, index) => (

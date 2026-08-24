@@ -91,6 +91,12 @@
   font-weight: 500;
 }
 
+.questionText {
+  flex: none;
+  padding: 12px 24px 4px;
+  color: var(--dsw-alias-label-secondary);
+}
+
 .detail {
   margin: 0 2px 8px;
 }

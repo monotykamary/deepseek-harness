@@ -76,6 +76,27 @@ export function changedFiles(changes: readonly DeliverableChange[]): readonly Ch
   }))
 }
 
+function treeSegments(files: readonly ChangedFileSummary[]): ReadonlyMap<string, readonly string[]> {
+  const parsed = files.map(file => ({
+    path: file.path,
+    absolute: file.path.startsWith('/') || /^[A-Za-z]:[\\/]/u.test(file.path) || /^[\\/]{2}/u.test(file.path),
+    segments: file.path.split(/[\\/]/u).filter(Boolean),
+  }))
+  const absolute = parsed.filter(file => file.absolute)
+  if (absolute.length === 0) return new Map(parsed.map(file => [file.path, file.segments]))
+  const directoryLengths = absolute.map(file => Math.max(0, file.segments.length - 1))
+  let commonDirectories = Math.min(...directoryLengths)
+  for (let index = 0; index < commonDirectories; index += 1) {
+    const segment = absolute[0]?.segments[index]
+    if (absolute.some(file => file.segments[index] !== segment)) {
+      commonDirectories = index
+      break
+    }
+  }
+  const start = Math.max(0, commonDirectories - 1)
+  return new Map(parsed.map(file => [file.path, file.absolute ? file.segments.slice(start) : file.segments]))
+}
+
 function finalizeDirectory(directory: MutableDirectory): ChangedDirectorySummary {
   const children: ChangedFileTreeNode[] = [
     ...[...directory.directories.values()].map(finalizeDirectory),
@@ -94,12 +115,13 @@ function finalizeDirectory(directory: MutableDirectory): ChangedDirectorySummary
 /**
  * Group changed files by path segments while preserving first-seen order.
  * @param files - Distinct changed files.
- * @returns Root tree rows; common directories become expandable nodes.
+ * @returns Root tree rows; absolute paths start at their nearest common directory.
  */
 export function changedFileTree(files: readonly ChangedFileSummary[]): readonly ChangedFileTreeNode[] {
   const root: MutableDirectory = { name: '', path: '', directories: new Map(), files: [] }
+  const segmentsByPath = treeSegments(files)
   for (const file of files) {
-    const segments = file.path.split(/[\\/]/u).filter(Boolean)
+    const segments = segmentsByPath.get(file.path) ?? []
     let directory = root
     let directoryPath = ''
     for (const segment of segments.slice(0, -1)) {
