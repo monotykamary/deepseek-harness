@@ -103,9 +103,9 @@ describe('ui-files browser plugin', () => {
     expect(b.read).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, signal)
     expect(b.write).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, 'b', 'v1', signal)
 
-    const header = (action.inject as unknown as () => FilesHeaderInjected)()
+    const header = (action.inject as unknown as (id: SessionId) => FilesHeaderInjected)(sid)
     header.openFiles()
-    expect(b.workbench.open).toHaveBeenCalledWith('files')
+    expect(b.workbench.open).toHaveBeenCalledWith(sid, 'files')
     await b.ctx.fiber.dispose()
   })
 

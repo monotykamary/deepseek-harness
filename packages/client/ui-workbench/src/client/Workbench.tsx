@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import {
   X, CodeXml, FolderOpen, ScanSearch,
@@ -74,8 +74,9 @@ function EmptyLauncher({ surfaces, onOpen, t }: EmptyLauncherProps) {
  * @returns inline workbench content or the same content inside a right Sheet.
  */
 export function Workbench({
-  mode, closePanel, useStore, actions, renderSlot, useSurfaces, t,
+  mode, closePanel, useStore, actions, renderSlot, useSurfaces, attach, t,
 }: WorkbenchProps) {
+  useLayoutEffect(() => attach(), [attach])
   const surfaces = useSurfaces(value => value)
   const panels = useStore(state => state.panels)
   const activePanelId = useStore(state => state.activePanelId)

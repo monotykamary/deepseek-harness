@@ -226,13 +226,17 @@ describe('SubagentHeaderLineage', () => {
     expect(screen.queryByRole('tree')).toBeNull()
   })
 
-  it('opens only on hover and preserves the portaled-menu crossing grace', async () => {
+  it('toggles on click and preserves delayed hover plus portaled-menu crossing grace', async () => {
     vi.useFakeTimers()
     const view = render(<SubagentHeaderLineage {...props(catalog())} />)
     const trigger = screen.getByRole('button', { name: /2 个子代理/ })
 
     fireEvent.click(trigger)
+    expect(screen.getByRole('tree')).toBeTruthy()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.click(trigger)
     expect(screen.queryByRole('tree')).toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
 
     fireEvent.mouseEnter(trigger.parentElement!)
     await vi.advanceTimersByTimeAsync(149)

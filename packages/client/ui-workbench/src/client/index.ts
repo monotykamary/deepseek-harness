@@ -1,5 +1,5 @@
 /** Browser plugin providing the tabbed Details workbench. */
-import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
+import type { ClientContext, SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
 import type {} from '@monotykamary/dsh-client-ui-layout/client'
 import type { WorkbenchInjected } from './contract.ts'
@@ -64,10 +64,10 @@ export function apply(ctx: ClientContext): void {
       },
       store: createWorkbenchStore,
       locale: NS,
-      inject: (_sessionId, actions): WorkbenchInjected => {
-        controller.attach(actions)
-        return { hooks: { surfaces } }
-      },
+      inject: (sessionId: SessionId, actions): WorkbenchInjected => ({
+        hooks: { surfaces },
+        attach: () => controller.attach(sessionId, actions),
+      }),
     }, Workbench))
     return () => {
       disposeSlot()

@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-Workbench 界面注册仍是静态插件声明，但 presentation 可以声明为 repeatable。每 Session 的 Workbench store 在这一个注册之上拥有 panel instance。每个 instance 都有稳定且会复用空缺的序号，通过已注册的 surface id 渲染，并以 owner prop 接收序号。`openNew(id)` 创建同级面板，`ensureCount(id, count)` 则为已运行资源恢复足够数量的 panel instance，而无需把应用数据动态注册为 slot。
+Workbench 界面注册仍是静态插件声明，但 presentation 可以声明为 repeatable。每 Session 的 Workbench store 在这一个注册之上拥有 panel instance。每个 instance 都有稳定且会复用空缺的序号，通过已注册的 surface id 渲染，并以 owner prop 接收序号。`openNew(sessionId, id)` 会在指定 Session 中创建同级面板，`ensureCount(sessionId, id, count)` 则为已运行资源恢复足够数量的 panel instance，而无需把应用数据动态注册为 slot。
 
 `ui-terminal` 把右侧 surface 标记为 repeatable。每个右侧终端 group 直接映射为外层 Workbench 面板，并依次标记为 Terminal 1、Terminal 2 等；「新建终端」会请求另一个 Workbench 面板。恢复时，第 N 个面板 attach 第 N 个运行中终端；每个 Session 的首次 discovery 只会执行一次面板数量恢复，因此后续活动面板切换不会重新创建用户已关闭的面板。底部位置继续在紧凑树中展示 group，「新建终端」会向活动 group 添加 pane。水平与垂直拆分控件在两个位置都始终向活动 group 添加 pane，三个 pane 是视觉上限。
 

@@ -247,7 +247,7 @@ describe('conversation slot inject API', () => {
     const { instance, injected } = b.chatViewApi(ROOT)
     injected.inspectCall('c1')
     expect(instance.store.getSnapshot().selection).toEqual({ callId: 'c1' })
-    expect(b.workbenchFake.open).toHaveBeenCalledWith('inspect')
+    expect(b.workbenchFake.open).toHaveBeenCalledWith(ROOT, 'inspect')
     // The chat view shares the conversation entry's store instance: selection
     // writes land where the skeleton and details read.
     const conv = b.conversationApi(ROOT)

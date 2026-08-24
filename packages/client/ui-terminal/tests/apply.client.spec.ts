@@ -3,7 +3,7 @@ import { Context, Service } from '@monotykamary/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
-import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
+import { SlotRegistry, type SessionId } from '@monotykamary/dsh-client-runtime/client'
 import { resolveSlotLabel } from '@monotykamary/dsh-client-ui-slots'
 import { usePinnedBrowserLanguages } from '@monotykamary/dsh-client-test-runtime'
 import { apply, inject } from '../src/client/index.ts'
@@ -93,8 +93,9 @@ describe('ui-terminal browser plugin', () => {
     expect(presentation.icon).toBe('terminal')
     expect((presentation.description as () => string)()).toBe('打开交互式持久终端')
 
-    const rightInjected = (surface.inject as unknown as (sessionId: string) => TerminalInjected)('session')
-    const bottomInjected = (bottom.inject as unknown as (sessionId: string) => TerminalInjected)('session')
+    const sessionId = 'session' as SessionId
+    const rightInjected = (surface.inject as unknown as (id: SessionId) => TerminalInjected)(sessionId)
+    const bottomInjected = (bottom.inject as unknown as (id: SessionId) => TerminalInjected)(sessionId)
     expect(rightInjected.hooks.preferences).toBe(bottomInjected.hooks.preferences)
     expect(rightInjected.hooks.colorScheme).toBe(bottomInjected.hooks.colorScheme)
     expect(rightInjected.hooks.colorScheme.getSnapshot()).toBe('dark')
@@ -105,9 +106,9 @@ describe('ui-terminal browser plugin', () => {
     rightInjected.openWorkbenchPanel()
     rightInjected.ensureWorkbenchPanels(3)
     bottomInjected.ensureWorkbenchPanels(4)
-    expect(b.workbench.openNew).toHaveBeenCalledWith('terminal')
+    expect(b.workbench.openNew).toHaveBeenCalledWith(sessionId, 'terminal')
     expect(b.workbench.ensureCount).toHaveBeenCalledOnce()
-    expect(b.workbench.ensureCount).toHaveBeenCalledWith('terminal', 3)
+    expect(b.workbench.ensureCount).toHaveBeenCalledWith(sessionId, 'terminal', 3)
     const listener = vi.fn()
     rightInjected.hooks.preferences.subscribe(listener)
     rightInjected.updatePreferences({ ligatures: false })

@@ -23,7 +23,7 @@ import '@fontsource/space-mono/latin-700.css'
 import '@fontsource/ubuntu-mono/latin-400.css'
 import '@fontsource/ubuntu-mono/latin-700.css'
 import './xterm.global.css'
-import type { ClientContext, ObservableSnapshot } from '@monotykamary/dsh-client-runtime/client'
+import type { ClientContext, ObservableSnapshot, SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {} from '@monotykamary/dsh-client-ui-layout/client'
@@ -90,18 +90,18 @@ export function apply(ctx: ClientContext): void {
   const t = ctx.locale.bind(NS)
   const preferences = new TerminalPreferenceStore()
   const colorScheme = new TerminalColorSchemeSource(ctx)
-  const restoredWorkbenchSessions = new Set<string>()
+  const restoredWorkbenchSessions = new Set<SessionId>()
   ctx.effect(() => () => { preferences.dispose() }, 'ui-terminal: preference subscriptions')
 
-  const terminalInjected = (sessionId: string): TerminalInjected => ({
+  const terminalInjected = (sessionId: SessionId): TerminalInjected => ({
     hooks: { preferences, colorScheme },
     updatePreferences: (patch) => { preferences.update(patch) },
     resetPreferences: () => { preferences.reset() },
     socketFactory: url => new WebSocket(url),
-    openWorkbenchPanel: () => { ctx.workbench.openNew(TERMINAL_SURFACE_ID) },
+    openWorkbenchPanel: () => { ctx.workbench.openNew(sessionId, TERMINAL_SURFACE_ID) },
     ensureWorkbenchPanels: (count) => {
       if (restoredWorkbenchSessions.has(sessionId)) return
-      ctx.workbench.ensureCount(TERMINAL_SURFACE_ID, count)
+      ctx.workbench.ensureCount(sessionId, TERMINAL_SURFACE_ID, count)
       restoredWorkbenchSessions.add(sessionId)
     },
   })

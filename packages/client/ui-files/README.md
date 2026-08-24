@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-Session-scoped workspace tree and autosaving source editor for the Web workbench. The browser plugin registers the **Files** `workbench.surface` entry, its icon and launcher description, and an **Open files** action in `conversation.session.header.actions`; every contribution follows the plugin effect lifetime. The header action opens and activates the stable `files` tab through `ctx.workbench`.
+Session-scoped workspace tree and autosaving source editor for the Web workbench. The browser plugin registers the **Files** `workbench.surface` entry, its icon and launcher description, and an **Open files** action in `conversation.session.header.actions`; every contribution follows the plugin effect lifetime. The header action passes its owning Session to `ctx.workbench`, opens and activates the stable `files` tab when absent, and reuses it when already open.
 
 Each resident Session owns one transient Files store. Opening the surface lazily lists its root through `remote.workspaceFiles`; expanding a directory lists only that directory, and selecting a file requests one complete bounded text value with an opaque provider version. Directory results and file values remain cached until explicit refresh. Request generations and `AbortSignal`s prevent a stale root, child, or read response from replacing newer state. Reloading the page discards the store.
 

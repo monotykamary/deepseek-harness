@@ -437,7 +437,7 @@ export function apply(ctx: Context): void {
         loadImage: attachment => conversation.resolveImage(sessionId, attachment),
         inspectCall: (callId) => {
           actions.select({ callId })
-          workbench.open(INSPECT_SURFACE_ID)
+          workbench.open(sessionId, INSPECT_SURFACE_ID)
         },
         chatScroll: {
           save: (position) => {

@@ -7,7 +7,7 @@
  * of cordis.yml removes both surfaces entirely;
  * the owning view renders an empty chain and inert prose at zero cost.
  */
-import type { ClientContext } from '@monotykamary/dsh-client-runtime/client'
+import type { ClientContext, SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type { ChatFileMentions } from '@monotykamary/dsh-client-ui-conversation/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
@@ -51,8 +51,8 @@ export function apply(ctx: ClientContext): void {
       name: 'conversation.chat.turnTail',
       select: selectProducedFiles,
       locale: NS,
-      inject: () => ({
-        openChanges: () => { ctx.workbench.open(CHANGES_SURFACE_ID) },
+      inject: (sessionId: SessionId) => ({
+        openChanges: () => { ctx.workbench.open(sessionId, CHANGES_SURFACE_ID) },
       }),
     }, ProducedFiles),
   )

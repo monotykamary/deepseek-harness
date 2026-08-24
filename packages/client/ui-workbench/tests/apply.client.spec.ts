@@ -1,7 +1,7 @@
 import { Context } from '@monotykamary/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
-import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
+import { SlotRegistry, type SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
 import { apply, inject } from '@monotykamary/dsh-client-ui-workbench/client'
 import { createWorkbenchStore } from '../src/client/store.ts'
@@ -52,10 +52,15 @@ describe('ui-workbench apply', () => {
   it('wires the current store actions into the navigation service and retracts everything on disposal', async () => {
     const b = await bench()
     const entry = b.slots.entries('details')[0]!
-    const instance = createWorkbenchStore().create('session')
-    const face = (entry.inject as unknown as (sessionId: string, actions: typeof instance.actions) => object)(
-      'session', instance.actions,
-    ) as { hooks: { surfaces: { getSnapshot(): readonly { id: WorkbenchSurfaceId }[] } } }
+    const sessionId = 'session' as SessionId
+    const instance = createWorkbenchStore().create(sessionId)
+    const face = (entry.inject as unknown as (id: SessionId, actions: typeof instance.actions) => object)(
+      sessionId, instance.actions,
+    ) as {
+      hooks: { surfaces: { getSnapshot(): readonly { id: WorkbenchSurfaceId }[] } }
+      attach: () => () => void
+    }
+    const detach = face.attach()
     b.slots.register({ name: 'workbench.surface', id: INSPECT, label: 'Inspect' } as never, () => null)
     const disposePresentation = b.ctx.workbench.registerPresentation(INSPECT, {
       icon: 'inspect', description: 'Inspect a tool call',
@@ -67,10 +72,11 @@ describe('ui-workbench apply', () => {
 
     b.ctx.workbench.show()
     expect(b.layout.openDetails).toHaveBeenCalledTimes(1)
-    b.ctx.workbench.open(INSPECT)
+    b.ctx.workbench.open(sessionId, INSPECT)
     expect(instance.store.getSnapshot().activePanelId).toBe('inspect:1')
     expect(b.layout.openDetails).toHaveBeenCalledTimes(2)
     disposePresentation()
+    detach()
     b.ctx.workbench.close()
     expect(b.layout.closeDetails).toHaveBeenCalledTimes(1)
 

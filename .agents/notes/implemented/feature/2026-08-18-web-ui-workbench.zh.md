@@ -10,9 +10,9 @@ Layout 已有可调整宽度的 Details 栏，但 `ui-conversation` 以单个已
 
 ## Decision
 
-`ui-workbench` 占用 layout 拥有的 `details` slot，并声明 Session 作用域的 `workbench.surface` 列表。每项功能以稳定 id、跟随 locale 的标签及 effect 范围的图标和启动器说明元数据注册自身列表 entry。Workbench 把这些注册投影为可用界面，在每 Session 的 entry store 中保存已打开和生效中的品牌化 id，并通过 `ctx.workbench.show()` 打开空面板、通过 `open(id)` 接收功能手势。服务会先拒绝未注册 id，再改变 layout 状态。
+`ui-workbench` 占用 layout 拥有的 `details` slot，并声明 Session 作用域的 `workbench.surface` 列表。每项功能以稳定 id、跟随 locale 的标签及 effect 范围的图标和启动器说明元数据注册自身列表 entry。Workbench 把这些注册投影为可用界面，在每 Session 的 entry store 中保存已打开和生效中的品牌化 id，并通过 `ctx.workbench.show()` 打开空面板，通过 `open(sessionId, id)`、`openNew(sessionId, id)` 与 `ensureCount(sessionId, id, count)` 接收有状态的功能手势。每个已挂载的 Details 组件会在其确切 Session id 下绑定 actions，并在卸载时撤销该绑定；服务只解析指定 Session，并且会先拒绝不可用的绑定或未注册 id，再改变 layout 状态。
 
-空面板会保持打开，并以居中启动器卡片展示全部已注册界面。关闭最后一个标签页会返回该启动器，而不会推断用户同时想关闭面板。标签页预留一个前置图标位置；悬停或键盘聚焦会在原位将图标换成关闭图标，因此标签文字不会位移。Immersive 界面只有在它是唯一已打开界面时才拥有顶部 chrome；打开另一界面会恢复通用标签与跨界面导航。`ui-conversation` 向其右对齐 Session utility 列表贡献右侧面板图标，并通过 `show()` 路由；功能专用操作仍是直接的 `open(id)` 快捷入口。
+空面板会保持打开，并以居中启动器卡片展示全部已注册界面。关闭最后一个标签页会返回该启动器，而不会推断用户同时想关闭面板。标签页预留一个前置图标位置；悬停或键盘聚焦会在原位将图标换成关闭图标，因此标签文字不会位移。Immersive 界面只有在它是唯一已打开界面时才拥有顶部 chrome；打开另一界面会恢复通用标签与跨界面导航。`ui-conversation` 向其右对齐 Session utility 列表贡献右侧面板图标，并通过 `show()` 路由；功能专用操作仍是直接的 `open(sessionId, id)` 快捷入口。
 
 `ui-conversation` 用现有 chat store 注册 **Inspect**，并在该 entry 下声明 `conversation.details.tool`。Tool 的 **Inspect** 会选择调用并打开此界面。Inspector 保留 Input／Output 回退行为，并提供明确的 **在轨迹中查看** 交接，因此 Workbench 不会吸收 Trajectory 的事件账本职责。
 
@@ -24,7 +24,7 @@ Layout 通过 Details owner share 传入 `column` 或 `sheet`。空间足够时�
 
 ## Verification
 
-逐文件覆盖率固定 Workbench store、展示投影、服务、空启动器、图标／关闭标签页、注册清理、右侧面板 utility、响应式 Sheet、deliverables Definition、增量 target，以及 Changes presenter 的独立与全部 disclosure 状态。无密钥 Web journey 会启动发货 Loader 组合，从页头图标打开空面板，通过卡片启动 Files，检查标签页悬停行为，并与通过 Changes 和 Inspect 的已记录变更路径一起验证内联与紧凑承载。
+逐文件覆盖率固定 Workbench store、展示投影、明确的双 Session 服务路由与绑定清理、单例复用、空启动器、图标／关闭标签页、注册清理、右侧面板 utility、响应式 Sheet、deliverables Definition、增量 target，以及 Changes presenter 的独立与全部 disclosure 状态。无密钥 Web journey 会启动发货 Loader 组合，从页头图标打开空面板，通过卡片启动 Files，检查标签页悬停行为，并与通过 Changes 和 Inspect 的已记录变更路径一起验证内联与紧凑承载。
 
 ## Alternatives considered
 

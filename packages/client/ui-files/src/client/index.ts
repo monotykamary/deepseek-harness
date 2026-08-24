@@ -90,8 +90,8 @@ export function apply(ctx: ClientContext): void {
     id: 'workspace-files',
     order: 30,
     locale: NS,
-    inject: (): FilesHeaderInjected => ({
-      openFiles: () => { ctx.workbench.open(FILES_SURFACE_ID) },
+    inject: (sessionId: SessionId): FilesHeaderInjected => ({
+      openFiles: () => { ctx.workbench.open(sessionId, FILES_SURFACE_ID) },
     }),
   }, FilesHeaderAction))
 }

@@ -1,3 +1,4 @@
+import type { SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type { BoundActions } from '@monotykamary/dsh-client-ui-slots'
 import type { ILayout } from '@monotykamary/dsh-client-ui-layout/client'
 import type { WorkbenchSurfaceId, WorkbenchSurfacePresentation } from './contract.ts'
@@ -6,6 +7,10 @@ import type { WorkbenchSurfaceDirectory } from './surface-directory.ts'
 
 /** Bound actions of the currently rendered session workbench. */
 type WorkbenchActions = BoundActions<ReturnType<typeof createWorkbenchStore>>
+
+interface WorkbenchBinding {
+  readonly actions: WorkbenchActions
+}
 
 /** Cross-plugin workbench navigation face. */
 export interface IWorkbench {
@@ -19,28 +24,31 @@ export interface IWorkbench {
    */
   registerPresentation(id: WorkbenchSurfaceId, presentation: WorkbenchSurfacePresentation): () => void
   /**
-   * Open and activate one registered surface, then reveal the Details region.
+   * Open and activate one registered surface in its owning Session, then reveal the Details region.
+   * @param sessionId - Session whose transient tab set receives the surface.
    * @param id - registered workbench surface id.
    */
-  open(id: WorkbenchSurfaceId): void
+  open(sessionId: SessionId, id: WorkbenchSurfaceId): void
   /**
    * Open and activate a new panel instance of a repeatable surface.
+   * @param sessionId - Session whose transient tab set receives the new panel.
    * @param id - registered repeatable Workbench surface id.
    */
-  openNew(id: WorkbenchSurfaceId): void
+  openNew(sessionId: SessionId, id: WorkbenchSurfaceId): void
   /**
    * Ensure a repeatable surface has enough panels to represent restored resources.
+   * @param sessionId - Session whose transient tab set represents the resources.
    * @param id - registered repeatable Workbench surface id.
    * @param count - required panel count.
    */
-  ensureCount(id: WorkbenchSurfaceId, count: number): void
+  ensureCount(sessionId: SessionId, id: WorkbenchSurfaceId, count: number): void
   /** Hide the workbench while retaining its per-session panel set. */
   close(): void
 }
 
-/** Workbench controller backed by the current session's store and layout panel. */
+/** Workbench controller routing explicit Session targets to mounted stores and the layout panel. */
 export class WorkbenchController implements IWorkbench {
-  private actions: WorkbenchActions | undefined
+  private readonly actionsBySession = new Map<SessionId, WorkbenchBinding>()
 
   /**
    * @param layout - layout panel controller.
@@ -52,11 +60,17 @@ export class WorkbenchController implements IWorkbench {
   ) {}
 
   /**
-   * Attach the current session workbench actions during slot injection.
+   * Attach one mounted Session workbench for the component lifetime.
+   * @param sessionId - Session owning the bound tab actions.
    * @param actions - bound per-session tab actions.
+   * @returns disposer that retracts only this exact binding.
    */
-  attach(actions: WorkbenchActions): void {
-    this.actions = actions
+  attach(sessionId: SessionId, actions: WorkbenchActions): () => void {
+    const binding = { actions }
+    this.actionsBySession.set(sessionId, binding)
+    return () => {
+      if (this.actionsBySession.get(sessionId) === binding) this.actionsBySession.delete(sessionId)
+    }
   }
 
   /** Reveal the Details region without choosing a surface. */
@@ -75,28 +89,29 @@ export class WorkbenchController implements IWorkbench {
   }
 
   /**
-   * Open one registered workbench surface.
+   * Open one registered workbench surface for one Session.
+   * @param sessionId - Session whose tab store receives or reuses the surface.
    * @param id - registered surface id.
    */
-  open(id: WorkbenchSurfaceId): void {
+  open(sessionId: SessionId, id: WorkbenchSurfaceId): void {
     this.requireSurface(id)
-    this.requireActions().openSurface(id)
+    this.requireActions(sessionId).openSurface(id)
     this.layout.openDetails()
   }
 
   /** Open one new panel instance of a repeatable Workbench surface. */
-  openNew(id: WorkbenchSurfaceId): void {
+  openNew(sessionId: SessionId, id: WorkbenchSurfaceId): void {
     const surface = this.requireSurface(id)
     if (!surface.repeatable) throw new Error(`workbench surface is not repeatable: ${String(id)}`)
-    this.requireActions().openNewSurface(id)
+    this.requireActions(sessionId).openNewSurface(id)
     this.layout.openDetails()
   }
 
   /** Ensure enough panels exist for restored instances of a repeatable surface. */
-  ensureCount(id: WorkbenchSurfaceId, count: number): void {
+  ensureCount(sessionId: SessionId, id: WorkbenchSurfaceId, count: number): void {
     const surface = this.requireSurface(id)
     if (!surface.repeatable) throw new Error(`workbench surface is not repeatable: ${String(id)}`)
-    this.requireActions().ensureSurfaceCount(id, count)
+    this.requireActions(sessionId).ensureSurfaceCount(id, count)
   }
 
   /** Hide the workbench without discarding its tabs. */
@@ -110,8 +125,11 @@ export class WorkbenchController implements IWorkbench {
     return surface
   }
 
-  private requireActions(): WorkbenchActions {
-    if (this.actions === undefined) throw new Error('workbench: surface actions not wired (Details entry not mounted)')
-    return this.actions
+  private requireActions(sessionId: SessionId): WorkbenchActions {
+    const binding = this.actionsBySession.get(sessionId)
+    if (binding === undefined) {
+      throw new Error(`workbench: Session actions not wired for ${String(sessionId)} (Details entry not mounted)`)
+    }
+    return binding.actions
   }
 }

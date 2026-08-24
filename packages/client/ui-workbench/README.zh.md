@@ -2,9 +2,9 @@
 
 [English](README.md) | 中文
 
-供独立注册的 Session 界面使用的标签式右侧面板宿主。该插件占用 layout 的 `details` slot、声明可叠加的 `workbench.surface` 列表，并提供 `ctx.workbench.show()`、`open(id)`、`openNew(id)`、`ensureCount(id, count)`、`close()` 及 effect 可清理的呈现注册。界面注册项提供稳定 `id`、顺序、跟随 locale 的标签、组件，以及它拥有的子 slot 或 store；打开未注册的品牌化 `WorkbenchSurfaceId` 会明确失败。移除界面注册项时，同一声明生命周期会移除其标签页。
+供独立注册的 Session 界面使用的标签式右侧面板宿主。该插件占用 layout 的 `details` slot、声明可叠加的 `workbench.surface` 列表，并提供 `ctx.workbench.show()`、`open(sessionId, id)`、`openNew(sessionId, id)`、`ensureCount(sessionId, id, count)`、`close()` 及 effect 可清理的呈现注册。界面注册项提供稳定 `id`、顺序、跟随 locale 的标签、组件，以及它拥有的子 slot 或 store；打开未注册的品牌化 `WorkbenchSurfaceId` 会明确失败。移除界面注册项时，同一声明生命周期会移除其标签页。
 
-已打开的面板 instance 与活动面板 id 保存在每 Session 的临时 entry store 中。单例界面会复用现有面板；可重复界面可以创建多个带稳定且会复用空缺序号的面板，而每个 instance 仍通过同一个静态插件注册渲染。`show()` 会显示空面板，其居中卡片列出全部已注册界面；选择卡片会追加并激活该界面。关闭生效中的标签页会选择相邻的剩余项，关闭最后一个标签页则回到启动器而不隐藏面板；关闭面板会保留其标签集合。每个标签页显示所注册的图标，并在悬停或键盘聚焦时于同一位置换成关闭图标。界面可声明 immersive chrome：当它是唯一已打开界面时，其组件拥有顶部行；打开另一界面会恢复通用 Workbench 标签，使跨界面导航保持可用。指针选择与 Left／Right／Home／End 键盘导航使用同一激活动作。已打开面板会保留在全尺寸分层 body 中；非活动 body 不可见且 inert，激活操作直接切换可见性而不经过中间 launcher 或 canvas，只有关闭标签页才会卸载其界面。
+已打开的面板 instance 与活动面板 id 保存在每 Session 的临时 entry store 中。有状态的服务调用会指定该 Session，并且只解析其生命周期绑定的已挂载 actions，因此其他驻留 Session 不会收到所请求的标签页。单例界面会复用现有面板；可重复界面可以创建多个带稳定且会复用空缺序号的面板，而每个 instance 仍通过同一个静态插件注册渲染。`show()` 会显示空面板，其居中卡片列出全部已注册界面；选择卡片会追加并激活该界面。关闭生效中的标签页会选择相邻的剩余项，关闭最后一个标签页则回到启动器而不隐藏面板；关闭面板会保留其标签集合。每个标签页显示所注册的图标，并在悬停或键盘聚焦时于同一位置换成关闭图标。界面可声明 immersive chrome：当它是唯一已打开界面时，其组件拥有顶部行；打开另一界面会恢复通用 Workbench 标签，使跨界面导航保持可用。指针选择与 Left／Right／Home／End 键盘导航使用同一激活动作。已打开面板会保留在全尺寸分层 body 中；非活动 body 不可见且 inert，激活操作直接切换可见性而不经过中间 launcher 或 canvas，只有关闭标签页才会卸载其界面。
 
 Layout 提供 Details 承载模式。三栏让步求解器能够保留中心栏下限时，Workbench 填充可调整宽度的内联栏。明确打开的 Details 偏好若求解为零内联宽度，同一个已挂载 Workbench 会通过共享的右侧 `Sheet` portal；关闭任一宿主都写入唯一的 layout 关闭动作。切换 Session 仍会在绘制前关闭 Details，而每个驻留 Session 的 store 会保留自身标签页。
 

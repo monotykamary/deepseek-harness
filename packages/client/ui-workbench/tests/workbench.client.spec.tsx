@@ -69,6 +69,7 @@ function mountWorkbench(options: {
       actions={instance.actions}
       renderSlot={renderSlot}
       useSurfaces={staticHook(surfaces)}
+      attach={() => () => {}}
       t={makeTranslate(zh)}
     />
   )
@@ -215,6 +216,7 @@ describe('Workbench', () => {
         actions={instance.actions}
         renderSlot={((_key, _owner, opts) => <div>{opts?.only}</div>) as WorkbenchProps['renderSlot']}
         useSurfaces={staticHook([surface('inspect', 'Inspect')])}
+        attach={() => () => {}}
         t={makeTranslate(en)}
       />,
     )

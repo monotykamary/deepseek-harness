@@ -16,7 +16,7 @@ import {
 import type {
   ConversationEventInput, ConversationLocationDataStore, ConversationMatch, ConversationNodeDefinition,
   ConversationTimelineSnapshot, ConversationTurnDataMap, ConversationViewDefinition,
-  ConversationViewNode, ToolResultNode, TurnLocation,
+  ConversationViewNode, SessionId, ToolResultNode, TurnLocation,
 } from '@monotykamary/dsh-client-runtime/client'
 import { apply as applyLocale, inject as localeInject } from '@monotykamary/dsh-client-locale/client'
 import type { ChatFileMentions, TurnTailOwnerProps } from '@monotykamary/dsh-client-ui-conversation/client'
@@ -614,11 +614,12 @@ describe('plugin registration', () => {
     await fiber.await()
     const [entry] = ctx.slots.entries('conversation.chat.turnTail')
     expect(entry).toBeDefined()
-    const injected = entry?.inject?.() as unknown as ProducedFilesInjected
+    const sessionId = 'session' as SessionId
+    const injected = (entry?.inject as unknown as (id: SessionId) => ProducedFilesInjected)(sessionId)
     expect(Object.keys(injected)).toEqual(['openChanges'])
     expect(injected.openChanges).toBeTypeOf('function')
     injected.openChanges()
-    expect(workbench.open).toHaveBeenCalledWith('changes')
+    expect(workbench.open).toHaveBeenCalledWith(sessionId, 'changes')
     const changes = ctx.slots.entries('workbench.surface')[0]
     expect(changes?.options.id).toBe('changes')
     expect(resolveSlotLabel(changes?.options.label)).toBe('Changes')

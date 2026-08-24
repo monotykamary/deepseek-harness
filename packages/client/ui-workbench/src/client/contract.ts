@@ -46,6 +46,11 @@ export interface WorkbenchInjected {
     /** Ordered workbench surface registrations with locale-resolved labels. */
     surfaces: ObservableSnapshot<readonly WorkbenchSurface[]>
   }
+  /**
+   * Bind this mounted Workbench's Session actions for its component lifetime.
+   * @returns disposer for this exact action binding.
+   */
+  attach: () => () => void
 }
 
 /** Owner props identifying one mounted Workbench panel instance. */

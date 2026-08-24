@@ -725,7 +725,7 @@ function CatalogDropdown({
             { count: descendants.runningCount > 0 ? descendants.runningCount : descendantCount },
           )}
         onClick={openTitle === undefined
-          ? undefined
+          ? () => { changeOpen(!open) }
           : () => {
             cancelHoverOpen()
             if (open) changeOpen(false)
