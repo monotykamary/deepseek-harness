@@ -98,13 +98,23 @@ function main(): void {
 
     const environment = consumerEnvironment(consumerRoot)
     console.log(`release verify-packed-install: installing ${String(packed.size)} tarball(s) into ${consumerRoot}`)
-    // Optional dependencies are omitted: the Landlock platform packages behind
-    // them need a musl toolchain and one build per architecture, and a consumer
-    // that cannot install them must still start — which is what optional means
-    // here. Their entry package is a plain dependency of dsh-sandbox-local, so
-    // its tarball is supplied through --from.
-    capture('npm', ['install', '--no-audit', '--no-fund', '--package-lock=false', '--omit=optional'],
-      { cwd: consumerRoot, env: environment })
+    // Landlock platform tarballs are not supplied: they need a musl toolchain
+    // per architecture, and npm must tolerate an unavailable or incompatible
+    // optional package. Do not omit all optionals — dependencies such as Koffi
+    // use their own optional platform package to provide the native prebuild.
+    // The Landlock entry itself is a plain dependency of dsh-sandbox-local and
+    // its tarball is supplied through --from. Every packed package is already
+    // a top-level file dependency; legacy peer mode avoids npm repeatedly
+    // reconciling the family's cyclic peer graph, while release:verify owns
+    // peer-range and publish-order correctness.
+    capture(
+      'npm',
+      [
+        'install', '--no-audit', '--no-fund', '--package-lock=false',
+        '--legacy-peer-deps', '--loglevel=error',
+      ],
+      { cwd: consumerRoot, env: environment },
+    )
 
     const bin = join(consumerRoot, 'node_modules', ...entry.packageName.split('/'), entry.binPath)
     const version = capture(process.execPath, [bin, '--version'], { cwd: consumerRoot, env: environment })

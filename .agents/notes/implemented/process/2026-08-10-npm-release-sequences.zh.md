@@ -99,9 +99,9 @@ registry 的两个行为决定了「怎么尝试一次发布」。写入之间�
 | `publishOrder` | 按 npm 会安装的依赖段加 peer 声明做拓扑序，同层按包名排；安装依赖成环是报错而不是随意定序，任何排不进去的 peer 边被丢弃并点名 |
 | `pack` | 把整族打进一个目录并记录上传顺序 |
 | `verify` | 族的版本基线、完整打印出来的发布顺序；发布时还要求本次运行来自该族的 tag、且成员可发布 |
-| `verify-packed-install` | 把一个或多个 pack 目录的 tarball 装进一次性 consumer，并驱动已安装的可执行入口 |
+| `verify-packed-install` | 把每个传入 tarball 列为顶层 file 依赖，以 npm legacy peer 模式安装以免反复协调家族的循环 peer 图，再驱动可执行文件；`verify` 另行负责 peer 范围与发布顺序 |
 | `publish` | 上面那三态 |
-| `process` / `tarball` | 启动命令、读取打包 tarball 的唯一正家，其中的入口守卫让每个脚本都可被 import |
+| `process` / `tarball` | 启动命令、读取打包 tarball 的唯一正家，其中的入口守卫让每个脚本都可被 import；捕获型命令预留 64 MiB，而不是 Node 默认的 1 MiB |
 
 dsh 族套用仓库的发布 payload 策略（拒绝源码与声明映射）。vendored 族保留上游 payload，因为那些 manifest 导出 `./src/*`，去掉 `src` 会发出一个导出映射指向不存在文件的包。
 
@@ -113,7 +113,7 @@ dsh 族套用仓库的发布 payload 策略（拒绝源码与声明映射）。v
 
 dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 vendored 框架声明成 peer，而那些包属于另一条序列，无凭据的 job 无法从私有 registry 取到——所以 dsh 的 `pack` job 为验证而打包 vendored 族，发布的仍只有 dsh 那一份。发布工作流（`release-publish.yml`）重新打包当前树，只发布 dsh 族。
 
-验证还会打一份 Landlock entry 的 tarball——`dsh-sandbox-local` 把它声明为普通 `dependencies`——同时略去可选依赖。那些可选项背后的平台包需要 musl 工具链且每个架构各构建一次，单台 runner 产不出来；而装不到它们的消费方也必须能起，这正是「可选」在这里的含义。因此验证按目录内容读取 tarball，而不是读发布顺序：一个目录可能只装着为满足跨序列依赖而打出来的包，任何发布顺序都不描述它。
+验证还会打一份 Landlock entry 的 tarball——`dsh-sandbox-local` 把它声明为普通 `dependencies`——但不提供 Landlock 平台 tarball。那些包需要 musl 工具链且每个架构各构建一次，单台 runner 产不出来；npm 必须容忍不可用或平台不兼容的可选包，这就证明了所需的缺席行为。安装会保留其他可选依赖，因为 Koffi 等原生库正是通过这种依赖交付平台预构建。验证按目录内容读取 tarball，而不是读发布顺序，因为一个目录可能只装着为满足跨序列依赖而打出来的包。
 
 ### 本次带出的仓库改动
 

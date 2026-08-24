@@ -99,9 +99,9 @@ The entity in this domain is a **release family**: a set of packages sharing one
 | `publishOrder` | topological order over the sections npm installs plus peer declarations, ties broken by package name; a cycle among installed dependencies is reported rather than resolved arbitrarily, and a peer edge no order can honour is dropped and named |
 | `pack` | packs a whole family into one directory and records the upload order |
 | `verify` | the family's version baseline, the publish order it prints in full, and — when publishing — that the run comes from that family's tag and its members are publishable |
-| `verify-packed-install` | installs the tarballs of one or more pack directories into a throwaway consumer and drives the installed executable |
+| `verify-packed-install` | lists every supplied tarball as a top-level file dependency, installs with npm legacy peer mode to avoid repeatedly reconciling the family's cyclic peer graph, and drives the executable; `verify` separately owns peer ranges and publish order |
 | `publish` | the three registry states above |
-| `process` / `tarball` | the one home for spawning commands and for reading a packed tarball, including the entry guard that keeps every script importable |
+| `process` / `tarball` | the one home for spawning commands and reading a packed tarball, including the entry guard that keeps every script importable; captured commands reserve 64 MiB rather than Node's 1 MiB default |
 
 The dsh family applies the repository's publication payload policy, which rejects sources and declaration maps. The vendored family keeps upstream's payload, because those manifests export `./src/*` and dropping `src` would publish an export map pointing at absent files.
 
@@ -113,7 +113,7 @@ The `pack` job walks the whole release set once, packing each member into one di
 
 A dsh verification installs the vendored family's pack output too. The harness packages declare the vendored framework as a peer, those packages live in another sequence, and the credential-free job cannot fetch them from a private registry — so the dsh `pack` job packs the vendored family for verification while publishing only the dsh set. The publish workflow (`release-publish.yml`) repacks the current tree and publishes only the dsh set.
 
-The verification also packs the Landlock entry, which `dsh-sandbox-local` declares as a plain dependency, and omits optional dependencies. The platform packages behind those optional entries need a musl toolchain and one build per architecture, so a job on one runner cannot produce them; a consumer that cannot install them must still start, which is what optional means here. The verification therefore reads a directory by its contents rather than a pack order, because a directory can hold tarballs packed only to satisfy a cross-sequence dependency.
+The verification also packs the Landlock entry, which `dsh-sandbox-local` declares as a plain dependency, but supplies no Landlock platform tarballs. Those packages need a musl toolchain and one build per architecture, so one runner cannot produce them; npm must tolerate an unavailable or incompatible optional package, which proves the required absence behavior. The install retains unrelated optional dependencies because native libraries such as Koffi deliver their platform prebuild that way. Verification reads a directory by its contents rather than a pack order because a directory can hold tarballs packed only to satisfy a cross-sequence dependency.
 
 ### Repository changes this carried
 

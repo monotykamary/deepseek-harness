@@ -7,6 +7,9 @@ import { spawnSync } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
+/** Captured release commands may print one npm warning per packed dependency. */
+const RELEASE_CAPTURE_MAX_BYTES = 64 * 1024 * 1024
+
 /** Where and with what environment a release step runs a command. */
 export interface RunOptions {
   /** Working directory; defaults to the current one. */
@@ -33,7 +36,9 @@ export interface CommandResult {
  * @returns The exit status and captured streams.
  */
 export function attempt(command: string, args: readonly string[], options: RunOptions = {}): CommandResult {
-  const result = spawnSync(command, [...args], { cwd: options.cwd, env: options.env, encoding: 'utf8' })
+  const result = spawnSync(command, [...args], {
+    cwd: options.cwd, env: options.env, encoding: 'utf8', maxBuffer: RELEASE_CAPTURE_MAX_BYTES,
+  })
   if (result.error !== undefined) throw result.error
   return { status: result.status, stdout: result.stdout, stderr: result.stderr }
 }
@@ -62,6 +67,7 @@ export function attemptEchoed(command: string, args: readonly string[], options:
     cwd: options.cwd,
     env: options.env,
     encoding: 'utf8',
+    maxBuffer: RELEASE_CAPTURE_MAX_BYTES,
     // 'inherit' would leave nothing to capture, so the streams are piped and
     // echoed instead.
     stdio: ['inherit', 'pipe', 'pipe'],
