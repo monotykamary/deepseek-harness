@@ -773,6 +773,7 @@
       ],
       "ignoreDependencies": [
         "@monotykamary/.+",
+        "dsh-tool-repair",
         "dsh-fabric",
         "dsh-fovea",
         "dsh-factory"

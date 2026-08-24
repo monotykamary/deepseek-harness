@@ -43,11 +43,17 @@ async function bench(items: readonly SessionSummary[], value: WorkspaceSettings 
   const ctx = new Context()
   const sessions = createSnapshotStore(sessionState(items))
   const policy = createSnapshotStore(settings(value))
+  const settingsScope: SettingsScope<WorkspaceSettings> = {
+    getSnapshot: () => policy.getSnapshot(),
+    subscribe: listener => policy.subscribe(listener),
+    set: () => Promise.resolve(),
+    unset: () => Promise.resolve(),
+  }
   ctx.provide('sessions', { list: sessions } as never)
   let service: SessionDispositionService | undefined
   const fiber = ctx.plugin({
     inject: ['sessions'],
-    apply(scope) { service = new SessionDispositionService(scope, policy as SettingsScope<WorkspaceSettings>) },
+    apply(scope) { service = new SessionDispositionService(scope, settingsScope) },
   })
   await fiber.await()
   if (service === undefined) throw new Error('Session disposition service did not mount')
@@ -115,7 +121,8 @@ describe('SessionDispositionService', () => {
     const item = summary('listed', now - 4 * day)
     const b = await bench([item], { autoSettleInactive: false, autoSettleAfterDays: 3 })
     b.policy.set({
-      status: 'unavailable', value: undefined, revision: undefined, writable: false, mode: 'memory',
+      status: 'unavailable', value: undefined, base: {}, user: {},
+      revision: undefined, writable: false, mode: 'memory',
     })
     expect(b.service.state.getSnapshot().settledSessionIds).toEqual([item.id])
     b.service.settleSession(sid('ghost'))
