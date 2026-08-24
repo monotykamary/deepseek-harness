@@ -35,7 +35,7 @@
       - code: 0.1.1
     - listitem:
       - strong: dsh-fabric
-      - code: 0.1.6
+      - code: 0.1.7
     - listitem:
       - strong: dsh-fovea
       - code: 0.5.1

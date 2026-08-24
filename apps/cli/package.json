@@ -84,7 +84,7 @@
     "node-addon-require-builtin": "^0.1.4",
     "dsh-tool-repair": "0.1.1",
     "dsh-multiprovider": "0.1.1",
-    "dsh-fabric": "0.1.6",
+    "dsh-fabric": "0.1.7",
     "dsh-fovea": "0.5.1",
     "dsh-factory": "0.1.4",
     "@monotykamary/dsh-distribution-update": "workspace:^"
@@ -110,7 +110,7 @@
       "companions": {
         "dsh-tool-repair": "0.1.1",
         "dsh-multiprovider": "0.1.1",
-        "dsh-fabric": "0.1.6",
+        "dsh-fabric": "0.1.7",
         "dsh-fovea": "0.5.1",
         "dsh-factory": "0.1.4"
       }

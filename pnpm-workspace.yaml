@@ -89,15 +89,15 @@ minimumReleaseAgeExclude:
   - framer-motion@13.1.1
   - motion-dom@13.1.1
   - motion@13.1.1
-  - dsh-fabric-client-ui@0.1.6
-  - dsh-fabric-code-runtime-quickjs@0.1.6
-  - dsh-fabric-compaction@0.1.6
-  - dsh-fabric-host@0.1.6
-  - dsh-fabric-mesh@0.1.6
-  - dsh-fabric-protocol@0.1.6
-  - dsh-fabric-schema@0.1.6
-  - dsh-fabric-system-prompt@0.1.6
-  - dsh-fabric@0.1.6
+  - dsh-fabric-client-ui@0.1.7
+  - dsh-fabric-code-runtime-quickjs@0.1.7
+  - dsh-fabric-compaction@0.1.7
+  - dsh-fabric-host@0.1.7
+  - dsh-fabric-mesh@0.1.7
+  - dsh-fabric-protocol@0.1.7
+  - dsh-fabric-schema@0.1.7
+  - dsh-fabric-system-prompt@0.1.7
+  - dsh-fabric@0.1.7
   - dsh-factory-client-ui@0.1.4
   - dsh-factory-domain@0.1.4
   - dsh-factory-protocol@0.1.4
