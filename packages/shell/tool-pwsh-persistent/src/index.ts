@@ -406,7 +406,7 @@ async function executeCommand(
         ctx, shells, owner, id, result.sessionStatus, marker, wrapped, fallback, fallbackTruncated, config,
       )
     }
-    if (promptCompleted(result)) {
+    if (result.waitReason === 'stdin_read' && promptCompleted(result)) {
       const snapshot = retainedScrollback(ctx, owner, id, latest)
       return renderCaptured(
         partialOutput(snapshot, marker, wrapped, fallback, fallbackTruncated),

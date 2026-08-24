@@ -165,7 +165,7 @@ class StubTerminalSession implements TerminalBackendSession {
     if (this.mode === 'idle-then-normal') {
       this.mode = 'normal'
       this.pendingText = request.text
-      return this.operation(Promise.resolve(this.result('', 'inferred_idle')))
+      return this.operation(Promise.resolve(this.result(this.motd, 'inferred_idle')))
     }
     if (this.mode === 'prompt-after-idle') {
       if (request.text.length > 0) {
@@ -411,6 +411,8 @@ describe('tool-pwsh-persistent', () => {
     const session = stub.sessions[0]!
 
     session.mode = 'idle-then-normal'
+    // The viewport still carries the previous prompt, but only this command's
+    // END marker may complete an inferred-idle send.
     expect(text(await call(ctx, owner, 'silent then complete'))).toContain('hello from')
 
     session.mode = 'incremental-fallback'
