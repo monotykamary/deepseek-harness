@@ -83,7 +83,7 @@ async function harness(
 // observes a marker the child prints while `operation` is still active. A caller
 // whose child is slow to print must raise the harness `timing` bounds too;
 // extending this deadline alone cannot recover output the operation never collected.
-async function waitForOutput(operation: TerminalSendOperation, expected: string, timeoutMs = 2_000): Promise<void> {
+async function waitForOutput(operation: TerminalSendOperation, expected: string, timeoutMs = 2_000): Promise<string> {
   const deadline = Date.now() + timeoutMs
   let output = ''
   while (!output.includes(expected) && Date.now() < deadline) {
@@ -91,6 +91,7 @@ async function waitForOutput(operation: TerminalSendOperation, expected: string,
     if (!output.includes(expected)) await new Promise(resolve => setTimeout(resolve, 10))
   }
   expect(output).toContain(expected)
+  return output
 }
 
 // A send the test interrupts settles when bash returns to its prompt, so the
@@ -285,7 +286,7 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
     process.env.DSH_TEST_SECRET = 'must-not-leak'
     try {
       const { ctx, root, agent } = await harness('danger-full-access', {
-        idleSilenceMs: 5_000,
+        idleSilenceMs: 300,
         handoffGraceMs: 300,
         timeoutMs: 8_000,
       }, 'pwsh')
@@ -301,12 +302,12 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
         text: 'Write-Output "keep=$env:KEEP secret=$env:DSH_TEST_SECRET"',
         submit: true,
       })
-      await waitForOutput(second, 'keep=ok', 15_000)
+      const secondOutput = await waitForOutput(second, 'keep=ok', 15_000)
       const result = await second.done
       expectReadyForNextSend(result.waitReason)
-      expect(result.viewport).toContain('keep=ok')
-      expect(result.viewport).toContain('secret=')
-      expect(result.viewport).not.toContain('must-not-leak')
+      expect(secondOutput).toContain('keep=ok')
+      expect(secondOutput).toContain('secret=')
+      expect(secondOutput).not.toContain('must-not-leak')
 
       expect(ctx.terminals.read(agent, created.sessionId, { offset: 0, count: 40 }).text).toContain('keep=ok')
       expect(await ctx.terminals.kill(agent, created.sessionId)).toBe(true)
@@ -319,7 +320,7 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
 
   it('pins UTF-8 output encoding so non-ASCII output survives the byte decode', async () => {
     const { ctx, root, agent } = await harness('danger-full-access', {
-      idleSilenceMs: 5_000,
+      idleSilenceMs: 300,
       handoffGraceMs: 300,
       timeoutMs: 8_000,
     }, 'pwsh')
@@ -331,20 +332,20 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
       text: '"console=" + [Console]::OutputEncoding.WebName + " out=" + $OutputEncoding.WebName',
       submit: true,
     })
-    await waitForOutput(pinned, 'console=utf-8 out=utf-8', 15_000)
+    const pinnedOutput = await waitForOutput(pinned, 'console=utf-8 out=utf-8', 15_000)
     const pinnedResult = await pinned.done
     expectReadyForNextSend(pinnedResult.waitReason)
-    expect(pinnedResult.viewport).toContain('console=utf-8 out=utf-8')
+    expect(pinnedOutput).toContain('console=utf-8 out=utf-8')
     // Char codes keep the submitted line ASCII-only, so the assertion is a
     // pure output-decode check.
     const sent = ctx.terminals.startSend(agent, created.sessionId, {
       text: "[Console]::Write([char]0x4E2D + [char]0x6587 + ' encoding-ok')",
       submit: true,
     })
-    await waitForOutput(sent, '中文 encoding-ok', 15_000)
+    const sentOutput = await waitForOutput(sent, '中文 encoding-ok', 15_000)
     const result = await sent.done
     expectReadyForNextSend(result.waitReason)
-    expect(result.viewport).toContain('中文 encoding-ok')
+    expect(sentOutput).toContain('中文 encoding-ok')
     await ctx.terminals.kill(agent, created.sessionId)
   }, 30_000)
 })

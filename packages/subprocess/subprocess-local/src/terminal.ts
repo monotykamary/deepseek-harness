@@ -12,6 +12,9 @@ import type {
 } from '@monotykamary/dsh-subprocess'
 import type { ProcessIdentity, ProcessInspector } from './process-inspector.ts'
 
+const CURSOR_POSITION_QUERY = '\x1b[6n'
+const CURSOR_POSITION_RESPONSE = '\x1b[1;1R'
+
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -26,6 +29,8 @@ function signalName(number: number | undefined): NodeJS.Signals | null {
 
 /**
  * A local terminal whose process-session ownership stays below the PTY backend.
+ * It also answers ANSI cursor-position queries that otherwise block an
+ * unattended line editor before shell input reaches the command parser.
  * The seam's terminate() promise — no write, inspection, or signal in flight
  * after settlement — holds here without operation tracking only because every
  * handle call completes synchronously under the hood (node-pty write, ps-based
@@ -42,6 +47,7 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
   private readonly exitDisposable: IDisposable
   private cleanup: Promise<void> | undefined
   private exited = false
+  private cursorPositionQueryTail = ''
   private trackedDescendants: ProcessIdentity[] = []
   /** The spawned shell's start identity; scans stop adopting members once the root pid no longer carries it. */
   private readonly rootIdentity: ProcessIdentity | undefined
@@ -61,7 +67,10 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
     this.pid = terminal.pid
     this.rootIdentity = inspector.processTree(this.pid).find(member => member.pid === this.pid)
     this.done = this.outcome.promise
-    this.dataDisposable = terminal.onData((data) => { this.output.write(Buffer.from(data, 'utf8')) })
+    this.dataDisposable = terminal.onData((data) => {
+      this.respondToCursorPositionQueries(data)
+      this.output.write(Buffer.from(data, 'utf8'))
+    })
     this.exitDisposable = terminal.onExit(({ exitCode, signal: exitSignal }) => {
       if (this.exited) return
       this.exited = true
@@ -71,6 +80,24 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
         signal: signalName(exitSignal),
       })
     })
+  }
+
+  private respondToCursorPositionQueries(data: string): void {
+    const scanned = this.cursorPositionQueryTail + data
+    this.cursorPositionQueryTail = scanned.slice(1 - CURSOR_POSITION_QUERY.length)
+    for (
+      let index = scanned.indexOf(CURSOR_POSITION_QUERY);
+      index >= 0;
+      index = scanned.indexOf(CURSOR_POSITION_QUERY, index + CURSOR_POSITION_QUERY.length)
+    ) {
+      try {
+        // An unattended node-pty has no terminal emulator to answer ANSI DSR.
+        // A fixed position is sufficient for line editors to finish startup.
+        this.terminal.write(CURSOR_POSITION_RESPONSE)
+      } catch (_terminalExitedDuringDeviceReply) {
+        return
+      }
+    }
   }
 
   // node-pty writes synchronously; the seam returns a promise for remote transports.

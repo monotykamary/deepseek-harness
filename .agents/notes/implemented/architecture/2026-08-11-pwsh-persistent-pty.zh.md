@@ -24,7 +24,7 @@ harness 在 Windows 上没有持久 shell。持久 `bash` 栈按构造就是 POS
 
 ### `@monotykamary/dsh-terminal-bash` 的 shell 方言
 
-一个 backend、两种方言：`shellDialect: 'bash' | 'pwsh'`（默认 `'bash'`，存量部署逐字节不变）。有效 `shellPath`/`shellArgs` 按方言解析（bash `/bin/bash --noprofile --norc -i`；pwsh 经共享的 `dsh-pwsh-local` 解析器取 `-NoLogo -NoProfile`，保留交互宿主供子 REPL）。子环境去掉 bash 专属 `PS1`/`PROMPT_COMMAND` 标记并为 pwsh 加 `NO_COLOR`。pwsh 无法从环境安装提示符，因此 backend 在启动时通过会话写入 prompt 函数，并等待受控提示符真正可见——因为 pwsh 从横幅到提示符的间隙可能超过静默上限，所以会在后续 send 上循环等待；`session_exit` 或 `timeout` 结算拒绝 spawn。两种方言发出相同的 BEL 终结 OSC `133;D;` 标记，因此 sanitizer、`PROMPT_MARKER_PREFIX`、`CONTROLLED_PROMPT` 与精确尾部就绪逻辑原样复用——标记仍只是就绪信号、载荷不被消费，与 bash 路径完全一致，且没有新增模型通知通道（与当前实现对齐；延后的 BEL 事件通道保持延后）。
+一个 backend、两种方言：`shellDialect: 'bash' | 'pwsh'`（默认 `'bash'`，存量部署逐字节不变）。有效 `shellPath`/`shellArgs` 按方言解析（bash `/bin/bash --noprofile --norc -i`；pwsh 经共享的 `dsh-pwsh-local` 解析器取 `-NoLogo -NoProfile`，保留交互宿主供子 REPL）。子环境去掉 bash 专属 `PS1`/`PROMPT_COMMAND` 标记并为 pwsh 加 `NO_COLOR`。`node-pty` 是 transport 而不是 terminal emulator，因此本地 provider 会识别完整或跨 chunk 的 ANSI `CSI 6 n` 光标位置查询，并以固定 `CSI 1;1 R` 回答；否则 PowerShell 7.6 会在读取任何已提交命令前等待该响应。查询仍保留在 raw output 中，交给 sanitizer 移除。pwsh 无法从环境安装提示符，因此 backend 在启动时通过会话写入 prompt 函数，并等待受控提示符真正可见——因为 pwsh 从横幅到提示符的间隙可能超过静默上限，所以会在后续 send 上循环等待；`session_exit` 或 `timeout` 结算拒绝 spawn。两种方言发出相同的 BEL 终结 OSC `133;D;` 标记，因此 sanitizer、`PROMPT_MARKER_PREFIX`、`CONTROLLED_PROMPT` 与精确尾部就绪逻辑原样复用——标记仍只是就绪信号、载荷不被消费，与 bash 路径完全一致，且没有新增模型通知通道（与当前实现对齐；延后的 BEL 事件通道保持延后）。
 
 ### `@monotykamary/dsh-tool-pwsh-persistent`
 

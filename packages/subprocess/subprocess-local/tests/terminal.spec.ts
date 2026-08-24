@@ -14,6 +14,7 @@ class FakePty {
   readonly kills: string[] = []
   autoExitOnKill = true
   throwKill = false
+  throwWrite = false
   onKill?: () => void
   private readonly dataListeners = new Set<(data: string) => void>()
   private readonly exitListeners = new Set<(event: { exitCode: number; signal?: number }) => void>()
@@ -36,7 +37,10 @@ class FakePty {
     for (const listener of this.exitListeners) listener({ exitCode, ...signal === undefined ? {} : { signal } })
   }
 
-  write(data: string): void { this.writes.push(data) }
+  write(data: string): void {
+    if (this.throwWrite) throw new Error('terminal exited during write')
+    this.writes.push(data)
+  }
 
   resize(cols: number, rows: number): void { this.resizes.push({ cols, rows }) }
 
@@ -195,6 +199,25 @@ describe('LocalTerminalHandle', () => {
     expect(await handle.done).toEqual({ exitCode: null, signal: 'SIGKILL' })
     await handle.terminate()
     expect(Buffer.concat(chunks).toString('utf8')).toBe('hello €')
+  })
+
+  it('answers complete and split cursor-position queries without hiding output', () => {
+    const pty = new FakePty()
+    const handle = makeHandle(pty, new FakeInspector(), 10)
+    const chunks: Buffer[] = []
+    handle.output.on('data', (chunk: Buffer) => { chunks.push(chunk) })
+
+    pty.emitData('before\x1b[')
+    expect(pty.writes).toEqual([])
+    pty.emitData('6nafter\x1b[6n')
+
+    expect(pty.writes).toEqual(['\x1b[1;1R', '\x1b[1;1R'])
+    expect(Buffer.concat(chunks).toString('utf8')).toBe('before\x1b[6nafter\x1b[6n')
+
+    const racingPty = new FakePty()
+    racingPty.throwWrite = true
+    makeHandle(racingPty, new FakeInspector(), 10)
+    expect(() => { racingPty.emitData('\x1b[6n') }).not.toThrow()
   })
 
   it('rejects unsafe foreground signals and writes after exit', async () => {
