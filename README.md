@@ -2,7 +2,7 @@
 
 # 🐟 DeepSeek Harness
 
-**A plugin-native coding-agent harness with Fabric coordination and Fovea repository intelligence included.**
+**A plugin-native coding-agent harness with resilient tool calls, Fabric coordination, and Fovea repository intelligence included.**
 
 _Run locally in one command, compose every capability, and keep the tested distribution together._
 
@@ -20,17 +20,18 @@ English | [中文](README.zh.md)
 npx @monotykamary/dsh@latest web
 ```
 
-DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure: [dsh-fabric](https://github.com/monotykamary/dsh-fabric) and [dsh-fovea](https://github.com/monotykamary/dsh-fovea) join every shipped profile, while the long-lived Web profile also includes [dsh-factory](https://github.com/monotykamary/dsh-factory); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
+DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure: [dsh-tool-repair](https://github.com/monotykamary/dsh-tool-repair), [dsh-fabric](https://github.com/monotykamary/dsh-fabric), and [dsh-fovea](https://github.com/monotykamary/dsh-fovea) join every shipped profile, while the long-lived Web profile also includes [dsh-factory](https://github.com/monotykamary/dsh-factory); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
 
 ## Why DSH?
 
 | | Capability | What it unlocks |
 | :-: | --- | --- |
 | 🧩 | **Everything is a plugin** | Replace models, tools, persistence, policy, UI, and orchestration through Cordis composition. |
+| 🩹 | **Tool repair included** | Revalidate unambiguous provider-format repairs before logging or execution; reject truncated work. |
 | 🧠 | **Fabric included** | Deterministic compaction, checked code execution, durable coordination, and live topology. |
 | 🔭 | **Fovea included** | Progressive repository navigation and impact analysis without bulk-reading the tree. |
 | 🛡️ | **Policy at execution** | Filesystem, subprocess, approval, timeout, and sandbox decisions remain enforceable capabilities. |
-| 🔄 | **Cohesive updates** | Settings and CLI report DSH, Fabric, and Fovea together and preserve the installation channel. |
+| 🔄 | **Cohesive updates** | Settings and CLI report DSH and every tested companion together and preserve the installation channel. |
 | 🧱 | **Profile layers** | Shipped templates stay current while user patches and out-of-tree bundles remain independently owned. |
 
 ## How it fits
@@ -39,6 +40,7 @@ DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the d
 flowchart LR
   User[CLI or Web] --> Profile[Managed profile template]
   Profile --> Core[DSH plugin spine]
+  Profile --> Repair[Tool Repair]
   Profile --> Fabric[Fabric]
   Profile --> Fovea[Fovea]
   Core --> Model[Model providers]
@@ -99,7 +101,7 @@ The Web Settings panel has an **Updates** page and marks Settings when a managed
 
 ## Profiles and plugins
 
-The shipped `web` and `headless` profiles resolve their template from the running DSH installation, so an app update also changes its tested Fabric/Fovea layers. `$DSH_HOME/profiles/<name>/package.json` stores only the template identity and user-managed bundles; `cordis.patch.yml` remains the user's override layer.
+The shipped `web` and `headless` profiles resolve their template from the running DSH installation, so an app update also changes its tested Tool Repair, Fabric, and Fovea layers. `$DSH_HOME/profiles/<name>/package.json` stores only the template identity and user-managed bundles; `cordis.patch.yml` remains the user's override layer.
 
 ```sh
 dsh --profile web --dump-config

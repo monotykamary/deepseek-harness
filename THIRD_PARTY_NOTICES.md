@@ -132,6 +132,7 @@ External packages that a workspace package resolves at runtime. The tier covers 
 | [`dsh-fabric`](https://github.com/monotykamary/dsh-fabric) | MIT |
 | [`dsh-factory`](https://github.com/monotykamary/dsh-factory) | MIT |
 | [`dsh-fovea`](https://github.com/monotykamary/dsh-fovea) | MIT |
+| [`dsh-tool-repair`](https://github.com/monotykamary/dsh-tool-repair) | MIT |
 | [`e2b`](https://github.com/e2b-dev/e2b) | MIT |
 | [`eventsource-parser`](https://github.com/rexxars/eventsource-parser) | MIT |
 | [`fflate`](https://github.com/101arrowz/fflate) | MIT |

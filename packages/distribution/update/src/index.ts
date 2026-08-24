@@ -179,7 +179,7 @@ function updateCommand(channel: InstallChannel, packageName: string): string | n
 /**
  * Read the app and its managed companions from the installed closure.
  * @param appManifest - absolute running app manifest path.
- * @returns installed DSH, Fabric, Fovea, and Factory versions.
+ * @returns installed DSH and every tested external companion version.
  */
 export function installedDistribution(appManifest: string): DistributionPackageStatus[] {
   const app = readManifest(appManifest)
@@ -192,7 +192,7 @@ export function installedDistribution(appManifest: string): DistributionPackageS
   const dependencies = app.dependencies
   if (dependencies === null || typeof dependencies !== 'object' || Array.isArray(dependencies)) return statuses
   const require = createRequire(appManifest)
-  for (const name of ['dsh-fabric', 'dsh-fovea', 'dsh-factory']) {
+  for (const name of ['dsh-tool-repair', 'dsh-fabric', 'dsh-fovea', 'dsh-factory']) {
     if (!(name in dependencies)) continue
     const manifestPath = require.resolve(`${name}/package.json`)
     statuses.push({ name, installed: packageVersion(manifestPath), latest: null, updateAvailable: false })
