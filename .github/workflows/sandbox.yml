@@ -86,23 +86,28 @@ jobs:
       # leave process-global or OS resources around before timing-sensitive IO.
       - name: PowerShell PTY tests (darwin parity)
         if: matrix.runner == 'seatbelt'
-        run: >-
-          pnpm exec vitest run
-          packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts
-          packages/terminal/terminal-bash/tests/local.spec.ts
-          --maxWorkers=1 --no-file-parallelism
+        env:
+          NO_COLOR: '1'
+        run: |
+          set -u +e -o pipefail
+          out=$(pnpm exec vitest run \
+            packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts \
+            packages/terminal/terminal-bash/tests/local.spec.ts \
+            --maxWorkers=1 --no-file-parallelism 2>&1); status=$?
+          echo "$out"
+          [ "$status" -eq 0 ]
+          echo "$out" | grep -qE 'Test Files[[:space:]]+2 passed \(2\)'
 
       # The unit suite runs on ubuntu in `checks`; this is the one darwin leg
-      # in the workflow, so run its complete inventory here too. The two files
-      # above are excluded only because they already ran. Keep the remainder
-      # serial: default fork fanout starves FSEvents long enough to create false
-      # watch failures on standard hosted capacity.
+      # in the workflow, so run its complete inventory here too. The real pwsh
+      # describes already ran above and self-skip here; the shared file's bash
+      # cases still run. Keep files serial so default fork fanout cannot starve
+      # FSEvents into false watch failures on standard hosted capacity.
       - name: Unit tests (darwin parity)
         if: matrix.runner == 'seatbelt'
-        run: >-
-          pnpm run test -- --maxWorkers=1 --no-file-parallelism
-          --exclude=packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts
-          --exclude=packages/terminal/terminal-bash/tests/local.spec.ts
+        env:
+          DSH_SKIP_REAL_PWSH_TESTS: '1'
+        run: pnpm run test -- --maxWorkers=1 --no-file-parallelism
 
       - name: Sandbox e2e (real kernel confinement, world-verified)
         # NO_COLOR: vitest force-enables ANSI color under GITHUB_ACTIONS even

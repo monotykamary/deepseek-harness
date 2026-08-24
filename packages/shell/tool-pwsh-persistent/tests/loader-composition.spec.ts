@@ -22,6 +22,7 @@ import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import ToolRegistry from '@monotykamary/dsh-tools'
 import * as ToolPwshPersistent from '@monotykamary/dsh-tool-pwsh-persistent'
 
+const skipRealPwsh = process.env.DSH_SKIP_REAL_PWSH_TESTS === '1'
 const hasPwsh = spawnSync(
   resolvePwshPath(), ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', '$true'],
   { encoding: 'utf8' },
@@ -70,7 +71,7 @@ function text(result: { content: { type: string; text?: string }[] }): string {
   return result.content.filter(block => block.type === 'text').map(block => block.text).join('')
 }
 
-describe.skipIf(!hasPwsh)('persistent pwsh through a real cordis.yml Loader composition', () => {
+describe.skipIf(!hasPwsh || skipRealPwsh)('persistent pwsh through a real cordis.yml Loader composition', () => {
   it('preserves cwd and environment across calls', async () => {
     root = await mkdtemp(join(tmpdir(), 'dsh-persistent-pwsh-loader-'))
     const canonicalRoot = await realpath(root)

@@ -266,18 +266,23 @@ describe('Sandbox workflow', () => {
     const pwsh: unknown = sandbox.steps.find(
       (step: unknown) => isRecord(step) && step.name === 'PowerShell PTY tests (darwin parity)',
     )
-    expect(pwsh).toEqual({
+    if (!isRecord(pwsh)) throw new TypeError('Sandbox workflow must define the PowerShell PTY step')
+    expect(pwsh).toMatchObject({
       name: 'PowerShell PTY tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
-      run: 'pnpm exec vitest run packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts packages/terminal/terminal-bash/tests/local.spec.ts --maxWorkers=1 --no-file-parallelism',
+      env: { NO_COLOR: '1' },
     })
+    expect(pwsh.run).toContain('packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts')
+    expect(pwsh.run).toContain('packages/terminal/terminal-bash/tests/local.spec.ts')
+    expect(pwsh.run).toContain("grep -qE 'Test Files[[:space:]]+2 passed \\(2\\)'")
     const parity: unknown = sandbox.steps.find(
       (step: unknown) => isRecord(step) && step.name === 'Unit tests (darwin parity)',
     )
     expect(parity).toEqual({
       name: 'Unit tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
-      run: 'pnpm run test -- --maxWorkers=1 --no-file-parallelism --exclude=packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts --exclude=packages/terminal/terminal-bash/tests/local.spec.ts',
+      env: { DSH_SKIP_REAL_PWSH_TESTS: '1' },
+      run: 'pnpm run test -- --maxWorkers=1 --no-file-parallelism',
     })
   })
 })

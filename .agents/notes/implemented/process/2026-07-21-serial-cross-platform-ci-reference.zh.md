@@ -24,7 +24,7 @@ Status: implemented
 
 macOS 参考流程使用 fork 进程运行常规 Vitest 项目。macOS arm64 上的 Node 24 曾在工作线程中执行 CJS 词法分析器时异常终止；进程边界能够隔离这一外部运行时故障，且无需从聚合流程中删除任何测试，而 Linux 与 Windows 仍使用开销更低的线程池。仓库自身引入的竞态均在相应的观测边界修复：开发构建产物的轮询逻辑每次发布重新扫描结果前，都会先暂存候选表、候选图和候选监视基线映射；构建产物缺失后会一直保持脏状态，直到成功计算内容哈希。PTY 就绪检测会在轮询检查前台进程组归属期间保留提示符候选项；常规静默时限也涵盖从交互式子进程继承而来的标记。真实 PTY fixture 会在运行时拼接同步标记，使就绪等待逻辑不会把交互式 shell 的输入回显误判为子进程已就绪。实时链接场景下的包管理器 e2e 会保留由工作流预先准备的 Corepack 主目录、pnpm 元数据缓存和 store 缓存，同时隔离其他包管理器的可变缓存，因此不会在安装前丢弃可复用的包管理器状态。
 
-独立的 [Sandbox](../../../../.github/workflows/sandbox.yml) 工作流属于同一职责划分中的参考侧。其 bwrap、Landlock x64/arm64 与 Seatbelt 真实内核矩阵只在向 `master` 推送后运行。Seatbelt leg 先在全新的单 worker Vitest 进程中运行两份真实 PowerShell PTY 文件，再以一个 worker 且禁用 file parallelism 的方式运行其余完整 macOS 单元测试清单，只排除已经执行的那两份文件。独立进程 ownership 让其他 suite 的生命周期和 OS 资源不进入时序敏感的 terminal IO，串行化则避免默认 fork fanout 让 FSEvents 饥饿成错误的 watch 失败。30 分钟诊断上限为该清单留出完成时间。这四个作业仅用于诊断：它们既不是分支保护的必需项，也不会跨工作流计入 `all checks passed`。拉取请求 CI 仍通过常规的单元测试与覆盖率清单检查沙箱源码；宿主内核与 packed-install 验证在合并后报告结果。
+独立的 [Sandbox](../../../../.github/workflows/sandbox.yml) 工作流属于同一职责划分中的参考侧。其 bwrap、Landlock x64/arm64 与 Seatbelt 真实内核矩阵只在向 `master` 推送后运行。Seatbelt leg 先在全新的单 worker Vitest 进程中运行两份真实 PowerShell PTY 文件，并由 run guard 要求两份文件都通过。随后它以一个 worker 且禁用 file parallelism 的方式运行完整 macOS 单元测试清单；`DSH_SKIP_REAL_PWSH_TESTS=1` 只跳过已经验证的真实 pwsh describe，共享 terminal 文件中的可移植 bash case 仍会运行。独立进程 ownership 让其他 suite 的生命周期和 OS 资源不进入时序敏感的 terminal IO，串行化则避免默认 fork fanout 让 FSEvents 饥饿成错误的 watch 失败。30 分钟诊断上限为该清单留出完成时间。这四个作业仅用于诊断：它们既不是分支保护的必需项，也不会跨工作流计入 `all checks passed`。拉取请求 CI 仍通过常规的单元测试与覆盖率清单检查沙箱源码；宿主内核与 packed-install 验证在合并后报告结果。
 
 master 分支的参考作业仅用于诊断，不参与拉取请求所要求的 `all checks passed` 结果。ci-master 与 Sandbox 工作流把跨平台参考流程保留在 master 推送上。系统根据已完成托管作业的时间戳评估性能，并将其报告为测量结果，而不是写成 `timeout-minutes` 值。
 
