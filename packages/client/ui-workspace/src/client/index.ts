@@ -16,7 +16,9 @@ import type {} from '@monotykamary/dsh-client-ui-layout/client'
 import type { ConnectionHandle } from '@monotykamary/dsh-client-connection/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@monotykamary/dsh-client-locale/client'
+import type { SessionDispositionContract } from './contract/disposition.ts'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from './contract/slots.ts'
+import { SessionDispositionService } from './session-disposition.ts'
 import { createWorkspaceViewStore } from './stores.ts'
 import { WorkspaceBrowser } from './rows/WorkspaceBrowser.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
@@ -29,9 +31,17 @@ export type {
   DirectoryFlowOwnerProps, DirectoryFlowSlotName, DirectoryPickingHooks, DirectoryPickingInjected,
   WorkspaceBrowserInjected, WorkspaceBrowserProps, WorkspacePickerInjected, WorkspacePickerProps,
 } from './contract/slots.ts'
+export type { SessionDispositionContract, SessionDispositionSnapshot } from './contract/disposition.ts'
 export type { WorkspaceKey } from './locales.ts'
 export { SHIPPED_WORKSPACE_SETTINGS } from '../settled-settings.ts'
 export type { WorkspaceSettings } from '../settled-settings.ts'
+
+declare module '@monotykamary/cordis' {
+  interface Context {
+    /** Shared browser-local Session shelf membership. */
+    sessionDisposition: SessionDispositionContract
+  }
+}
 
 declare module '@monotykamary/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -63,6 +73,7 @@ export const inject = [
  */
 export function apply(ctx: ClientContext): void {
   const settlement = ctx.settingsScope.bind<WorkspaceSettings>({ namespace: WORKSPACE_SETTINGS_NAMESPACE })
+  const disposition = new SessionDispositionService(ctx, settlement)
   const connection = ctx.get('connection') as ConnectionHandle
   const hostDescription = connection.hostDescription
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace: dictionaries')
@@ -119,8 +130,12 @@ export function apply(ctx: ClientContext): void {
     insertSessionBefore: async (workspaceId, sessionId, beforeSessionId) => {
       await ctx.workspaces.insertSessionBefore(workspaceId, sessionId, beforeSessionId)
     },
+    settleSession: (sessionId) => { disposition.settleSession(sessionId) },
+    unsettleSession: (sessionId) => { disposition.unsettleSession(sessionId) },
+    snoozeSession: (sessionId, until) => { disposition.snoozeSession(sessionId, until) },
+    wakeSession: (sessionId) => { disposition.wakeSession(sessionId) },
     createWorkspace: input => ctx.workspaces.create(input),
-    hooks: { directoryFlow: browserFlowSource, settlement, hostDescription },
+    hooks: { directoryFlow: browserFlowSource, sessionDisposition: disposition.state, hostDescription },
   })
   const pickerInjected = (): WorkspacePickerInjected => ({
     createWorkspace: input => ctx.workspaces.create(input),

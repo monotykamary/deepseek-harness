@@ -1,6 +1,6 @@
 import { Context } from '@monotykamary/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import { SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
+import { createSnapshotStore, SlotRegistry } from '@monotykamary/dsh-client-runtime/client'
 import { LocaleRuntime } from '@monotykamary/dsh-client-locale/client'
 import { apply, inject } from '@monotykamary/dsh-client-ui-workspace/client'
 import type { WorkspaceBrowserInjected, WorkspacePickerInjected } from '@monotykamary/dsh-client-ui-workspace/client'
@@ -30,7 +30,7 @@ async function bench() {
   const fork = vi.fn(async () => 'forked' as never)
   const settlement = {
     getSnapshot: () => ({
-      status: 'ready', value: { autoSettleInactive: true, autoSettleAfterDays: 3 },
+      status: 'ready', value: { autoSettleInactive: false, autoSettleAfterDays: 3 },
       base: {}, user: {}, revision: 1,
       writable: true, mode: 'host',
     }),
@@ -47,7 +47,14 @@ async function bench() {
   ctx.provide('workspaces', {
     create, startSession, rename, insertSessionBefore,
   } as never)
-  ctx.provide('sessions', { open, clear, search, searchResultLimit: 20, binding, fork } as never)
+  ctx.provide('sessions', {
+    open, clear, search, searchResultLimit: 20, binding, fork,
+    list: createSnapshotStore({
+      ids: ['session'],
+      byId: { session: { id: 'session', displayTitle: 'session', running: false, blank: false, updatedAt: Date.now() } },
+      current: undefined, phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined,
+    }),
+  } as never)
   const locale = new LocaleRuntime(ctx)
   // These specs assert the shipped Chinese copy. There is no jsdom `window`
   // in this lane, so browser-language detection never runs and the locale
@@ -101,7 +108,12 @@ describe('ui-workspace apply', () => {
 
     const browser = (b.slots.entries('sidebar.workspaces')[0]!.inject as () => WorkspaceBrowserInjected)()
     expect(b.bindSettlement).toHaveBeenCalledWith({ namespace: 'ui-workspace' })
-    expect(browser.hooks.settlement).toBe(b.settlement)
+    const disposition = b.ctx.get('sessionDisposition')
+    expect(browser.hooks.sessionDisposition).toBe(disposition?.state)
+    browser.settleSession('session' as never)
+    expect(disposition?.state.getSnapshot().settledSessionIds).toEqual(['session'])
+    browser.unsettleSession('session' as never)
+    expect(disposition?.state.getSnapshot().settledSessionIds).toEqual([])
     // Both arms delegate to the runtime's shared New Session action.
     browser.startSession('ws' as never)
     expect(b.startSession).toHaveBeenCalledWith('ws')
@@ -184,6 +196,7 @@ describe('ui-workspace apply', () => {
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
     await fiber.dispose()
+    expect(b.ctx.get('sessionDisposition')).toBeUndefined()
     expect(b.slots.entries('sidebar.workspaces')).toHaveLength(0)
     expect(b.slots.entries('conversation.hero.workspace')).toHaveLength(0)
     // expect(b.slots.entries('conversation.empty.workspace')).toHaveLength(0)

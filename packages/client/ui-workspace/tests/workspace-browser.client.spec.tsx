@@ -2,11 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { bindSnapshotSelector } from '@monotykamary/dsh-client-test-runtime'
+import { createSnapshotStore } from '@monotykamary/dsh-client-runtime/client'
 import type {
   SessionId, SessionListState, SessionSummary, WorkspaceId, WorkspaceListState, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
 import { makeTranslate } from '@monotykamary/dsh-client-test-runtime'
 import { zh as commonZh } from '@monotykamary/dsh-client-locale/src/locales/zh.ts'
+import type { SessionDispositionSnapshot } from '../src/client/contract/disposition.ts'
 import type { WorkspaceBrowserProps } from '../src/client/contract/slots.ts'
 import { createWorkspaceViewStore, FLAT_SESSION_ORDER_KEY } from '../src/client/stores.ts'
 import { UNGROUPED_KEY } from '../src/client/tree.ts'
@@ -51,31 +53,43 @@ function hook<T>(snapshot: T) {
   return function select<S>(selector: (state: T) => S): S { return selector(snapshot) }
 }
 
-function unavailableSettlement() {
-  return hook({
-    status: 'unavailable' as const,
-    value: undefined,
-    base: undefined,
-    user: undefined,
-    revision: undefined,
-    writable: false,
-    mode: 'memory' as const,
+function disposition(initial: Partial<SessionDispositionSnapshot> = {}) {
+  const source = createSnapshotStore<SessionDispositionSnapshot>({
+    settledSessionIds: [], snoozedUntilBySession: {}, wokeSessionIds: [], ...initial,
   })
-}
-
-function settlement(autoSettleAfterDays: number | null) {
-  return hook({
-    status: 'ready' as const,
-    value: {
-      autoSettleInactive: autoSettleAfterDays !== null,
-      autoSettleAfterDays: autoSettleAfterDays ?? 3,
-    },
-    base: {},
-    user: {},
-    revision: 1,
-    writable: true,
-    mode: 'host' as const,
-  })
+  const settleSession = (sessionId: SessionId): void => {
+    source.update((draft) => {
+      if (!draft.settledSessionIds.includes(sessionId)) draft.settledSessionIds = [...draft.settledSessionIds, sessionId]
+      const { [sessionId]: _removed, ...snoozed } = draft.snoozedUntilBySession
+      draft.snoozedUntilBySession = snoozed
+      draft.wokeSessionIds = draft.wokeSessionIds.filter(id => id !== sessionId)
+    })
+  }
+  const unsettleSession = (sessionId: SessionId): void => {
+    source.update((draft) => { draft.settledSessionIds = draft.settledSessionIds.filter(id => id !== sessionId) })
+  }
+  const snoozeSession = (sessionId: SessionId, until: number): void => {
+    source.update((draft) => {
+      draft.settledSessionIds = draft.settledSessionIds.filter(id => id !== sessionId)
+      draft.snoozedUntilBySession = { ...draft.snoozedUntilBySession, [sessionId]: until }
+      draft.wokeSessionIds = draft.wokeSessionIds.filter(id => id !== sessionId)
+    })
+  }
+  const wakeSession = (sessionId: SessionId): void => {
+    source.update((draft) => {
+      const { [sessionId]: _removed, ...snoozed } = draft.snoozedUntilBySession
+      draft.snoozedUntilBySession = snoozed
+      draft.wokeSessionIds = draft.wokeSessionIds.filter(id => id !== sessionId)
+    })
+  }
+  return {
+    source,
+    useSessionDisposition: bindSnapshotSelector(source),
+    settleSession: vi.fn(settleSession),
+    unsettleSession: vi.fn(unsettleSession),
+    snoozeSession: vi.fn(snoozeSession),
+    wakeSession: vi.fn(wakeSession),
+  }
 }
 
 /** jsdom lacks DragEvent — the fireEvent fallback drops clientY, so pin it on the built event. */
@@ -90,7 +104,7 @@ function dragData(): Pick<DataTransfer, 'effectAllowed' | 'dropEffect' | 'setDat
   return { effectAllowed: 'uninitialized', dropEffect: 'none', setData: vi.fn() }
 }
 
-function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
+function mount(overrides: Partial<WorkspaceBrowserProps> = {}, sessionDisposition = disposition()) {
   const store = createWorkspaceViewStore().create()
   const props: WorkspaceBrowserProps = {
     wide: true,
@@ -110,16 +124,20 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     archiveSession: vi.fn(async () => {}),
     insertWorkspaceBefore: vi.fn(async () => {}),
     insertSessionBefore: vi.fn(async () => {}),
+    settleSession: sessionDisposition.settleSession,
+    unsettleSession: sessionDisposition.unsettleSession,
+    snoozeSession: sessionDisposition.snoozeSession,
+    wakeSession: sessionDisposition.wakeSession,
     createWorkspace: vi.fn(async () => workspace('created', [])),
     useDirectoryFlow: bindSnapshotSelector({ getSnapshot: () => true, subscribe: () => () => {} }),
-    useSettlement: settlement(null),
+    useSessionDisposition: sessionDisposition.useSessionDisposition,
     useHostDescription: selector => selector(undefined),
     renderSlot: ((_name: string, owner: { open: boolean }) => (owner.open ? <div data-testid="directory-flow" /> : null)) as never,
     t,
     ...overrides,
   }
   const view = render(<WorkspaceBrowser {...props} />)
-  return { view, props, store }
+  return { view, props, store, disposition: sessionDisposition }
 }
 
 /** Re-render with (possibly) changed props — WorkspaceBrowser has no side channel. */
@@ -182,10 +200,10 @@ describe('WorkspaceBrowser', () => {
     const now = Date.now()
     const active = summary('active-session', now - 2 * day)
     const stale = summary('stale-session', now - 4 * day)
+    const sessionDisposition = disposition({ settledSessionIds: [stale.id] })
     const b = mount({
       useSessions: hook(sessionState([active, stale])),
-      useSettlement: settlement(3),
-    })
+    }, sessionDisposition)
     act(() => { b.store.actions.setGroupBy('flat') })
 
     expect(screen.getByText('active-session')).toBeTruthy()
@@ -200,42 +218,23 @@ describe('WorkspaceBrowser', () => {
     b.view.unmount()
     mount({
       useSessions: hook(sessionState([active, stale])),
-      useSettlement: settlement(3),
-    })
+    }, sessionDisposition)
     expect(screen.getByText('stale-session')).toBeTruthy()
     expect(screen.getByRole('button', { name: '已结' }).getAttribute('aria-expanded')).toBe('true')
   })
 
-  it('uses the shipped policy when remote settings are intentionally unavailable', () => {
-    const stale = summary('remote-stale', Date.now() - 4 * 86_400_000)
-    const b = mount({
-      useSessions: hook(sessionState([stale])),
-      useSettlement: unavailableSettlement(),
-    })
+  it('moves a Session when the shared disposition source classifies it as settled', () => {
+    const boundary = summary('boundary-session', Date.now())
+    const sessionDisposition = disposition()
+    const b = mount({ useSessions: hook(sessionState([boundary])) }, sessionDisposition)
     act(() => { b.store.actions.setGroupBy('flat') })
+    expect(screen.getByText('boundary-session')).toBeTruthy()
+
+    act(() => { sessionDisposition.source.set({
+      settledSessionIds: [boundary.id], snoozedUntilBySession: {}, wokeSessionIds: [],
+    }) })
+    expect(screen.queryByText('boundary-session')).toBeNull()
     expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
-  })
-
-  it('moves a Session into the shelf when the minute clock crosses its inactivity boundary', () => {
-    vi.useFakeTimers()
-    try {
-      const now = new Date('2026-08-19T12:00:00.000Z').getTime()
-      vi.setSystemTime(now)
-      const boundary = summary('boundary-session', now - 3 * 86_400_000)
-      const b = mount({
-        useSessions: hook(sessionState([boundary])),
-        useSettlement: settlement(3),
-      })
-      act(() => { b.store.actions.setGroupBy('flat') })
-      expect(screen.getByText('boundary-session')).toBeTruthy()
-
-      act(() => { vi.advanceTimersByTime(120_000) })
-      expect(screen.queryByText('boundary-session')).toBeNull()
-      expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
-      b.view.unmount()
-    } finally {
-      vi.useRealTimers()
-    }
   })
 
   it('pages settled history ten rows first and twenty-five rows at a time', () => {
@@ -243,7 +242,10 @@ describe('WorkspaceBrowser', () => {
     const now = Date.now()
     const stale = Array.from({ length: 36 }, (_, index) =>
       summary(`stale-${String(index + 1)}`, now - (index + 4) * day))
-    const b = mount({ useSessions: hook(sessionState(stale)), useSettlement: settlement(3) })
+    const b = mount(
+      { useSessions: hook(sessionState(stale)) },
+      disposition({ settledSessionIds: stale.map(item => item.id) }),
+    )
     act(() => { b.store.actions.setGroupBy('flat') })
 
     fireEvent.click(screen.getByRole('button', { name: '已结（36）' }))
@@ -1359,113 +1361,72 @@ describe('WorkspaceBrowser', () => {
     expect(row.hasAttribute('draggable')).toBe(false)
   })
 
-  it('settles a Session from the hover quick action into the shelf, durably across remount', () => {
-    const b = mount({
+  it('settles a Session from the hover action and retains the shared state across surface remount', () => {
+    const shared = disposition()
+    const browserProps = {
       useSessions: hook(sessionState([summary('manual-s', 1)])),
       useWorkspaces: hook(workspaceState([workspace('alpha', ['manual-s'])])),
-    })
+    }
+    const b = mount(browserProps, shared)
     act(() => { b.store.actions.setGroupBy('flat') })
     fireEvent.click(screen.getByRole('button', { name: '结算会话' }))
-    // The row recedes into the settled shelf; the store records the override.
-    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['manual-s'])
+    expect(shared.source.getSnapshot().settledSessionIds).toEqual([sid('manual-s')])
     expect(screen.queryByText('manual-s')).toBeNull()
     expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
     b.view.unmount()
-    // The override persists: a fresh mount shelves the Session without the minute clock.
-    mount({
-      useSessions: hook(sessionState([summary('manual-s', 1)])),
-      useWorkspaces: hook(workspaceState([workspace('alpha', ['manual-s'])])),
-    })
+
+    mount(browserProps, shared)
     expect(screen.queryByText('manual-s')).toBeNull()
     expect(screen.getByRole('button', { name: '已结（1）' })).toBeTruthy()
   })
 
-  it('un-settles an auto-settled row back into the active list and pins it there', () => {
-    const day = 86_400_000
-    const now = Date.now()
-    const stale = summary('stale-s', now - 4 * day)
+  it('un-settles a shared settled row back into the active list', () => {
+    const stale = summary('stale-s', Date.now() - 4 * 86_400_000)
+    const shared = disposition({ settledSessionIds: [stale.id] })
     const b = mount({
       useSessions: hook(sessionState([stale])),
-      useSettlement: settlement(3),
       useWorkspaces: hook(workspaceState([workspace('alpha', ['stale-s'])])),
-    })
+    }, shared)
     act(() => { b.store.actions.setGroupBy('flat') })
-    // Auto-settled: hidden behind the shelf until it is expanded.
     expect(screen.queryByText('stale-s')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '已结（1）' }))
     const row = screen.getByText('stale-s').closest('[role="treeitem"]') as HTMLElement
     fireEvent.contextMenu(row, { clientX: 10, clientY: 10 })
     fireEvent.click(screen.getByRole('menuitem', { name: '取消结算' }))
-    // The keep-active pin suppresses auto-settlement on the next projection.
-    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual(['stale-s'])
+    expect(shared.unsettleSession).toHaveBeenCalledWith(stale.id)
     expect(screen.getByText('stale-s')).toBeTruthy()
     expect(screen.queryByRole('button', { name: '已结（1）' })).toBeNull()
   })
 
-  it('snoozes a Session into its own shelf, wakes it at the deadline, and dismisses the pill', () => {
+  it('projects snoozed and Woke states and dismisses the shared marker', () => {
     vi.useFakeTimers()
     try {
       const now = new Date('2026-08-19T12:00:00.000Z').getTime()
       vi.setSystemTime(now)
+      const nap = summary('nap-s', 1)
+      const shared = disposition()
       const b = mount({
-        useSessions: hook(sessionState([summary('nap-s', 1)])),
+        useSessions: hook(sessionState([nap])),
         useWorkspaces: hook(workspaceState([workspace('alpha', ['nap-s'])])),
-      })
+      }, shared)
       act(() => { b.store.actions.setGroupBy('flat') })
-      // Snooze five minutes ahead through the context menu's preset submenu.
       fireEvent.contextMenu(screen.getByText('nap-s').closest('[role="treeitem"]') as HTMLElement)
       fireEvent.mouseEnter(screen.getByRole('menuitem', { name: '稍后提醒' }))
-      act(() => { b.store.actions.snoozeSession('nap-s', now + 300_000) })
+      act(() => { shared.snoozeSession(nap.id, now + 300_000) })
       fireEvent.keyDown(document, { key: 'Escape' })
-      // Hidden from the active list; the collapsed Snoozed shelf counts it.
       expect(screen.queryByText('nap-s')).toBeNull()
-      const snoozedToggle = screen.getByRole('button', { name: '稍后（1）' })
-      fireEvent.click(snoozedToggle)
+      fireEvent.click(screen.getByRole('button', { name: '稍后（1）' }))
       expect(screen.getByText('5分钟')).toBeTruthy()
 
-      // The wake deadline fires the exact re-render: the row returns with Woke.
-      act(() => { vi.advanceTimersByTime(300_000) })
+      act(() => { shared.source.set({ settledSessionIds: [], snoozedUntilBySession: {}, wokeSessionIds: [nap.id] }) })
       expect(screen.getByText('nap-s')).toBeTruthy()
       const pill = screen.getByRole('button', { name: '关闭唤醒提示' })
       expect(pill.textContent).toContain('已唤醒')
       fireEvent.click(pill)
-      expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({})
+      expect(shared.wakeSession).toHaveBeenCalledWith(nap.id)
       expect(screen.queryByText('已唤醒')).toBeNull()
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  it('settles and snoozes on a rehydrated store that predates the shelf override fields', () => {
-    // v6 blobs have no shelf fields: the mutators must initialize lazily.
-    localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({
-      workspaceScope: null, groupBy: 'flat', orderBy: 'updated', groupExpansion: {},
-      settledShelfExpanded: false, sessionOrderByAccount: {}, sessionUpdatedAtByAccount: {},
-    }))
-    const b = mount({
-      useSessions: hook(sessionState([summary('old-s', 1)])),
-      useWorkspaces: hook(workspaceState([workspace('alpha', ['old-s'])])),
-    })
-    fireEvent.click(screen.getByRole('button', { name: '结算会话' }))
-    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['old-s'])
-    // Idempotent: a second settle skips the duplicate push.
-    act(() => { b.store.actions.settleSession('old-s') })
-    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual(['old-s'])
-    // Un-settle filters the explicit list and pins the row.
-    act(() => { b.store.actions.unsettleSession('old-s') })
-    // Idempotent: a second un-settle skips the duplicate pin.
-    act(() => { b.store.actions.unsettleSession('old-s') })
-    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual(['old-s'])
-    // Settling again filters the pin out and re-homes the row.
-    act(() => { b.store.actions.settleSession('old-s') })
-    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
-    // Snoozing filters both settle sets and hides the row until the wake.
-    act(() => { b.store.actions.unsettleSession('old-s') })
-    act(() => { b.store.actions.snoozeSession('old-s', Date.now() + 60_000) })
-    expect(typeof b.store.getSnapshot().snoozedUntilBySession?.['old-s']).toBe('number')
-    expect(b.store.getSnapshot().explicitlySettledSessionIds).toEqual([])
-    expect(b.store.getSnapshot().pinnedActiveSessionIds).toEqual([])
-    act(() => { b.store.actions.wakeSession('old-s') })
-    expect(b.store.getSnapshot().snoozedUntilBySession).toEqual({})
   })
 })

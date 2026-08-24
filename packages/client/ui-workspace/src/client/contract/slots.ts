@@ -29,10 +29,9 @@ import type { HostObservable, PropsHooks, PropsLocale, PropsRenderSlots, PropsRu
 import type {} from '@monotykamary/dsh-client-ui-sidebar/client'
 import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {
-  SessionId, SessionSearchResultItem, SettingsScope, SettingsScopeSnapshot,
-  WorkspaceId, WorkspaceView,
+  SessionId, SessionSearchResultItem, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
-import type { WorkspaceSettings } from '../../settled-settings.ts'
+import type { SessionDispositionSnapshot } from './disposition.ts'
 import type { createWorkspaceViewStore } from '../stores.ts'
 
 /**
@@ -93,8 +92,8 @@ export type WorkspaceBrowserInjected = {
   hooks: DirectoryPickingInjected['hooks'] & {
     /** True while the sidebar directory-flow hole is occupied. */
     directoryFlow: HostObservable<boolean>
-    /** Host-resolved inactivity policy for the settled Session shelf. */
-    settlement: SettingsScope<WorkspaceSettings>
+    /** Shared effective settle, snooze, and wake membership. */
+    sessionDisposition: HostObservable<SessionDispositionSnapshot>
     /** Current generation's Host description, bound by the slot renderer. */
     hostDescription: HostDescriptionSource
   }
@@ -141,6 +140,14 @@ export type WorkspaceBrowserInjected = {
    * the Host response/changed frame; failures leave the order unchanged.
    */
   insertSessionBefore: (workspaceId: WorkspaceId, sessionId: SessionId, beforeSessionId?: SessionId) => Promise<void>
+  /** Settle a Session into the shared history shelf. */
+  settleSession: (sessionId: SessionId) => void
+  /** Return a settled Session to active work. */
+  unsettleSession: (sessionId: SessionId) => void
+  /** Hide a Session until one exact wake time. */
+  snoozeSession: (sessionId: SessionId, until: number) => void
+  /** Wake a snoozed Session or dismiss its Woke marker. */
+  wakeSession: (sessionId: SessionId) => void
   /** Adopt a picked host directory as a real Workspace before targeting a Session. */
   createWorkspace: (input: { path: string }) => Promise<WorkspaceView>
 }
@@ -154,8 +161,8 @@ export type WorkspaceBrowserProps =
   & {
     /** Selector hook over this surface's directory-flow occupancy. */
     useDirectoryFlow: SnapshotSelectorHook<boolean>
-    /** Selector hook over the resolved settled-session policy. */
-    useSettlement: SnapshotSelectorHook<SettingsScopeSnapshot<WorkspaceSettings>>
+    /** Selector hook over effective Session disposition. */
+    useSessionDisposition: SnapshotSelectorHook<SessionDispositionSnapshot>
   }
   & PropsHooks<WorkspaceBrowserInjected['hooks']>
   & PropsLocale<'workspace'>

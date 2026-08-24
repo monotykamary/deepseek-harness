@@ -16,9 +16,10 @@ export const inject = ['invariants']
 
 /**
  * No runtime invariant: the Host contribution is a schema-validated settings
- * namespace whose registration/update relations are owned by dsh-settings;
- * the Client contribution derives presentation from typed Session, Workspace,
- * job, settings, and slot stores without emitting a package-owned event.
+ * namespace whose registration/update relations are owned by dsh-settings. The
+ * `sessionDisposition` provider and its Session-list relationship exist only in
+ * the browser Cordis tree; this Host companion has no authoritative client event
+ * stream to inspect without adding a diagnostic wire surface.
  */
 const install: InvariantInstaller = () => {}
 

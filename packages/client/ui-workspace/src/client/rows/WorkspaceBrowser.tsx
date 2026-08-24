@@ -15,11 +15,10 @@ import {
 import type {
   SessionId, SessionListState, SessionSearchResultItem, WorkspaceId, WorkspaceView,
 } from '@monotykamary/dsh-client-runtime/client'
-import { SHIPPED_WORKSPACE_SETTINGS } from '../../settled-settings.ts'
 import type { WorkspaceBrowserProps } from '../contract/slots.ts'
 import type { SessionNode, SessionOrderBy } from '../tree.ts'
 import {
-  deriveFlat, deriveGroups, deriveSearchResults, deriveShelfSets, UNGROUPED_KEY,
+  deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY,
 } from '../tree.ts'
 import { ProjectRowItem, SearchResultItem, SessionNodeItem } from './Rows.tsx'
 import { FLAT_SESSION_ORDER_KEY } from '../stores.ts'
@@ -43,19 +42,8 @@ const SETTLED_INITIAL_COUNT = 10
 const SETTLED_PAGE_COUNT = 25
 const MINUTE_MS = 60_000
 
-/** Stable empty defaults for rehydrated stores that predate the shelf override fields. */
-const EMPTY_SESSION_IDS: readonly string[] = []
-const EMPTY_SNOOZES: Readonly<Record<string, number>> = {}
-
-/**
- * Minute-quantized clock shared by relative labels and day-granular
- * auto-settlement. wakeDelayMs adds an exact re-render at the earliest
- * future snooze deadline, so a snoozed row flips to Woke at its wake moment
- * instead of up to a minute later (the delay is recomputed when the snooze
- * set changes; a stale positive delay just fires once more).
- * @param wakeDelayMs - ms until the earliest future snooze wake, or null.
- */
-function useMinuteNow(wakeDelayMs: number | null = null): number {
+/** Minute-quantized clock for relative Session labels. */
+function useMinuteNow(): number {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const remaining = MINUTE_MS - Date.now() % MINUTE_MS
@@ -64,16 +52,11 @@ function useMinuteNow(wakeDelayMs: number | null = null): number {
       setNow(Date.now())
       interval = window.setInterval(() => { setNow(Date.now()) }, MINUTE_MS)
     }, remaining)
-    let wakeTimer: number | undefined
-    if (wakeDelayMs !== null && wakeDelayMs > 0) {
-      wakeTimer = window.setTimeout(() => { setNow(Date.now()) }, wakeDelayMs)
-    }
     return () => {
       window.clearTimeout(timeout)
       window.clearInterval(interval)
-      window.clearTimeout(wakeTimer)
     }
-  }, [wakeDelayMs])
+  }, [])
   return now
 }
 
@@ -404,14 +387,12 @@ type SessionTreeProps = Pick<
   orderBy: SessionOrderBy
   /** Minute-quantized activity clock. */
   now: number
-  /** Whole inactive days before shelving, or null while disabled/unavailable. */
-  autoSettleAfterDays: number | null
-  /** User-settled Session ids (persisted browser state). */
-  explicitlySettledSessionIds: readonly string[]
-  /** User-un-settled ids pinned out of auto-settlement (persisted browser state). */
-  pinnedActiveSessionIds: readonly string[]
-  /** Wake time per snoozed Session (persisted browser state). */
+  /** Sessions in the shared settled-history shelf. */
+  settledSessionIds: readonly SessionId[]
+  /** Future wake time per Session in the shared Snoozed shelf. */
   snoozedUntilBySession: Readonly<Record<string, number>>
+  /** Sessions returned from snooze with a dismissible Woke marker. */
+  wokeSessionIds: readonly SessionId[]
   /** Row callbacks shared by every SessionNodeItem render. */
   actions: RowActions
   /** Shelf-section props owned by the browser (rows arrive from this tree). */
@@ -577,8 +558,8 @@ function Shelves({
 function SessionTree({
   useSessions, startSession, open, workspaces, archivedSessionIds,
   onRenameRequest, onDeleteRequest,
-  insertWorkspaceBefore, insertSessionBefore, orderBy, now, autoSettleAfterDays,
-  explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession,
+  insertWorkspaceBefore, insertSessionBefore, orderBy, now,
+  settledSessionIds, snoozedUntilBySession, wokeSessionIds,
   actions, shelvesBase,
   workspace,
   groupExpansion, setGroupExpanded,
@@ -650,21 +631,17 @@ function SessionTree({
     () => reconciledSessionOrder(ungroupedSessionIds, sessionOrderByAccount[UNGROUPED_KEY]),
     [sessionOrderByAccount, ungroupedSessionIds],
   )
-  const shelf = useMemo(
-    () => deriveShelfSets(
-      list, now, autoSettleAfterDays, explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession,
-    ),
-    [autoSettleAfterDays, list, now, explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession],
-  )
-  const settledSet = shelf.settledIds
+  const settledSet = useMemo(() => new Set(settledSessionIds), [settledSessionIds])
+  const snoozedKeys = useMemo(() => new Set(Object.keys(snoozedUntilBySession)), [snoozedUntilBySession])
+  const wokeSet = useMemo(() => new Set(wokeSessionIds), [wokeSessionIds])
   const groups = useMemo(
     () => deriveGroups(list, orderedWorkspaces, archivedSessionIds, {
       expandedGroups,
       ...(sessionOrderByAccount[UNGROUPED_KEY] === undefined
         ? {}
         : { ungroupedOrder: sessionOrderByAccount[UNGROUPED_KEY] }),
-    }, [...shelf.settledIds, ...Object.keys(shelf.snoozedUntil)] as SessionId[]),
-    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount, shelf.settledIds, shelf.snoozedUntil],
+    }, [...settledSessionIds, ...snoozedKeys] as SessionId[]),
+    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount, settledSessionIds, snoozedKeys],
   )
   const scopedIds = useMemo(
     () => workspace === undefined ? null : new Set(workspace.sessionIds),
@@ -677,10 +654,10 @@ function SessionTree({
   )
   const snoozedRows = useMemo(
     () => deriveFlat(list, archivedSessionIds)
-      .filter(row => shelf.snoozedUntil[row.id as string] !== undefined
+      .filter(row => snoozedUntilBySession[row.id as string] !== undefined
         && (scopedIds === null || scopedIds.has(row.id)))
-      .sort((a, b) => (shelf.snoozedUntil[a.id as string] ?? 0) - (shelf.snoozedUntil[b.id as string] ?? 0)),
-    [archivedSessionIds, list, scopedIds, shelf.snoozedUntil],
+      .sort((a, b) => (snoozedUntilBySession[a.id as string] ?? 0) - (snoozedUntilBySession[b.id as string] ?? 0)),
+    [archivedSessionIds, list, scopedIds, snoozedUntilBySession],
   )
   const commitSessionDrag = (activeDrag: DragState, over: NonNullable<DragState['over']>): void => {
     if (sessionDropCommitted.current) return
@@ -871,7 +848,7 @@ function SessionTree({
                     now={now}
                     onOpen={open}
                     {...actions}
-                    woke={shelf.wokeIds.has(node.id)}
+                    woke={wokeSet.has(node.id)}
                     drag={dragProps}
                     t={t}
                   />
@@ -895,7 +872,7 @@ function SessionTree({
         <Shelves
           {...shelvesBase}
           snoozedRows={snoozedRows}
-          snoozedUntil={shelf.snoozedUntil}
+          snoozedUntil={snoozedUntilBySession}
           settledRows={settledRows}
           currentId={current}
         />
@@ -908,8 +885,7 @@ function SessionTree({
 /** The flat "In one list" body: every session is one draggable top-level row. */
 function FlatList({
   useSessions, open, archivedSessionIds, workspace,
-  orderBy, now, autoSettleAfterDays,
-  explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession,
+  orderBy, now, settledSessionIds, snoozedUntilBySession, wokeSessionIds,
   actions, shelvesBase,
   sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
 }: Pick<
@@ -919,10 +895,9 @@ function FlatList({
   | 'archivedSessionIds'
   | 'orderBy'
   | 'now'
-  | 'autoSettleAfterDays'
-  | 'explicitlySettledSessionIds'
-  | 'pinnedActiveSessionIds'
+  | 'settledSessionIds'
   | 'snoozedUntilBySession'
+  | 'wokeSessionIds'
   | 'actions'
   | 'shelvesBase'
   | 'sessionOrderByAccount'
@@ -944,17 +919,9 @@ function FlatList({
     ),
     [list, archivedSessionIds, workspaceSessionIds],
   )
-  const shelf = useMemo(
-    () => deriveShelfSets(
-      list, now, autoSettleAfterDays, explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession,
-    ),
-    [autoSettleAfterDays, list, now, explicitlySettledSessionIds, pinnedActiveSessionIds, snoozedUntilBySession],
-  )
-  const settledSet = shelf.settledIds
-  const snoozedKeys = useMemo(
-    () => new Set(Object.keys(shelf.snoozedUntil)),
-    [shelf.snoozedUntil],
-  )
+  const settledSet = useMemo(() => new Set(settledSessionIds), [settledSessionIds])
+  const snoozedKeys = useMemo(() => new Set(Object.keys(snoozedUntilBySession)), [snoozedUntilBySession])
+  const wokeSet = useMemo(() => new Set(wokeSessionIds), [wokeSessionIds])
   const sessionIds = useMemo(() => allRows.map(row => row.id), [allRows])
   const previousOrderBy = useRef(orderBy)
   useEffect(() => {
@@ -993,9 +960,9 @@ function FlatList({
   )
   const snoozedRows = useMemo(
     () => allRows
-      .filter(row => shelf.snoozedUntil[row.id as string] !== undefined)
-      .sort((a, b) => (shelf.snoozedUntil[a.id as string] ?? 0) - (shelf.snoozedUntil[b.id as string] ?? 0)),
-    [allRows, shelf.snoozedUntil],
+      .filter(row => snoozedUntilBySession[row.id as string] !== undefined)
+      .sort((a, b) => (snoozedUntilBySession[a.id as string] ?? 0) - (snoozedUntilBySession[b.id as string] ?? 0)),
+    [allRows, snoozedUntilBySession],
   )
   const [drag, setDrag] = useState<DragState | null>(null)
   const dropCommitted = useRef(false)
@@ -1038,7 +1005,7 @@ function FlatList({
               now={now}
               onOpen={open}
               {...actions}
-              woke={shelf.wokeIds.has(node.id)}
+              woke={wokeSet.has(node.id)}
               drag={{
                 start: () => {
                   dropCommitted.current = false
@@ -1065,7 +1032,7 @@ function FlatList({
         <Shelves
           {...shelvesBase}
           snoozedRows={snoozedRows}
-          snoozedUntil={shelf.snoozedUntil}
+          snoozedUntil={snoozedUntilBySession}
           settledRows={settledRows}
           currentId={list.current}
         />
@@ -1172,11 +1139,15 @@ export function WorkspaceBrowser({
   insertWorkspaceBefore,
   archiveSession,
   insertSessionBefore,
+  settleSession,
+  unsettleSession,
+  snoozeSession,
+  wakeSession,
   createWorkspace,
   searchSessions,
   searchResultLimit,
   useDirectoryFlow,
-  useSettlement,
+  useSessionDisposition,
   useHostDescription,
   renderSlot,
   t,
@@ -1185,25 +1156,14 @@ export function WorkspaceBrowser({
   const workspaces = useWorkspaces(state => state.items)
   const workspacePhase = useWorkspaces(state => state.phase)
   const archivedSessionIds = useWorkspaces(state => state.archivedSessionIds)
-  const explicitlySettledSessionIds = useStore(s => s.explicitlySettledSessionIds ?? EMPTY_SESSION_IDS)
-  const pinnedActiveSessionIds = useStore(s => s.pinnedActiveSessionIds ?? EMPTY_SESSION_IDS)
-  const snoozedUntilBySession = useStore(s => s.snoozedUntilBySession ?? EMPTY_SNOOZES)
+  const settledSessionIds = useSessionDisposition(state => state.settledSessionIds)
+  const snoozedUntilBySession = useSessionDisposition(state => state.snoozedUntilBySession)
+  const wokeSessionIds = useSessionDisposition(state => state.wokeSessionIds)
   const snoozedShelfExpanded = useStore(s => s.snoozedShelfExpanded === true)
   // Live occupancy of this surface's directory-flow hole (the same source the
   // flow reads): a composition without a picking affordance can add nothing.
   const directoryFlowAvailable = useDirectoryFlow(occupied => occupied)
-  const autoSettleAfterDays = useSettlement((snapshot) => {
-    const settings = snapshot.value
-      ?? (snapshot.status === 'unavailable' ? SHIPPED_WORKSPACE_SETTINGS : undefined)
-    return settings?.autoSettleInactive === true ? settings.autoSettleAfterDays : null
-  })
-  // Re-render exactly at the earliest future snooze deadline so the row
-  // flips to Woke at its wake moment (the minute clock alone lags up to 60s).
-  const nextWakeDelay = useMemo(() => {
-    const future = Object.values(snoozedUntilBySession).filter(time => time > Date.now())
-    return future.length === 0 ? null : Math.min(...future) - Date.now()
-  }, [snoozedUntilBySession])
-  const now = useMinuteNow(nextWakeDelay)
+  const now = useMinuteNow()
   const workspaceScope = useStore(s => s.workspaceScope)
   const groupBy = useStore(s => s.groupBy)
   const orderBy = useStore(s => s.orderBy)
@@ -1387,10 +1347,10 @@ export function WorkspaceBrowser({
     onRename: onSessionRename,
     onFork: forkSession,
     onArchive: onSessionArchive,
-    onSettle: actions.settleSession,
-    onUnsettle: actions.unsettleSession,
-    onSnooze: actions.snoozeSession,
-    onWake: actions.wakeSession,
+    onSettle: settleSession,
+    onUnsettle: unsettleSession,
+    onSnooze: snoozeSession,
+    onWake: wakeSession,
   }
   const shelvesBase: ShelvesBaseProps = {
     snoozedExpanded: snoozedShelfExpanded,
@@ -1582,10 +1542,9 @@ export function WorkspaceBrowser({
                 workspace={scopedWorkspace}
                 orderBy={orderBy}
                 now={now}
-                autoSettleAfterDays={autoSettleAfterDays}
-                explicitlySettledSessionIds={explicitlySettledSessionIds}
-                pinnedActiveSessionIds={pinnedActiveSessionIds}
+                settledSessionIds={settledSessionIds}
                 snoozedUntilBySession={snoozedUntilBySession}
+                wokeSessionIds={wokeSessionIds}
                 actions={rowActions}
                 shelvesBase={shelvesBase}
                 sessionOrderByAccount={sessionOrderByAccount}
@@ -1612,10 +1571,9 @@ export function WorkspaceBrowser({
                 insertSessionBefore={insertSessionBefore}
                 orderBy={orderBy}
                 now={now}
-                autoSettleAfterDays={autoSettleAfterDays}
-                explicitlySettledSessionIds={explicitlySettledSessionIds}
-                pinnedActiveSessionIds={pinnedActiveSessionIds}
+                settledSessionIds={settledSessionIds}
                 snoozedUntilBySession={snoozedUntilBySession}
+                wokeSessionIds={wokeSessionIds}
                 actions={rowActions}
                 shelvesBase={shelvesBase}
                 workspace={scopedWorkspace}

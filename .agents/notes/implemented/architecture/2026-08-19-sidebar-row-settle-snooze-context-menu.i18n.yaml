@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-19-sidebar-row-settle-snooze-context-menu.md
-2026-08-19-sidebar-row-settle-snooze-context-menu.md: 9cf6ca43ac3abeeafa79fd92dd92a0ff39e9276c
-2026-08-19-sidebar-row-settle-snooze-context-menu.zh.md: 422aee0c6b3b9fc2baf6f9b8fd3297d46cccb83c
+2026-08-19-sidebar-row-settle-snooze-context-menu.md: 3bd0f53f038f2ad912454cff679cd82e4baae579
+2026-08-19-sidebar-row-settle-snooze-context-menu.zh.md: af60bac4b562b20bdadb0110435964b76433099b
