@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-brand-official",
   "description": "Official DeepSeek Harness brand and welcome occupants for the Web client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publishConfig": {
     "access": "public"
   },

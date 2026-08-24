@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-files",
   "description": "Workspace file tree and autosaving source editor for the Web workbench",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publishConfig": {
     "access": "public"
   },

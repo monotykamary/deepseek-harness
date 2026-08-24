@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-worktree",
   "description": "Provider registry and portable vocabulary for repository worktrees",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
