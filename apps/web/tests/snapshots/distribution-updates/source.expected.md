@@ -26,7 +26,7 @@
   - list:
     - listitem:
       - strong: "@monotykamary/dsh"
-      - code: 0.1.1 → 999.0.0
+      - code: 0.1.2 → 999.0.0
     - listitem:
       - strong: dsh-tool-repair
       - code: 0.1.1
