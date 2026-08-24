@@ -1,0 +1,15 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General"
+    - button "Models"
+    - button "Plugins"
+    - button "Agent presets"
+    - button "Accounts"
+    - button "Updates"
+  - button "Open configuration file"
+  - button "Close"
+  - heading "Provider accounts" [level=2]
+  - paragraph: Distribute provider requests across OAuth, API-key, and service accounts without changing model identities.
+  - button "Refresh"
+  - paragraph: No provider has registered an account pool yet.

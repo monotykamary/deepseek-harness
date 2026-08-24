@@ -17,8 +17,8 @@ import { compareVersions, nextVendorVersion, planShared, reachesPayload } from '
  */
 function member(directory: string, name: string, manifest: Record<string, unknown> = {}): ReleaseMember {
   const resolved = name === '@monotykamary/dsh' ? {
-    dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
-    dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
+    dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
+    dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
     ...manifest,
   } : manifest
   return { directory, name, version: '0.0.1', manifest: resolved }
@@ -92,18 +92,23 @@ describe('release families', () => {
     expect(() => { dsh.verifyVersions(members) }).toThrow(/must share one version/)
     expect(() => { dsh.verifyVersions([members[0]!]) }).not.toThrow()
     const drifted = member('apps/cli', '@monotykamary/dsh', {
-      dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '^1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
-      dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
+      dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '^1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
+      dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
     })
     expect(() => { dsh.verifyVersions([drifted]) }).toThrow(/pin tested companion dsh-fabric/)
     const missingFactory = member('apps/cli', '@monotykamary/dsh', {
-      dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' },
-      dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' } } },
+      dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' },
+      dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0' } } },
     })
     expect(() => { dsh.verifyVersions([missingFactory]) }).toThrow(/pin tested companion dsh-factory/)
+    const missingMultiprovider = member('apps/cli', '@monotykamary/dsh', {
+      dependencies: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
+      dsh: { distribution: { companions: { 'dsh-tool-repair': '0.5.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
+    })
+    expect(() => { dsh.verifyVersions([missingMultiprovider]) }).toThrow(/pin tested companion dsh-multiprovider/)
     const missingRepair = member('apps/cli', '@monotykamary/dsh', {
-      dependencies: { 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
-      dsh: { distribution: { companions: { 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
+      dependencies: { 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' },
+      dsh: { distribution: { companions: { 'dsh-multiprovider': '0.6.0', 'dsh-fabric': '1.0.0', 'dsh-fovea': '2.0.0', 'dsh-factory': '3.0.0' } } },
     })
     expect(() => { dsh.verifyVersions([missingRepair]) }).toThrow(/pin tested companion dsh-tool-repair/)
   })

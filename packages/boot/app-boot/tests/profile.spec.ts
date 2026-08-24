@@ -152,8 +152,8 @@ describe('loadProfile', () => {
     // cannot be asserted to fail here: the source-plane test runner resolves
     // @monotykamary/* through tsconfig paths regardless of the staged anchor.
     expect(PROFILE_TEMPLATES.web).toContain('@monotykamary/dsh-base')
-    expect(PROFILE_TEMPLATES.web).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-tool-repair', 'dsh-fabric', 'dsh-fovea', 'dsh-factory'])
-    expect(PROFILE_TEMPLATES.headless).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-tool-repair', 'dsh-fabric', 'dsh-fovea'])
+    expect(PROFILE_TEMPLATES.web).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-tool-repair', 'dsh-multiprovider', 'dsh-fabric', 'dsh-fovea', 'dsh-factory'])
+    expect(PROFILE_TEMPLATES.headless).toEqual(['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-tool-repair', 'dsh-multiprovider', 'dsh-fabric', 'dsh-fovea'])
     try {
       loadProfile('t', 'web', anchor, home)
     } catch {
@@ -169,6 +169,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       '@monotykamary/dsh-headless': { patch: '[]\n' },
       'dsh-tool-repair': { patch: '[]\n' },
+      'dsh-multiprovider': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
@@ -191,6 +192,17 @@ describe('loadProfile', () => {
     expect(readProfileManifest('t', custom).dsh?.profile).toEqual({
       template: 'headless', bundles: ['custom-bundle'],
     })
+
+    const priorHome = tmp()
+    const prior = resolveProfileDir('headless', priorHome)
+    initProfile(prior, [
+      '@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-tool-repair', 'dsh-fabric', 'dsh-fovea',
+      'custom-bundle',
+    ])
+    loadProfile('t', 'headless', anchor, priorHome)
+    expect(readProfileManifest('t', prior).dsh?.profile).toEqual({
+      template: 'headless', bundles: ['custom-bundle'],
+    })
   })
 
   it('migrates a legacy web tuple and preserves appended user bundles', () => {
@@ -198,6 +210,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-base': { patch: '[]\n' },
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       'dsh-tool-repair': { patch: '[]\n' },
+      'dsh-multiprovider': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
       'dsh-factory': { patch: '[]\n' },
@@ -220,6 +233,17 @@ describe('loadProfile', () => {
       template: 'web', bundles: ['custom-bundle'],
     })
 
+    const priorHome = tmp()
+    const prior = resolveProfileDir('web', priorHome)
+    initProfile(prior, [
+      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-tool-repair', 'dsh-fabric', 'dsh-fovea',
+      'dsh-factory', 'custom-bundle',
+    ])
+    loadProfile('t', 'web', anchor, priorHome)
+    expect(readProfileManifest('t', prior).dsh?.profile).toEqual({
+      template: 'web', bundles: ['custom-bundle'],
+    })
+
     const userHome = tmp()
     const user = resolveProfileDir('web', userHome)
     initProfile(user, ['custom-bundle'])
@@ -233,6 +257,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-base': { patch: '[]\n' },
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       'dsh-tool-repair': { patch: '[]\n' },
+      'dsh-multiprovider': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
       'dsh-factory': { patch: '[]\n' },
@@ -247,13 +272,13 @@ describe('loadProfile', () => {
 
     writeProfileManifest(dir, {
       name: 'dsh-profile-web',
-      dsh: { profile: { template: 'web', bundles: ['custom-bundle', 'dsh-factory'] } },
+      dsh: { profile: { template: 'web', bundles: ['custom-bundle', 'dsh-factory', 'dsh-multiprovider'] } },
     })
 
     const profile = loadProfile('t', 'web', anchor, home)
 
     expect(profile.layers.map(layer => layer.packageName)).toEqual([
-      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-tool-repair', 'dsh-fabric', 'dsh-fovea', 'dsh-factory',
+      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-tool-repair', 'dsh-multiprovider', 'dsh-fabric', 'dsh-fovea', 'dsh-factory',
       'custom-bundle',
     ])
     expect(readProfileManifest('t', dir).dsh?.profile).toEqual({
@@ -266,6 +291,7 @@ describe('loadProfile', () => {
       '@monotykamary/dsh-base': { patch: '[]\n' },
       '@monotykamary/dsh-web-app': { patch: '[]\n' },
       'dsh-tool-repair': { patch: '[]\n' },
+      'dsh-multiprovider': { patch: '[]\n' },
       'dsh-fabric': { patch: '[]\n' },
       'dsh-fovea': { patch: '[]\n' },
       'dsh-factory': { patch: '[]\n' },

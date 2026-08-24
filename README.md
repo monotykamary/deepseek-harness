@@ -2,7 +2,7 @@
 
 # 🐟 DeepSeek Harness
 
-**A plugin-native coding-agent harness with resilient tool calls, Fabric coordination, and Fovea repository intelligence included.**
+**A plugin-native coding-agent harness with multi-account providers, resilient tool calls, Fabric coordination, and Fovea repository intelligence included.**
 
 _Run locally in one command, compose every capability, and keep the tested distribution together._
 
@@ -20,7 +20,7 @@ English | [中文](README.zh.md)
 npx @monotykamary/dsh@latest web
 ```
 
-DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure: [dsh-tool-repair](https://github.com/monotykamary/dsh-tool-repair), [dsh-fabric](https://github.com/monotykamary/dsh-fabric), and [dsh-fovea](https://github.com/monotykamary/dsh-fovea) join every shipped profile, while the long-lived Web profile also includes [dsh-factory](https://github.com/monotykamary/dsh-factory); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
+DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the default browser; SSH launches print the host URL because the forwarding address belongs to the SSH client or editor, and `--no-open` runs only the server. The npm package carries the complete tested closure: [dsh-tool-repair](https://github.com/monotykamary/dsh-tool-repair), [dsh-multiprovider](https://github.com/monotykamary/dsh-multiprovider), [dsh-fabric](https://github.com/monotykamary/dsh-fabric), and [dsh-fovea](https://github.com/monotykamary/dsh-fovea) join every shipped profile, while the long-lived Web profile also includes [dsh-factory](https://github.com/monotykamary/dsh-factory); profiles do not pin separate copies. See the [Web UI guide](docs/user/guide/index.md).
 
 ## Why DSH?
 
@@ -28,6 +28,7 @@ DSH serves the Web UI at `http://127.0.0.1:3080`. Local launches also open the d
 | :-: | --- | --- |
 | 🧩 | **Everything is a plugin** | Replace models, tools, persistence, policy, UI, and orchestration through Cordis composition. |
 | 🩹 | **Tool repair included** | Revalidate unambiguous provider-format repairs before logging or execution; reject truncated work. |
+| 🔀 | **Multi-account providers included** | Share provider identity while routing complete operations through explicit, health-aware account leases. |
 | 🧠 | **Fabric included** | Deterministic compaction, checked code execution, durable coordination, and live topology. |
 | 🔭 | **Fovea included** | Progressive repository navigation and impact analysis without bulk-reading the tree. |
 | 🛡️ | **Policy at execution** | Filesystem, subprocess, approval, timeout, and sandbox decisions remain enforceable capabilities. |
@@ -41,9 +42,11 @@ flowchart LR
   User[CLI or Web] --> Profile[Managed profile template]
   Profile --> Core[DSH plugin spine]
   Profile --> Repair[Tool Repair]
+  Profile --> Accounts[Multiprovider]
   Profile --> Fabric[Fabric]
   Profile --> Fovea[Fovea]
-  Core --> Model[Model providers]
+  Accounts --> Model[Model providers]
+  Core --> Model
   Core --> Tools[Policy-guarded tools]
   Core --> Sessions[(Durable sessions)]
   Fabric --> Mesh[(Durable mesh)]
@@ -101,7 +104,7 @@ The Web Settings panel has an **Updates** page and marks Settings when a managed
 
 ## Profiles and plugins
 
-The shipped `web` and `headless` profiles resolve their template from the running DSH installation, so an app update also changes its tested Tool Repair, Fabric, and Fovea layers. `$DSH_HOME/profiles/<name>/package.json` stores only the template identity and user-managed bundles; `cordis.patch.yml` remains the user's override layer.
+The shipped `web` and `headless` profiles resolve their template from the running DSH installation, so an app update also changes its tested Tool Repair, Multiprovider, Fabric, and Fovea layers. `$DSH_HOME/profiles/<name>/package.json` stores only the template identity and user-managed bundles; `cordis.patch.yml` remains the user's override layer.
 
 ```sh
 dsh --profile web --dump-config

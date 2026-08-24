@@ -21,14 +21,16 @@ function fixture(): { root: string; manifest: string } {
   mkdirSync(join(root, '.git'))
   writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: []\n')
   mkdirSync(join(app, 'node_modules', 'dsh-tool-repair'), { recursive: true })
+  mkdirSync(join(app, 'node_modules', 'dsh-multiprovider'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-fabric'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-fovea'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-factory'), { recursive: true })
   const manifest = join(app, 'package.json')
   writeFileSync(manifest, JSON.stringify({
-    name: '@monotykamary/dsh', version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
+    name: '@monotykamary/dsh', version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-multiprovider': '3.5.6', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
   }))
   writeFileSync(join(app, 'node_modules', 'dsh-tool-repair', 'package.json'), JSON.stringify({ name: 'dsh-tool-repair', version: '3.4.5' }))
+  writeFileSync(join(app, 'node_modules', 'dsh-multiprovider', 'package.json'), JSON.stringify({ name: 'dsh-multiprovider', version: '3.5.6' }))
   writeFileSync(join(app, 'node_modules', 'dsh-fabric', 'package.json'), JSON.stringify({ name: 'dsh-fabric', version: '4.5.6' }))
   writeFileSync(join(app, 'node_modules', 'dsh-fovea', 'package.json'), JSON.stringify({ name: 'dsh-fovea', version: '7.8.9' }))
   writeFileSync(join(app, 'node_modules', 'dsh-factory', 'package.json'), JSON.stringify({ name: 'dsh-factory', version: '8.9.0' }))
@@ -47,7 +49,7 @@ describe('distribution inventory', () => {
   it('reads the app closure and detects every supported channel', () => {
     const { manifest } = fixture()
     expect(installedDistribution(manifest).map(pkg => `${pkg.name}@${pkg.installed}`)).toEqual([
-      '@monotykamary/dsh@1.2.3', 'dsh-tool-repair@3.4.5', 'dsh-fabric@4.5.6', 'dsh-fovea@7.8.9', 'dsh-factory@8.9.0',
+      '@monotykamary/dsh@1.2.3', 'dsh-tool-repair@3.4.5', 'dsh-multiprovider@3.5.6', 'dsh-fabric@4.5.6', 'dsh-fovea@7.8.9', 'dsh-factory@8.9.0',
     ])
     expect(detectInstallChannel('/work/apps/cli/package.json')).toBe('source')
     expect(detectInstallChannel('/tmp/_npx/x/package.json')).toBe('npx')
@@ -148,23 +150,23 @@ describe('distribution inventory', () => {
     const { manifest } = fixture()
     writeFileSync(manifest, JSON.stringify({
       name: '@monotykamary/dsh', version: '0.1.0-rc.11',
-      dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
+      dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-multiprovider': '3.5.6', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
     }))
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
-      version: '0.1.0-rc.8', dependencies: { 'dsh-tool-repair': '^3.4.0', 'dsh-fabric': '^4.5.0', 'dsh-fovea': '^7.8.0', 'dsh-factory': '^8.9.0' },
+      version: '0.1.0-rc.8', dependencies: { 'dsh-tool-repair': '^3.4.0', 'dsh-multiprovider': '^3.5.0', 'dsh-fabric': '^4.5.0', 'dsh-fovea': '^7.8.0', 'dsh-factory': '^8.9.0' },
     }))))
     const packages = await checkInstalledDistribution(manifest)
-    expect(packages.map(pkg => pkg.updateAvailable)).toEqual([false, false, false, false, false])
+    expect(packages.map(pkg => pkg.updateAvailable)).toEqual([false, false, false, false, false, false])
   })
 
   it('checks latest tags and rejects malformed registry responses', async () => {
     const { manifest } = fixture()
     const fetch = vi.fn(async () => new Response(JSON.stringify({
-      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.10', 'dsh-factory': '8.9.0' },
+      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-multiprovider': '3.5.6', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.10', 'dsh-factory': '8.9.0' },
     })))
     vi.stubGlobal('fetch', fetch)
     const packages = await checkInstalledDistribution(manifest, 'https://registry.example/', 500)
-    expect(packages.map(pkg => pkg.updateAvailable)).toEqual([false, false, false, true, false])
+    expect(packages.map(pkg => pkg.updateAvailable)).toEqual([false, false, false, false, true, false])
     expect(fetch).toHaveBeenCalledOnce()
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}')))
     await expect(checkInstalledDistribution(manifest)).rejects.toThrow('registry response has no version')
@@ -174,6 +176,11 @@ describe('distribution inventory', () => {
     await expect(checkInstalledDistribution(manifest)).rejects.toThrow('no tested version for dsh-tool-repair')
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ version: '2.0.0', dependencies: null }))))
     await expect(checkInstalledDistribution(manifest)).rejects.toThrow('no tested version for dsh-tool-repair')
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      version: '2.0.0',
+      dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
+    }))))
+    await expect(checkInstalledDistribution(manifest)).rejects.toThrow('no tested version for dsh-multiprovider')
 
     vi.useFakeTimers()
     vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => new Promise<Response>((_resolve, reject) => {
@@ -210,7 +217,7 @@ describe('distribution inventory', () => {
     let release: (() => void) | undefined
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => {
       release = () => { resolve(new Response(JSON.stringify({
-        version: '9.0.0', dependencies: { 'dsh-tool-repair': '9.0.0', 'dsh-fabric': '9.0.0', 'dsh-fovea': '9.0.0', 'dsh-factory': '9.0.0' },
+        version: '9.0.0', dependencies: { 'dsh-tool-repair': '9.0.0', 'dsh-multiprovider': '9.0.0', 'dsh-fabric': '9.0.0', 'dsh-fovea': '9.0.0', 'dsh-factory': '9.0.0' },
       }))) }
     })))
     process.env.DSH_INSTALL_CHANNEL = 'source'
@@ -250,7 +257,7 @@ describe('distribution inventory', () => {
     const { manifest } = fixture()
     process.env.DSH_INSTALL_CHANNEL = 'source'
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
-      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
+      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-multiprovider': '3.5.6', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
     }))))
     const ctx = new Context()
     const service = new DistributionUpdateService(ctx, { appManifest: manifest })
@@ -265,7 +272,7 @@ describe('distribution inventory', () => {
     process.env.DSH_INSTALL_CHANNEL = 'source'
     vi.useFakeTimers()
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
-      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
+      version: '1.2.3', dependencies: { 'dsh-tool-repair': '3.4.5', 'dsh-multiprovider': '3.5.6', 'dsh-fabric': '4.5.6', 'dsh-fovea': '7.8.9', 'dsh-factory': '8.9.0' },
     }))))
     const ctx = new Context()
     const service = new DistributionUpdateService(ctx, {

@@ -82,10 +82,11 @@
     "@monotykamary/cordis": "workspace:^",
     "js-yaml": "^4.2.0",
     "node-addon-require-builtin": "^0.1.4",
-    "dsh-tool-repair": "0.1.0",
-    "dsh-fabric": "0.1.5",
-    "dsh-fovea": "0.5.0",
-    "dsh-factory": "0.1.1",
+    "dsh-tool-repair": "0.1.1",
+    "dsh-multiprovider": "0.1.1",
+    "dsh-fabric": "0.1.6",
+    "dsh-fovea": "0.5.1",
+    "dsh-factory": "0.1.4",
     "@monotykamary/dsh-distribution-update": "workspace:^"
   },
   "devDependencies": {
@@ -107,10 +108,11 @@
   "dsh": {
     "distribution": {
       "companions": {
-        "dsh-tool-repair": "0.1.0",
-        "dsh-fabric": "0.1.5",
-        "dsh-fovea": "0.5.0",
-        "dsh-factory": "0.1.1"
+        "dsh-tool-repair": "0.1.1",
+        "dsh-multiprovider": "0.1.1",
+        "dsh-fabric": "0.1.6",
+        "dsh-fovea": "0.5.1",
+        "dsh-factory": "0.1.4"
       }
     }
   }

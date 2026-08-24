@@ -192,7 +192,7 @@ export function installedDistribution(appManifest: string): DistributionPackageS
   const dependencies = app.dependencies
   if (dependencies === null || typeof dependencies !== 'object' || Array.isArray(dependencies)) return statuses
   const require = createRequire(appManifest)
-  for (const name of ['dsh-tool-repair', 'dsh-fabric', 'dsh-fovea', 'dsh-factory']) {
+  for (const name of ['dsh-tool-repair', 'dsh-multiprovider', 'dsh-fabric', 'dsh-fovea', 'dsh-factory']) {
     if (!(name in dependencies)) continue
     const manifestPath = require.resolve(`${name}/package.json`)
     statuses.push({ name, installed: packageVersion(manifestPath), latest: null, updateAvailable: false })

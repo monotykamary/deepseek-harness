@@ -16,13 +16,13 @@
 
 运行中的 `dsh` 是一棵插件树，由启动时按序叠加的各层组合而成。
 
-**profile** 是存放在 Harness home 中的具名组装。内置 profile 记录由安装拥有的模板标识与用户添加的组合包，自定义 profile 只列出自己的组合包；两者都保存用户自己的 `cordis.patch.yml`。`web` 和 `headless` 作为模板随发行版交付，且各自在上游组合之上叠放当前 `dsh` 安装精确测试过的 Fabric 与 Fovea 版本。
+**profile** 是存放在 Harness home 中的具名组装。内置 profile 记录由安装拥有的模板标识与用户添加的组合包，自定义 profile 只列出自己的组合包；两者都保存用户自己的 `cordis.patch.yml`。`web` 和 `headless` 作为模板随发行版交付，且各自在上游组合之上叠放当前 `dsh` 安装精确测试过的外部配套组件版本。
 
 **组合包**是 Cordis 配置项及其挂载代码的分发格式，因此它插入的内容始终可被其上各层 patch。
 
 两者都在各自的 `package.json` 中通过 `dsh` 字段声明自己：`dsh.profile.template` 选择由安装拥有的模板，`dsh.profile.bundles` 列出用户管理的层，`dsh.bundle` 指向一个组合包的 patch 文件。
 
-[`dsh-base`](../packages/bundle/base/README.zh.md) 是每个 profile 的第一层：模型适配器、工具、持久化、沙箱与审批策略、设置、凭据、遥测。[`dsh-web-app`](../packages/bundle/web-app/README.zh.md) 增加浏览器应用；[`dsh-headless`](../packages/bundle/headless/README.zh.md) 增加一次性运行器，且完全不带服务器。本定制风味在每个随附模板中增加 `dsh-tool-repair`（由 schema 指导的最终工具调用修复）、`dsh-fabric`（确定性压缩、QuickJS 代码运行时、持久 mesh 与实时拓扑）和 `dsh-fovea`（fovea 化的仓库智能）。长生命周期 Web 模板还增加 `dsh-factory`（持久依赖图、周期性 Agent 工作、checkout lane 与 Triage）；Headless 保持一次性运行，不启动其后台调度器。四者都作为 `dsh` 应用的安装依赖交付。
+[`dsh-base`](../packages/bundle/base/README.zh.md) 是每个 profile 的第一层：模型适配器、工具、持久化、沙箱与审批策略、设置、凭据、遥测。[`dsh-web-app`](../packages/bundle/web-app/README.zh.md) 增加浏览器应用；[`dsh-headless`](../packages/bundle/headless/README.zh.md) 增加一次性运行器，且完全不带服务器。本定制风味在每个随附模板中增加 `dsh-tool-repair`（由 schema 指导的最终工具调用修复）、`dsh-multiprovider`（提供方中立的账户选择、关联、健康状态与操作员设置）、`dsh-fabric`（确定性压缩、QuickJS 代码运行时、持久 mesh 与实时拓扑）和 `dsh-fovea`（fovea 化的仓库智能）。长生命周期 Web 模板还增加 `dsh-factory`（持久依赖图、周期性 Agent 工作、checkout lane 与 Triage）；Headless 保持一次性运行，不启动其后台调度器。五者都作为 `dsh` 应用的安装依赖交付。
 
 各层按此顺序应用在空条目列表之上：先按 profile 列出的顺序应用每个组合包，然后是 profile 的 `cordis.patch.yml`，然后是 home 级的那份，最后是任意 `--patch` overlay。一条 patch 按 id 定位某个条目并替换其整个 config，或插入新条目。
 

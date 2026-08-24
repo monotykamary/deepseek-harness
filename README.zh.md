@@ -2,7 +2,7 @@
 
 # 🐟 DeepSeek Harness
 
-**一个插件原生的编程 Agent Harness，内置稳健工具调用、Fabric 协作能力与 Fovea 仓库智能。**
+**一个插件原生的编程 Agent Harness，内置多账户提供方、稳健工具调用、Fabric 协作能力与 Fovea 仓库智能。**
 
 _一条命令即可本地运行；所有能力均可组合，经过测试的发行版始终一起更新。_
 
@@ -20,7 +20,7 @@ _一条命令即可本地运行；所有能力均可组合，经过测试的发�
 npx @monotykamary/dsh@latest web
 ```
 
-DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默认浏览器打开页面，通过 SSH 启动时则只打印宿主机 URL，传入 `--no-open` 可仅运行服务器。npm 包携带完整且经过测试的依赖闭包：[dsh-tool-repair](https://github.com/monotykamary/dsh-tool-repair)、[dsh-fabric](https://github.com/monotykamary/dsh-fabric) 与 [dsh-fovea](https://github.com/monotykamary/dsh-fovea) 会加入每个随附 profile，长生命周期 Web profile 还包含 [dsh-factory](https://github.com/monotykamary/dsh-factory)；profile 不会固定它们的独立副本。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
+DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默认浏览器打开页面，通过 SSH 启动时则只打印宿主机 URL，传入 `--no-open` 可仅运行服务器。npm 包携带完整且经过测试的依赖闭包：[dsh-tool-repair](https://github.com/monotykamary/dsh-tool-repair)、[dsh-multiprovider](https://github.com/monotykamary/dsh-multiprovider)、[dsh-fabric](https://github.com/monotykamary/dsh-fabric) 与 [dsh-fovea](https://github.com/monotykamary/dsh-fovea) 会加入每个随附 profile，长生命周期 Web profile 还包含 [dsh-factory](https://github.com/monotykamary/dsh-factory)；profile 不会固定它们的独立副本。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
 
 ## 为什么选择 DSH？
 
@@ -28,6 +28,7 @@ DSH 会在 `http://127.0.0.1:3080` 启动 Web UI；本机启动时还会用默�
 | :-: | --- | --- |
 | 🧩 | **一切皆插件** | 通过 Cordis 组合替换模型、工具、持久化、策略、UI 与编排。 |
 | 🩹 | **内置工具修复** | 在记录或执行前重新校验无歧义的提供方格式修复；拒绝被截断的工作。 |
+| 🔀 | **内置多账户提供方** | 保持提供方标识不变，通过显式且感知健康状态的账户租约路由完整操作。 |
 | 🧠 | **内置 Fabric** | 确定性压缩、受检代码执行、持久协作与实时拓扑。 |
 | 🔭 | **内置 Fovea** | 渐进式仓库导航与影响分析，无需批量读取代码树。 |
 | 🛡️ | **执行时策略** | 文件系统、子进程、审批、超时与沙箱决策均由可执行能力约束。 |
@@ -41,9 +42,11 @@ flowchart LR
   User[CLI or Web] --> Profile[Managed profile template]
   Profile --> Core[DSH plugin spine]
   Profile --> Repair[Tool Repair]
+  Profile --> Accounts[Multiprovider]
   Profile --> Fabric[Fabric]
   Profile --> Fovea[Fovea]
-  Core --> Model[Model providers]
+  Accounts --> Model[Model providers]
+  Core --> Model
   Core --> Tools[Policy-guarded tools]
   Core --> Sessions[(Durable sessions)]
   Fabric --> Mesh[(Durable mesh)]
@@ -101,7 +104,7 @@ Web 设置面板包含**更新**页面；任一托管包出现新版时，设置
 
 ## 配置档与插件
 
-内置 `web` 与 `headless` 配置档从当前 DSH 安装解析模板，因此应用更新也会更新其经过测试的 Tool Repair、Fabric 与 Fovea 层。`$DSH_HOME/profiles/<name>/package.json` 只保存模板标识与用户管理的 Bundle；`cordis.patch.yml` 仍是用户的覆盖层。
+内置 `web` 与 `headless` 配置档从当前 DSH 安装解析模板，因此应用更新也会更新其经过测试的 Tool Repair、Multiprovider、Fabric 与 Fovea 层。`$DSH_HOME/profiles/<name>/package.json` 只保存模板标识与用户管理的 Bundle；`cordis.patch.yml` 仍是用户的覆盖层。
 
 ```sh
 dsh --profile web --dump-config
