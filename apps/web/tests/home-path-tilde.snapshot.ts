@@ -14,15 +14,12 @@ installAssembledBootEnv()
 
 describe('assembled POSIX home-path display', () => {
   it('shows the home-descendant Workspace path as ~ and copies the full path', async () => {
-    localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({
+    localStorage.setItem('dsh.workspace.view.v7', JSON.stringify({
       workspaceScope: null,
       groupBy: 'workspace',
       orderBy: 'manual',
       groupExpansion: {},
       settledShelfExpanded: false,
-      explicitlySettledSessionIds: [],
-      pinnedActiveSessionIds: [],
-      snoozedUntilBySession: {},
       snoozedShelfExpanded: false,
       sessionOrderByAccount: {},
       sessionUpdatedAtByAccount: {},

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-settled-session-shelf.md
-2026-08-19-settled-session-shelf.md: c271274cba18e7e3a33eb3d2932374e2d43a4e3f
-2026-08-19-settled-session-shelf.zh.md: 79b294cd771d4f5059d833235d5588b6003c4222
+2026-08-19-settled-session-shelf.md: 76bf32d27b7b1b69f940c6b96bc5184175be84ac
+2026-08-19-settled-session-shelf.zh.md: 9c84d5dafef125518e7cf5c28a3821353a0f5842

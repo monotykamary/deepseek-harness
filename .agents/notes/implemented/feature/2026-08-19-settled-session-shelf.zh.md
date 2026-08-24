@@ -14,7 +14,7 @@ Workspace 浏览器会在分组和扁平侧边栏模式下，把不活跃 Sessio
 
 浏览器按分钟量化的时钟把最新已知活动与阈值比较。当前和空白 Session、待处理交互、未查看完成提醒、运行中的 Session、运行中的 subagent 后代，以及 running 或 stopping 后台 job 都留在活跃区。已结 job 会用完成时间延长活动时间。该判断只使用 `SessionListState` 中已有的权威事实，不从组件状态推断存活性。
 
-分组和扁平派生会从活跃行中省略已分类 id。一个全局 shelf 在活跃内容之后，按最新优先顺序渲染同一批可见且未归档的 Session。其 disclosure 状态持久化在 `dsh.workspace.view.v6`；每次展开先显示 10 行，显式操作每次再增加 25 行。shelf 行保留正常操作与 hover 详情，但在 hover 或 focus 前保持弱化。Search 有意忽略 shelf 分区，可以打开任意已结 Session；打开后该 Session 成为当前项，因此回到活跃区。
+分组和扁平派生会从活跃行中省略已分类 id。一个全局 shelf 在活跃内容之后，按最新优先顺序渲染同一批可见且未归档的 Session。其 disclosure 状态持久化在 `dsh.workspace.view.v7`；每次展开先显示 10 行，显式操作每次再增加 25 行。shelf 行保留正常操作与 hover 详情，但在 hover 或 focus 前保持弱化。Search 有意忽略 shelf 分区，可以打开任意已结 Session；打开后该 Session 成为当前项，因此回到活跃区。
 
 这是不活跃 settlement，不是 T3 完整的 orchestration settlement 生命周期。dsh 没有持久 PR 状态或显式 settle／unsettle 命令，因此不会伪造这些输入。归档仍是独立的 Host 持久操作，会从 search 与所有浏览投影中移除 Session。
 

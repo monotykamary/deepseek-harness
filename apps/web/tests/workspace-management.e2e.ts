@@ -385,8 +385,8 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     // the shipped flat preference through the same persisted store and
     // verifies both the rendering and the reload round-trip.
     await page.evaluate(() => {
-      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}') as Record<string, unknown>
-      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'flat' }))
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v7') ?? '{}') as Record<string, unknown>
+      localStorage.setItem('dsh.workspace.view.v7', JSON.stringify({ ...state, groupBy: 'flat' }))
     })
     const warningStart = tripwire.warnings.length
     await page.reload({ waitUntil: 'load' })
@@ -396,7 +396,7 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     // headers (Ungrouped included) render above it.
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
     await expect.poll(() => page.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
-    expect(await page.evaluate(() => localStorage.getItem('dsh.workspace.view.v6'))).toContain('flat')
+    expect(await page.evaluate(() => localStorage.getItem('dsh.workspace.view.v7'))).toContain('flat')
     // The persisted preference survives a second reload.
     const secondWarningStart = tripwire.warnings.length
     await page.reload({ waitUntil: 'load' })
@@ -405,8 +405,8 @@ describe('web e2e: workspace management (create / rename / flat view / hover aff
     await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 15_000 }).toBe(0)
     // Restore the grouped baseline for inter-spec hygiene.
     await page.evaluate(() => {
-      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v6') ?? '{}') as Record<string, unknown>
-      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify({ ...state, groupBy: 'workspace' }))
+      const state = JSON.parse(localStorage.getItem('dsh.workspace.view.v7') ?? '{}') as Record<string, unknown>
+      localStorage.setItem('dsh.workspace.view.v7', JSON.stringify({ ...state, groupBy: 'workspace' }))
     })
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })

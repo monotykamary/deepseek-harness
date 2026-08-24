@@ -26,7 +26,7 @@ export const ZH_BROWSER_LOCALE = 'zh-CN'
  * the flat default is covered by the workspace-browser unit suites, the
  * assembled-jsdom lane, and the workspace-management toggle scenario. Keep
  * the shape in sync with ui-workspace's createWorkspaceViewStore init and
- * its persist key 'dsh.workspace.view.v6'.
+ * its persist key 'dsh.workspace.view.v7'.
  */
 const GROUPED_WORKSPACE_VIEW = {
   workspaceScope: null,
@@ -34,6 +34,7 @@ const GROUPED_WORKSPACE_VIEW = {
   orderBy: 'updated',
   groupExpansion: {},
   settledShelfExpanded: false,
+  snoozedShelfExpanded: false,
   sessionOrderByAccount: {},
   sessionUpdatedAtByAccount: {},
 }
@@ -45,8 +46,8 @@ const GROUPED_WORKSPACE_VIEW = {
  */
 export async function seedGroupedWorkspaceView(page: Page): Promise<void> {
   await page.addInitScript((seed) => {
-    if (localStorage.getItem('dsh.workspace.view.v6') === null) {
-      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify(seed))
+    if (localStorage.getItem('dsh.workspace.view.v7') === null) {
+      localStorage.setItem('dsh.workspace.view.v7', JSON.stringify(seed))
     }
   }, GROUPED_WORKSPACE_VIEW)
 }
