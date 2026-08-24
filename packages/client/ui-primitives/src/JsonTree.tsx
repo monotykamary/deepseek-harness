@@ -206,15 +206,15 @@ function claimFocus(button: HTMLElement): void {
 
 function moveFocus(button: HTMLElement, direction: -1 | 1): void {
   const tree = button.closest<HTMLElement>('[role="tree"]')
-  /* v8 ignore next -- JsonTree attaches expander handlers only beneath its owning role=tree. */
+  /* JsonTree attaches expander handlers only beneath its owning role=tree. */
   if (tree === null) return
   const expanders = Array.from(tree.querySelectorAll<HTMLElement>('[data-json-expander]'))
   const current = expanders.indexOf(button)
-  /* v8 ignore next -- the current expander is a member of the queried non-empty set. */
+  /* the current expander is a member of the queried non-empty set. */
   if (current < 0 || expanders.length === 0) return
   const next = (current + direction + expanders.length) % expanders.length
   const nextExpander = expanders[next]
-  /* v8 ignore next -- modulo over the non-empty expander set always resolves a member. */
+  /* modulo over the non-empty expander set always resolves a member. */
   if (nextExpander !== undefined) claimFocus(nextExpander)
 }
 
@@ -452,7 +452,7 @@ export function JsonTree({
 
   const copyPosition = (row: HTMLElement): Pick<CopyTarget, 'left' | 'side' | 'top'> => {
     const root = rootRef.current
-    /* v8 ignore next -- row events and viewport listeners run only after the root ref mounts. */
+    /* row events and viewport listeners run only after the root ref mounts. */
     if (root === null) throw new Error('JsonTree root is not mounted')
     const rootRect = root.getBoundingClientRect()
     const rowRect = row.getBoundingClientRect()
@@ -471,7 +471,7 @@ export function JsonTree({
   const repositionCopyButton = (row: HTMLElement) => {
     const position = copyPosition(row)
     setCopyTarget((current) => {
-      /* v8 ignore next -- an active row and its copy target are installed together. */
+      /* an active row and its copy target are installed together. */
       if (current === undefined) return current
       return { ...current, ...position }
     })
@@ -517,7 +517,7 @@ export function JsonTree({
 
   const handleRootMouseOver = (event: ReactMouseEvent<HTMLDivElement>) => {
     if (!copyable || copyMenuOpenRef.current) return
-    /* v8 ignore next -- browser mouse events delivered through React target an Element. */
+    /* browser mouse events delivered through React target an Element. */
     if (!(event.target instanceof Element)) return
     if (event.target.closest('[data-json-copy-button]') === null) clearCopyTarget()
   }
@@ -528,7 +528,7 @@ export function JsonTree({
   }
 
   const copy = async (mode: 'json' | 'path' | 'prettyJson' | 'value') => {
-    /* v8 ignore next -- copy controls only render while their target exists. */
+    /* copy controls only render while their target exists. */
     if (copyTarget === undefined) return
     try {
       await navigator.clipboard.writeText(copyText(copyTarget, mode))

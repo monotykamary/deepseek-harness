@@ -354,7 +354,7 @@ export async function runScenario(input: InputScript, opts: RunOptions): Promise
   const cleanup = async (action: () => Promise<unknown>): Promise<void> => {
     cleanupResults.push(...await Promise.allSettled([action()]))
   }
-  /* v8 ignore next 1 -- launch itself can only throw on a defensive synchronous spawn API failure */
+  /* launch itself can only throw on a defensive synchronous spawn API failure */
   await cleanup(() => launched?.close('SIGKILL') ?? Promise.resolve())
   await cleanup(() => rm(cwd, { recursive: true, force: true }))
   await cleanup(() => rm(sessionsRoot, { recursive: true, force: true }))

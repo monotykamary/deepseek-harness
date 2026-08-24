@@ -174,7 +174,7 @@ function resolveDistIndex(): string {
   try {
     return require.resolve('@monotykamary/dsh-web-frontend/dist/index.html')
   } catch {
-    /* v8 ignore next 2 -- reachable only on a checkout without a built dist; the test tree builds it */
+    /* reachable only on a checkout without a built dist; the test tree builds it */
     throw new Error('web-app: frontend dist not built; run pnpm run build from the repository root first')
   }
 }

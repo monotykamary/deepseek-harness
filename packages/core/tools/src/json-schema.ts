@@ -184,7 +184,7 @@ function scalarMatches(type: JsonSchemaScalarType, value: unknown): value is Jso
     case 'integer': return isJsonNumber(value) && Number.isInteger(value)
     case 'boolean': return typeof value === 'boolean'
     case 'null': return value === null
-    /* v8 ignore next -- JsonSchemaScalarType is closed; this retains compile-time exhaustiveness. */
+    /* JsonSchemaScalarType is closed; this retains compile-time exhaustiveness. */
     default: return assertNever(type, 'JsonSchemaType')
   }
 }
@@ -332,7 +332,7 @@ function checkSchemaNode(root: unknown, rootPath: string, violations: string[], 
             const entries = Object.entries(properties)
             for (let index = entries.length - 1; index >= 0; index--) {
               const entry = entries[index]
-              /* v8 ignore next -- the loop is bounded by the captured entry count. */
+              /* the loop is bounded by the captured entry count. */
               if (entry === undefined) continue
               tasks.push({ kind: 'enter', node: entry[1], path: `${path}.properties.${entry[0]}` })
             }
@@ -369,7 +369,7 @@ function checkSchemaNode(root: unknown, rootPath: string, violations: string[], 
         }
         break
       }
-      /* v8 ignore next -- schemaType was narrowed from the closed SCHEMA_TYPES table above. */
+      /* schemaType was narrowed from the closed SCHEMA_TYPES table above. */
       default: assertNever(schemaType, 'JsonSchemaType')
     }
   }
@@ -507,13 +507,13 @@ function checkValue(schema: JsonSchemaNode, value: unknown, path: string): strin
 
   while (frames.length > 0) {
     const frame = frames.at(-1)
-    /* v8 ignore next -- the loop condition guarantees a current frame. */
+    /* the loop condition guarantees a current frame. */
     if (frame === undefined) break
     try {
       if (frame.phase === 'children') {
         if (frame.childIndex < frame.children.length) {
           const child = frame.children[frame.childIndex]
-          /* v8 ignore next -- childIndex is bounded by children.length. */
+          /* childIndex is bounded by children.length. */
           if (child === undefined) throw new Error('missing schema-value child frame')
           frame.childIndex++
           frames.push(valueFrame(child.node, child.value, child.path))
@@ -639,7 +639,7 @@ function checkValue(schema: JsonSchemaNode, value: unknown, path: string): strin
     }
   }
 
-  /* v8 ignore next -- every root frame finishes or throws. */
+  /* every root frame finishes or throws. */
   return rootResult ?? losslessValueViolation(path)
 }
 

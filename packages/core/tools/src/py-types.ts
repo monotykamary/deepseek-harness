@@ -520,13 +520,13 @@ function renderType(schema: unknown, className: string, state: RenderState): str
 
     while (frames.length > 0) {
       const frame = frames.at(-1)
-      /* v8 ignore next -- the loop condition guarantees a current frame. */
+      /* the loop condition guarantees a current frame. */
       if (frame === undefined) break
 
       if (frame.phase === 'children') {
         if (frame.childIndex < frame.children.length) {
           const child = frame.children[frame.childIndex]
-          /* v8 ignore next -- childIndex is bounded by children.length. */
+          /* childIndex is bounded by children.length. */
           if (child === undefined) throw new Error('missing python render child')
           frame.childIndex++
           frames.push(newFrame(child.schema, child.className, child.listDepth))
@@ -550,7 +550,7 @@ function renderType(schema: unknown, className: string, state: RenderState): str
         if (frame.kind === 'array') {
           // `list[A | B]` needs no parentheses in Python. Array frames always
           // schedule exactly one child, so its type is present.
-          /* v8 ignore next -- the ?? arm needs a childless array frame, which start never builds. */
+          /* the ?? arm needs a childless array frame, which start never builds. */
           finish(`list[${frame.childTypes[0] ?? 'Any'}]`)
           continue
         }
@@ -558,14 +558,14 @@ function renderType(schema: unknown, className: string, state: RenderState): str
         // references is already declared (declaration order = reference order).
         const node = frame.node
         const name = frame.allocated
-        /* v8 ignore next -- typeddict frames always set node and allocated at start. */
+        /* typeddict frames always set node and allocated at start. */
         if (node === undefined || name === undefined) throw new Error('missing typeddict frame state')
         const required = new Set(node.required)
         const lines = [`class ${name}(TypedDict):`]
         for (let index = 0; index < frame.entries.length; index++) {
           const entry = frame.entries[index]
           const fieldType = frame.childTypes[index]
-          /* v8 ignore next -- entries and childTypes correspond one-to-one. */
+          /* entries and childTypes correspond one-to-one. */
           if (entry === undefined || fieldType === undefined) throw new Error('missing typeddict field type')
           const [field, fieldSchema] = entry
           // The parent node passed assertSupportedJsonSchema, so every property
@@ -689,18 +689,18 @@ function renderType(schema: unknown, className: string, state: RenderState): str
           // at 1, reserving the bracket an optional field's `NotRequired[…]`
           // wraps around it. frame.allocated was assigned three statements up;
           // the ?? arm is for the type system only.
-          /* v8 ignore next -- allocated is always set before children are built. */
+          /* allocated is always set before children are built. */
           frame.children = entries.map(([field, child]) => ({ schema: child, className: childClassName(frame.allocated ?? '', camelCase(field)), listDepth: 1 }))
           break
         }
-        /* v8 ignore next 4 -- assertSupportedJsonSchema narrowed this closed type union. */
+        /* assertSupportedJsonSchema narrowed this closed type union. */
         default: {
           state.typing.add('Any')
           finish('Any')
         }
       }
     }
-    /* v8 ignore next -- every root frame produces one expression. */
+    /* every root frame produces one expression. */
     return result ?? 'Any'
   } catch {
     // An unsupported or malformed schema failed validation (before any

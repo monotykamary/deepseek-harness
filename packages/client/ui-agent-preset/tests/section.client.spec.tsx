@@ -73,7 +73,7 @@ function renderSection(
 function rowFor(id: string): HTMLElement {
   const key = screen.getAllByText(id).find(node => node.tagName === 'CODE')
   const row = key?.closest('li') ?? null
-  /* v8 ignore next -- every rendered card prints its id */
+  /* every rendered card prints its id */
   if (row === null) throw new Error(`no card for ${id}`)
   return row
 }

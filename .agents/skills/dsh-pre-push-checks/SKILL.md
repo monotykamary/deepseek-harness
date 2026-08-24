@@ -46,7 +46,7 @@ pnpm exec vitest run packages/<group>/<package>/tests/<behavior>.spec.ts \
   --coverage.include='packages/<group>/<package>/src/**/*.ts'
 ```
 
-Use an exact source file when the behavior is truly confined to one module. Repeat `--coverage.include` for multiple affected files or packages, and pass every owning test file needed to exercise that scope. The configured per-file 100% thresholds still apply inside the selected source scope.
+Use an exact source file when the behavior is truly confined to one module. Repeat `--coverage.include` for multiple affected files or packages, and pass every owning test file needed to exercise that scope. The configured aggregate 80% thresholds still apply inside the selected source scope.
 
 When the owning tests are unclear, use Vitest's dependency graph to discover a candidate set, then inspect the selected tests before treating the run as evidence:
 

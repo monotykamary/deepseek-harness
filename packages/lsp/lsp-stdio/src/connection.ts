@@ -102,11 +102,10 @@ export class LspConnection {
       // configured credential or DSH_* fact reaches the child deliberately.
       env: spec.env,
     })
-    /* v8 ignore start -- 'pipe' dispositions expose both streams by the seam contract; defensive. */
+    /* 'pipe' dispositions expose both streams by the seam contract; defensive. */
     if (this.handle.stdin === undefined || this.handle.stdout === undefined) {
       throw new Error('lsp-stdio: subprocess implementation dropped a piped protocol stream')
     }
-    /* v8 ignore stop */
     this.stdin = this.handle.stdin
     this.closed = new Promise<void>((resolve) => {
       const close = (): void => {
@@ -138,7 +137,7 @@ export class LspConnection {
 
   /** The retained stderr tail, for diagnostics on a failed server. */
   get stderrTail(): string {
-    /* v8 ignore next -- the collect disposition always exposes a stderr reader; defensive. */
+    /* the collect disposition always exposes a stderr reader; defensive. */
     return this.handle.collected.stderr?.readFrom(0).text ?? ''
   }
 
@@ -245,7 +244,7 @@ export class LspConnection {
     const method = frame.method
     if (typeof method === 'string' && (typeof id === 'number' || typeof id === 'string')) {
       // A response-write failure has already invalidated the connection in `write()`.
-      /* v8 ignore next -- protocol tests exercise response writes; only a simultaneous connection
+      /* protocol tests exercise response writes; only a simultaneous connection
          failure makes this consumption handler run. */
       void this.handleServerRequest(id, method, frame.params).catch(() => {})
       return
@@ -292,14 +291,13 @@ export class LspConnection {
       }
       try {
         this.writer(this.stdin, message, done)
-      /* v8 ignore start -- Node stream write failures are callback-delivered; this guards a
+      /* Node stream write failures are callback-delivered; this guards a
          nonconforming Writable implementation throwing synchronously. */
       } catch (error) {
         const failure = asError(error)
         this.fail(failure)
         reject(failure)
       }
-      /* v8 ignore stop */
     })
   }
 
@@ -310,7 +308,7 @@ export class LspConnection {
   }
 
   private fail(error: Error): void {
-    /* v8 ignore next -- the second arm (closeReason already set) needs two fail() calls before close; defensive. */
+    /* the second arm (closeReason already set) needs two fail() calls before close; defensive. */
     if (this.closeReason === undefined) this.closeReason = error
     this.failAll(error)
   }
@@ -324,6 +322,6 @@ export class LspConnection {
 
 /** Coerce an unknown thrown value to an `Error`. */
 function asError(value: unknown): Error {
-  /* v8 ignore next -- the non-Error branch guards against a non-Error throw, which our paths never produce. */
+  /* the non-Error branch guards against a non-Error throw, which our paths never produce. */
   return value instanceof Error ? value : new Error(String(value))
 }

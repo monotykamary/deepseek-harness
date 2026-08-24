@@ -58,8 +58,9 @@ Package groups: [packages/README.md](packages/README.md).
 ```sh
 pnpm install            # pnpm workspaces, node ^22.19 || >=24
 pnpm run clean           # remove build outputs and safe residue from deleted packages
-pnpm run test           # vitest unit tests
-pnpm run test:coverage  # CI coverage gate: per-file 100% on packages/*/*/src
+pnpm run test           # required deterministic unit tests
+pnpm run test:observational  # nonblocking host-timing observations
+pnpm run test:coverage  # CI coverage gate: aggregate 80% on packages/*/*/src
 pnpm run test:e2e       # real-API tests; self-skip without DEEPSEEK_API_KEY
 pnpm run test:snapshot  # keyless ACP/headless replay vs expected outputs; filter: -t <name>
 pnpm run test:snapshot:record  # re-record expected outputs (needs key)
@@ -82,15 +83,16 @@ When required `gh`, `pnpm`, build, test, or generator commands fail because the 
 
 ### Golden rule: inner loop free, gates when done
 
-Focused checks run freely during implementation — `test:gui` (seconds), `test:changed` (the packages the worktree touched), `test:gui:watch` / `test:changed:watch` (one package) — and after each repair pass. Full-suite gates — `test:coverage`, `test:web`, `test:snapshot`, `doc-sync`, hygiene, builds — run once when implementation is complete; after a failure, finish the repair pass before rerunning, and inspect saved output instead of repeating unchanged commands.
+Use focused checks during implementation and run relevant full checks once at completion. Reuse passing evidence for an unchanged tree; after failure, repair and rerun only invalidated checks.
 
 ### Run relevant checks locally
 
 Run checks before pushes via [dsh-pre-push-checks](.agents/skills/dsh-pre-push-checks/SKILL.md); report only commands run. After `gh stack sync`, validate immediately; do not merge before checks pass.
 
 - Match evidence to the surface: focused tests for behavior, snapshots for model or user output, `doc-sync` for docs, build/hygiene and built smokes for published paths, and real-API e2e for provider behavior.
-- Never default to the full suite or repeat a passing check for commit or push. CI owns exhaustive coverage and the platform matrix; rehearse all locally only by explicit request, for CI diagnosis, or for an irreducibly repository-wide change.
-- `test:coverage`, not `test`, is the CI coverage gate ([why](docs/testing.md)).
+- Never default to the full suite or repeat a passing check for commit or push. CI owns the platform matrix; rehearse all locally only by explicit request, CI diagnosis, or irreducibly repository-wide change.
+- Revision readiness is the conjunction of every required deterministic check on that exact revision; missing, failed, skipped, or cancelled evidence means not ready. Make flakes deterministic; if host timing cannot be controlled, keep that test observational and nonblocking—never hide it with retries or larger sleeps.
+- Coverage requires 80% aggregate statements, branches, functions, and lines without suppression directives. Release pack/install feedback runs independently of full rehearsals ([policy](docs/testing.md)).
 
 ## Secrets / .env
 

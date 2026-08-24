@@ -120,10 +120,10 @@ export function attachStructuredRuntime(childCtx: Context, schema: ObjectJsonSch
       staged.delete(exec)
       if (result.isError) return
       if (exec.parent === undefined) {
-        /* v8 ignore else -- sequential agent-loop dispatch lets the guard block every later supported call */
+        /* sequential agent-loop dispatch lets the guard block every later supported call */
         if (captured === undefined) captured = { value: entry.value }
       } else {
-        /* v8 ignore else -- Code Mode serializes sub-dispatches, so the guard blocks every later supported call */
+        /* Code Mode serializes sub-dispatches, so the guard blocks every later supported call */
         if (captured === undefined && pending === undefined) {
           pending = { parent: exec.parent, value: entry.value }
         }
@@ -134,7 +134,7 @@ export function attachStructuredRuntime(childCtx: Context, schema: ObjectJsonSch
     const entry = pending
     pending = undefined
     if (result.isError) return
-    /* v8 ignore else -- Code Mode serializes outer executions, so the guard blocks every later supported call */
+    /* Code Mode serializes outer executions, so the guard blocks every later supported call */
     if (captured === undefined) captured = { value: entry.value }
   })
 

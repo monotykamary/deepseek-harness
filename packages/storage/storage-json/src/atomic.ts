@@ -40,7 +40,7 @@ export async function writeAtomic(path: string, data: string): Promise<void> {
 }
 
 /** fsync a POSIX directory so a just-renamed entry is crash-durable. */
-/* v8 ignore start -- Windows rejects O_RDONLY directory opens; POSIX coverage exercises this. */
+/* Windows rejects O_RDONLY directory opens; POSIX coverage exercises this. */
 async function fsyncDirectory(path: string): Promise<void> {
   if (process.platform === 'win32') return
   const handle = await open(path, 'r')
@@ -50,4 +50,3 @@ async function fsyncDirectory(path: string): Promise<void> {
     await handle.close()
   }
 }
-/* v8 ignore stop */

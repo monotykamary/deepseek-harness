@@ -30,10 +30,6 @@ export function standardDecoratorPlugin() {
       })
       return {
         code: result.outputText
-          .replace(
-            /^(\s*)(__esDecorate\()/gmu,
-            '$1/* v8 ignore next -- compiler-synthetic decorator accessors have no source behavior */ $2',
-          )
           .replace(/\n?\/\/# sourceMappingURL=.*$/u, '\n'),
         map: result.sourceMapText,
       }

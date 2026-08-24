@@ -15,7 +15,7 @@ import { boot, installFailLoud, loadEnv, resolveConfigPath } from '@monotykamary
 
 const NAME = 'dsh-acp-demo'
 
-/* v8 ignore start -- thin self-executing composition over the unit-tested
+/* thin self-executing composition over the unit-tested
    dsh-app-boot helpers; exercised end-to-end by the snapshot suite and the
    built-bin smoke */
 installFailLoud(NAME)
@@ -32,4 +32,3 @@ if (snapshotMode !== undefined) {
     void ctx.fiber.dispose().then(() => { process.exit(0) })
   })
 }
-/* v8 ignore stop */

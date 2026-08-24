@@ -88,7 +88,7 @@ function sendHandshake(socket: WebSocket, handshake: BrowserTerminalHandshake): 
 }
 
 function asError(error: unknown): Error {
-  /* v8 ignore next -- request parsers and expected-frame callbacks throw BrowserTerminalError only. */
+  /* request parsers and expected-frame callbacks throw BrowserTerminalError only. */
   return error instanceof Error ? error : new BrowserTerminalError('BAD_RESPONSE', String(error))
 }
 

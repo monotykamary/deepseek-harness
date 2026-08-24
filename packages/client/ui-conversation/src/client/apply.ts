@@ -157,7 +157,7 @@ export function apply(ctx: Context): void {
   const viewTabs = (): ViewTab[] => {
     const tabs: ViewTab[] = []
     for (const entry of slots.entries('conversation.view')) {
-      /* v8 ignore next -- unreachable: list registration validates id at load. */
+      /* unreachable: list registration validates id at load. */
       if (entry.options.id === undefined) continue
       tabs.push({ id: entry.options.id, label: resolveSlotLabel(entry.options.label) ?? entry.options.id })
     }

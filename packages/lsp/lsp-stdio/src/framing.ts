@@ -80,7 +80,7 @@ export class MessageDecoder {
     try {
       return { ready: true, message: JSON.parse(body) }
     } catch (error) {
-      /* v8 ignore next -- JSON.parse throws a SyntaxError (an Error); the String() fallback is defensive. */
+      /* JSON.parse throws a SyntaxError (an Error); the String() fallback is defensive. */
       throw new Error(`LSP message body was not valid JSON: ${error instanceof Error ? error.message : String(error)}`)
     }
   }

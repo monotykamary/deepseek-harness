@@ -117,7 +117,7 @@ export function parseCommand(line: string): ParsedCommand | undefined {
   const match = /^\/([a-z][a-z0-9_-]*)(?=$|[\t\n\r ])/u.exec(line)
   if (match === null) return undefined
   const name = match[1]
-  /* v8 ignore next -- the first capture is required whenever the regular expression matches */
+  /* the first capture is required whenever the regular expression matches */
   if (name === undefined) return undefined
   return Object.freeze({ name, rawInput: line.slice(match[0].length) })
 }

@@ -85,7 +85,7 @@ function flattenTypeDocument(document: TypeDocument): string {
     }
     for (let index = task.parts.length - 1; index >= 0; index--) {
       const part = task.parts[index]
-      /* v8 ignore next -- the loop is bounded by the captured part count. */
+      /* the loop is bounded by the captured part count. */
       if (part !== undefined) tasks.push(part)
     }
   }
@@ -122,12 +122,12 @@ function renderSupportedSchema(schema: JsonSchemaNode, indent: number): TypeDocu
 
   while (frames.length > 0) {
     const frame = frames.at(-1)
-    /* v8 ignore next -- the loop condition guarantees a current frame. */
+    /* the loop condition guarantees a current frame. */
     if (frame === undefined) break
     if (frame.phase === 'children') {
       if (frame.childIndex < frame.children.length) {
         const child = frame.children[frame.childIndex]
-        /* v8 ignore next -- childIndex is bounded by children.length. */
+        /* childIndex is bounded by children.length. */
         if (child === undefined) throw new Error('missing schema render child')
         frame.childIndex++
         frames.push(schemaRenderFrame(child.node, child.indent))
@@ -138,7 +138,7 @@ function renderSupportedSchema(schema: JsonSchemaNode, indent: number): TypeDocu
         for (let index = 0; index < frame.childDocuments.length; index++) {
           if (index > 0) parts.push(' | ')
           const child = frame.childDocuments[index]
-          /* v8 ignore next -- child documents correspond one-to-one with children. */
+          /* child documents correspond one-to-one with children. */
           if (child !== undefined) parts.push(child)
         }
         finish(typeDocumentFrom(parts))
@@ -146,7 +146,7 @@ function renderSupportedSchema(schema: JsonSchemaNode, indent: number): TypeDocu
       }
       if (frame.kind === 'array') {
         const child = frame.childDocuments[0]
-        /* v8 ignore next -- array frames always schedule exactly one child. */
+        /* array frames always schedule exactly one child. */
         if (child === undefined) throw new Error('missing array item type')
         finish(child.containsUnionOrIntersection
           ? typeDocument('(', child, ')[]')
@@ -159,7 +159,7 @@ function renderSupportedSchema(schema: JsonSchemaNode, indent: number): TypeDocu
       for (let index = 0; index < frame.entries.length; index++) {
         const entry = frame.entries[index]
         const child = frame.childDocuments[index]
-        /* v8 ignore next -- object entries and child documents have the same length. */
+        /* object entries and child documents have the same length. */
         if (entry === undefined || child === undefined) throw new Error('missing object property type')
         const [name, prop] = entry
         for (const line of docLines(prop.description, frame.indent + 1)) parts.push('\n', line)
@@ -220,13 +220,13 @@ function renderSupportedSchema(schema: JsonSchemaNode, indent: number): TypeDocu
         }
         break
       }
-      /* v8 ignore next -- assertSupportedJsonSchema narrowed this closed type union. */
+      /* assertSupportedJsonSchema narrowed this closed type union. */
       default:
         finish(typeDocument('unknown'))
     }
   }
 
-  /* v8 ignore next -- every root frame produces one document. */
+  /* every root frame produces one document. */
   return rootDocument ?? typeDocument('unknown')
 }
 

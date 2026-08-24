@@ -244,7 +244,7 @@ class LocalLspProvider implements LspProvider {
 
   /** Reject work that cannot publish or use a provider-owned instance. */
   private assertActive(signal?: AbortSignal): void {
-    /* v8 ignore next -- the seam unregisters this provider before disposal; direct in-flight calls
+    /* the seam unregisters this provider before disposal; direct in-flight calls
        exercise the post-await check instead. */
     if (this.isDisposed()) throw new LspError('lsp-stdio provider is disposed', 'LSP_DISPOSED')
     if (signal?.aborted) throw abortError(signal)
@@ -328,7 +328,7 @@ class LocalLspProvider implements LspProvider {
 
   /** Drop the slot iff it still contains this instance. */
   private evictIfCurrent(workspace: WorkspaceKey, instance: LspInstance): void {
-    /* v8 ignore next -- mismatch requires another query to replace the slot before this finally runs. */
+    /* mismatch requires another query to replace the slot before this finally runs. */
     if (this.instances.get(workspace) === instance) this.instances.delete(workspace)
   }
 

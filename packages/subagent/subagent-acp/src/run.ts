@@ -183,7 +183,6 @@ function toError(value: unknown): Error {
   // The catch only sees rejections from the ACP SDK RPCs and the spawn `error`
   // event, which are always `Error`s; the `String(value)` arm is a defensive
   // fallback for a non-Error throw that the typed APIs cannot produce.
-  /* v8 ignore next */
   return value instanceof Error ? value : new Error(String(value))
 }
 
@@ -213,17 +212,16 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
     graceMs: spec.disposeGraceMs,
     env: spec.env,
   })
-  /* v8 ignore start -- 'pipe' dispositions expose both streams by the seam contract; defensive. */
+  /* 'pipe' dispositions expose both streams by the seam contract; defensive. */
   if (child.stdin === undefined || child.stdout === undefined) {
     throw new Error('subagent-acp: subprocess implementation dropped a piped protocol stream')
   }
-  /* v8 ignore stop */
   // Spawn-level failure surfaces as `done` rejecting into the startup race; a
   // clean exit must never win it, so the success arm parks forever. (The ACP
   // connection observing its streams closing bounds a child that exits
   // without speaking the protocol.)
   const spawnFailed: Promise<never> = child.done.then(
-    /* v8 ignore next -- the success arm's never-settling executor is intentionally empty. */
+    /* the success arm's never-settling executor is intentionally empty. */
     () => new Promise<never>(() => {}),
     (err: unknown) => Promise.reject(toError(err)),
   )
@@ -280,7 +278,6 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
     flags.cancelled = true
     signalCancelSettled()
     // Best-effort ACP cancel; process teardown remains authoritative.
-    /* v8 ignore next */
     if (sessionId !== undefined) void conn.cancel({ sessionId }).catch(() => { /* child gone / no session */ })
   }
   const onAbort = (): void => { requestCancel() }
@@ -317,7 +314,6 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
   }
   // The startup transaction validates the returned id before it can fulfill.
   // This assertion carries that cross-closure invariant into TypeScript.
-  /* v8 ignore next */
   if (sessionId === undefined) throw new Error('unreachable: ACP startup fulfilled without a session id')
   const remoteSessionId = sessionId
 
@@ -335,7 +331,6 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
       ])
     } catch (error: unknown) {
       // Cover a process rejection already queued when cancellation arrives.
-      /* v8 ignore next */
       if (flags.cancelled) return { output: collectOutput(), stopReason: 'aborted' }
       // Flatten post-publication transport failures while preserving diagnostics.
       try {

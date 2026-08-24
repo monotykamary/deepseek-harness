@@ -102,7 +102,7 @@ interface LiveRun {
  * `import.meta.url` with a query string; relative resolution drops it. Worker
  * receives a filesystem string so pkg's VFS Worker hook can resolve it.
  */
-/* v8 ignore next -- the './worker.cjs' arm is the built-lib world, unreachable unbuilt by construction; the built-lib e2e pins it. */
+/* the './worker.cjs' arm is the built-lib world, unreachable unbuilt by construction; the built-lib e2e pins it. */
 const WORKER_PATH = fileURLToPath(new URL(new URL(import.meta.url).pathname.endsWith('.ts') ? './worker.ts' : './worker.cjs', import.meta.url))
 
 /** Render an unknown thrown value as a message, `Error` or not. */
@@ -125,7 +125,7 @@ function waitForPipeDrain(stream: Readable): Promise<void> {
     stream.once('error', done)
     // Close the event-registration race if termination finished between the
     // initial state check and the listeners above.
-    /* v8 ignore next -- this race cannot be scheduled deterministically between the adjacent state check and listener registration. */
+    /* this race cannot be scheduled deterministically between the adjacent state check and listener registration. */
     if (stream.readableEnded || stream.destroyed) done()
   })
 }
@@ -215,7 +215,7 @@ class OutputLedger {
       const prefix = truncateJsonStringBytes(text, availableBytes)
       if (prefix.length > 0) {
         const prefixBytes = jsonStringBytesUpTo(prefix, availableBytes)
-        /* v8 ignore next -- truncateJsonStringBytes guarantees its returned prefix fits the same budget. */
+        /* truncateJsonStringBytes guarantees its returned prefix fits the same budget. */
         if (prefixBytes === undefined) throw new Error('output ledger produced an oversized log prefix')
         retained.push(prefix)
         retainedBytes += prefixBytes + separatorBytes
@@ -405,7 +405,7 @@ export class WorkerThreadCodeRuntime extends CodeRuntime {
       // that were already queued; `finish` materializes the result only after
       // termination completes.
       const captureStray = (chunk: Buffer): void => {
-        /* v8 ignore next -- a second post-overflow chunk races immediate worker termination; the first overflow path is covered. */
+        /* a second post-overflow chunk races immediate worker termination; the first overflow path is covered. */
         if (terminalOverride !== undefined) return
         const text = chunk.toString('utf8')
         if (!output.admit(text, strayLogs)) {

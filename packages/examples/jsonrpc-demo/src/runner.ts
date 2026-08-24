@@ -7,7 +7,7 @@
 import { existsSync } from 'node:fs'
 import { boot, installFailLoud, loadEnv, resolveConfigPath } from '@monotykamary/dsh-app-boot'
 
-/* v8 ignore start -- composition over tested app-boot/jsonrpc and executable acceptance paths */
+/* composition over tested app-boot/jsonrpc and executable acceptance paths */
 const NAME = 'dsh-jsonrpc-agent'
 
 /**
@@ -52,4 +52,3 @@ export async function runJsonrpcAgent(bareModuleBaseUrl?: string): Promise<void>
   process.on('SIGTERM', () => { void disposeAndExit(0) })
   process.on('SIGINT', () => { void disposeAndExit(130) })
 }
-/* v8 ignore stop */

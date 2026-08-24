@@ -91,7 +91,7 @@ export class SubagentActivationSetupRegistry {
     const state: TransactionState = { installations: [], invalidated: false }
     try {
       for (const registration of [...this.registrations]) {
-        /* v8 ignore next -- only a synchronous re-entrant revocation of an
+        /* only a synchronous re-entrant revocation of an
          * already-snapshotted registration reaches this guard. */
         if (registration.removed) continue
         const installation: Installation = {
@@ -118,7 +118,7 @@ export class SubagentActivationSetupRegistry {
       try {
         this.releaseAll([...state.installations], 'setup rollback')
       } catch (releaseFailure: unknown) {
-        /* v8 ignore next -- requires independent installer and rollback faults. */
+        /* requires independent installer and rollback faults. */
         void releaseFailure
       }
       throw error
@@ -172,7 +172,7 @@ export class SubagentActivationSetupRegistry {
     installation.released = true
     installation.registration.installations.delete(installation)
     const indexed = this.byChild.get(installation.childCtx)
-    /* v8 ignore next 4 -- every live installation is indexed until this method removes it. */
+    /* every live installation is indexed until this method removes it. */
     if (indexed !== undefined) {
       indexed.delete(installation)
       if (indexed.size === 0) this.byChild.delete(installation.childCtx)

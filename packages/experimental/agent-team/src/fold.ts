@@ -194,7 +194,7 @@ function parseCurrentTeamEvent(event: TeamSessionEvent): TeamSessionEvent {
       return { ...event, data: parsePersisted(event.type, teamMessageQueuedEventSchema, event.data) }
     case 'team/message/delivered':
       return { ...event, data: parsePersisted(event.type, teamMessageDeliveredEventSchema, event.data) }
-    /* v8 ignore next 2 -- TeamEventType is closed and every member is handled above. */
+    /* TeamEventType is closed and every member is handled above. */
     default:
       return event
   }
@@ -272,7 +272,7 @@ export function applyTeamEvent(state: TeamFoldState, event: SessionEvent): void 
       state.delivered.add(decoded.data.messageId)
       break
     }
-    /* v8 ignore next 2 -- TeamEventType is closed and every member is handled above. */
+    /* TeamEventType is closed and every member is handled above. */
     default:
       return
   }

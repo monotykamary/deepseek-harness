@@ -31,7 +31,7 @@ const tokenizeCjkFriendlyAttention: Tokenizer = function (effects, ok, nok) {
   return start
 
   function start(code: number | null): State | undefined {
-    /* v8 ignore next -- this text construct is dispatched only for an asterisk. */
+    /* this text construct is dispatched only for an asterisk. */
     if (code !== codes.asterisk) return nok(code)
     marker = code
     effects.enter('attentionSequence')

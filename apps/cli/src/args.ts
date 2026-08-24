@@ -228,7 +228,7 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
   } catch (error) {
     return process.exit(error instanceof CommanderError ? error.exitCode : 1)
   }
-  /* v8 ignore next -- an action resolves or Commander throws */
+  /* an action resolves or Commander throws */
   if (resolved === undefined) throw new Error('dsh: no invocation resolved')
   return resolved
 }

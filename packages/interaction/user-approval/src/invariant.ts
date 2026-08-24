@@ -88,7 +88,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
     }
     if (event.type !== 'approval/asked' && event.type !== 'approval/decided') return
     const candidate = staged.get(event)
-    /* v8 ignore next -- internal/dispatch stages every package-owned pair event */
+    /* internal/dispatch stages every package-owned pair event */
     if (candidate === undefined || candidate.session !== session) return fail('approval audit event published without pre-commit validation')
     staged.delete(event)
     applyApprovalTransition(trace.pending, candidate.transition)

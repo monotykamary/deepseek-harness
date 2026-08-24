@@ -203,7 +203,7 @@ function replayedAssistant(message: Message, source: ModelMessageSource, rawStat
         arguments: parseArguments(block.arguments),
         ...replay.type === 'tool-call' && replay.thoughtSignature !== undefined ? { thoughtSignature: replay.thoughtSignature } : {},
       }
-      /* v8 ignore next -- readReplayState rejects unknown replay tags, so an equal plugin-added Harness tag cannot reach this switch */
+      /* readReplayState rejects unknown replay tags, so an equal plugin-added Harness tag cannot reach this switch */
       default: return invalidReplay(`block ${index} has an unsupported Harness type`)
     }
   })
@@ -240,7 +240,7 @@ export function toPiAssistant(message: Message, onDegrade?: (reason: string) => 
   try {
     return replayedAssistant(message, source, source.replayState)
   } catch (error: unknown) {
-    /* v8 ignore next -- replayedAssistant throws only INVALID_REPLAY_STATE LlmErrors today; the
+    /* replayedAssistant throws only INVALID_REPLAY_STATE LlmErrors today; the
        guard keeps a future non-replay failure loud instead of silently degrading it */
     if (!(error instanceof LlmError) || error.code !== 'INVALID_REPLAY_STATE') throw error
     onDegrade?.(error.message)

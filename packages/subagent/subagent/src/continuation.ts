@@ -309,7 +309,7 @@ function settlementSummary(childId: SessionId, stopReason: SubagentResult['stopR
       return `${subject} declined the task.`
     case 'error':
       return `${subject} failed before it finished.`
-    /* v8 ignore next 4 -- `SubagentResult['stopReason']` is merge-extensible, so this arm
+    /* `SubagentResult['stopReason']` is merge-extensible, so this arm
      * needs a backend that adds a variant; an unnameable ending is reported as unfinished
      * rather than silently as success. */
     default:
@@ -512,7 +512,7 @@ export class SubagentContinuationManager {
         if (activation === undefined) return this.coldResume(parent, childId, content, options)
         // A delivery that arrives after the disposal transaction began must not
         // reach a handle being torn down; wait for release, then cold-resume.
-        /* v8 ignore next 3 -- the send-versus-dispose cutoff: reaching this arm needs a
+        /* the send-versus-dispose cutoff: reaching this arm needs a
          * delivery to observe the transaction inside the same critical section that opened it,
          * which no test can schedule deterministically. The behavior is covered end-to-end by
          * "cold-resumes a delivery that lost the race with final disposal". */
@@ -521,12 +521,11 @@ export class SubagentContinuationManager {
         }
         return this.submitAdmitted(activation, content, options.source, parent, options.signal)
       })
-      /* v8 ignore start -- only the lost-cutoff arm above returns undefined, so only that
+      /* only the lost-cutoff arm above returns undefined, so only that
        * race reaches the retry below, which then cold-resumes a new Activation. */
       if (live !== undefined) return live
       this.assertAdmitting(parent)
       options.signal.throwIfAborted()
-      /* v8 ignore stop */
     }
   }
 
@@ -627,7 +626,7 @@ export class SubagentContinuationManager {
         'UNAUTHORIZED',
       )
     }
-    /* v8 ignore next 6 -- only a synchronous re-entrant disposer can open this
+    /* only a synchronous re-entrant disposer can open this
      * transaction between exact-agent authorization and this no-await cutoff. */
     if (activation.disposal !== undefined) {
       throw new SubagentError(
@@ -641,7 +640,7 @@ export class SubagentContinuationManager {
   /** Resolve the reporting child's live direct parent from durable lineage. */
   private resolveReportParent(child: Agent): Agent {
     const parentId = child.session.header.parentSession
-    /* v8 ignore next -- every continuation-managed child has direct-parent metadata. */
+    /* every continuation-managed child has direct-parent metadata. */
     const parent = parentId === undefined ? undefined : this.ctx.agents.get(parentId)
     if (parent === undefined) {
       throw new SubagentError(
@@ -1012,7 +1011,7 @@ export class SubagentContinuationManager {
     try {
       return this.submitAdmitted(activation, content, source, parent, signal)
     } catch (error: unknown) {
-      /* v8 ignore next -- rollback disposal failures must not mask the
+      /* rollback disposal failures must not mask the
        * pre-acceptance signal, drain, or lifecycle failure. */
       await this.dispose(activation).catch(() => undefined)
       throw error
@@ -1113,7 +1112,7 @@ export class SubagentContinuationManager {
       // Registered through the child's own scoped context, so scope filtering
       // already restricts both listeners to this exact agent.
       handle.agent.ctx.on('agent/inbox/claimed', ({ message }) => {
-        /* v8 ignore next -- a claim of an id this manager never admitted needs
+        /* a claim of an id this manager never admitted needs
          * another sender on the same child, which no current path allows. */
         if (activation.accepted.delete(message.id)) this.wake(activation)
       })
@@ -1128,7 +1127,7 @@ export class SubagentContinuationManager {
     } catch (error: unknown) {
       // Listener exceptions are contained by the lifecycle emitter; a start
       // publication throw therefore leaves no residency edge to pair.
-      /* v8 ignore next -- rollback failure must not mask the admission failure
+      /* rollback failure must not mask the admission failure
        * that prevented this operation from returning an accepted message id. */
       await this.rollbackUnpublished(activation).catch(() => undefined)
       throw error
@@ -1249,7 +1248,7 @@ export class SubagentContinuationManager {
   ): MessageId {
     signal.throwIfAborted()
     this.assertAdmitting(parent)
-    /* v8 ignore next 6 -- only a synchronous re-entrant disposer can change
+    /* only a synchronous re-entrant disposer can change
      * this field between the caller's live check and this no-await boundary. */
     if (disposalOf(activation) !== undefined) {
       throw new SubagentError(

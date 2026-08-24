@@ -569,7 +569,7 @@ export function InputBar({
       return
     }
     if (inputActions === undefined) return // absent machine: the button is disabled
-    /* v8 ignore next -- defensive: the primary button is disabled while empty||disabled, so a click cannot reach the false arm. */
+    /* defensive: the primary button is disabled while empty||disabled, so a click cannot reach the false arm. */
     if (!empty && !disabled && !machineBusy) inputActions.submit()
   }
 

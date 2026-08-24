@@ -92,14 +92,14 @@ export async function openDatabase(
 function configureConnectionSecurity(db: DatabaseSync, path: string): void {
   db.exec(sql('trusted-schema-off'))
   const trustedSchema = integerField(db.prepare(sql('select-trusted-schema')).get(), 'trusted_schema')
-  /* v8 ignore next 3 -- supported SQLite versions return the fixed setting. */
+  /* supported SQLite versions return the fixed setting. */
   if (trustedSchema !== 0) {
     throw new Error(`session database at "${path}" retained trusted_schema=${trustedSchema}, expected 0`)
   }
   db.exec(sql('mmap-off'))
   if (path === ':memory:') return
   const mmapSize = integerField(db.prepare(sql('select-mmap-size')).get(), 'mmap_size')
-  /* v8 ignore next 3 -- supported file-backed SQLite connections return the fixed setting. */
+  /* supported file-backed SQLite connections return the fixed setting. */
   if (mmapSize !== 0) {
     throw new Error(`session database at "${path}" retained mmap_size=${mmapSize}, expected 0`)
   }
@@ -136,9 +136,9 @@ function configureDatabase(
     db.exec(sql('commit'))
     began = false
   } catch (error: unknown) {
-    /* v8 ignore else -- a failed begin leaves no transaction to roll back. */
+    /* a failed begin leaves no transaction to roll back. */
     if (began) {
-      /* v8 ignore next 5 -- retain the original ownership failure if rollback fails too. */
+      /* retain the original ownership failure if rollback fails too. */
       try {
         db.exec(sql('rollback'))
       } catch {
@@ -169,7 +169,7 @@ async function selectJournalMode(
   }
   const selected = stringField(result, 'journal_mode').toLowerCase()
   const expected = path === ':memory:' ? 'memory' : journalMode
-  /* v8 ignore next 3 -- SQLite returns the selected mode from these fixed, valid pragmas. */
+  /* SQLite returns the selected mode from these fixed, valid pragmas. */
   if (selected !== expected) {
     throw new Error(`session database at "${path}" selected journal mode ${selected}, expected ${expected}`)
   }
@@ -178,7 +178,7 @@ async function selectJournalMode(
 function configureDurability(db: DatabaseSync, path: string): void {
   db.exec(sql('synchronous-full'))
   const synchronous = integerField(db.prepare(sql('select-synchronous')).get(), 'synchronous')
-  /* v8 ignore next 3 -- supported SQLite versions return the fixed setting. */
+  /* supported SQLite versions return the fixed setting. */
   if (synchronous !== 2) {
     throw new Error(`session database at "${path}" retained synchronous=${synchronous}, expected FULL (2)`)
   }

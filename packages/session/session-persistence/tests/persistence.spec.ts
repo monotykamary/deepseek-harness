@@ -156,7 +156,7 @@ class MemoryPersistence extends SessionPersistence implements PersistenceBackend
     // synthetic closers are appended (the same DELETE+INSERT a DB backend does,
     // minus the truncate).
     const entry = this.store.get(m.id)
-    /* v8 ignore next -- commitRepair only runs for a materialized (stored) session */
+    /* commitRepair only runs for a materialized (stored) session */
     if (!entry) return
     if (closers.length > 0) entry.events.push(...structuredClone(closers) as SessionEvent[])
   }

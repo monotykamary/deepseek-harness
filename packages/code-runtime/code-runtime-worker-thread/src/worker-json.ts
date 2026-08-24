@@ -224,7 +224,7 @@ export function snapshotCodeJsonValue(value: unknown): CodeJsonValue | undefined
     append(tasks, { kind: 'leave', source: candidate })
     for (let index = keys.length - 1; index >= 0; index--) {
       const key = keys[index]
-      /* v8 ignore next -- the loop is bounded by the captured key count. */
+      /* the loop is bounded by the captured key count. */
       if (key === undefined) return undefined
       append(tasks, { kind: 'object-property', source: candidate as Record<string, unknown>, key, target })
     }
@@ -277,7 +277,7 @@ export function encodeWorkerJson(value: CodeJsonValue): WorkerJsonWire {
     append(wire, { kind: 'object', keys })
     for (let index = keys.length - 1; index >= 0; index--) {
       const key = keys[index]
-      /* v8 ignore next -- the loop is bounded by the captured key count. */
+      /* the loop is bounded by the captured key count. */
       if (key === undefined) throw new IntrinsicError('cannot encode a missing JSON object key')
       const item = current[key]
       if (item === undefined) throw new IntrinsicError('cannot encode an undefined JSON object property')
@@ -362,13 +362,13 @@ export function decodeWorkerJson(input: unknown): CodeJsonValue | undefined {
         rootAssigned = true
         return true
       }
-      /* v8 ignore next -- completed frames are popped before another token can attach. */
+      /* completed frames are popped before another token can attach. */
       if (parent.index >= (parent.kind === 'array' ? parent.length : parent.keys.length)) return false
       if (parent.kind === 'array') {
         append(parent.target, value)
       } else {
         const key = parent.keys[parent.index]
-        /* v8 ignore next -- object frames are built from validated keys and their exact length. */
+        /* object frames are built from validated keys and their exact length. */
         if (key === undefined) return false
         defineEnumerableDataProperty(parent.target, key, value)
       }
@@ -406,7 +406,7 @@ export function decodeWorkerJson(input: unknown): CodeJsonValue | undefined {
       if (frame) append(frames, frame)
       while (frames.length > 0) {
         const current = frames[frames.length - 1]
-        /* v8 ignore next -- the loop condition guarantees a final frame. */
+        /* the loop condition guarantees a final frame. */
         if (current === undefined) break
         if (current.index < (current.kind === 'array' ? current.length : current.keys.length)) break
         takeLast(frames)

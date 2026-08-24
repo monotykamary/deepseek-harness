@@ -64,7 +64,7 @@ export async function bridge(
     }
     chunks.push(buffer)
   }
-  /* v8 ignore next 3 -- `??` arms: node:http always sets url/method on server
+  /* `??` arms: node:http always sets url/method on server
   requests; the fields are only optional on the client-side IncomingMessage type */
   const request = new Request(new URL(req.url ?? '/', 'http://dsh.internal'), {
     method: req.method ?? 'GET',

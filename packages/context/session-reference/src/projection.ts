@@ -51,7 +51,7 @@ function projectSessionConversation(snapshot: SessionSurfaceSnapshot): Projected
       }
       case 'tool/result':
         break
-      /* v8 ignore next 2 -- SurfaceEventType is closed and every variant is handled above. */
+      /* SurfaceEventType is closed and every variant is handled above. */
       default:
         assertNever(event, 'session-reference surface event')
     }
@@ -89,7 +89,7 @@ export function retainReferencedSession(
     const dropIndex = retained.findIndex((item, index) => !item.checkpoint && index !== newestIndex)
     if (dropIndex < 0) break
     const removed = retained.splice(dropIndex, 1)[0]
-    /* v8 ignore next 3 -- dropIndex came from this exact array and is non-negative. */
+    /* dropIndex came from this exact array and is non-negative. */
     if (removed === undefined) {
       throw new Error('session-reference retention selected a missing message')
     }
@@ -111,12 +111,12 @@ export function retainReferencedSession(
     const overflow = size() - maxBytes
     const target = Math.max(0, longestBytes - overflow)
     const item = retained[longestIndex]
-    /* v8 ignore next 3 -- longestIndex was selected from this exact array's entries. */
+    /* longestIndex was selected from this exact array's entries. */
     if (item === undefined) {
       throw new Error('session-reference retention selected a missing longest message')
     }
     const shortened = truncateWithNotice(item.originalText, target)
-    /* v8 ignore next -- strictly lowering the byte target must change a complete-string retention result. */
+    /* strictly lowering the byte target must change a complete-string retention result. */
     if (shortened.text === retained[longestIndex]?.text) return undefined
     retained[longestIndex] = { ...item, text: shortened.text, omittedBytes: shortened.omittedBytes }
   }
@@ -142,7 +142,7 @@ function textContent(content: readonly { type: string; text?: string }[]): strin
 }
 
 function truncateWithNotice(text: string, maxOutputBytes: number): { text: string; omittedBytes: number } {
-  /* v8 ignore next -- callers invoke this only with a target smaller than the selected original text. */
+  /* callers invoke this only with a target smaller than the selected original text. */
   if (Buffer.byteLength(text, 'utf8') <= maxOutputBytes) return { text, omittedBytes: 0 }
   let low = 0
   let high = maxOutputBytes
@@ -155,7 +155,7 @@ function truncateWithNotice(text: string, maxOutputBytes: number): { text: strin
     retainer.push(text)
     const result = retainer.finish()
     // The complete source string was pushed before `finish()`, so omission is exact.
-    /* v8 ignore next 3 -- complete-string TextRetainer input cannot report a lower bound. */
+    /* complete-string TextRetainer input cannot report a lower bound. */
     if (result.omittedBytes.kind !== 'exact') {
       throw new Error('session-reference retention did not report exact omitted bytes')
     }

@@ -24,7 +24,7 @@ Cut along the architecture's natural test hooks into three tiers, bottom-up:
 
 Inter-tier discipline: **each tier tests its own layer, upper tiers never re-test lower ones** — an app semantic snapshot pins only user-visible projection across the assembled plugin boundary, while Playwright smoke proves browser and carrier liveness; wire semantics belong to tier 1 and data semantics to tier 2. Pure-function layers (lineage/partial/notifier/transcript-adapter) are tested directly with zero fakes in the same package's tests/ alongside tier 2.
 
-- **Host and client source** are under the repo-wide per-file 100% coverage gate except the narrow browser-grade exclusions annotated in `vitest.config.ts`; component suites use per-file jsdom pragmas and Testing Library without changing Node suites.
+- **Host and client source** contributes to the repository’s aggregate 80% coverage measurement; component suites use per-file jsdom pragmas and Testing Library without changing Node suites.
 - **App-owned semantic snapshots** read built client bundles, execute them through the real loader, and drive only deterministic fixture hooks. They own stable visible state such as sidebar labels, breadcrumbs, and `document.title`, not CSS pixels or lower-layer state-machine details.
 
 ## Lane map

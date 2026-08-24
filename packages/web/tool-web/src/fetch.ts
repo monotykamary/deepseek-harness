@@ -237,7 +237,7 @@ function renderBody(body: WebFetchBody, maxInputChars: number): RenderedBody {
       }
     case 'text':
       return { text: content, sourceTruncated }
-    /* v8 ignore next 2 -- WebFetchBody is a closed union; this arm is unreachable and only makes adding a kind a compile error. */
+    /* WebFetchBody is a closed union; this arm is unreachable and only makes adding a kind a compile error. */
     default:
       return assertNever(body, 'unhandled web fetch body kind')
   }

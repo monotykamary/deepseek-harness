@@ -222,7 +222,7 @@ export class XtermSurface {
   private readonly onScrollbarThumbPointerMove = (event: PointerEvent): void => {
     if (!this.scrollbarDragging) return
     const scrollbar = this.scrollbar
-    /* v8 ignore next -- uninstall removes the pointer listener before clearing this owned pair. */
+    /* uninstall removes the pointer listener before clearing this owned pair. */
     if (scrollbar === undefined) return
     const trackHeight = scrollbar.track.clientHeight
     const lastViewportLine = this.terminal.buffer.active.length - this.terminal.rows
@@ -243,7 +243,7 @@ export class XtermSurface {
   private readonly onScrollbarTrackPointerDown = (event: PointerEvent): void => {
     if (event.button !== 0) return
     const scrollbar = this.scrollbar
-    /* v8 ignore next -- uninstall removes the pointer listener before clearing this owned pair. */
+    /* uninstall removes the pointer listener before clearing this owned pair. */
     if (scrollbar === undefined) return
     if (event.target === scrollbar.thumb) return
     this.outputScroll.noteUserScroll()

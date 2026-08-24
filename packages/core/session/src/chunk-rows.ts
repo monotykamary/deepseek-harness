@@ -313,7 +313,7 @@ function expandRow(row: ChunkRow): SessionEvent[] {
           argumentsDelta: members[k] as string,
         }
         break
-      /* v8 ignore next 2 -- validateRow only returns the three row tags */
+      /* validateRow only returns the three row tags */
       default:
         return assertNever(row, 'chunk-rows expandRow')
     }

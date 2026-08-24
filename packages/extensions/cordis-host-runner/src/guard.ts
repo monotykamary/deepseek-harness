@@ -176,7 +176,7 @@ function cloneJson(value: unknown, path: string): unknown {
     const entries = Object.entries(record)
     for (let index = entries.length - 1; index >= 0; index--) {
       const entry = entries[index]
-      /* v8 ignore next -- the loop is bounded by the captured entry count. */
+      /* the loop is bounded by the captured entry count. */
       if (entry === undefined) continue
       tasks.push({
         kind: 'visit',
@@ -348,7 +348,7 @@ function normalizePropertyMap(
       const mapEntries = Object.entries(task.entries)
       for (let index = mapEntries.length - 1; index >= 0; index--) {
         const entry = mapEntries[index]
-        /* v8 ignore next -- the loop is bounded by the captured entry count. */
+        /* the loop is bounded by the captured entry count. */
         if (entry === undefined) continue
         tasks.push({
           kind: 'value',
@@ -478,12 +478,12 @@ function normalizePropertyMap(
       case 'json':
         assertSchemaKeys(value, path, ['type', ...requiredKey, ...ANNOTATION_KEYS])
         break
-      /* v8 ignore next 2 -- SCHEMA_TYPES narrows this closed switch before dispatch. */
+      /* SCHEMA_TYPES narrows this closed switch before dispatch. */
       default:
         throw new Error(`harness.defineTool ${path} must declare a valid type: ${VALID_TYPES}`)
     }
   }
-  /* v8 ignore next -- the root map task assigns before scheduling descendants. */
+  /* the root map task assigns before scheduling descendants. */
   return holder.value ?? {}
 }
 

@@ -80,7 +80,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
   const [edges, setEdges] = useState({ left: false, right: false })
   const updateEdges = useCallback(() => {
     const el = railRef.current
-    /* v8 ignore next -- defensive: every caller runs while the rail element is mounted. */
+    /* defensive: every caller runs while the rail element is mounted. */
     if (el === null) return
     // 1px slack: engines report fractional scroll positions at the edges.
     const left = el.scrollLeft > 1
@@ -91,7 +91,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
     const grew = countRef.current !== null && items.length > countRef.current
     countRef.current = items.length
     const el = railRef.current
-    /* v8 ignore next -- defensive: the rail div renders unconditionally, so the layout effect always finds it. */
+    /* defensive: the rail div renders unconditionally, so the layout effect always finds it. */
     if (el === null) return
     // A newly added attachment lands at the rail's end: reveal it.
     if (grew) el.scrollLeft = el.scrollWidth - el.clientWidth
@@ -99,7 +99,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
   }, [items.length, updateEdges])
   useEffect(() => {
     const el = railRef.current
-    /* v8 ignore next -- defensive: the rail div renders unconditionally, so the mount effect always finds it. */
+    /* defensive: the rail div renders unconditionally, so the mount effect always finds it. */
     if (el === null) return
     // The rail's width follows the composer, which resizes with sidebars and
     // panels, not only the window — observe the element itself. jsdom (the
@@ -141,7 +141,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
   }, [updateEdges])
   const page = (direction: -1 | 1): void => {
     const el = railRef.current
-    /* v8 ignore next -- defensive: the arrows render only while the rail is mounted, so a click cannot find a null ref. */
+    /* defensive: the arrows render only while the rail is mounted, so a click cannot find a null ref. */
     if (el === null) return
     // One viewport minus a card keeps the last visible thumbnail as context;
     // the floor keeps narrow rails paging a useful distance.

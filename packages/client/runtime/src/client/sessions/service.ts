@@ -527,7 +527,7 @@ export class SessionRuntime implements ISessions {
     this.watched = current
     this.sweepDeferred()
     const record = this.resolve(current)
-    /* v8 ignore next 3 -- defensive: current is always a listed id (open()
+    /* defensive: current is always a listed id (open()
      * validates and the projection masks absent selections), so resolve
      * cannot miss; kept so a future current writer cannot crash the notify. */
     if (record !== undefined) {
@@ -683,7 +683,7 @@ export class SessionRuntime implements ISessions {
   /** Run deferred teardowns whose session is no longer staged (called when the stage moves). */
   private sweepDeferred(): void {
     for (const id of [...this.deferredRemovals]) {
-      /* v8 ignore next -- defensive: only the staged id ever defers, and every
+      /* defensive: only the staged id ever defers, and every
        * stage move sweeps first, so the set cannot contain the id the stage just
        * moved to; kept as a guard against future extra sweep call sites. */
       if (id === this.watched) continue
@@ -694,7 +694,7 @@ export class SessionRuntime implements ISessions {
       }
       const record = this.scopes.get(id)
       this.deferredRemovals.delete(id)
-      /* v8 ignore next -- defensive: prune deletes a scope and its deferral
+      /* defensive: prune deletes a scope and its deferral
        * together, so a deferred id always still owns its record; kept so a
        * future teardown path cannot double-dispose. */
       if (record !== undefined) {

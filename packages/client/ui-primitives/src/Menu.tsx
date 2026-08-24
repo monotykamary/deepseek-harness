@@ -139,7 +139,7 @@ export function Menu({ open, anchor, items, selectedId, selectedIds, onSelect, o
       if (getAnchorRect !== undefined) {
         r = getAnchorRect()
       } else {
-        /* v8 ignore next 2 -- the ref is attached before the layout effect runs and the listeners die with it. */
+        /* the ref is attached before the layout effect runs and the listeners die with it. */
         r = rootRef.current?.getBoundingClientRect() ?? null
       }
       if (r === null) return

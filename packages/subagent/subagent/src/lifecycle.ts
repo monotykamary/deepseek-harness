@@ -251,7 +251,7 @@ function epochStopReason(events: readonly SessionEvent[]): SubagentResult['stopR
     case undefined:
     case 'completed':
       return droppedUnrun ? 'aborted' : 'completed'
-    /* v8 ignore next 3 -- `TurnEndReason` is merge-extensible, so this arm needs a
+    /* `TurnEndReason` is merge-extensible, so this arm needs a
      * backend that adds a variant; treating an unnameable reason as success would
      * report failed work as completed. */
     default:

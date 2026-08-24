@@ -532,7 +532,7 @@ export class ClientModuleRegistry extends Service {
       res.end()
       return
     }
-    /* v8 ignore next -- `?? '/'` arm: node:http always sets url on server requests. */
+    /* `?? '/'` arm: node:http always sets url on server requests. */
     const pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname)
     // The id may contain a scope slash. Anything else under /plugins (including
     // /plugins/events when the HMR row is absent) is an unknown resource.

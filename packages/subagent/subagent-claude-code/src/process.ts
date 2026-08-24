@@ -18,7 +18,7 @@ import {
 } from '@monotykamary/dsh-subprocess'
 
 function thrown(value: unknown): Error {
-  /* v8 ignore next -- the subprocess seam rejects with Error. */
+  /* the subprocess seam rejects with Error. */
   return value instanceof Error ? value : new Error(String(value))
 }
 

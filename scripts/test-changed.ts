@@ -1,7 +1,7 @@
 /**
  * Fast inner-loop gate: run vitest scoped to the packages the worktree
  * changed, instead of the whole suite. Answers "does my next edit hold?"
- * in seconds-to-minutes (add --coverage to enforce the per-file 100% bar on
+ * in seconds-to-minutes (add --coverage to enforce the aggregate 80% bar on
  * only the changed packages' src, minutes instead of the full hours-long
  * coverage gate). CI remains the exhaustive authority; this is a local
  * feedback tool, not a substitute for the full gates.
@@ -72,7 +72,7 @@ vitestArgs.push(...scopes)
 if (options.coverage) {
   vitestArgs.push('--coverage')
   for (const scope of scopes) {
-    // src-only include: the per-file 100% threshold then gates exactly the
+    // src-only include: the aggregate 80% threshold then gates exactly the
     // changed packages' runtime source, minutes instead of the full gate.
     if (scope.startsWith('packages/')) {
       vitestArgs.push('--coverage.include', scope + '/src/**/*.{ts,tsx}')

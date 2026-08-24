@@ -92,7 +92,7 @@ function writableAncestor(path: string): boolean {
   let candidate = resolve(path)
   while (!existsSync(candidate)) {
     const parent = dirname(candidate)
-    /* v8 ignore next -- every supported filesystem exposes its parsed root as an existing directory */
+    /* every supported filesystem exposes its parsed root as an existing directory */
     if (parent === candidate) return false
     candidate = parent
   }
@@ -171,7 +171,7 @@ function updateCommand(channel: InstallChannel, packageName: string): string | n
     case 'nix': return 'nix flake update'
     case 'source': return null
     case 'unknown': return null
-    /* v8 ignore next -- TypeScript closes InstallChannel; runtime input is normalized before this call. */
+    /* TypeScript closes InstallChannel; runtime input is normalized before this call. */
     default: channel satisfies never; return null
   }
 }
@@ -212,7 +212,7 @@ export async function checkInstalledDistribution(
 ): Promise<DistributionPackageStatus[]> {
   const installed = installedDistribution(appManifest)
   const app = installed[0]
-  /* v8 ignore next -- installedDistribution validates and always inserts the app first. */
+  /* installedDistribution validates and always inserts the app first. */
   if (app === undefined) throw new Error('distribution-update: installed distribution has no app')
   const controller = new AbortController()
   const timeout = setTimeout(() => { controller.abort() }, requestTimeoutMs)
@@ -240,7 +240,7 @@ export async function checkInstalledDistribution(
         throw new Error(`${app.name}: latest release has invalid version requirement for ${pkg.name}`)
       }
       const targetFloor = exactTarget ?? minimumTarget?.version
-      /* v8 ignore next -- exactTarget or minimumTarget supplied targetFloor. */
+      /* exactTarget or minimumTarget supplied targetFloor. */
       if (targetFloor === undefined) throw new Error(`${pkg.name}: target version has no minimum`)
       return { ...pkg, latest, updateAvailable: gt(targetFloor, installedVersion) }
     })
@@ -267,7 +267,7 @@ function sourceRoot(appManifest: string): string {
 export function launchDetachedUpdate(appManifest: string): DistributionUpdateLaunch {
   const packages = installedDistribution(appManifest)
   const app = packages[0]
-  /* v8 ignore next -- installedDistribution always inserts the validated app first. */
+  /* installedDistribution always inserts the validated app first. */
   if (app === undefined) throw new Error('distribution-update: installed distribution has no app')
   const channel = detectInstallChannel(appManifest)
   const command = updateCommand(channel, app.name)
@@ -323,7 +323,7 @@ export class DistributionUpdateService extends TypertRemoteService {
     }
     this.packages = installedDistribution(config.appManifest)
     const app = this.packages[0]
-    /* v8 ignore next -- installedDistribution always inserts the validated app first. */
+    /* installedDistribution always inserts the validated app first. */
     if (app === undefined) throw new Error('distribution-update: installed distribution has no app')
     this.appName = app.name
     this.channel = detectInstallChannel(config.appManifest)

@@ -39,7 +39,7 @@ function styleObject(css: string): CSSProperties {
 /** Map one parsed DOM node onto a React element (text nodes pass through). */
 function domToReact(node: ChildNode, key: number): ReactNode {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent
-  /* v8 ignore next 2 -- KaTeX output holds only elements and text; other
+  /* KaTeX output holds only elements and text; other
      node kinds cannot appear in its serialized vocabulary. */
   if (node.nodeType !== Node.ELEMENT_NODE) return null
   const element = node as Element
@@ -73,7 +73,6 @@ export function renderTexToReact(value: string, displayMode: boolean): ReactNode
     } catch {
       // KaTeX renders ParseErrors itself under throwOnError: false; only its
       // internal errors reach here, so mirror rehype-katex's manual span.
-      /* v8 ignore next 8 */
       return (
         <span
           className="katex-error"

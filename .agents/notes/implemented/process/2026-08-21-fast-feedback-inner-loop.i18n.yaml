@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-21-fast-feedback-inner-loop.md
-2026-08-21-fast-feedback-inner-loop.md: a4be58e6672fb568a0c5521301fa52d0b9f62e7b
-2026-08-21-fast-feedback-inner-loop.zh.md: 539155279819212307e940bcf10523d92653f420
+2026-08-21-fast-feedback-inner-loop.md: 17fd8ba14c165bdcf1bc051aeacc2526b1a9df19
+2026-08-21-fast-feedback-inner-loop.zh.md: 3fc1534c4f4f6db63f5f6b4b0b3dd12fef0fe405

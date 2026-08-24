@@ -177,7 +177,7 @@ function unattendedDiagnostic(
 }
 
 function thrown(value: unknown): Error {
-  /* v8 ignore next -- typed protocol and stream failures reject with Error. */
+  /* typed protocol and stream failures reject with Error. */
   return value instanceof Error ? value : new Error(String(value))
 }
 

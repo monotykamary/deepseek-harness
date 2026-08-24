@@ -297,7 +297,7 @@ export class ThemeRuntime {
     // Both built-ins always exist; a registered preference id resolves or has
     // been reset by its disposer, so the lookup cannot miss.
     const active = this.themes.find(t => t.id === resolvedId)
-    /* v8 ignore next 2 -- needs a registry without light/dark, which register()/dispose() cannot produce */
+    /* needs a registry without light/dark, which register()/dispose() cannot produce */
     if (active === undefined) throw new Error(`theme registry lost "${resolvedId}"`)
     return Object.freeze({
       preference: this.preference,

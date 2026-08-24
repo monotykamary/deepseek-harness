@@ -281,7 +281,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
       && event.type !== 'compaction/summary'
       && event.type !== 'compaction/end') return
     const candidate = staged.get(event)
-    /* v8 ignore next -- internal/dispatch stages every compaction event */
+    /* internal/dispatch stages every compaction event */
     if (candidate === undefined || candidate.session !== session) return fail('compaction event published without pre-commit validation')
     staged.delete(event)
     trace.compaction = applyCompactionTransition(candidate.transition)

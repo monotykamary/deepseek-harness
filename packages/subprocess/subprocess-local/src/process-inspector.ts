@@ -36,7 +36,7 @@ export interface ProcessInspectorInternals {
   kill(pid: number, signal: NodeJS.Signals): void
 }
 
-/* v8 ignore start -- thin OS bindings; injected logic is unit-tested and real platform composition exercises them. */
+/* thin OS bindings; injected logic is unit-tested and real platform composition exercises them. */
 const DEFAULT_INTERNALS: ProcessInspectorInternals = {
   readFile: path => readFileSync(path, 'utf8'),
   readDir: path => readdirSync(path),
@@ -46,7 +46,6 @@ const DEFAULT_INTERNALS: ProcessInspectorInternals = {
   exec: (file, args) => execFileSync(file, args, { encoding: 'utf8' }),
   kill: (pid, signal) => process.kill(pid, signal),
 }
-/* v8 ignore stop */
 
 interface ProcStat {
   pid: number

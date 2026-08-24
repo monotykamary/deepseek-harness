@@ -610,7 +610,7 @@ function chooseRandomBehavior(
     draw -= weight
   }
   // Floating-point subtraction can only leave a rounding residue at the upper boundary.
-  /* v8 ignore next -- seededRandom is strictly less than one; this guards floating-point residue only */
+  /* seededRandom is strictly less than one; this guards floating-point residue only */
   return (weights.at(-1) as readonly [ConcreteMockLlmBehavior, number])[0]
 }
 
@@ -646,7 +646,7 @@ export async function startMockLlmServer(options: MockLlmServerOptions): Promise
   }
 
   const handle = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
-    /* v8 ignore next -- node:http server requests always carry a URL despite the shared optional type */
+    /* node:http server requests always carry a URL despite the shared optional type */
     const path = new URL(request.url ?? '/', 'http://mock.invalid').pathname
     if (request.method !== 'POST') {
       response.writeHead(405, { allow: 'POST' }).end()
@@ -698,7 +698,7 @@ export async function startMockLlmServer(options: MockLlmServerOptions): Promise
   }
 
   const server = createServer((request, response) => {
-    /* v8 ignore start -- last-resort containment for Node response failures after validated test inputs */
+    /* last-resort containment for Node response failures after validated test inputs */
     handle(request, response).catch((error: unknown) => {
       const record = requests.at(-1)
       if (record !== undefined) finishRecord(resolved, record, 'server_error')
@@ -709,7 +709,6 @@ export async function startMockLlmServer(options: MockLlmServerOptions): Promise
       response.writeHead(500, { 'content-type': 'application/json' })
       response.end(JSON.stringify({ error: { message: 'mock server handler failed', code: 'MOCK_HANDLER_FAILED' } }))
     })
-    /* v8 ignore stop */
   })
 
   let closing: Promise<void> | undefined

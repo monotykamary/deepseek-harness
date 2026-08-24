@@ -239,7 +239,7 @@ export class AclSandbox {
       this.tempWriteSidPtr = this.tempWriteSid === undefined ? undefined : parseSid(this.tempWriteSid)
 
       const tempDir = this.mode === 'read-only' || this.tempDirOption === null ? null : this.tempDirOption
-      /* v8 ignore next -- constructor validation requires workspace-write to supply
+      /* constructor validation requires workspace-write to supply
          an explicit temp directory or null; the other branches normalize to null. */
       if (tempDir === undefined) throw new Error('AclSandbox workspace-write temp directory was not resolved')
       if (tempDir !== null) {
@@ -410,7 +410,7 @@ export class AclSandbox {
       freeSidBestEffort(api, sidPtr, label, failures)
     }
     const token = this.token
-    /* v8 ignore next -- init assigns this.api only after this.token, so an initialized instance always
+    /* init assigns this.api only after this.token, so an initialized instance always
        has its token; the guard mirrors the write-SID guard. */
     if (token !== undefined) {
       try {

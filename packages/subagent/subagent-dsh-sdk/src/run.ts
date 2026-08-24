@@ -96,7 +96,6 @@ function toError(value: unknown): Error {
   // The catch only sees rejections from the SDK client, which are always
   // `Error`s; the `String(value)` arm is a defensive fallback for a non-Error
   // throw that the typed surfaces cannot produce.
-  /* v8 ignore next */
   return value instanceof Error ? value : new Error(String(value))
 }
 
@@ -153,7 +152,6 @@ export async function startSdkRun(request: SubagentStartRequest, spec: SdkRunSpe
     // Defensive: an abort() is a macrotask and no user callback runs inside
     // the microtask drain between handshake fulfillment and this continuation,
     // so the recheck is not schedulable today; it guards future reentrancy.
-    /* v8 ignore next */
     if (flags.cancelled) throw new Error('subagent cancelled before the SDK child initialized')
   } catch (error: unknown) {
     request.signal.removeEventListener('abort', onAbort)

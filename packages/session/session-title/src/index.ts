@@ -210,7 +210,7 @@ function copySessionTitleSource(source: SessionTitleSource): SessionTitleSource 
       ...(source.model === undefined ? {} : { model: { ...source.model } }),
     }
     case 'user': return { kind: 'user' }
-    /* v8 ignore next -- closed-union exhaustiveness guard */
+    /* closed-union exhaustiveness guard */
     default: return assertNever(source, 'SessionTitleSource')
   }
 }
@@ -378,7 +378,7 @@ export class SessionTitleService extends Service {
       source: { kind: 'user' },
     })
     const snapshot = this.get(session)
-    /* v8 ignore next -- unreachable: the append above just committed a session/title event. */
+    /* unreachable: the append above just committed a session/title event. */
     if (snapshot === undefined) throw new Error('renamed title failed to fold')
     return snapshot
   }
@@ -637,7 +637,7 @@ export class SessionTitleService extends Service {
     this.assertServiceActive()
     work.signal.throwIfAborted()
     const state = this.work.get(session)
-    /* v8 ignore next -- every supported supersession, provider disposal, and session disposal aborts
+    /* every supported supersession, provider disposal, and session disposal aborts
      * the work signal before changing this state. */
     if (this.registration !== work.registration
       || state?.active !== work

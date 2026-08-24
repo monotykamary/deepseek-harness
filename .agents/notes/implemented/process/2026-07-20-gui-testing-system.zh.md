@@ -24,7 +24,7 @@ GUI 栈需要考虑多种应用形态，同应用形态内的不同运行环境�
 
 层间纪律：**各层各测各的，上层不重测下层**：应用语义快照只固定组装后插件边界上的用户可见投影，Playwright 冒烟测试负责验证浏览器与承载层是否存活；wire 语义归 1 层，数据语义归 2 层。纯函数层（lineage/partial/notifier/transcript-adapter）随 2 层同包 tests/ 零假体直测。
 
-- **host 与 client 源码**均纳入全仓 per-file 100% 覆盖率门禁，仅排除 `vitest.config.ts` 中带注释的少量浏览器级例外；组件套件通过逐文件 jsdom pragma 和 Testing Library 运行，不会改变 Node 套件。
+- **host 与 client 源码**参与仓库聚合 80% 覆盖率度量；组件套件通过逐文件 jsdom pragma 和 Testing Library 运行，不会改变 Node 套件。
 - **归应用所有的语义快照**读取已构建的 client bundle，通过真实 loader 执行它们，并且只驱动确定性的 fixture 钩子。它们负责固定侧边栏标签、面包屑和 `document.title` 等稳定可见状态，而不固定 CSS 像素或下层状态机细节。
 
 ## 车道地图

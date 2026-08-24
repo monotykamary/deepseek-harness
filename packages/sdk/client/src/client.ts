@@ -219,7 +219,6 @@ export class HarnessClient {
     // Writes racing the runtime's death EPIPE on stdin; the exit edge below is
     // the real signal, so the stream-level error only needs to be non-fatal.
     // The timing of that race is not deterministically reproducible.
-    /* v8 ignore next */
     child.stdin.on('error', () => {})
     let stderrBuffer = ''
     child.stderr.setEncoding('utf8')
@@ -307,7 +306,7 @@ export class HarnessClient {
       throw this.closedError('DeepSeek Harness runtime is not running')
     }
     const transport = this.transport
-    /* v8 ignore next -- start() either sets the transport or throws */
+    /* start() either sets the transport or throws */
     if (transport === undefined) throw new TransportClosedError('DeepSeek Harness runtime is not running')
     const timeout = timeoutMs ?? this.options.requestTimeoutMs
     try {
@@ -425,7 +424,6 @@ export class HarnessClient {
       current = parent
     }
     // The parent map only ever extends chains upward, so a cycle cannot form.
-    /* v8 ignore next */
     return false
   }
 
@@ -468,6 +466,6 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** The message of a thrown value (the transport only throws `Error`s; `String` covers the rest). */
 function errorMessage(error: unknown): string {
-  /* v8 ignore next -- the transport and dispose ladder reject only with Errors */
+  /* the transport and dispose ladder reject only with Errors */
   return error instanceof Error ? error.message : String(error)
 }

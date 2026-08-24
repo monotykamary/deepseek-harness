@@ -41,7 +41,7 @@ export class SessionCorpus {
       const service = childCtx.sessionPersistence
       this._persistence = service
       childCtx.effect(() => () => {
-        /* v8 ignore next -- a stale optional-service disposer cannot clear a replacement */
+        /* a stale optional-service disposer cannot clear a replacement */
         if (this._persistence === service) this._persistence = undefined
       }, 'sessionQuery.persistenceBinding')
     })
@@ -207,14 +207,13 @@ export class SessionCorpus {
       Array.from({ length: workerCount }, () => worker()),
     )
     if (signal?.aborted) signal.throwIfAborted()
-    /* v8 ignore start -- per-id failures settle inside resolvePersisted; workers reject only on abort above */
+    /* per-id failures settle inside resolvePersisted; workers reject only on abort above */
     for (const settlement of settlements) {
       if (settlement.status === 'rejected') {
         const reason: unknown = settlement.reason
         throw reason
       }
     }
-    /* v8 ignore stop */
     signal?.throwIfAborted()
     return orderedResults(ids, resolved)
   }
@@ -232,7 +231,7 @@ function projectSource<Value>(
     signal?.throwIfAborted()
     return { sessionId, status: 'fulfilled', value }
   } catch (reason: unknown) {
-    /* v8 ignore next -- the synchronous projector has no external cancellation yield */
+    /* the synchronous projector has no external cancellation yield */
     if (signal?.aborted) signal.throwIfAborted()
     return { sessionId, status: 'rejected', reason }
   }

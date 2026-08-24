@@ -540,7 +540,7 @@ Tool registry and execution pipeline. Scoped registrations shadow globals; one v
  * @param options - Code Mode behavior attached to the same scoped declaration.
  * @returns the exact disposer that restores the deployment default.
  */
-presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): () => void
+presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): () => Promise<void>
 
 /**
  * Register globally or in the calling agent scope. Scoped tools shadow

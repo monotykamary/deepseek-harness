@@ -877,7 +877,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/directory-picker-browse/src/index.ts:181`](../packages/host/directory-picker-browse/src/index.ts)
+Source: [`packages/host/directory-picker-browse/src/index.ts:180`](../packages/host/directory-picker-browse/src/index.ts)
 
 <a id="monotykamarydsh-host-frontend-static"></a>
 
@@ -2072,7 +2072,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/skill/skill/src/index.ts:279`](../packages/skill/skill/src/index.ts)
+Source: [`packages/skill/skill/src/index.ts:278`](../packages/skill/skill/src/index.ts)
 
 <a id="monotykamarydsh-skill-filesystem"></a>
 

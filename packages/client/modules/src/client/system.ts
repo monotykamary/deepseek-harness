@@ -148,7 +148,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
     const existing = this.loadCache.get(id)
     if (existing !== undefined) return existing
     const registered = this.factories.get(id)
-    /* v8 ignore next -- callers check the factory branch before dispatching here. */
+    /* callers check the factory branch before dispatching here. */
     if (registered === undefined) throw new Error(`client-modules: no registered factory for "${id}"`)
     if (this.materializing.has(id)) {
       throw new Error(`client-modules: require cycle through "${id}" (factory-form CJS cannot deliver partial exports)`)

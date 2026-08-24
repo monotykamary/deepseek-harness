@@ -91,7 +91,7 @@ export function FilesPanel({ useStore, actions, list, read, write, t }: FilesPan
   )
 
   const activate = (entry: WorkspaceFileEntry): void => {
-    /* v8 ignore next -- `other` rows are disabled before this private callback can run. */
+    /* `other` rows are disabled before this private callback can run. */
     if (entry.kind === 'other') return
     if (entry.kind === 'file') {
       actions.expandPath(entry.locator, false)

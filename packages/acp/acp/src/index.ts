@@ -148,11 +148,10 @@ export function apply(ctx: Context, config: AcpConfig): void {
   const notify = async (notification: SessionNotification): Promise<void> => {
     try {
       await conn.sessionUpdate(notification)
-    /* v8 ignore start -- the ACP SDK contains notification-handler failures; only a transport write failure reaches this guard. */
+    /* the ACP SDK contains notification-handler failures; only a transport write failure reaches this guard. */
     } catch (error: unknown) {
       logger.warn(`acp: session/update failed: ${String(error)}`)
     }
-    /* v8 ignore stop */
   }
 
   const rejectFromError = (
@@ -180,7 +179,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
         // reading the live tail here includes every committed output task.
         await record.outputTail
       }
-      /* v8 ignore next -- this prompt owns the slot until this exact settlement clears it. */
+      /* this prompt owns the slot until this exact settlement clears it. */
       if (record.inflight !== inflight) return
       record.inflight = undefined
       if (inflight.cancelRequested) {
@@ -206,13 +205,12 @@ export function apply(ctx: Context, config: AcpConfig): void {
         inflight.resolve(end.kind === 'max-tokens' ? 'end_turn' : turnEndToStopReason(end))
       }
     })()
-    /* v8 ignore start -- admissionDone only resolves, and the queued path's idle/output gates contain their own failures. */
+    /* admissionDone only resolves, and the queued path's idle/output gates contain their own failures. */
       .catch((error: unknown) => {
         if (record.inflight !== inflight) return
         record.inflight = undefined
         inflight.reject(internalError(`prompt settlement failed: ${errorChain(error)}`))
       })
-    /* v8 ignore stop */
   }
 
   // Emit only committed assistant text/images. Raw chunks, reasoning, tools,
@@ -318,7 +316,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
           meta: { cwd: params.cwd },
           agentOptions: agentOptions(config),
         })
-        /* v8 ignore next 4 -- a real stdio close can race an in-flight create. */
+        /* a real stdio close can race an in-flight create. */
         if (closed) {
           await handle.dispose()
           throw internalError('connection closed during session/new')
@@ -440,7 +438,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
     }
   }
 
-  /* v8 ignore next 4 -- production stdio wiring; tests inject config.stream. */
+  /* production stdio wiring; tests inject config.stream. */
   const stream: Stream = config.stream ?? ndJsonStream(
     Writable.toWeb(process.stdout) as WritableStream<Uint8Array>,
     Readable.toWeb(process.stdin) as ReadableStream<Uint8Array>,
@@ -509,7 +507,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
     return quiescing
   }
 
-  /* v8 ignore start -- production transport rejection and teardown failure. */
+  /* production transport rejection and teardown failure. */
   void conn.closed
     .catch((error: unknown) => {
       logger.warn(`acp: connection closed with an error: ${String(error)}`)
@@ -518,7 +516,6 @@ export function apply(ctx: Context, config: AcpConfig): void {
     .catch((error: unknown) => {
       logger.warn(`acp: connection-close teardown failed: ${String(error)}`)
     })
-  /* v8 ignore stop */
 
   ctx.effect(() => quiesce, 'acp.connection')
 }

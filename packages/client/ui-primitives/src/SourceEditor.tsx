@@ -41,7 +41,7 @@ export function SourceEditor({
   const lines = useMemo(() => value.split('\n'), [value])
 
   const syncScroll = (event: UIEvent<HTMLTextAreaElement>): void => {
-    /* v8 ignore next -- the textarea scroll handler is removed with its sibling backdrop. */
+    /* the textarea scroll handler is removed with its sibling backdrop. */
     if (backdrop.current === null) return
     backdrop.current.scrollTop = event.currentTarget.scrollTop
     backdrop.current.scrollLeft = event.currentTarget.scrollLeft

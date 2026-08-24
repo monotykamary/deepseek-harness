@@ -133,16 +133,15 @@ async function assertOwnerOnly(filename: string): Promise<void> {
     await canonicalizeWatchPath(filename)
     return
   }
-  /* v8 ignore next -- POSIX coverage cannot take the Windows peer; native Windows coverage does. */
+  /* POSIX coverage cannot take the Windows peer; native Windows coverage does. */
   if (process.platform === 'win32') return
-  /* v8 ignore start -- Windows has no POSIX mode enforcement; POSIX behavior tests enforce this peer. */
+  /* Windows has no POSIX mode enforcement; POSIX behavior tests enforce this peer. */
   const offending = mode & GROUP_OTHER_BITS
   if (offending === 0) return
   throw new Error(
     `credentials-local: ${filename} is readable beyond its owner (mode ${(mode & 0o777).toString(8)});`
     + ` run "chmod 600 ${filename}" before starting again`,
   )
-  /* v8 ignore stop */
 }
 
 /** Whether a filesystem error means absence; every non-ENOENT failure must surface. */
@@ -158,7 +157,7 @@ function isENOENT(error: unknown): boolean {
  */
 function describeYamlError(error: YAMLError): string {
   const at = error.linePos?.[0]
-  /* v8 ignore next -- `prettyErrors` populates linePos on every error; the guard answers its optional type */
+  /* `prettyErrors` populates linePos on every error; the guard answers its optional type */
   const where = at === undefined ? '' : ` at line ${String(at.line)}, column ${String(at.col)}`
   return `${error.code}${where}`
 }
@@ -475,12 +474,12 @@ function renderRecord(text: string | undefined, key: CredentialKey, record: Cred
  */
 function deleteSectionEntry(document: Document, section: 'refs' | 'records', key: string): void {
   const map: unknown = document.get(section, true)
-  /* v8 ignore next -- both callers render a delete only for an entry they just
+  /* both callers render a delete only for an entry they just
      found in the parsed snapshot, so the section it lives in is always a map;
      the guard is what narrows `get`'s `unknown`. */
   if (isMap(map)) {
     const first = map.items[0]
-    /* v8 ignore next -- a map that holds the entry has a first item, and the
+    /* a map that holds the entry has a first item, and the
        parser admits only scalar keys, so only the identity test can be false. */
     if (first !== undefined && isScalar(first.key) && first.key.value === key) {
       map.commentBefore = null
@@ -838,7 +837,7 @@ export class LocalCredentialProvider extends CredentialProvider {
     return withFileLock(this.spec.filename, async () => {
       const current = await readFile(this.spec.filename, 'utf8')
       const migrated = renderFlatLayoutMigration(current)
-      /* v8 ignore next 2 -- the losing side of the cross-process migration race:
+      /* the losing side of the cross-process migration race:
          another boot rewrote the document between the unlocked recognize and
          this lock. That interleaving cannot be scheduled deterministically
          through a whole boot (migration.spec drives it best-effort); the

@@ -138,14 +138,13 @@ function asError(reason: unknown): Error {
   return reason instanceof Error ? reason : new Error(String(reason))
 }
 
-/* v8 ignore start -- a close failure of an abandoned handle has no consumer, and forcing one needs a filesystem torn down mid-request. */
+/* a close failure of an abandoned handle has no consumer, and forcing one needs a filesystem torn down mid-request. */
 /** Swallow the close failure of a handle its caller already departed. */
 function swallowCloseFailure(): void {}
-/* v8 ignore stop */
 
 /** Message text of an unknown thrown value. */
 function messageOf(error: unknown): string {
-  /* v8 ignore next -- node:fs rejects with Error instances; the String arm only satisfies the unknown narrowing. */
+  /* node:fs rejects with Error instances; the String arm only satisfies the unknown narrowing. */
   return error instanceof Error ? error.message : String(error)
 }
 
@@ -165,7 +164,7 @@ async function directoryRow(
       // network filesystem must not keep a departed caller's request alive.
       enterable = (await raceAbort(stat(path), signal)).isDirectory()
     } catch {
-      /* v8 ignore next 2 -- an abort landing mid-probe needs a stalled stat; the per-candidate check in list covers the settled path. */
+      /* an abort landing mid-probe needs a stalled stat; the per-candidate check in list covers the settled path. */
       if (signal?.aborted) throw asError(signal.reason)
       // Broken or cyclic symlink: stat is the probe, failure means "not enterable".
       return null
@@ -267,7 +266,7 @@ export default class BrowseDirectoryPicker extends DirectoryPicker {
         // very stall the abort escaped (the abandoned read's settlement is
         // already swallowed by raceAbort).
         const closing = level.close()
-        /* v8 ignore next 3 -- an abort between open and close needs a stalled read; the abandoned-close arm has no observable outcome. */
+        /* an abort between open and close needs a stalled read; the abandoned-close arm has no observable outcome. */
         if (signal?.aborted) {
           closing.catch(swallowCloseFailure)
         } else {

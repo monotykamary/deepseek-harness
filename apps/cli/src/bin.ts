@@ -6,7 +6,7 @@
  * @module @monotykamary/dsh/bin
  */
 
-/* v8 ignore file -- built-bin acceptance exercises this self-executing dispatch. */
+/* built-bin acceptance exercises this self-executing dispatch. */
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

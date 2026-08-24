@@ -42,6 +42,10 @@ function withPnpmEntrypoint<T>(action: () => T, entrypoint = '/private/pnpm.cjs'
   }
 }
 
+function withoutCoveragePartitions<T>(action: () => T): T {
+  return withEnv('DSH_COVERAGE_PARTITIONS', undefined, action)
+}
+
 function withEnv<T>(name: string, value: string | undefined, action: () => T): T {
   const previous = process.env[name]
   if (value === undefined) Reflect.deleteProperty(process.env, name)
@@ -157,9 +161,30 @@ describe('gate graph validation', () => {
     }
   })
 
+  it.each(['ci-primary', 'check-all', 'ci-windows-complete'] as const)(
+    'keeps host observations visible but nonblocking in %s',
+    (mode) => {
+      const subject = withPnpmEntrypoint(() => gatesForMode(mode))
+        .find(gate => gate.id === 'observational-tests')
+
+      expect(subject?.allowFailure).toBe(true)
+      expect(subject?.args).toEqual(expect.arrayContaining(['run', 'test:observational']))
+    },
+  )
+
+  it('splits the coverage worker budget evenly between measured and uninstrumented tests', () => {
+    const gates = withoutCoveragePartitions(() =>
+      withEnv('DSH_COVERAGE_MAX_WORKERS', '6', () =>
+        withPnpmEntrypoint(() => gatesForMode('ci-coverage'))))
+
+    expect(gates.find(subject => subject.id === 'coverage')?.args).toContain('--maxWorkers=3')
+    expect(gates.find(subject => subject.id === 'coverage-exempt-heavy')?.args).toContain('--maxWorkers=3')
+  })
+
   it('applies one configured test and polling timeout to both coverage gates', () => {
-    const gates = withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', '15000', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete')))
+    const gates = withoutCoveragePartitions(() =>
+      withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', '15000', () =>
+        withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
 
     for (const id of ['coverage', 'coverage-exempt-heavy']) {
       expect(gates.find(subject => subject.id === id)?.args).toEqual(expect.arrayContaining([
@@ -170,8 +195,9 @@ describe('gate graph validation', () => {
   })
 
   it('keeps Vitest timeout defaults when the coverage override is absent', () => {
-    const gates = withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', undefined, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete')))
+    const gates = withoutCoveragePartitions(() =>
+      withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', undefined, () =>
+        withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
 
     for (const id of ['coverage', 'coverage-exempt-heavy']) {
       expect(gates.find(subject => subject.id === id)?.args).not.toEqual(expect.arrayContaining([

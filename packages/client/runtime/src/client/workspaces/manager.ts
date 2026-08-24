@@ -108,7 +108,7 @@ export class WorkspaceManager {
       } catch (error) {
         this.state = 'error'
         const folded = transportError<never>(error)
-        /* v8 ignore next -- transportError always returns the failure branch. */
+        /* transportError always returns the failure branch. */
         this.error = folded.ok ? null : folded.error
       } finally {
         this.refreshFrames = null

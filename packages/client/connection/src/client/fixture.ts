@@ -600,7 +600,7 @@ function buildAlphaLog(): SessionEvent[] {
 }
 
 /** Narrows a parsed-JSON field to string; fixture args are authored in-file, so non-strings only mean a typo here. */
-/* v8 ignore next -- the fallback arm is the same in-file-typo guard as the JSON.parse catch above. */
+/* the fallback arm is the same in-file-typo guard as the JSON.parse catch above. */
 const str = (value: unknown, fallback = ''): string => typeof value === 'string' ? value : fallback
 
 /** Fixture presenter registry (mirrors host viewFor): pure derivation, undefined = no view. */
@@ -609,7 +609,7 @@ function presentCall(name: string, argsRaw: string): ToolCallView | undefined {
   try {
     args = JSON.parse(argsRaw) as Record<string, unknown>
   } catch {
-    /* v8 ignore next 2 -- defensive: fixture args are authored in-file as valid JSON; only an in-file typo could reach the catch. */
+    /* defensive: fixture args are authored in-file as valid JSON; only an in-file typo could reach the catch. */
     return undefined
   }
   switch (name) {
@@ -731,7 +731,7 @@ function viewFor(event: SessionEvent, log: readonly SessionEvent[]): ToolEventVi
     const callId = String(event.data.message.source.callId)
     for (let i = log.length - 1; i >= 0; i--) {
       const candidate = log[i]
-      /* v8 ignore next -- dense-array guard: i stays within [0, log.length),
+      /* dense-array guard: i stays within [0, log.length),
       so the undefined arm needs a sparse log no code path builds. */
       if (candidate !== undefined && candidate.type === 'tool/call' && String(candidate.data.callId) === callId) {
         const resultText = event.data.message.content[0].content.map(b => (b.type === 'text' ? b.text : '')).join('')
@@ -1140,7 +1140,7 @@ function projectionFramesOf(id: SessionId, log: readonly SessionEvent[], event: 
   if (frames.length > 0) return frames
   if (type === 'session/title') {
     const values = projectionValuesOf(log)
-    /* v8 ignore next -- the advancing title event is in the log, so the key is present. */
+    /* the advancing title event is in the log, so the key is present. */
     if (!Object.hasOwn(values, 'title')) return []
     return [{ type: 'session/projection', sessionId: id, key: 'title', value: values['title'], seq: event.seq }]
   }
@@ -1200,7 +1200,7 @@ function pageOf(
   let messages = 0
   for (let i = end - 1; i >= 0; i--) {
     const event = log[i]
-    /* v8 ignore next -- dense-array guard: log seqs are array indexes, i stays within [0, end). */
+    /* dense-array guard: log seqs are array indexes, i stays within [0, end). */
     if (event === undefined) break
     if (event.type === 'user/message' || event.type === 'assistant/message') messages++
     if (event.type === 'turn/start' && messages >= maxMessages) {
@@ -1703,7 +1703,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
     log.push(event)
     // Emission-time view derivation (mirrors the host's live path).
     const view = viewFor(event, log)
-    /* v8 ignore next 3 -- the view-present arm needs a live tool/call emission,
+    /* the view-present arm needs a live tool/call emission,
     but the fixture replay produces text-only turns; view vocabulary is
     exercised through the history samples (turns 60-62). */
     emitMux(view === undefined
@@ -2229,7 +2229,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
     const step = 0
     append(id, { type: 'step/start', data: { turn, step } })
     append(id, { type: 'assistant/chunk', data: { turn, step, chunk: { type: 'block-start', index: 0, blockType: 'text' } } })
-    /* v8 ignore next -- the ?? arm needs a null match, but every fixture reply is non-empty. */
+    /* the ?? arm needs a null match, but every fixture reply is non-empty. */
     const pieces = replyText.match(/[\s\S]{1,6}/gu) ?? [replyText]
     let i = 0
     const finish = (aborted: boolean): void => {
@@ -2319,7 +2319,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         const cwd = workspace?.path ?? request.payload.cwd ?? '/tmp/fixture'
         const requestedId = request.payload.sessionId
         const attachWorkspace = (sessionId: SessionId): void => {
-          /* v8 ignore next -- callers enter only when a target Workspace exists. */
+          /* callers enter only when a target Workspace exists. */
           if (workspace === undefined || workspace.sessionIds.includes(sessionId)) return
           workspace.sessionIds = [sessionId, ...workspace.sessionIds]
           workspace.updatedAt = new Date().toISOString()
@@ -2738,7 +2738,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         if (beforeWorkspaceId !== workspaceId) {
           const previousOrder = workspaces.map(candidate => candidate.workspaceId)
           const [workspace] = workspaces.splice(source, 1)
-          /* v8 ignore next -- source was resolved from the same array immediately above. */
+          /* source was resolved from the same array immediately above. */
           if (workspace === undefined) throw new Error(`fixture lost workspace ${workspaceId}`)
           const at = beforeWorkspaceId === undefined
             ? workspaces.length
@@ -2977,7 +2977,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         // fx-gamma only: never touch fx-alpha's running semantics (the conversation replay drives that).
         const timer = setInterval(() => {
           const gamma = summaryOf(sid('fx-gamma'))
-          /* v8 ignore next -- the undefined arm needs fx-gamma deleted, but the fixture never removes sessions. */
+          /* the undefined arm needs fx-gamma deleted, but the fixture never removes sessions. */
           if (gamma !== undefined) setRunning(gamma.sessionId, !gamma.running)
         }, 5000)
         try {

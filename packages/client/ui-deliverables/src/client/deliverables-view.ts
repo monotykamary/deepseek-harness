@@ -35,7 +35,7 @@ export class DeliverablesSnapshotBuilder implements ConversationViewBuilder<Deli
     const turnOrder = new Map(timeline.turnOrder.map((turn, index) => [turn, index]))
     const rank = (turn: number): number => {
       const index = turnOrder.get(turn)
-      /* v8 ignore next -- every target node belongs to an Engine-owned Turn in this timeline. */
+      /* every target node belongs to an Engine-owned Turn in this timeline. */
       if (index === undefined) throw new Error(`deliverables view has no timeline Turn ${String(turn)}`)
       return index
     }

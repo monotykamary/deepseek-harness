@@ -244,11 +244,10 @@ export class PwshLocalExecutor extends ShellExecutor {
   /** The collect-mode readers the executor itself requested (present by construction). */
   private static collected(handle: SubprocessHandle): { stdout: SubprocessOutputReader; stderr: SubprocessOutputReader } {
     const { stdout, stderr } = handle.collected
-    /* v8 ignore start -- collect dispositions expose both readers by the seam contract; defensive. */
+    /* collect dispositions expose both readers by the seam contract; defensive. */
     if (stdout === undefined || stderr === undefined) {
       throw new Error('pwsh-local: subprocess implementation dropped a requested collect stream')
     }
-    /* v8 ignore stop */
     return { stdout, stderr }
   }
 

@@ -14,7 +14,7 @@ Web GUI 以一条真实组装链交付——chromium 页面 → client 插件 bu
 
 ### Scaffold：`apps/web/tests/scaffold.ts`
 
-一个普通的共享 fixture 模块（[测试政策认可的形态](../../../../docs/testing.zh.md)），不是包：值得门禁把守的逻辑——回放推导、会话解析、日志脱敏、持久化——都在已受门禁的包 `dsh-llm-replay`、`dsh-acp-snapshot`、`dsh-session-persistence-jsonl` 中；剩下的只是启动接线和浏览器胶水，而驱动 chromium 的源码在无浏览器的覆盖率 runner 上无法诚实保持逐文件 100% 覆盖率。
+一个普通的共享 fixture 模块（[测试政策认可的形态](../../../../docs/testing.zh.md)），不是包：值得门禁把守的逻辑——回放推导、会话解析、日志脱敏、持久化——都在已受门禁的包 `dsh-llm-replay`、`dsh-acp-snapshot`、`dsh-session-persistence-jsonl` 中；剩下的是归应用所有、尚无可复用包约定的启动接线和浏览器胶水。
 
 `launchWebScaffold()` 通过 vendored Loader 的 include 机制，从交付的 `apps/cli/config/base.cordis.yml` 与 `apps/cli/config/web.cordis.yml` 启动真实 web 组合——与 `AppCLIEntry` 为 `dsh web` 驱动的是同一棵树、同一套机制。差异全部经 include patch 覆盖在这棵树上，即 ACP `cordis.snapshot.yml` 模式的进程内表达：临时 `persistenceRoot`；每个主机级 `skill-filesystem` 根目录（`dshHome`、`agentsHome` 和 `bundledSkillDir`）都钉在临时工作区下并禁用监听，因为环境 skill（技能）目录是模型可见输入；禁用 `agent-instructions`（录制的 fixture 不得嵌入本仓库的 AGENTS.md）；禁用 `session-title-llm`（其发后不管的标题调用会与循环争抢会话的回放游标）；webserver 行钉到端口 0，并使用已构建的 dist；无密钥模式下禁用 `llm-deepseek`。patch 的 id 一旦不再匹配任何行，boot 扫描会大声失败而不是漂移。boot 在临时工作区 `chdir` 下运行，使 api-gateway 的 `process.cwd()` 会话默认值、工具 cwd 与 fixture 一致；`dsh web` bin 自身的胶水（argv、profile json、AppCLIEntry）仍由 `smoke-real.e2e.ts` 中的无密钥 CLI（命令行界面）冒烟把守。初始化回滚和正常关闭都会先对 Cordis 树执行 dispose（资源释放），再删除 scaffold 持有的两个临时根目录；每项清理都会独立尝试，并会报告清理失败而不掩盖初始化失败。
 
@@ -64,7 +64,7 @@ Web GUI 以一条真实组装链交付——chromium 页面 → client 插件 bu
 
 **用占位 `DEEPSEEK_API_KEY` + 回放拦截替代禁用适配器行。** 尽管零组合改动且树内有两处先例仍被否决：它用谎言满足 `llm-deepseek` 的快速失败密钥检查，还留下一个挂载却被拦截的死适配器；禁用行（ACP overlay 的同款做法）是诚实的无密钥，并在最早可解析点快速失败。
 
-**`packages/test-support/web-snapshot` 包 + `defineWebSnapshotSuite` 工厂。** 已否决：驱动 chromium 的源码在无浏览器的覆盖率 runner 上无法诚实保持逐文件 100%，且除受门禁的包已导出的辅助工具与本地 scaffold 外，这些场景专用交互尚未形成稳定的无浏览器约定。出现第二个 web 形态消费方，或被证实重复的生命周期代码确立该约定后，再重新考虑。
+**`packages/test-support/web-snapshot` 包 + `defineWebSnapshotSuite` 工厂。** 已否决：除包已导出的辅助工具与归应用所有的 scaffold 外，这些场景专用交互尚未形成稳定的无浏览器约定。出现第二个 web 形态消费方，或被证实重复的生命周期代码确立该约定后，再重新考虑。
 
 **第二份提交的规范化会话日志预期输出。** 已否决：日志表面已由 ACP/headless/TUI 套件经同一循环与持久化钉住；在此只会翻倍刷新成本并重复测试下层。内联在根上下文事件上的世界状态断言保住了验证世界的义务。
 

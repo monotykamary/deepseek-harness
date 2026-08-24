@@ -122,7 +122,7 @@ export class WorkbenchSurfaceDirectory {
   private read(): readonly WorkbenchSurface[] {
     const surfaces: WorkbenchSurface[] = []
     for (const entry of this.slots.entries('workbench.surface')) {
-      /* v8 ignore next -- list registration requires an id at load. */
+      /* list registration requires an id at load. */
       if (entry.options.id === undefined) continue
       const id = entry.options.id as WorkbenchSurfaceId
       const presentation = this.presentations.get(id)

@@ -255,7 +255,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
   }
 
   const adoptPicked = (): void => {
-    /* v8 ignore next -- the dialog only renders with candidates loaded */
+    /* the dialog only renders with candidates loaded */
     if (candidates === undefined) return
     const byId = new Map(models.map(model => [textOf(model, 'id'), model]))
     for (const candidate of candidates) {

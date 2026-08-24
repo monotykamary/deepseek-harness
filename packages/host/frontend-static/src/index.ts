@@ -114,7 +114,7 @@ export function apply(ctx: Context, config: Config): void {
       res.end()
       return
     }
-    /* v8 ignore next -- node:http always sets url on server requests */
+    /* node:http always sets url on server requests */
     const rawPath = new URL(req.url ?? '/', 'http://x').pathname
     await serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, renderIndex)
   }), 'frontend-static: fallback seat')

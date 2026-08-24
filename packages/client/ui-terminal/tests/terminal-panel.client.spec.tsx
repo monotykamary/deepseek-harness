@@ -509,9 +509,11 @@ describe('TerminalPanel', () => {
     const right = mount({ placement: 'right', workbenchPanelOrdinal: 2 }, false)
     await screen.findByTestId('viewport')
     expect(right.ensureWorkbenchPanels).toHaveBeenCalledWith(2)
-    expect(mocks.connect).toHaveBeenLastCalledWith(expect.any(Function), expect.objectContaining({
-      type: 'attach', terminalId: 'terminal-2',
-    }), expect.any(Object))
+    await waitFor(() => {
+      expect(mocks.connect).toHaveBeenCalledWith(right.props.socketFactory, expect.objectContaining({
+        type: 'attach', terminalId: 'terminal-2',
+      }), expect.any(Object))
+    })
   })
 
   it('creates a replacement group after the last pane exits', async () => {

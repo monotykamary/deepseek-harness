@@ -20,7 +20,7 @@ function validate(events: readonly SessionEvent[], seedLength: number, fail: Inv
   try {
     foldScheduleEvents(events, seedLength)
   } catch (error: unknown) {
-    /* v8 ignore next -- foldScheduleEvents normalizes every rejected stream to ScheduleLogError. */
+    /* foldScheduleEvents normalizes every rejected stream to ScheduleLogError. */
     if (!(error instanceof ScheduleLogError)) throw error
     fail(error.message)
   }

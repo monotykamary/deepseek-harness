@@ -386,7 +386,7 @@ function migrateLegacyTurnStartEvent(event: SessionEvent, id: SessionId): Sessio
 function migrateLegacyTurnEndEvent(event: SessionEvent, id: SessionId): SessionEvent {
   if (event.type !== 'turn/end') return event
   const data = asRecord(event.data)
-  /* v8 ignore next -- a non-record current envelope cannot match a legacy shape. */
+  /* a non-record current envelope cannot match a legacy shape. */
   if (data === undefined) return event
   const malformed = (): never => {
     throw new Error(`session "${id}" contains malformed pre-react-loop turn/end at seq ${event.seq}`)
@@ -975,7 +975,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
     const events = session.events
     await this.flush(session)
     const state = this.states.get(session.id)
-    /* v8 ignore next -- successful flush always publishes this live session's durable state */
+    /* successful flush always publishes this live session's durable state */
     if (state === undefined) throw new Error(`session "${session.id}" lost persistence state during load`)
     if (events.length === 0) throw new Error(`session "${session.id}" not found`)
     if (interruptedTurnClosers(events).length > 0) {
@@ -1107,9 +1107,8 @@ export class PersistenceCoordinator<TornMarker = unknown> {
           // A close failure can only add teardown context; keep the already-
           // captured drain AggregateError as the primary failure rather than
           // masking it. Only surface the close error if the drain succeeded.
-          /* v8 ignore start -- close failure racing disposal is a defensive teardown edge */
+          /* close failure racing disposal is a defensive teardown edge */
           if (disposeError === undefined) throw closeError
-          /* v8 ignore stop */
         }
       }
     }, `${this.backend.name} write path`)
@@ -1215,7 +1214,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   private async seedMatchesPersisted(id: SessionId, seed: readonly SessionEvent[], cursor: number): Promise<boolean> {
     if (cursor === 0) return true
     const stored = await this.backend.loadStored(id)
-    /* v8 ignore next -- a cursor > 0 means the session was materialized, so it exists */
+    /* a cursor > 0 means the session was materialized, so it exists */
     if (stored === undefined) return false
     this.assertStoredId(id, stored.meta)
     return seedCoversPrefix(seed, snapshotStoredEvents(stored.events, id).slice(0, cursor))
@@ -1239,7 +1238,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
     const tracked = this.states.get(id)
     if (tracked !== undefined) {
       // case 1: already tracked.
-      /* v8 ignore next -- initFor dedupes per session object; same-object re-entry can't occur */
+      /* initFor dedupes per session object; same-object re-entry can't occur */
       if (tracked.owner === session) return
       if (tracked.owner === undefined) {
         // Ownerless state from the public create()/load() API. The FIRST live
@@ -1288,7 +1287,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
     // Bind this state to the live session so a later DIFFERENT session reusing
     // the id is detected as a collision (case 1) rather than silently no-opped.
     const created = this.states.get(id)
-    /* v8 ignore next -- create() always sets the state for the id */
+    /* create() always sets the state for the id */
     if (created !== undefined) created.owner = session
     if (seed.length > 0) await this.appendCore(id, seed)
   }
@@ -1354,7 +1353,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   /** Append one controller-owned prefix after filtering events initialization already stored. */
   private async appendLiveBatch(id: SessionId, batch: readonly SessionEvent[]): Promise<void> {
     const state = this.states.get(id)
-    /* v8 ignore next -- state is always set by the awaited initialization */
+    /* state is always set by the awaited initialization */
     const cursor = state?.cursor ?? 0
     const fresh = batch.filter(e => e.seq >= cursor)
     await this.appendCore(id, fresh)

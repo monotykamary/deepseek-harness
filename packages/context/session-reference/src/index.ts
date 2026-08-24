@@ -138,7 +138,7 @@ export class SessionReferenceResolver extends TypertRemoteService {
       if (references.length === 0) return [message]
       const resolved = await this.prepare(agent, content, references, signal)
       const direct = freezeMessage({ ...message, content: resolved.content })
-      /* v8 ignore if -- a parsed canonical mention always leaves one normalized reference */
+      /* a parsed canonical mention always leaves one normalized reference */
       if (resolved.additionalContext === undefined) {
         throw new Error('session-reference preparation omitted context for a canonical mention')
       }

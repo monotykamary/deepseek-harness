@@ -1964,7 +1964,7 @@ export function TrajectoryTable({
     const row = recordIndex === undefined
       ? null
       : rootRef.current?.querySelector<HTMLElement>(`tr[data-record-index="${recordIndex}"]`)
-    /* v8 ignore next -- jsdom lacks scrollIntoView; browsers always have it. */
+    /* jsdom lacks scrollIntoView; browsers always have it. */
     if (row !== undefined && row !== null && typeof row.scrollIntoView === 'function') {
       row.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
@@ -1994,7 +1994,7 @@ export function TrajectoryTable({
       const target = focusHeight > ledger.clientHeight
         ? firstRow
         : focusedRows[Math.floor((focusedRows.length - 1) / 2)]
-      /* v8 ignore next -- jsdom lacks scrollIntoView; browsers always have it. */
+      /* jsdom lacks scrollIntoView; browsers always have it. */
       if (target !== undefined && typeof target.scrollIntoView === 'function') {
         followsTableTail.current = false
         target.scrollIntoView({

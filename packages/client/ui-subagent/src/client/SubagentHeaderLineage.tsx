@@ -550,7 +550,7 @@ function CatalogDropdown({
     cancelHoverClose()
     if (next) {
       const trigger = triggerRef.current
-      /* v8 ignore next -- a queued callback can outlive the trigger */
+      /* a queued callback can outlive the trigger */
       if (trigger === null) return
       setOpen(true)
       setMenuPosition(catalogMenuPosition(trigger))
@@ -627,7 +627,7 @@ function CatalogDropdown({
     if (!open) return
     const placeMenu = (): void => {
       const trigger = triggerRef.current
-      /* v8 ignore next -- native resize or scroll can outlive the trigger */
+      /* native resize or scroll can outlive the trigger */
       if (trigger === null) return
       setMenuPosition(catalogMenuPosition(trigger))
     }

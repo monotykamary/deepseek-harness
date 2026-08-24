@@ -31,7 +31,7 @@ export function createProcessShutdown(
   let forceExited = false
 
   const clearExitTimeout = (): void => {
-    /* v8 ignore else -- shutdown() arms the timer before any asynchronous exit path can run. */
+    /* shutdown() arms the timer before any asynchronous exit path can run. */
     if (timeout !== undefined) clearTimeout(timeout)
   }
 

@@ -83,7 +83,7 @@ function fakeApi(
         if (options.throwRead === true) return Promise.reject(new Error('socket closed'))
         if (options.failRead !== undefined) return fail(options.failRead)
         const preset = presets.get(payload.agentPreset)
-        /* v8 ignore next -- every test reads an id the fake store holds */
+        /* every test reads an id the fake store holds */
         if (preset === undefined) return fail(`unknown preset ${payload.agentPreset}`)
         return ok({
           agentPreset: payload.agentPreset,
@@ -97,7 +97,7 @@ function fakeApi(
         if (options.throwCopy === true) return Promise.reject(new Error('socket closed'))
         if (options.failCopy !== undefined) return fail(options.failCopy)
         const source = presets.get(payload.from)
-        /* v8 ignore next -- every test copies a source the fake store holds */
+        /* every test copies a source the fake store holds */
         if (source === undefined) return fail(`unknown preset ${payload.from}`)
         presets.set(payload.agentPreset, {
           trust: 'user',
@@ -126,7 +126,7 @@ function fakeApi(
       update: (payload: { ns: string; patch: { default?: string } }) => {
         record('settings.update', payload)
         if (options.failSettings !== undefined) return fail(options.failSettings)
-        /* v8 ignore next -- the controller only ever patches `default` */
+        /* the controller only ever patches `default` */
         defaultId.id = payload.patch.default ?? defaultId.id
         return ok({})
       },

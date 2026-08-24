@@ -149,7 +149,7 @@ function CardDescription({ text }: { text: string }): ReactNode {
   const [truncated, setTruncated] = useState(false)
   useLayoutEffect(() => {
     const el = ref.current
-    /* v8 ignore next -- the ref is attached before layout effects run. */
+    /* the ref is attached before layout effects run. */
     if (el === null) return
     const measure = () => { setTruncated(el.scrollHeight > el.clientHeight) }
     measure()
@@ -192,7 +192,7 @@ export function AgentPresetSection(props: AgentPresetSectionProps): ReactNode {
   // session shares the host composition and the page would be an empty list.
   if (state.status === 'unavailable') return null
   if (state.status === 'error') {
-    /* v8 ignore next -- an error status always carries text; the fallback satisfies the nullable type */
+    /* an error status always carries text; the fallback satisfies the nullable type */
     const detail = state.error ?? ''
     return (
       <div className={css.section}>

@@ -187,7 +187,7 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, home,
             setMenuRect(null)
             // Unknown ids leave before the dispatch: a future menu row must
             // not inherit the destructive branch as an else fallback.
-            /* v8 ignore next -- workspaceMenuItems carries exactly these two rows today. */
+            /* workspaceMenuItems carries exactly these two rows today. */
             if (id !== 'rename' && id !== 'delete') return
             if (id === 'rename') actions.rename()
             else actions.delete()
@@ -218,7 +218,7 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, home,
   )
 }
 
-/* v8 ignore next 3 -- closed-union backstop; only reached if the status is forged */
+/* closed-union backstop; only reached if the status is forged */
 function assertNever(value: never): never {
   throw new Error(`unknown pending interaction: ${String(value)}`)
 }
@@ -259,7 +259,7 @@ function sessionStatuses(
       pending = { state: 'warning', label: t('status.waitingAnswer') }
       break
     case undefined: break
-    /* v8 ignore next -- closed PendingInteractionStatus union */
+    /* closed PendingInteractionStatus union */
     default: return assertNever(node.pendingInteraction)
   }
   if (pending !== undefined) return subagents === undefined ? [pending] : [pending, subagents]
@@ -310,7 +310,7 @@ function pointerRect(e: { clientX: number; clientY: number }): DOMRect {
   return {
     left: clientX, top: clientY, right: clientX, bottom: clientY,
     width: 0, height: 0, x: clientX, y: clientY,
-    /* v8 ignore next -- Menu reads only the rect fields; toJSON is never invoked. */
+    /* Menu reads only the rect fields; toJSON is never invoked. */
     toJSON: () => ({}),
   }
 }
@@ -527,7 +527,7 @@ export function SessionNodeItem({
     setSnoozeOpen(false)
     if (id.startsWith('snooze:')) {
       const preset = snoozePresets.find(candidate => `snooze:${candidate.id}` === id)
-      /* v8 ignore next -- the popover and submenu items come from the same presets, so the id always resolves. */
+      /* the popover and submenu items come from the same presets, so the id always resolves. */
       if (preset !== undefined) onSnooze(node.id, preset.snoozedUntil)
       return
     }
@@ -536,7 +536,7 @@ export function SessionNodeItem({
     if (id === 'archive') { onArchive(node.id); return }
     if (id === 'settle') { onSettle(node.id); return }
     if (id === 'unsettle') { onUnsettle(node.id); return }
-    /* v8 ignore next -- every other dispatchable id returns above; only 'wake' can fall through. */
+    /* every other dispatchable id returns above; only 'wake' can fall through. */
     if (id === 'wake') onWake(node.id)
   }
   // T3-adapted Session cards keep project context, live status, title, and

@@ -156,7 +156,7 @@ interface CalendarParts {
 /** Read one required named regular-expression group as a number. */
 function groupNumber(groups: Record<string, string | undefined>, name: string): number {
   const value = groups[name]
-  /* v8 ignore next -- successful fixed regexes always provide every requested group. */
+  /* successful fixed regexes always provide every requested group. */
   if (value === undefined) throw new ScheduleInputError('invalid_rule', 'The at value has an invalid shape.')
   return Number(value)
 }
@@ -199,7 +199,7 @@ function futureInstant(epoch: number, now: number): string {
     throw new ScheduleInputError('not_future', 'The scheduled time must be strictly in the future.')
   }
   const instant = new Date(epoch).toISOString()
-  /* v8 ignore next -- an in-range integral Date always formats as the canonical UTC profile. */
+  /* an in-range integral Date always formats as the canonical UTC profile. */
   if (!UTC_INSTANT.test(instant)) {
     throw new ScheduleInputError(
       'time_out_of_range',
@@ -262,7 +262,7 @@ export function canonicalizeTimeZone(value: string): string {
       { cause: error },
     )
   }
-  /* v8 ignore next -- Intl returns the requested canonical zone or an IANA canonical alias. */
+  /* Intl returns the requested canonical zone or an IANA canonical alias. */
   if (canonical !== 'UTC' && !IANA_ZONE.test(canonical)) {
     throw new ScheduleInputError('invalid_time_zone', 'time_zone must resolve to UTC or an IANA Area/Location name.')
   }
@@ -301,15 +301,15 @@ function parseLocalAt(value: LocalAtInput): CalendarParts {
 function localProjection(formatter: Intl.DateTimeFormat, epoch: number): CalendarParts & { offset: number } {
   const values = Object.fromEntries(formatter.formatToParts(epoch).map(part => [part.type, part.value]))
   const zoneName = values['timeZoneName']
-  /* v8 ignore next -- a formatter configured with longOffset always emits this part. */
+  /* a formatter configured with longOffset always emits this part. */
   const offsetMatch = typeof zoneName === 'string' ? OFFSET_NAME.exec(zoneName) : null
   const offsetGroups = offsetMatch?.groups
-  /* v8 ignore next -- the formatter requested longOffset, whose part is defined by Intl. */
+  /* the formatter requested longOffset, whose part is defined by Intl. */
   if (offsetMatch === null || offsetGroups === undefined) {
     throw new ScheduleInputError('invalid_time_zone', 'time_zone did not expose a usable UTC offset.')
   }
   const direction = offsetGroups['sign'] === '-' ? -1 : 1
-  /* v8 ignore next -- some Intl builds spell UTC as bare GMT instead of GMT+00:00. */
+  /* some Intl builds spell UTC as bare GMT instead of GMT+00:00. */
   const offset = offsetGroups['sign'] === undefined
     ? 0
     : direction * (
@@ -535,7 +535,7 @@ export function resolveEveryOccurrence(
   }
   const steps = Math.floor((acceptedAt - target) / interval)
   const occurrence = target + steps * interval
-  /* v8 ignore next -- bounded operands and a quotient-derived product stay safe. */
+  /* bounded operands and a quotient-derived product stay safe. */
   if (!Number.isSafeInteger(occurrence) || occurrence < target || occurrence > acceptedAt) {
     throw new ScheduleLogError('every occurrence arithmetic must stay within the accepted interval')
   }
@@ -607,7 +607,7 @@ export function foldScheduleEvents(
         else active.set(change.id, next)
         break
       }
-      /* v8 ignore next 3 -- decodeScheduleChange returns a closed operation union. */
+      /* decodeScheduleChange returns a closed operation union. */
       default: {
         const unreachable: never = change
         throw new ScheduleLogError(`unknown decoded schedule change ${String(unreachable)}`)

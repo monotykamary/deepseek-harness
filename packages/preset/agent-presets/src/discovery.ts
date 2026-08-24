@@ -96,7 +96,7 @@ async function compositionProblem(path: string): Promise<string | undefined> {
   try {
     rows = load(content, { schema: entryListSchema })
   } catch (error) {
-    /* v8 ignore next -- js-yaml throws YAMLException (an Error) for every parse failure; the fallback keeps a hostile value readable */
+    /* js-yaml throws YAMLException (an Error) for every parse failure; the fallback keeps a hostile value readable */
     const full = error instanceof Error ? error.message : String(error)
     // First line only: js-yaml appends a multi-line code-frame snippet, and
     // the reason is displayed on a roster card, not in a terminal.

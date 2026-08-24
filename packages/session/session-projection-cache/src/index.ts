@@ -280,7 +280,7 @@ export class SessionProjectionCache extends Service {
   }
 
   private requireTable(): KvTable<SessionId, CheckpointRecord> {
-    /* v8 ignore next -- Service.init assigns the table before the service becomes injectable */
+    /* Service.init assigns the table before the service becomes injectable */
     if (this.table === undefined) throw new Error('session projection cache is not initialized')
     return this.table
   }

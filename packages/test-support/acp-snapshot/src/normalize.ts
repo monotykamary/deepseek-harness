@@ -59,7 +59,7 @@ export function extractSnapshotSpillPaths(content: string): Map<string, string> 
   const result = new Map<string, string>()
   for (const match of content.matchAll(SNAPSHOT_SPILL_PATH_RE)) {
     const name = match[1]
-    /* v8 ignore next -- the filename capture is required and non-empty whenever the spill regex matches */
+    /* the filename capture is required and non-empty whenever the spill regex matches */
     if (name === undefined) continue
     result.set(name, match[0])
   }

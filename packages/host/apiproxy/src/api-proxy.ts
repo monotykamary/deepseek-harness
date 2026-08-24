@@ -206,7 +206,7 @@ function canonicalClientTimeZone(value: string): string | undefined {
   try {
     const canonical = new Intl.DateTimeFormat('en-US', { timeZone: value })
       .resolvedOptions().timeZone
-    /* v8 ignore next -- Intl returns UTC or a canonical IANA Area/Location for accepted input. */
+    /* Intl returns UTC or a canonical IANA Area/Location for accepted input. */
     if (canonical !== 'UTC' && !IANA_TIME_ZONE.test(canonical)) return undefined
     return canonical
   } catch {
@@ -1472,7 +1472,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
       const id = approvalId
       return new Promise<ApprovalOutcome>((resolve) => {
         const settle = (outcome: ApprovalOutcome): void => {
-          /* v8 ignore next 3 -- defensive double-settle guard: respond() routes
+          /* defensive double-settle guard: respond() routes
              through the pending table (a settled id is not-pending before it can
              re-settle) and the first settle removes the abort listener, so no
              reachable path settles twice; kept against future settle callers. */

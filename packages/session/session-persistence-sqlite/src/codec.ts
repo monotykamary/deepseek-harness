@@ -166,7 +166,7 @@ function emitBoundedRun(out: StorageRecord[], kind: DeltaKind, completeRun: read
       offset += 1
       continue
     }
-    /* v8 ignore next -- accepted is set only with its same-branch candidate. */
+    /* accepted is set only with its same-branch candidate. */
     out.push(acceptedRow ?? malformed(kind, 'bounded encoder lost its accepted row'))
     offset += accepted
   }

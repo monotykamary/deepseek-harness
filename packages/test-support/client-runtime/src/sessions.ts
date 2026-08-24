@@ -512,7 +512,7 @@ export class TestSessions implements ISessions {
 
   private bindingOf(id: SessionId, record: SessionRecord): TestSessionBinding {
     const ctx = this.scope(id)
-    /* v8 ignore next 2 -- bindingOf only runs for a live record, whose scope
+    /* bindingOf only runs for a live record, whose scope
      * always resolves; kept so a future caller cannot mint a ctx-less binding. */
     if (ctx === undefined) throw new Error(`test session "${id}" resolved no scope`)
     return { sessionId: id, session: record.session, ctx }

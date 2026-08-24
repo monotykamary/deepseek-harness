@@ -40,7 +40,7 @@ export function useAnchoredPosition(options: AnchoredPositionOptions): CSSProper
       return
     }
     const place = () => {
-      /* v8 ignore start -- geometry read from real layout: jsdom reports zero
+      /* geometry read from real layout: jsdom reports zero
          offset sizes, so the positive-size clamp arms are exercised by browser
          scenarios rather than unit tests. */
       const rect = anchorRef.current?.getBoundingClientRect()
@@ -52,7 +52,6 @@ export function useAnchoredPosition(options: AnchoredPositionOptions): CSSProper
       let top = rect.bottom + gap
       if (width > 0) left = Math.min(Math.max(left, margin), window.innerWidth - width - margin)
       if (height > 0) top = Math.min(Math.max(top, margin), window.innerHeight - height - margin)
-      /* v8 ignore stop */
       setPosition({ left, top })
     }
     // The first run measures the panel in the same commit that opened it, so

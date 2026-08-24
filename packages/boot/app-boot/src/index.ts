@@ -423,7 +423,7 @@ export function renderConfigDump(
   let composed = base
   for (let count = 1; count <= layers.length; count += 1) {
     const layer = layers[count - 1]
-    /* v8 ignore next -- count iterates 1..length, so the slot exists */
+    /* count iterates 1..length, so the slot exists */
     if (layer === undefined) continue
     const warnings: string[] = []
     composed = snapshot(count, warnings)
@@ -457,7 +457,7 @@ function groupedDump(
   }
   for (let index = 0; index < composed.length; index += 1) {
     const record = provenance[index]
-    /* v8 ignore next -- this array is index-aligned with composed by construction */
+    /* this array is index-aligned with composed by construction */
     if (record === undefined) continue
     const label = record.patchedBy.length === 0
       ? record.origin
@@ -496,7 +496,7 @@ export async function mountRootInclude(
         const specifier = isAbsolute(name) ? pathToFileURL(name).href : name
         if (name.startsWith('.') || name.startsWith('cordis:')) return super.import(specifier, getOuterStack)
         const internal = this.ctx.loader.internal
-        /* v8 ignore next -- Node supplies the internal loader; this preserves the
+        /* Node supplies the internal loader; this preserves the
            original diagnostic for hypothetical embedders without it. */
         if (internal === undefined) return super.import(specifier, getOuterStack)
         return internal.import(specifier, bareModuleBaseUrl, {})

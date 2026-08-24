@@ -74,7 +74,7 @@ interface DiffRow {
 }
 
 /** Local exhaustiveness helper — this package does not depend on `dsh-llm`. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if a row kind is forged */
+/* closed-union backstop; only reached if a row kind is forged */
 function assertNever(value: never): never {
   throw new Error(`unreachable diff row kind: ${String(value)}`)
 }
@@ -151,7 +151,7 @@ function copyText(rows: DiffRow[]): string {
       case 'add': return `+ ${row.text}`
       case 'path': return row.text
       case 'gap': return row.text
-      /* v8 ignore next -- closed-union backstop; only reached if a row kind is forged */
+      /* closed-union backstop; only reached if a row kind is forged */
       default: return assertNever(row.kind)
     }
   }).join('\n')

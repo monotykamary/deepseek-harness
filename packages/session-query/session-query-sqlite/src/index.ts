@@ -237,7 +237,7 @@ export class SqliteSessionQueryEngine extends SessionQueryEngine {
       const binding = { identity: Symbol(), service }
       this._persistenceBinding = binding
       childCtx.effect(() => () => {
-        /* v8 ignore next -- a stale optional-service disposer cannot clear a replacement */
+        /* a stale optional-service disposer cannot clear a replacement */
         if (this._persistenceBinding !== binding) return
         this._persistenceBinding = { identity: Symbol() }
       }, 'sessionQuerySqlite.persistenceBinding')
@@ -443,7 +443,7 @@ export class SqliteSessionQueryEngine extends SessionQueryEngine {
         began = true
         for (const row of persistentDeletes) this._deleteSession('persisted', row.id as SessionId)
         for (const entry of persistentChanges) {
-          /* v8 ignore next -- observation loads every entry whose revision differs */
+          /* observation loads every entry whose revision differs */
           if (entry.loaded === undefined) throw new Error(`missing loaded revision for session "${entry.header.id}"`)
           this._replacePersistedSession(entry.loaded, entry.revision, nextMainGeneration)
         }
@@ -456,9 +456,9 @@ export class SqliteSessionQueryEngine extends SessionQueryEngine {
         }
         db.exec('COMMIT')
       } catch (error: unknown) {
-        /* v8 ignore next -- a BEGIN failure has no transaction to roll back; the common wrapper still reports it. */
+        /* a BEGIN failure has no transaction to roll back; the common wrapper still reports it. */
         if (began) {
-          /* v8 ignore next 5 -- ROLLBACK failure requires a SQLite double fault; the original failure remains actionable. */
+          /* ROLLBACK failure requires a SQLite double fault; the original failure remains actionable. */
           try {
             db.exec('ROLLBACK')
           } catch {
@@ -750,7 +750,7 @@ export class SqliteSessionQueryEngine extends SessionQueryEngine {
   }
 
   private _requireDb(): DatabaseSync {
-    /* v8 ignore next -- callers await `_ready`; this guards lifecycle misuse */
+    /* callers await `_ready`; this guards lifecycle misuse */
     if (this._db === undefined) throw indexClosed()
     return this._db
   }

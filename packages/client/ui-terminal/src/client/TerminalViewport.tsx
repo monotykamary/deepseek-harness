@@ -48,7 +48,7 @@ export function TerminalViewport({
     const container = containerRef.current
     const scrollbarTrack = scrollbarTrackRef.current
     const scrollbarThumb = scrollbarThumbRef.current
-    /* v8 ignore next -- React commits all three rendered sibling refs before layout effects. */
+    /* React commits all three rendered sibling refs before layout effects. */
     if (container === null || scrollbarTrack === null || scrollbarThumb === null) return
     const surface = new XtermSurface(
       container,
@@ -87,7 +87,7 @@ export function TerminalViewport({
     transitionOwner?.addEventListener('transitionend', onTransitionEnd)
     transitionOwner?.addEventListener('transitioncancel', onTransitionEnd)
     observer.observe(container)
-    /* v8 ignore next -- the surface container is always rendered inside the viewport root. */
+    /* the surface container is always rendered inside the viewport root. */
     if (container.parentElement !== null) observer.observe(container.parentElement)
     const screen = container.querySelector('.xterm-screen')
     if (screen !== null) observer.observe(screen)
@@ -102,7 +102,7 @@ export function TerminalViewport({
 
   useEffect(() => {
     const surface = surfaceRef.current
-    /* v8 ignore next -- the layout effect owns the surface before passive effects run. */
+    /* the layout effect owns the surface before passive effects run. */
     if (surface === null) return
     let cancelled = false
     surface.apply(preferences, colorScheme)
@@ -123,7 +123,7 @@ export function TerminalViewport({
   }, [preferences, colorScheme])
 
 
-  /* v8 ignore next -- every validated terminal palette defines its background. */
+  /* every validated terminal palette defines its background. */
   const background = terminalTheme(colorScheme).background ?? '#000000'
   return (
     <div

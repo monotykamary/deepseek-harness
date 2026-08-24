@@ -810,7 +810,7 @@ class FaceAnalyzer {
   }
 
   private moduleExports(moduleSpecifier: ts.StringLiteral): ts.Symbol[] {
-    /* v8 ignore next -- a semantically valid export declaration from a resolved module always has a module symbol. */
+    /* a semantically valid export declaration from a resolved module always has a module symbol. */
     const moduleSymbol = this.checker.getSymbolAtLocation(moduleSpecifier) as ts.Symbol
     return this.checker.getExportsOfModule(moduleSymbol)
   }
@@ -2319,10 +2319,10 @@ class FaceAnalyzer {
         ...(node.type === undefined ? {} : { type: this.convertType(node.type) }),
       })
     }
-    /* v8 ignore else -- every source TypeNode kind accepted by TypeScript is handled above; this arm keeps
+    /* every source TypeNode kind accepted by TypeScript is handled above; this arm keeps
      * future compiler kinds fail-loud. */
     if (ts.isThisTypeNode(node)) return add({ kind: 'this' })
-    /* v8 ignore next -- paired with the exhaustive TypeNode guard above. */
+    /* paired with the exhaustive TypeNode guard above. */
     this.fail(node, `unsupported TypeScript type node ${ts.SyntaxKind[node.kind]}`)
   }
 
@@ -2343,7 +2343,7 @@ class FaceAnalyzer {
 
   private targetForReference(symbol: ts.Symbol, site: ReferenceSite): TypeTargetModel {
     const declaration = preferredDeclaration(symbol)
-    /* v8 ignore next -- a symbol from a semantically valid source type reference always has a declaration. */
+    /* a symbol from a semantically valid source type reference always has a declaration. */
     if (declaration === undefined) this.fail(site, `type symbol ${symbol.name} has no declaration`)
     if (ts.isTypeParameterDeclaration(declaration)) {
       return {
@@ -2841,7 +2841,7 @@ function documentationOf(node: ts.Node): DocumentationModel {
 function normalizedDocText(value: string | undefined): string | undefined {
   if (value === undefined) return undefined
   const normalized = value.replace(/\s+/g, ' ').trim()
-  /* v8 ignore next -- TypeScript represents whitespace-only JSDoc as undefined before this helper is called. */
+  /* TypeScript represents whitespace-only JSDoc as undefined before this helper is called. */
   return normalized.length === 0 ? undefined : normalized
 }
 
@@ -2950,7 +2950,7 @@ function literalModel(node: ts.LiteralTypeNode): Omit<Extract<TypeNodeModel, { k
   if (literal.kind === ts.SyntaxKind.TrueKeyword) return { kind: 'literal', value: true, text: 'true' }
   if (literal.kind === ts.SyntaxKind.FalseKeyword) return { kind: 'literal', value: false, text: 'false' }
   if (literal.kind === ts.SyntaxKind.NullKeyword) return { kind: 'literal', value: null, text: 'null' }
-  /* v8 ignore else -- all remaining LiteralTypeNode syntax is a signed numeric or bigint literal. */
+  /* all remaining LiteralTypeNode syntax is a signed numeric or bigint literal. */
   if (ts.isPrefixUnaryExpression(literal)
     && (ts.isNumericLiteral(literal.operand) || ts.isBigIntLiteral(literal.operand))) {
     return {
@@ -2961,7 +2961,7 @@ function literalModel(node: ts.LiteralTypeNode): Omit<Extract<TypeNodeModel, { k
       text: literal.getText(),
     }
   }
-  /* v8 ignore next -- TypeScript's LiteralTypeNode grammar is exhausted above; this contains future compiler syntax. */
+  /* TypeScript's LiteralTypeNode grammar is exhausted above; this contains future compiler syntax. */
   throw new TypertAnalysisError(`typert: unsupported literal type ${literal.getText()}`)
 }
 
@@ -3026,7 +3026,7 @@ function authoredExportName(node: ReferenceSite, moduleSpecifier: string): strin
       return referenced[1] as string
     }
   }
-  /* v8 ignore next -- moduleSpecifierOf returns only the matching import inspected by this loop. */
+  /* moduleSpecifierOf returns only the matching import inspected by this loop. */
   throw new TypertAnalysisError(`typert: cannot recover export name for ${localName} from ${moduleSpecifier}`)
 }
 

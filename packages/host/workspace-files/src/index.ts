@@ -59,7 +59,7 @@ function utf8Length(content: string): number {
 }
 
 function locatorPath(locator: WorkspaceFileLocator): string {
-  /* v8 ignore next -- every error using this label requires at least one segment. */
+  /* every error using this label requires at least one segment. */
   return locator.segments.length === 0 ? '.' : locator.segments.join('/')
 }
 

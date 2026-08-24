@@ -19,7 +19,7 @@ function isLive(job: JobView): boolean {
 }
 
 /** Closed-union exhaustiveness fence for the wire status set. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if a status is forged */
+/* closed-union backstop; only reached if a status is forged */
 function assertNever(value: never): never {
   throw new Error(`unhandled job status: ${JSON.stringify(value)}`)
 }
@@ -35,7 +35,7 @@ function dotState(status: JobView['status']): StateDotState {
     case 'completed': return 'done'
     case 'killed': return 'warning'
     case 'failed': return 'error'
-    /* v8 ignore next -- closed wire status union */
+    /* closed wire status union */
     default: return assertNever(status)
   }
 }
@@ -48,7 +48,7 @@ function statusLabel(status: JobView['status'], t: TranslateNS<typeof NS>): stri
     case 'completed': return t('status.completed')
     case 'killed': return t('status.killed')
     case 'failed': return t('status.failed')
-    /* v8 ignore next -- closed wire status union */
+    /* closed wire status union */
     default: return assertNever(status)
   }
 }

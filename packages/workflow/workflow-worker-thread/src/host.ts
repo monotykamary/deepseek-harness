@@ -65,7 +65,7 @@ export function workerSpawnEnv(
  * @returns the entry path or URL and the Worker options to spawn it with.
  */
 function resolveWorkerSpawn(init: WorkerInit): { entry: string | URL; options: WorkerOptions } {
-  /* v8 ignore next 3 -- the built-output arm: tests always run unbuilt (src/); the built-worker e2e exercises this shape for real */
+  /* the built-output arm: tests always run unbuilt (src/); the built-worker e2e exercises this shape for real */
   if (!import.meta.url.endsWith('.ts')) {
     return { entry: fileURLToPath(new URL('./worker.cjs', import.meta.url)), options: { workerData: init, env: workerSpawnEnv(), execArgv: [] } }
   }
@@ -149,7 +149,7 @@ export class WorkerRun implements WorkflowRun {
     this.worker = new Worker(entry, options)
     this.worker.on('message', (message: WorkerToHostMessage) => { this.onMessage(message) })
     this.worker.on('error', (error) => { this.onWorkerDeath(`workflow worker failed: ${renderThrown(error)}`, false) })
-    /* v8 ignore next -- messageerror: not constructible from the engine's own protocol (every payload is JSON data) */
+    /* messageerror: not constructible from the engine's own protocol (every payload is JSON data) */
     this.worker.on('messageerror', (error) => { this.onWorkerDeath(`workflow worker message failed to deserialize: ${renderThrown(error)}`, false) })
     this.worker.on('exit', (code) => {
       this.workerGone = true
@@ -245,7 +245,7 @@ export class WorkerRun implements WorkflowRun {
       this.reapChildren('workflow disposed')
     })().then(
       () => { claimed.resolve(undefined) },
-      /* v8 ignore next -- result/quiescence never reject and Worker.terminate is the only external promise */
+      /* result/quiescence never reject and Worker.terminate is the only external promise */
       (error: unknown) => { claimed.reject(error) },
     )
     return this.disposed
@@ -260,7 +260,7 @@ export class WorkerRun implements WorkflowRun {
       // Only a teardown race can land here (every engine message is JSON
       // data, so serialization cannot fail); there is nothing left to
       // deliver to — log and move on.
-      /* v8 ignore next -- postMessage teardown race (a throw between exit and its event): not constructible in-process */
+      /* postMessage teardown race (a throw between exit and its event): not constructible in-process */
       this.ctx.logger.warn(`workflow-worker-thread: postMessage failed: ${renderThrown(error)}`)
     }
   }
@@ -306,7 +306,7 @@ export class WorkerRun implements WorkflowRun {
       case WorkerToHostType.Result:
         this.onResult(message.result)
         break
-      /* v8 ignore next 2 -- closed engine-owned union; the arm only makes adding a message type a compile error */
+      /* closed engine-owned union; the arm only makes adding a message type a compile error */
       default:
         assertNever(message, 'worker-to-host message')
     }
@@ -340,7 +340,7 @@ export class WorkerRun implements WorkflowRun {
     this.pendingStarts.add(task)
     void task.then(
       () => { this.finishPendingStart(task) },
-      /* v8 ignore next -- startChild contains provider and cleanup failures */
+      /* startChild contains provider and cleanup failures */
       () => { this.finishPendingStart(task) },
     )
   }
@@ -558,7 +558,7 @@ export class WorkerRun implements WorkflowRun {
    * @param end - the settlement to emit (worker-reported or synthesized).
    */
   private endAgent(end: WorkflowAgentEndInfo): void {
-    /* v8 ignore next -- a real end still in flight across the grace force-settle: not orderable in-process */
+    /* a real end still in flight across the grace force-settle: not orderable in-process */
     if (!this.liveAgents.delete(end.seq)) return
     this.observer.agentEnd(end)
   }
@@ -584,7 +584,6 @@ export class WorkerRun implements WorkflowRun {
   private cancelledResult(agentsStarted: number): WorkflowResult {
     // cancel() is the only writer of cancelReason and every caller checks it
     // first; the fallback guards the type, not a reachable path.
-    /* v8 ignore next */
     const reason = this.cancelReason ?? 'workflow cancelled'
     return { value: null, stopReason: 'cancelled', error: `workflow run cancelled: ${reason}`, agentsStarted }
   }
@@ -603,7 +602,7 @@ export class WorkerRun implements WorkflowRun {
   private settleResult(result: WorkflowResult): void {
     // Every current terminal source claims ownership before calling here; keep
     // the fallback local so a future caller cannot resolve twice.
-    /* v8 ignore next -- defensive fallback outside the claimed state machine */
+    /* defensive fallback outside the claimed state machine */
     if (this.settled) return
     this.terminalClaimed = true
     this.settled = true

@@ -111,10 +111,10 @@ export class ToolResultPruner extends Service {
       consumed = blockEnd
     }
 
-    /* v8 ignore next -- totalChars > threshold and valid budgets guarantee a removed text span. */
+    /* totalChars > threshold and valid budgets guarantee a removed text span. */
     if (!markerInserted) throw new Error('tool-result prune: failed to locate the removed text span')
     const charsAfter = this.measureContent(pruned)
-    /* v8 ignore next -- config validation fixes the emitted head + marker + tail budget. */
+    /* config validation fixes the emitted head + marker + tail budget. */
     if (charsAfter > this.config.thresholdChars || charsAfter >= totalChars) {
       throw new Error('tool-result prune: replacement must be smaller and within threshold')
     }
@@ -137,7 +137,7 @@ export class ToolResultPruner extends Service {
     const candidates: SnapshotCandidate[] = []
     for (const seq of [...session.surface.nodes]) {
       const event = session.events[seq]
-      /* v8 ignore next -- surface seqs are validated contiguous log references. */
+      /* surface seqs are validated contiguous log references. */
       if (event?.type === 'tool/result') candidates.push({ seq, event })
     }
 

@@ -435,7 +435,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
       // Arity is label-independent: only the collapsed chain's depth decides.
       if (displayCrumbs(target, '').length < 2) { landSingle(); return }
       const parentCrumb = target.crumbs.at(-2)
-      /* v8 ignore next -- narrowing: a two-deep display chain implies a parent crumb (root-to-target inclusive). */
+      /* narrowing: a two-deep display chain implies a parent crumb (root-to-target inclusive). */
       if (parentCrumb === undefined) { landSingle(); return }
       continueScan(parentCrumb.path).then((parentLevel) => {
         if (seq !== requestSeq.current) return
@@ -554,7 +554,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
 
   /** A right-column pick advances the view one level: child becomes the level. */
   const advance = useCallback((entry: DirectoryEntry) => {
-    /* v8 ignore next -- narrowing guard: the right column only renders with a child listing. */
+    /* narrowing guard: the right column only renders with a child listing. */
     if (child === null) return
     setParent(child)
     select(entry)
@@ -595,7 +595,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
     ?? (parent === null ? '' : (displayCrumbs(parent, t('browser.home')).at(-1)?.name ?? parent.path))
 
   const confirmCreate = (): void => {
-    /* v8 ignore next -- reentry fence: the nested dialog only renders with a target and disables while creating. */
+    /* reentry fence: the nested dialog only renders with a target and disables while creating. */
     if (targetPath === null || folderDraft === null || creatingFolder) return
     // Trim only rejects an all-whitespace draft; the Host gets the original
     // spelling — the backend accepts any non-blank single segment verbatim,
@@ -620,13 +620,13 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
       // occupant of the content's right edge while it shows).
       setError(null)
       scan.then((level) => {
-        /* v8 ignore next -- same fence as navigate/select; the modal blocks superseding input */
+        /* same fence as navigate/select; the modal blocks superseding input */
         if (seq !== requestSeq.current) return
         setParent(level)
         setLoading(false)
         select({ name, path: createdPath, hidden: false })
       }, (reason: unknown) => {
-        /* v8 ignore next -- same fence as navigate/select; the modal blocks superseding input */
+        /* same fence as navigate/select; the modal blocks superseding input */
         if (seq !== requestSeq.current) return
         setLoading(false)
         setError(failureText(reason))
@@ -718,10 +718,10 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
       refocusPick.current = false
       refocusEditZone.current = false
       const rowHost = millerRowRef.current
-      /* v8 ignore next -- narrowing guard: the miller row is mounted whenever a pick just committed. */
+      /* narrowing guard: the miller row is mounted whenever a pick just committed. */
       if (rowHost === null) return
       const row = rowHost.querySelector<HTMLButtonElement>('button[aria-current="true"]')
-      /* v8 ignore next -- narrowing guard: the pick that set the flag just rendered its aria-current row. */
+      /* narrowing guard: the pick that set the flag just rendered its aria-current row. */
       if (row === null) return
       row.focus()
       return
@@ -732,7 +732,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
       // the user parked elsewhere (a surviving row) stays theirs.
       if (document.activeElement !== document.body) return
       const zone = editZoneRef.current
-      /* v8 ignore next -- narrowing guard: crumb mode renders the edit zone whenever the editor just closed. */
+      /* narrowing guard: crumb mode renders the edit zone whenever the editor just closed. */
       if (zone === null) return
       zone.focus()
     }
@@ -795,7 +795,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
           if (pathDraft === null) return
           if (!document.hasFocus()) return
           const card = event.currentTarget.closest('[role="dialog"]')
-          /* v8 ignore next -- narrowing guard: this scope always renders inside the Modal card. */
+          /* narrowing guard: this scope always renders inside the Modal card. */
           if (card === null) return
           if (event.relatedTarget instanceof Node && card.contains(event.relatedTarget)) return
           // The user moved focus out of the card themselves: cancel without
@@ -986,7 +986,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
             variant="primary"
             className={clsx(css.footerAction)}
             disabled={targetPath === null || loading || parentInert || draftPending}
-            /* v8 ignore next -- narrowing guard: Open disables while no target exists. */
+            /* narrowing guard: Open disables while no target exists. */
             onClick={() => { if (targetPath !== null) onOpen(targetPath) }}
           >
             {t('browser.open')}

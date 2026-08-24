@@ -513,7 +513,7 @@ export class AgentRegistry extends Service {
     entry.detachRequested = false
     // A stale capability can never delete a later same-id lifecycle. The
     // captured entry identity is the final boundary.
-    /* v8 ignore next -- enter() rejects replacement while this single-shot detach capability is live. */
+    /* enter() rejects replacement while this single-shot detach capability is live. */
     if (this.store.get(entry.id) !== entry) return
     this.store.delete(entry.id)
     // An insertion rolled back before announce was never externally created,

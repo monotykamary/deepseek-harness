@@ -489,7 +489,7 @@ export class GoalService extends TypertRemoteService {
     activation: GoalActivation,
   ): GoalView {
     const createdAt = cache.state.createdAt
-    /* v8 ignore next -- strict replay and every snapshot commit set createdAt whenever a current goal exists */
+    /* strict replay and every snapshot commit set createdAt whenever a current goal exists */
     if (createdAt === undefined) throw new Error('current goal cache lacks createdAt')
     return this.commitSnapshot(
       agent,
@@ -506,7 +506,7 @@ export class GoalService extends TypertRemoteService {
   /** Clamp a current goal's next timestamp across backward wall-clock movement. */
   private nextMutationTime(cache: GoalCache): number {
     const updatedAt = cache.state.updatedAt
-    /* v8 ignore next -- strict replay and every snapshot commit set updatedAt whenever a current goal exists */
+    /* strict replay and every snapshot commit set updatedAt whenever a current goal exists */
     if (updatedAt === undefined) throw new Error('current goal cache lacks updatedAt')
     return Math.max(Date.now(), updatedAt)
   }
@@ -533,7 +533,7 @@ export class GoalService extends TypertRemoteService {
     }
     this.commit(agent, cache, change, activation)
     const view = this.view(cache)
-    /* v8 ignore next -- the durable goal event installs the snapshot before this read */
+    /* the durable goal event installs the snapshot before this read */
     if (view === undefined) throw new Error('snapshot commit cleared the goal unexpectedly')
     return view
   }
@@ -563,7 +563,7 @@ export class GoalService extends TypertRemoteService {
     const createdAt = cache.state.createdAt
     const updatedAt = cache.state.updatedAt
     if (goal === undefined) return undefined
-    /* v8 ignore next 3 -- strict replay and snapshot commits establish both timestamps with every current goal */
+    /* strict replay and snapshot commits establish both timestamps with every current goal */
     if (createdAt === undefined || updatedAt === undefined) {
       throw new Error(`goal "${goal.id}" cache lacks timestamps`)
     }

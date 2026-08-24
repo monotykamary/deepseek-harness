@@ -993,7 +993,7 @@ export class SessionStore extends Service {
     entry.detachRequested = false
     // A stale capability cannot remove observers or storage belonging to a
     // later same-id lifecycle.
-    /* v8 ignore next -- enter() rejects replacement while this single-shot detach capability is live. */
+    /* enter() rejects replacement while this single-shot detach capability is live. */
     if (this.store.get(entry.id) !== entry) return
     this.store.delete(entry.id)
     attachments.delete(entry.session)

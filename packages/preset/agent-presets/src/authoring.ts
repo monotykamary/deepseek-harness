@@ -105,7 +105,7 @@ async function tightenModes(dir: string): Promise<void> {
     if (entry.isDirectory()) {
       await tightenModes(target)
     } else {
-      /* v8 ignore next -- Windows exposes no POSIX owner-execute bit; the POSIX lane covers both file modes. */
+      /* Windows exposes no POSIX owner-execute bit; the POSIX lane covers both file modes. */
       await chmod(target, ((await stat(target)).mode & 0o100) === 0 ? 0o600 : 0o700)
     }
   }

@@ -935,7 +935,7 @@ export class ToolRuntime extends Service {
         // Own-property read: a language like `toString`/`constructor` would
         // otherwise resolve an inherited Object.prototype member as a renderer.
         const render = SDK_RENDERERS[runtime.language]
-        /* v8 ignore next -- requireCodeRuntime rejects an unknown language before this runs. */
+        /* requireCodeRuntime rejects an unknown language before this runs. */
         if (render === undefined) throw new Error(`dsh-tools: no SDK renderer for ${runtime.language}`)
         return render(this.sdkSchemas(context.scope), this.runCodeLabelFor(context.scope))
       },
@@ -1010,7 +1010,7 @@ export class ToolRuntime extends Service {
    * @param options - Code Mode behavior attached to the same scoped declaration.
    * @returns the exact disposer that restores the deployment default.
    */
-  presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): () => void {
+  presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): () => Promise<void> {
     const ctx = this.ctx
     const runCodeLabel = options.runCodeLabel ?? 'required'
     if (mode === 'native' && runCodeLabel !== 'required') {
@@ -1311,7 +1311,7 @@ export class ToolRuntime extends Service {
       .filter(definition => definition.name !== RUN_CODE_NAME)
       .map((definition): ToolSdkSchema => {
         const output = snapshotJsonValue(definition.output.schema)
-        /* v8 ignore next -- registration already validated and retained this schema as lossless JSON. */
+        /* registration already validated and retained this schema as lossless JSON. */
         if (output === undefined) {
           throw new Error(`tool "${definition.name}" output schema must be lossless JSON before SDK projection`)
         }
@@ -1425,7 +1425,7 @@ export class ToolRuntime extends Service {
         return await this.finalizeScheduledExecution(prepared.exec, prepared.result)
       case 'final-result':
         return this.finishScheduledExecution(prepared.exec, prepared.result)
-      /* v8 ignore next -- closed-union exhaustiveness guard */
+      /* closed-union exhaustiveness guard */
       default:
         return assertNever(prepared, 'scheduled tool preparation')
     }
@@ -1611,7 +1611,7 @@ export class ToolRuntime extends Service {
   /** Whether the original caller signal is currently aborted. */
   private callerCancelled(exec: ToolRunContext): boolean {
     const state = this.cancellationStates.get(exec)
-    /* v8 ignore next -- only registry-minted executions reach the staged scheduler methods */
+    /* only registry-minted executions reach the staged scheduler methods */
     if (state === undefined) throw new Error('tool registry scheduler invariant violated: missing cancellation state')
     return state.callerSignal.aborted
   }
@@ -1619,7 +1619,7 @@ export class ToolRuntime extends Service {
   /** Canonical cancellation outcome selected by whether the tool body started. */
   private cancellationResult(exec: ToolRunContext, prior?: ToolExecutionResult): ToolExecutionResult {
     const state = this.cancellationStates.get(exec)
-    /* v8 ignore next -- only registry-minted executions reach the staged scheduler methods */
+    /* only registry-minted executions reach the staged scheduler methods */
     if (state === undefined) throw new Error('tool registry scheduler invariant violated: missing cancellation state')
     return state.bodyInvoked
       ? toolAbortedResult(prior)
@@ -1633,7 +1633,7 @@ export class ToolRuntime extends Service {
    */
   private async dispatchToolBody(exec: MutableToolRunContext): Promise<ToolExecutionResult> {
     const state = this.cancellationStates.get(exec)
-    /* v8 ignore next -- only registry-minted executions reach the staged scheduler methods */
+    /* only registry-minted executions reach the staged scheduler methods */
     if (state === undefined) throw new Error('tool registry scheduler invariant violated: missing cancellation state')
     const wrapperSignal = exec.signal
     const fused = fuseToolSignals(state.callerSignal, wrapperSignal)
@@ -1678,7 +1678,7 @@ export class ToolRuntime extends Service {
       )
       const normalized = this.normalizeDispatchResult(exec, result)
       const deferredContexts = this.deferredContexts.get(exec)
-      /* v8 ignore next -- dispatch only receives executions minted by this registry's prepare stage */
+      /* dispatch only receives executions minted by this registry's prepare stage */
       if (deferredContexts === undefined) throw new Error('tool registry scheduler invariant violated: unprepared execution')
       const resultWithDeferredContexts: ToolExecutionResult = deferredContexts.length === 0
         ? normalized

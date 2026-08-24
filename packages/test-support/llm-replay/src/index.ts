@@ -198,7 +198,7 @@ export function parseSessionLog(text: string): SessionEvent[] {
     try {
       decoded = decodeStorageRecord(record)
     } catch (error) {
-      /* v8 ignore next -- decodeStorageRecord only throws Error instances; the String arm satisfies unknown narrowing. */
+      /* decodeStorageRecord only throws Error instances; the String arm satisfies unknown narrowing. */
       const detail = error instanceof Error ? error.message : String(error)
       throw new Error(`session snapshot line ${index + 1}: ${detail}`, { cause: error })
     }
@@ -595,14 +595,14 @@ class ReplayAdapter extends LlmAdapter {
 
   override providerInfo(provider: string): LlmProviderInfo {
     const configured = this.providers.get(provider)
-    /* v8 ignore next -- LlmRuntime only asks about routes registered from this same map. */
+    /* LlmRuntime only asks about routes registered from this same map. */
     if (configured === undefined) return super.providerInfo(provider)
     return { id: provider, name: configured.name ?? provider }
   }
 
   override providerRetryPolicy(provider: string): ResolvedRetryPolicy | undefined {
     const configured = this.providers.get(provider)
-    /* v8 ignore next -- LlmRuntime only asks about routes registered from this same map. */
+    /* LlmRuntime only asks about routes registered from this same map. */
     if (configured === undefined) return super.providerRetryPolicy(provider)
     return configured.retryPolicy === undefined
       ? undefined
@@ -611,7 +611,7 @@ class ReplayAdapter extends LlmAdapter {
 
   override listModels(provider: string): Promise<readonly LlmModelInfo[]> {
     const configured = this.providers.get(provider)
-    /* v8 ignore next -- LlmRuntime only asks about routes registered from this same map. */
+    /* LlmRuntime only asks about routes registered from this same map. */
     if (configured === undefined) return Promise.resolve([])
     return Promise.resolve((configured.models ?? []).map(model => ({
       provider,
@@ -624,7 +624,7 @@ class ReplayAdapter extends LlmAdapter {
 
   override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
     const configured = this.providers.get(provider)
-    /* v8 ignore next -- LlmRuntime only asks about routes registered from this same map. */
+    /* LlmRuntime only asks about routes registered from this same map. */
     if (configured === undefined) return Promise.resolve({ provider, id: model, name: model })
     const configuredModel = configured.models?.find(candidate => candidate.id === model)
     return Promise.resolve({
@@ -709,9 +709,9 @@ async function* replayEntry(entry: ReplayEntry, signal: AbortSignal | undefined,
         if (signal?.aborted) { reject(new Error('aborted')); return }
         signal?.addEventListener('abort', () => { reject(new Error('aborted')) }, { once: true })
       })
-      /* v8 ignore next -- unreachable: the hang promise only ever rejects (on abort), never resolves; control never reaches here */
+      /* unreachable: the hang promise only ever rejects (on abort), never resolves; control never reaches here */
       return
-    /* v8 ignore next -- sidecar entries are validated before they reach the closed local union. */
+    /* sidecar entries are validated before they reach the closed local union. */
     default:
       return assertNever(entry, 'llm-replay replay entry')
   }

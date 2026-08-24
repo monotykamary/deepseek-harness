@@ -149,10 +149,10 @@ export class ScheduleRuntime {
 
   /** Retire one exact run and honor a trigger that landed during its final microtask. */
   private retire(run: Promise<void>): void {
-    /* v8 ignore next -- only the exact stored run installs this callback. */
+    /* only the exact stored run installs this callback. */
     if (this.run !== run) return
     this.run = undefined
-    /* v8 ignore next -- covers a trigger in the promise-settlement microtask gap. */
+    /* covers a trigger in the promise-settlement microtask gap. */
     if (this.requested && !this.stopping && !this.faulted) this.requestDrive()
   }
 

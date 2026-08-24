@@ -207,10 +207,9 @@ function renderResourceHint(skill: Pick<SkillDefinition, 'provider' | 'resourceB
         `Resources for this skill: ${escapeText(base.description)}`,
         'Load referenced resources only as needed.',
       ]
-    /* v8 ignore start -- SkillResourceBase is a closed union; a future kind must fail compilation here. */
+    /* SkillResourceBase is a closed union; a future kind must fail compilation here. */
     default:
       return assertNever(base, 'SkillResourceBase.kind')
-    /* v8 ignore stop */
   }
 }
 
@@ -627,7 +626,7 @@ export class SkillRegistry extends Service {
 
   /** Invalidate after a stale definition load, only while the exact registration that produced the entry is still live. */
   private invalidateEntry(entry: IndexedCandidate): void {
-    /* v8 ignore else -- A definition load can outlive the exact provider registration it selected. */
+    /* A definition load can outlive the exact provider registration it selected. */
     if (entry.layer.providers.get(entry.provider.name)?.provider === entry.provider) this.invalidateCache()
   }
 
@@ -680,7 +679,7 @@ function invalidProviderObservation(providerName: string): TypeError {
 
 const RUNTIME_SKILL_PROVIDER: SkillProvider = {
   name: RUNTIME_PROVIDER,
-  /* v8 ignore next -- Runtime skills are injected directly by the registry; this provider only owns `get()`. */
+  /* Runtime skills are injected directly by the registry; this provider only owns `get()`. */
   list() {
     return Promise.resolve([])
   },

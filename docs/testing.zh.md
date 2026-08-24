@@ -6,15 +6,17 @@
 
 ## 内环反馈
 
-`pnpm run test:gui`（秒级；无浏览器、无服务器）覆盖全部客户端与 host 端 GUI 包；`pnpm run test:changed` 把 vitest 限定到工作区改动的包，其 `--coverage` 模式只对改动包的 src 执行按文件 100% 门槛（几分钟，而非数小时的完整门禁）。`test:gui:watch` 与 `test:changed:watch` 在单个包上迭代。根 AGENTS.md 的黄金法则让这些检查在实现期间自由运行；下面各完整套件门禁仍是完成时的一次性终检。
+`pnpm run test:gui` 无需浏览器或服务器即可覆盖客户端与 host GUI 包；`pnpm run test:changed` 把 Vitest 限定到工作区改动包，`--coverage` 只度量这些包的源码。watch 变体用于单包迭代。实现期间自由运行这些检查；相关完整检查只在结束时运行一次。
 
 ## 层级
 
-- **单元测试**（`pnpm run test`）：vitest 运行包和示例各自的 `tests/**` 目录下的测试，以及匹配 `scripts/**/*.spec.ts` 的仓库脚本测试；测试文件与其所覆盖的代码区域放在一起。每个注册表都有一个 HMR（热模块替换）安全测试（对向该注册表贡献内容的 fiber 执行 dispose（资源释放），并断言清理完成）。优先覆盖边界情况、错误路径、事件顺序、并发竞态，以及针对约定回归的永久测试（见 `packages/core/agent-loop/tests/contract-regressions.spec.ts`）。
-- **覆盖率门禁**（`pnpm run test:coverage`）：门禁级运行，对 `packages/*/*/src` 按文件 100% 覆盖。未覆盖的行往往是门禁正确标记出的死代码（应删除），而非需要补写的测试。行覆盖率是必要条件，但永远不是充分条件：它证明行被执行过，不证明功能按交付预期工作。`packages/shell/pwsh-local/src` 的按文件 100% 覆盖需要真实的 `pwsh`：缺少它时其执行器套件会自动跳过，`vitest.config.ts` 会豁免该文件以使无 pwsh 的主机保持绿色，而 CI runner 自带 pwsh，仍按完整标准执行门禁。
+- **单元测试**（`pnpm run test`）：运行确定性的包、示例与脚本测试。优先覆盖边界情况、错误路径、事件顺序、并发竞态与约定回归。无法同步的主机观察由 `test:observational` 运行；失败保持可见，但不否决就绪状态。
+- **覆盖率门禁**（`pnpm run test:coverage`）：`packages/*/*/src` 的语句、分支、函数与行聚合覆盖率均须达到 80%。禁止使用覆盖率抑制指令。覆盖率只能证明代码被执行，不能替代对交付行为的必需检查。
 - **真实 API e2e**（`pnpm run test:e2e`）：带密钥测试调用真实提供方 API，包括 DeepSeek 模型以及各提供方特有的冒烟测试；这些测试各自由自己的密钥控制（`EXA_API_KEY`、`PERPLEXITY_API_KEY` 等），缺少密钥时套件会自动跳过，使 keyless CI 保持绿色（[真实 API e2e Agent Note](../.agents/notes/implemented/testing/2026-06-19-real-api-e2e-ci.zh.md)）。
 - **快照**（`pnpm run test:snapshot`）：无密钥预期输出覆盖对外行为（传输约定与呈现），持久化日志则固定组装后的后端行为。ACP 启动真实的自动化服务器示例、回放录制会话，并对归一化 JSON-RPC 与重新持久化的日志执行 diff（[ACP 快照 Agent Note](../.agents/notes/implemented/testing/2026-06-19-acp-snapshot-tests.zh.md)）；headless 后端场景通过未导出的 JSONL 测试 driver 启动各自显式的示例组装，而 `apps/cli` 则单独负责产品 CLI（命令行界面）`dsh --profile headless` 的验收。当模型 transcript（文本记录）发生变化时使用 `pnpm run test:snapshot:record`，回放输入仍然有效时使用 `pnpm run test:snapshot:refresh`；请审查每一处 JSONL 与预期输出差异。一个 ACP 场景（`text-turn`）固定完整的系统提示词与工具 schema 内容；其他 fixture（测试前置数据）将其 token 化，因此修改只会扰动一行（[pinned-header Agent Note](../.agents/notes/archived/testing/2026-07-06-pin-request-header-content-in-one-scenario.md)）。
 - **Web 浏览器快照**（`pnpm run test:web`；必需的 Linux PR（Pull Request）门禁）：Chromium 将回放后的浏览器输出与 `apps/web/tests/snapshots/` 比较。CI 强制只读的 `DSH_SNAPSHOT=replay`，绝不写入预期输出；record/refresh 留在本地，每处 diff 都须评审（[web e2e 车道](../.agents/notes/implemented/testing/2026-07-24-web-gui-browser-e2e-lane.zh.md)、[CI 门禁决策](../.agents/notes/implemented/testing/2026-07-30-web-browser-snapshot-ci-gate.zh.md)）。`test:web` 会[先构建](../.agents/notes/implemented/bug-fix/2026-07-28-themed-scrollbars-and-reserved-gutter.zh.md)以交付插件 CSS。
+
+仅当完整必需检查集合在同一 revision 上全部成功时，该 revision 才就绪；缺失、失败、跳过或取消的证据都会否决就绪状态。发行 pack/install 工作流独立于完整演练提供反馈。
 
 会话 fixture 保留 header 与 payload，但省略正文序号／时间 envelope。回放会合成这些字段；运行时持久化不变。fixture 使用规范打包行；[迁移器](../scripts/migrate-packed-session-fixtures.ts)会改写旧布局。
 

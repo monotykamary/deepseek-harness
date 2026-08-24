@@ -311,7 +311,7 @@ describe('hooks-claude-code bridge — SubagentStart / SubagentStop (observe)', 
     // them, so the no-context arm of the SubagentStart continuation — covered
     // only here — executes before this file's coverage snapshot instead of
     // racing it (the arm went uncovered on a loaded CI runner and failed the
-    // per-file 100% branch gate).
+    // behavior matrix).
     await hooks.dispose()
   })
 

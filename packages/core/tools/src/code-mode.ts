@@ -185,7 +185,7 @@ function jsonNormalizeArgs(value: unknown): { dispatched: unknown; logged: unkno
     throw new Error('tool arguments must be lossless JSON (call the tool with an arguments object, e.g. `{}`)')
   }
   const logged = snapshotJsonValue(snapshot)
-  /* v8 ignore next -- snapshot is already a detached lossless JSON value. */
+  /* snapshot is already a detached lossless JSON value. */
   if (logged === undefined) {
     throw new Error('tool arguments could not be detached for durable logging')
   }
@@ -238,7 +238,7 @@ function renderJsonValue(value: Exclude<JsonValue, string>): string {
       tasks.push({ kind: 'text', text: compact ? ']' : `\n${JSON_INDENT.repeat(task.depth)}]` })
       for (let index = current.length - 1; index >= 0; index--) {
         const item = current[index]
-        /* v8 ignore next -- canonical JsonValue arrays are dense. */
+        /* canonical JsonValue arrays are dense. */
         if (item === undefined) throw new Error('cannot render a sparse JSON array')
         tasks.push({ kind: 'value', value: item, depth: childDepth, compact })
         tasks.push({
@@ -260,10 +260,10 @@ function renderJsonValue(value: Exclude<JsonValue, string>): string {
     tasks.push({ kind: 'text', text: compact ? '}' : `\n${JSON_INDENT.repeat(task.depth)}}` })
     for (let index = keys.length - 1; index >= 0; index--) {
       const key = keys[index]
-      /* v8 ignore next -- the loop is bounded by the captured key count. */
+      /* the loop is bounded by the captured key count. */
       if (key === undefined) throw new Error('cannot render a missing JSON object key')
       const item = current[key]
-      /* v8 ignore next -- canonical JsonValue records contain no undefined properties. */
+      /* canonical JsonValue records contain no undefined properties. */
       if (item === undefined) throw new Error('cannot render an undefined JSON object property')
       tasks.push({ kind: 'value', value: item, depth: childDepth, compact })
       tasks.push({
@@ -587,7 +587,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               this.settled = true
             },
             async commit(): Promise<void> {
-              /* v8 ignore next -- commit() runs only after `settled` flipped, which set parked. */
+              /* commit() runs only after `settled` flipped, which set parked. */
               if (parked === undefined) return
               const result = parked.kind === 'post-result'
                 ? await scheduler.finalize(parked.exec, parked.result)

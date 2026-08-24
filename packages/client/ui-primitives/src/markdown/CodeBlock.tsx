@@ -35,7 +35,7 @@ export function CodeBlock({ code, lang, className, copyLabel = '复制', copiedL
 
   const onCopy = useCallback(() => {
     if (copied) return
-    /* v8 ignore next -- both arms always mount a <pre>; trimmed is the
+    /* both arms always mount a <pre>; trimmed is the
        typed fallback if the DOM shape ever diverges. */
     const text = rootRef.current?.querySelector('pre')?.textContent ?? trimmed
     void writeClipboard(text).then((ok) => {

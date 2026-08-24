@@ -142,7 +142,7 @@ export function jsonValueBytesUpTo(value: CodeJsonValue, maxBytes: number): numb
     }
 
     const key = task.keys[task.index]
-    /* v8 ignore next -- an object frame is created and advanced only for an existing Object.keys entry. */
+    /* an object frame is created and advanced only for an existing Object.keys entry. */
     if (key === undefined) return undefined
     const keyBytes = jsonStringBytesUpTo(key, maxBytes - bytes)
     if (keyBytes === undefined) return undefined

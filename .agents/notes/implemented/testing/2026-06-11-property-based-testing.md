@@ -8,7 +8,7 @@ English | [中文](2026-06-11-property-based-testing.zh.md)
 
 ## Problem
 
-Example-based tests pin the cases we thought of. The harness's core is protocol-shaped — chunk streams, event logs, schema conversion, inbox scheduling — where the input space is combinatorial and the interesting bugs live in interleavings nobody wrote an example for. The motivating evidence: a block-assembly ordering bug once survived 100% line coverage of the happy paths. Per-file 100% coverage proves every line ran, not that every interleaving is correct.
+Example-based tests pin the cases we thought of. The harness's core is protocol-shaped — chunk streams, event logs, schema conversion, inbox scheduling — where the input space is combinatorial and the interesting bugs live in interleavings nobody wrote an example for. The motivating evidence: a block-assembly ordering bug once survived 100% line coverage of the happy paths. Coverage measures executed code, not whether every interleaving is correct.
 
 ## Decision
 
@@ -24,6 +24,6 @@ Example-based tests pin the cases we thought of. The harness's core is protocol-
 - Generator quality is the value lever — the generators bias toward small index pools and short strings so collisions and interleavings are common.
 - **It already paid off:** the BlockAssembler stream found a real bug — a duplicate `block-end` at the same index rewrote a completed block. Fixed (first close wins, matching the existing straggler rule) with a dedicated regression test.
 - A property flake from a timeout is a finding, not something to retry away. The loop properties are deterministic by construction (settle on `agent/status`), so a hang is a real defect.
-- Property tests supplement, not replace, the example tests that pin specific branches for the 100%-coverage gate.
+- Property tests supplement the example tests that pin specific behavior.
 
 <!-- agent-note-format: alternatives-not-recorded (pre-format Agent Note) -->

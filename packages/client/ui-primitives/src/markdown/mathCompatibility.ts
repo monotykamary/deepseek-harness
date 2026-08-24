@@ -11,7 +11,7 @@ import type { Construct, Extension, Previous, State, Tokenizer } from 'micromark
 const previousBackslash: Previous = function (code) {
   if (code !== codes.backslash) return true
   const tail = this.events.at(-1)
-  /* v8 ignore next -- a previous code necessarily has a preceding event. */
+  /* a previous code necessarily has a preceding event. */
   if (tail === undefined) return false
   return tail[1].type === types.characterEscape
 }
@@ -20,7 +20,7 @@ const tokenizeBackslashMathText: Tokenizer = function (effects, ok, nok) {
   return start
 
   function start(code: number | null): State | undefined {
-    /* v8 ignore next -- the text construct is dispatched only for a backslash. */
+    /* the text construct is dispatched only for a backslash. */
     if (code !== codes.backslash) return nok(code)
     effects.enter('mathText')
     effects.enter('mathTextSequence')
@@ -85,7 +85,7 @@ const tokenizeBackslashMathText: Tokenizer = function (effects, ok, nok) {
     return slash
 
     function slash(code: number | null): State | undefined {
-      /* v8 ignore next -- this partial construct is attempted only at a backslash. */
+      /* this partial construct is attempted only at a backslash. */
       if (code !== codes.backslash) return closeNok(code)
       closeEffects.enter('mathTextSequence')
       closeEffects.consume(code)
@@ -104,7 +104,7 @@ const tokenizeBackslashMathText: Tokenizer = function (effects, ok, nok) {
     return slash
 
     function slash(code: number | null): State | undefined {
-      /* v8 ignore next -- the opening check follows a failed close attempt at a backslash. */
+      /* the opening check follows a failed close attempt at a backslash. */
       if (code !== codes.backslash) return openNok(code)
       openEffects.enter(types.chunkString)
       openEffects.consume(code)
@@ -132,7 +132,7 @@ function createMathFlow(marker: number, openMarker: number, closeMarker: number,
     return start
 
     function start(code: number | null): State | undefined {
-      /* v8 ignore next -- the flow construct is dispatched only for its marker. */
+      /* the flow construct is dispatched only for its marker. */
       if (code !== marker) return nok(code)
       effects.enter('mathFlow')
       effects.enter('mathFlowFence')
@@ -260,7 +260,7 @@ function createMathFlow(marker: number, openMarker: number, closeMarker: number,
       return sequenceStart
 
       function sequenceStart(code: number | null): State | undefined {
-        /* v8 ignore next -- the opening check follows a failed close attempt at the marker. */
+        /* the opening check follows a failed close attempt at the marker. */
         if (code !== marker) return openNok(code)
         openEffects.enter(types.chunkString)
         openEffects.consume(code)
@@ -289,9 +289,9 @@ const tokenizeNonLazyContinuation: Tokenizer = function (effects, ok, nok) {
   return start
 
   function start(code: number | null): State | undefined {
-    /* v8 ignore next -- continuation constructs are attempted only after a line ending. */
+    /* continuation constructs are attempted only after a line ending. */
     if (code === codes.eof) return ok(code)
-    /* v8 ignore next -- continuation constructs are attempted only after a line ending. */
+    /* continuation constructs are attempted only after a line ending. */
     if (!markdownLineEnding(code)) return nok(code)
     effects.enter(types.lineEnding)
     effects.consume(code)

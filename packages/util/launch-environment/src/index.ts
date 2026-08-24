@@ -58,7 +58,7 @@ export interface LaunchEnvironmentSnapshot {
  * @returns the key to store and look up by.
  */
 function lookupKey(name: string): string {
-  /* v8 ignore next -- native Windows coverage exercises the folding arm; POSIX covers the exact one */
+  /* native Windows coverage exercises the folding arm; POSIX covers the exact one */
   return process.platform === 'win32' ? name.toUpperCase() : name
 }
 

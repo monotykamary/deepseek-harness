@@ -203,7 +203,7 @@ export function ancestorChain(root: string, cwd: string): string[] {
   while (current !== resolvedRoot) {
     chain.push(current)
     const parent = dirname(current)
-    /* v8 ignore next -- discovery always supplies cwd or an ancestor root. */
+    /* discovery always supplies cwd or an ancestor root. */
     if (parent === current) break
     current = parent
   }
@@ -256,7 +256,7 @@ async function allExistingInstructionFiles(
       case 'absent':
       case 'unavailable':
         continue
-      /* v8 ignore next 2 -- StatFileProbe is closed; this arm only makes adding a kind a compile error. */
+      /* StatFileProbe is closed; this arm only makes adding a kind a compile error. */
       default:
         assertNever(probe, 'StatFileProbe')
     }
@@ -290,7 +290,7 @@ async function discoverInstructionFiles(
     case 'absent':
     case 'unavailable':
       break
-    /* v8 ignore next 2 -- StatFileProbe is closed; this arm only makes adding a kind a compile error. */
+    /* StatFileProbe is closed; this arm only makes adding a kind a compile error. */
     default:
       assertNever(userGlobalProbe, 'StatFileProbe')
   }

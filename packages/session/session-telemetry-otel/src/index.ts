@@ -78,7 +78,7 @@ function sharingStatusFor(mode: SessionTelemetryMode): SessionTelemetrySharingSt
     case SessionTelemetryMode.FULL: return 'full'
     case SessionTelemetryMode.FEEDBACK_ONLY: return 'feedback-only'
     case SessionTelemetryMode.DISABLED: return 'disabled'
-    /* v8 ignore next 2 -- resolveMode already rejected unknown values before this switch; the closed enum cannot reach the default. */
+    /* resolveMode already rejected unknown values before this switch; the closed enum cannot reach the default. */
     default: return assertNever(mode)
   }
 }
@@ -292,7 +292,7 @@ export class OpenTelemetrySessionBackend extends SessionTelemetryBackend {
     try {
       await Promise.race([providerShutdown, deadline])
     } finally {
-      /* v8 ignore else -- the Promise executor assigns timer synchronously before this race starts. */
+      /* the Promise executor assigns timer synchronously before this race starts. */
       if (timer !== undefined) clearTimeout(timer)
     }
   }

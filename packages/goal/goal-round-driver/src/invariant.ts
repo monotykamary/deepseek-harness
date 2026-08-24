@@ -19,7 +19,7 @@ function foldChecked(events: readonly SessionEvent[], fail: InvariantFailure): F
   try {
     return foldGoal(events)
   } catch (error: unknown) {
-    /* v8 ignore next -- the strict goal decoder throws Error instances */
+    /* the strict goal decoder throws Error instances */
     const message = error instanceof Error ? error.message : String(error)
     return fail(`cannot reconstruct the goal before a continuation message: ${message}`)
   }

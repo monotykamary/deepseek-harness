@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/testing/2026-06-11-mutation-testing.md
-2026-06-11-mutation-testing.md: 591d9012644a19ee2c67a916b63092d79f78db1f
-2026-06-11-mutation-testing.zh.md: a8e786ab6566d12762c55bc559b436a13f3b32b2
+2026-06-11-mutation-testing.md: 9332e13de988f0a7a66441899ae7e1ddb124156f
+2026-06-11-mutation-testing.zh.md: 20f704edd330ae3f1b6bc9ac61ac4d1d623afab6

@@ -180,7 +180,7 @@ function applyTransition(trace: SessionTrace, transition: SessionTraceTransition
     case 'clear':
       trace.pendingCalls.clear()
       break
-    /* v8 ignore next -- validateEvent produces this closed transition union */
+    /* validateEvent produces this closed transition union */
     default:
       assertNever(transition.pendingCalls, 'session trace pending-call transition')
   }
@@ -213,7 +213,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
     return trace
   }
 
-  /* v8 ignore next -- session/event always follows list() or session/created seeding */
+  /* session/event always follows list() or session/created seeding */
   const traceFor = (session: Session): SessionTrace => traces.get(session) ?? seedSession(session)
 
   for (const session of ctx.sessions.list()) seedSession(session)
@@ -222,7 +222,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
 
   ctx.on('session/event', (session, event) => {
     const staged = stagedTransitions.get(event)
-    /* v8 ignore next 2 -- internal/dispatch stages the exact callback arguments */
+    /* internal/dispatch stages the exact callback arguments */
     if (staged === undefined || staged.session !== session) {
       return fail('session/event reached publication without matching pre-commit validation')
     }

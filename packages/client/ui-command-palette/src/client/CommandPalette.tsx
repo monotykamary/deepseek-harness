@@ -53,7 +53,7 @@ function statusLabel(session: PaletteSession, t: CommandPaletteProps['t']): stri
   return undefined
 }
 
-/* v8 ignore next 3 -- closed-union backstop; only reached if a typed item is forged */
+/* closed-union backstop; only reached if a typed item is forged */
 function assertNever(value: never): never {
   throw new Error(`unknown command-palette item: ${String(value)}`)
 }
@@ -68,7 +68,7 @@ function itemIcon(item: PaletteItem): ReactNode {
         ? <span className={css.iconPlaceholder} />
         : <StateDot state={state} size={10} />
     }
-    /* v8 ignore next -- closed-union backstop; typed callers cannot supply another kind */
+    /* closed-union backstop; typed callers cannot supply another kind */
     default: return assertNever(item)
   }
 }
@@ -303,7 +303,7 @@ export function CommandPalette({
         close()
         openSession(item.session.summary.id)
         return
-      /* v8 ignore next -- closed-union backstop; typed callers cannot supply another kind */
+      /* closed-union backstop; typed callers cannot supply another kind */
       default: return assertNever(item)
     }
   }

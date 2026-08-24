@@ -101,7 +101,7 @@ async function readBounded(response: Response, url: string): Promise<string> {
     await response.body?.cancel()
     throw oversized()
   }
-  /* v8 ignore next -- fetch always exposes a body stream on a 2xx Response; the null guard is defensive. */
+  /* fetch always exposes a body stream on a 2xx Response; the null guard is defensive. */
   if (response.body === null) return ''
   const reader = response.body.getReader()
   const chunks: Uint8Array[] = []
@@ -115,7 +115,7 @@ async function readBounded(response: Response, url: string): Promise<string> {
       chunks.push(value)
     }
   } finally {
-    /* v8 ignore next 4 -- cancel() after a completed or abandoned read settles without rejecting; unobserved best-effort cleanup. */
+    /* cancel() after a completed or abandoned read settles without rejecting; unobserved best-effort cleanup. */
     await reader.cancel().catch(() => {
       // Cancel after a drained read, or after this function walked away from
       // an oversized one, is cleanup; the reply is already decided either way.

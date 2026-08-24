@@ -341,10 +341,9 @@ function stopReasonError(result: WorkflowResult): string | undefined {
       return `Ralph workflow was cancelled${result.error === undefined ? '' : ` (${result.error})`}`
     case 'error':
       return `Ralph workflow failed: ${result.error ?? 'unknown error'}`
-    /* v8 ignore start -- WorkflowStopReason is closed; a future variant must fail loud here. */
+    /* WorkflowStopReason is closed; a future variant must fail loud here. */
     default:
       return `Ralph workflow ended abnormally (${String(result.stopReason satisfies never)})`
-    /* v8 ignore stop */
   }
 }
 

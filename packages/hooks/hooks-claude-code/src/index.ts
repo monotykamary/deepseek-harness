@@ -310,7 +310,7 @@ const SUBAGENT_TYPE = 'general-purpose'
 function lastTurn(agent: Agent | undefined): number {
   if (!agent) return 0
   const last = [...agent.session.events].findLast(e => e.type === 'turn/start')
-  /* v8 ignore next -- agent-present callers are tool/stop extension points inside an open turn. */
+  /* agent-present callers are tool/stop extension points inside an open turn. */
   return last?.type === 'turn/start' ? last.data.turn : 0
 }
 

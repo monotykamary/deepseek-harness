@@ -43,7 +43,7 @@ interface EditableFileProps {
   readonly wrap: boolean
 }
 
-/* v8 ignore next 3 -- closed Remote reason union backstop. */
+/* closed Remote reason union backstop. */
 function assertNever(value: never): never {
   throw new Error(`unhandled workspace preview reason: ${JSON.stringify(value)}`)
 }
@@ -56,7 +56,7 @@ function unavailableText(
     case 'too-large': return t('preview.tooLarge', { limit: byteLimitLabel(value.maxBytes) })
     case 'not-text': return t('preview.notText')
     case 'not-file': return t('preview.notFile')
-    /* v8 ignore next -- closed Remote reason union. */
+    /* closed Remote reason union. */
     default: return assertNever(value.reason)
   }
 }
@@ -70,7 +70,7 @@ function saveMessage(phase: SavePhase, t: TranslateNS<typeof NS>): string {
     case 'too-large': return t('editor.tooLarge')
     case 'not-file': return t('preview.notFile')
     case 'error': return t('editor.error')
-    /* v8 ignore next -- closed local phase union. */
+    /* closed local phase union. */
     default: return assertNever(phase)
   }
 }
@@ -105,7 +105,7 @@ function EditableFile({ file, value, t, onWrite, onCommit, wrap }: EditableFileP
         case 'not-file':
           if (mounted.current) setPhase(result.kind)
           return false
-        /* v8 ignore next 2 -- closed WorkspaceFileWriteResult union backstop. */
+        /* closed WorkspaceFileWriteResult union backstop. */
         default:
           return assertNever(result)
       }
@@ -114,7 +114,7 @@ function EditableFile({ file, value, t, onWrite, onCommit, wrap }: EditableFileP
       if (mounted.current) setPhase(pending ? 'pending' : 'saved')
     },
     onError: () => {
-      /* v8 ignore next -- disposed coordinators cannot publish transport errors. */
+      /* disposed coordinators cannot publish transport errors. */
       if (mounted.current) setPhase('error')
     },
   }), [fileKey, file, onCommit, onWrite])

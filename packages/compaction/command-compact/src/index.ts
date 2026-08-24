@@ -13,11 +13,10 @@ export const inject = ['commands', 'compaction']
 const USAGE = 'Usage: /compact (no arguments)'
 
 /** Fail loudly if a locally closed union gains an unhandled member. */
-/* v8 ignore start -- closed-union backstop is unreachable without violating the TypeScript contract */
+/* closed-union backstop is unreachable without violating the TypeScript contract */
 function assertNever(value: never): never {
   throw new TypeError(`unknown manual compaction error code: ${String(value)}`)
 }
-/* v8 ignore stop */
 
 /** Convert expected capability failures into concise human-only outcomes. */
 function expectedFailure(error: ManualCompactionError): CommandResult {
@@ -49,7 +48,7 @@ function expectedFailure(error: ManualCompactionError): CommandResult {
         kind: 'error',
         text: 'Compaction finished, but the session could not be saved.',
       }
-    /* v8 ignore next 2 -- ManualCompactionErrorCode is closed and every member is handled above */
+    /* ManualCompactionErrorCode is closed and every member is handled above */
     default: return assertNever(error.code)
   }
 }

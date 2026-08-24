@@ -126,7 +126,7 @@ export class LspInstance {
 
   private async runQuery(request: LspProviderQuery, source: HostSource, signal?: AbortSignal): Promise<LspQueryResult> {
     if (this.disposed) throw new LspError('LSP instance was disposed', 'LSP_DISPOSED')
-    /* v8 ignore next -- the abortable queue wait rejects a pre-aborted signal before runQuery; this is a belt-and-suspenders guard. */
+    /* the abortable queue wait rejects a pre-aborted signal before runQuery; this is a belt-and-suspenders guard. */
     if (signal?.aborted) throw abortError(signal)
     // Observe abort during the handshake wait, and never pool a poisoned instance: if the wait ends
     // in failure — an abort on a still-pending handshake, OR `initialize` rejecting (utf-8
@@ -141,7 +141,7 @@ export class LspInstance {
       throw error
     }
     const capabilities = this.capabilities
-    /* v8 ignore next -- `ready` resolves only after capabilities are set, else it rejects above; defensive. */
+    /* `ready` resolves only after capabilities are set, else it rejects above; defensive. */
     if (capabilities === undefined) throw new Error('LSP instance is not initialized')
     if (!supportsOperation(capabilities, request.operation)) {
       throw new LspError(`server does not support ${request.operation}`, 'LSP_UNSUPPORTED_OPERATION')
@@ -153,7 +153,7 @@ export class LspInstance {
     const uri = source.fileUrl
     let opened = false
     try {
-      /* v8 ignore next -- guards an abort landing between the ready wait and didOpen; not deterministically reproducible. */
+      /* guards an abort landing between the ready wait and didOpen; not deterministically reproducible. */
       if (signal?.aborted) throw abortError(signal)
       try {
         await abortable(this.connection.notify('textDocument/didOpen', {
@@ -181,7 +181,7 @@ export class LspInstance {
           try {
             await this.startTeardown()
           } catch {
-            /* v8 ignore next -- teardown owns all expected process races; this only preserves the
+            /* teardown owns all expected process races; this only preserves the
                already-settled query outcome if an unexpected cleanup primitive itself rejects. */
           }
         }
@@ -227,7 +227,7 @@ export class LspInstance {
         const settled = await Promise.race([
           send.then(markSettled, markSettled),
           new Promise<boolean>((resolve) => {
-            /* v8 ignore next -- the cancel-grace deadline signal is freshly armed and not yet aborted here; defensive. */
+            /* the cancel-grace deadline signal is freshly armed and not yet aborted here; defensive. */
             if (grace.signal.aborted) { resolve(false); return }
             grace.signal.addEventListener('abort', () => { resolve(false) }, { once: true })
           }),
@@ -253,7 +253,7 @@ export class LspInstance {
     if (method === 'workspace/configuration') {
       // Answer every requested item with the one static configuration value.
       const record = params as { items?: unknown[] } | null
-      /* v8 ignore next -- a configuration request always carries an items array; the empty fallback is defensive. */
+      /* a configuration request always carries an items array; the empty fallback is defensive. */
       const items = Array.isArray(record?.items) ? record.items : []
       return Promise.resolve(items.map(() => this.spec.configuration))
     }

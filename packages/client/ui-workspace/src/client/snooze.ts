@@ -95,7 +95,7 @@ export function resolveSnoozePresets(now: Date, t: Translate): readonly SnoozePr
   })
   const daysUntilMonday = (1 - now.getDay() + 7) % 7 || 7
   const nextWeek = atHour(addDays(now, daysUntilMonday), MORNING_HOUR)
-  /* v8 ignore next -- defensive: getDay() is always within 0..6. */
+  /* defensive: getDay() is always within 0..6. */
   const weekdayLabel = t(WEEKDAY_KEYS[nextWeek.getDay()] ?? 'weekday.sun')
   presets.push({
     id: 'next-week',

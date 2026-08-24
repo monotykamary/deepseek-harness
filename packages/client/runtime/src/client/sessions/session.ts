@@ -401,7 +401,7 @@ export class Session implements SessionFace {
       }
       this.events = [...older.map(e => e.event), ...this.events]
       this.views = [...older.map(e => e.view), ...this.views]
-      /* v8 ignore next -- the ?? arm needs older[0] undefined, but the empty-page branch above already returned. */
+      /* the ?? arm needs older[0] undefined, but the empty-page branch above already returned. */
       this.baseSeq = older[0]?.event.seq ?? this.baseSeq
       this.hasMore = result.value.hasMore
       this.conversation.prepend(older.map(conversationInput), this.hasMore)
@@ -640,7 +640,7 @@ export class Session implements SessionFace {
       if (generation !== this.openGeneration) return
       this.openState = 'error'
       const folded = transportError<never>(error)
-      /* v8 ignore next -- the `? null` arm is unreachable: transportError always returns ok:false. */
+      /* the `? null` arm is unreachable: transportError always returns ok:false. */
       this.openError = folded.ok ? null : folded.error
     } finally {
       if (generation === this.openGeneration) this.notifier.markDirty()
@@ -710,7 +710,7 @@ export class Session implements SessionFace {
    *  installWindow path. No openState transition — the UI keeps the current window (no loading
    *  flash); events arriving meanwhile detour to liveBuffer via the stitching flag. */
   private async repairGap(): Promise<void> {
-    /* v8 ignore next -- re-entry guard: acceptLiveEvent already detours to liveBuffer while stitching, so no second call reaches here. */
+    /* re-entry guard: acceptLiveEvent already detours to liveBuffer while stitching, so no second call reaches here. */
     if (this.stitching) return
     this.stitching = true
     const generation = this.openGeneration

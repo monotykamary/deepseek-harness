@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决策
 
-根 AGENTS.md 现在把验证分为两层。内环在实现期间自由运行：`pnpm run test:gui`（全部客户端与 host 端 GUI 包，秒级）、`pnpm run test:changed`（把 vitest 限定到工作区改动的包，见 [scripts/test-changed.ts](../../../../scripts/test-changed.ts)）、`test:changed --coverage`（只对改动包的 src 执行按文件 100% 门槛，几分钟而非数小时），以及单包迭代用的 watch 变体 `test:gui:watch`／`test:changed:watch`。完整套件门禁——test:coverage、test:web、test:snapshot、doc-sync、hygiene、build——只在实现完成时运行一次，保留原规则的反反复折腾属性：门禁失败后先完成修复再重跑。CI 仍是穷尽性权威；限定范围的覆盖率运行只是本地代理，绝非替代品。
+根 AGENTS.md 现在把验证分为两层。内环在实现期间自由运行：`pnpm run test:gui`（全部客户端与 host 端 GUI 包，秒级）、`pnpm run test:changed`（把 vitest 限定到工作区改动的包，见 [scripts/test-changed.ts](../../../../scripts/test-changed.ts)）、`test:changed --coverage`（只对改动包源码执行聚合 80% 门槛），以及单包迭代用的 watch 变体 `test:gui:watch`／`test:changed:watch`。完整套件门禁——test:coverage、test:web、test:snapshot、doc-sync、hygiene、build——只在实现完成时运行一次，保留原规则的反反复折腾属性：门禁失败后先完成修复再重跑。CI 仍是穷尽性权威；限定范围的覆盖率运行只是本地代理，绝非替代品。
 
 ## 备选方案
 

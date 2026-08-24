@@ -82,7 +82,7 @@ export class SessionPreparations<Source extends PreparedSource, CommitState> {
     await (signal === undefined ? entry.result : observeQueuedAbort(entry.result, signal))
     while (this.entries.get(id) === entry && entry.phase !== 'ready') {
       const settled = entry.reservationSettled
-      /* v8 ignore next -- committing/reserved transitions install this waiter synchronously. */
+      /* committing/reserved transitions install this waiter synchronously. */
       if (settled === undefined) throw new Error(`session "${id}" preparation lost its reservation waiter`)
       if (signal === undefined) await settled
       else await observeQueuedAbort(settled, signal)
@@ -327,7 +327,7 @@ export function observeQueuedAbort<T>(
           rejectObservation(reject, reason)
           return
         }
-        /* v8 ignore next -- a native AbortSignal emits abort only after becoming aborted. */
+        /* a native AbortSignal emits abort only after becoming aborted. */
         reject(new Error('queued observation abort event lacked an aborted signal'))
       })
     }

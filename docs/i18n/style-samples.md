@@ -34,9 +34,9 @@
 
 ## ③ 测试政策清单
 
-> **Coverage gate** (`pnpm run test:coverage`): the gating run, per-file 100% on `packages/*/*/src`. An uncovered line is often dead code the gate is correctly flagging for deletion, not a missing test to bolt on. Line coverage is necessary, never sufficient — it proves lines ran, not that the feature works as shipped.
+> **Coverage gate** (`pnpm run test:coverage`): statements, branches, functions, and lines under `packages/*/*/src` must each reach 80% in aggregate. Coverage is execution evidence, never proof that the feature works as shipped.
 
-覆盖率门禁（`pnpm run test:coverage`）：作为合入门禁校验，要求 `packages/*/*/src` 目录下每个文件行覆盖率达到 100%。未覆盖代码行大多是无用死代码，门禁标记这类代码是提示删除，而非单纯补充测试。行覆盖率是必要条件，但远不充分：它仅能证明代码被执行过，无法保证功能符合线上预期。
+覆盖率门禁（`pnpm run test:coverage`）：`packages/*/*/src` 下的语句、分支、函数与行聚合覆盖率均须达到 80%。覆盖率是执行证据，绝不是功能按交付方式运行的证明。
 
 > We are DeepSeek — do not ration real-API tests. A no-key test proves the plumbing; only a with-key run proves the agent works against a real model. Write many: real prompts that write files, multi-turn conversations, tool use, cancellation mid-stream. Cheapest and highest-value are **smoke tests** that boot the real example, send one real prompt, and check the world — they catch the "green unit tests, broken product" class that mocks structurally cannot. The self-skip exists only so secretless CI and keyless contributors aren't blocked; it is not a cost signal.
 

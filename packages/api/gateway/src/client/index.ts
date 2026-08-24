@@ -128,7 +128,7 @@ class ClientRemoteService extends Service implements TypertClientRemote {
       listeners.push(subscription)
       return () => {
         const at = listeners.indexOf(subscription)
-        /* v8 ignore next -- listener */
+        /* listener */
         if (at >= 0) listeners.splice(at, 1)
       }
     }, `api-gateway.client.$on(${JSON.stringify(event)})`)
@@ -275,7 +275,7 @@ class ClientRemoteService extends Service implements TypertClientRemote {
     const handle = namespace
     return async () => {
       for (const method of [...installed].reverse()) {
-        /* v8 ignore next -- Cordis effect disposers are idempotent and invoke this cleanup at most once. */
+        /* Cordis effect disposers are idempotent and invoke this cleanup at most once. */
         if (!method.token.active) continue
         method.token.active = false
         method.token.abort.abort()
@@ -311,7 +311,7 @@ class ClientRemoteService extends Service implements TypertClientRemote {
       await fiber.dispose()
       throw error
     }
-    /* v8 ignore next 3 -- a settled namespace fiber synchronously constructs its Service and installs the group. */
+    /* a settled namespace fiber synchronously constructs its Service and installs the group. */
     if (service === undefined || installed === undefined) {
       throw new Error(`client api: namespace ${JSON.stringify(name)} did not start`)
     }
@@ -496,7 +496,7 @@ class RemoteNamespaceService extends Service {
   remove(kind: 'direct' | 'scoped', method: string, token: MountToken): void {
     const record = this.methods.get(method)
     const current = record?.[kind]
-    /* v8 ignore next -- duplicate live variants are rejected before installation, so no newer token can replace this one. */
+    /* duplicate live variants are rejected before installation, so no newer token can replace this one. */
     if (record === undefined || current?.token !== token) return
     if (kind === 'direct') delete record.direct
     else delete record.scoped

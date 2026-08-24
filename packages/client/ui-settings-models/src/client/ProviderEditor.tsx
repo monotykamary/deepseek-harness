@@ -259,12 +259,12 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       // the write with a message naming a path instead of the row, and because
       // nothing but this function decides what is written.
       const failure = validateDeepSeekModels(schema.getPath(next, ['models']))
-      /* v8 ignore next 3 -- unreachable from the card: the same failure disables submit */
+      /* unreachable from the card: the same failure disables submit */
       if (failure !== undefined) {
         return `${t('model')} ${String(failure.index + 1)}: ${t(failure.key)}`
       }
     }
-    /* v8 ignore next -- apply is only reachable from the rendered card, which required a resolved node */
+    /* apply is only reachable from the rendered card, which required a resolved node */
     if (props.credentialOnly !== true && node !== undefined && settingsPath.length === 0) {
       const sectionError = schema.validate(node, next)
       if (sectionError !== undefined) return sectionError

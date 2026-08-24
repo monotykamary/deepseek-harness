@@ -124,7 +124,7 @@ function TerminalPane({
       callbacksRef.current.onConnected(live.terminal)
       setPhase('ready')
       if (handshake.type === 'open') surface.showCursor()
-      /* v8 ignore else -- a pane can become inactive only while this asynchronous attach is settling. */
+      /* a pane can become inactive only while this asynchronous attach is settling. */
       if (activeRef.current) surface.focus()
     } catch (failure: unknown) {
       if (generation !== generationRef.current) return
@@ -307,7 +307,7 @@ export function TerminalPanel({
   }
 
   const addToGroup = (direction: SplitDirection): void => {
-    /* v8 ignore next -- split and New Terminal controls cannot call this without an active group. */
+    /* split and New Terminal controls cannot call this without an active group. */
     if (activeGroup === undefined) return
     if (activeGroup.items.length >= 3) return
     const key = allocate('terminal')

@@ -162,7 +162,7 @@ export class HttpFetchProvider implements WebFetchProvider {
       }
     }
 
-    /* v8 ignore next -- a 2xx Response from fetch always exposes a body stream; the null guard is defensive. */
+    /* a 2xx Response from fetch always exposes a body stream; the null guard is defensive. */
     if (response.body === null) return { bytes: new Uint8Array(0), truncatedByBytes: false }
 
     const chunks: Uint8Array[] = []
@@ -187,10 +187,10 @@ export class HttpFetchProvider implements WebFetchProvider {
         total += value.byteLength
       }
     } catch (error: unknown) {
-      /* v8 ignore next -- mid-stream read fault needs a network drop after headers; translate path covered by request-phase tests. */
+      /* mid-stream read fault needs a network drop after headers; translate path covered by request-phase tests. */
       throw translateAbortOrNetwork(error, signal)
     } finally {
-      /* v8 ignore next 4 -- cancel() after a completed/broken read settles without rejecting; unobserved best-effort cleanup. */
+      /* cancel() after a completed/broken read settles without rejecting; unobserved best-effort cleanup. */
       await reader.cancel().catch(() => {
         // Cancel after a successful read (or after we broke past the cap) is
         // best-effort cleanup; the bytes we need are already collected.
@@ -217,7 +217,7 @@ function resolveRedirect(location: string, base: URL): URL {
   try {
     return new URL(location, base)
   } catch (error: unknown) {
-    /* v8 ignore next 2 -- URL resolution against a valid absolute base effectively never throws; defensive guard. */
+    /* URL resolution against a valid absolute base effectively never throws; defensive guard. */
     throw new WebError(`invalid redirect Location "${location}"`, 'WEB_PROVIDER_ERROR', { cause: error })
   }
 }

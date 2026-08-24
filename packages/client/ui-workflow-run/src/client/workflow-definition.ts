@@ -65,7 +65,7 @@ function statusFromStopReason(stopReason: WorkflowStopReason): WorkflowRunStatus
     case 'completed': return 'completed'
     case 'cancelled': return 'cancelled'
     case 'error': return 'failed'
-    /* v8 ignore next -- WorkflowStopReason is closed and every variant is handled above. */
+    /* WorkflowStopReason is closed and every variant is handled above. */
     default: return stopReason satisfies never
   }
 }
@@ -75,7 +75,7 @@ function statusFromOutcome(outcome: WorkflowAgentOutcome): WorkflowRunStatus {
     case 'completed': return 'completed'
     case 'cancelled': return 'cancelled'
     case 'failed': return 'failed'
-    /* v8 ignore next -- WorkflowAgentOutcome is closed and every variant is handled above. */
+    /* WorkflowAgentOutcome is closed and every variant is handled above. */
     default: return outcome satisfies never
   }
 }

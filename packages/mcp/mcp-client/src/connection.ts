@@ -318,7 +318,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     // a server that crashes AFTER a successful initial sync cannot flip client
     // to undefined before this continuation runs.
     if (client !== undefined) return {}
-    /* v8 ignore next -- defensive: firstAttemptError is always set when connect/sync fails */
+    /* defensive: firstAttemptError is always set when connect/sync fails */
     return { error: firstAttemptError ?? new Error(`${label}: initial connection failed`) }
   })
 

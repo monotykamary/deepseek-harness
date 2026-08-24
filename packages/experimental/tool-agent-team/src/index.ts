@@ -150,7 +150,7 @@ function jsonOutput<const S extends ValueSchemaSpec>(schema: S): {
 
 /** Recover the exact caller guaranteed by Agent-scoped tool discovery. */
 function callingAgent(agent: Agent | undefined, toolName: string): Agent {
-  /* v8 ignore next 2 -- Team tools are registered only in an exact Agent scope, so discovery supplies this carrier. */
+  /* Team tools are registered only in an exact Agent scope, so discovery supplies this carrier. */
   if (agent === undefined) throw new Error(`${toolName} requires a calling Agent`)
   return agent
 }

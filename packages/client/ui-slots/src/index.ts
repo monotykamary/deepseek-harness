@@ -1134,7 +1134,7 @@ export class SlotCore {
     if (!entry.children) return
     for (const childKey of Object.keys(entry.children)) {
       const childRec = this.records.get(childKey)
-      /* v8 ignore next -- defensive: declaring always creates the record */
+      /* defensive: declaring always creates the record */
       if (!childRec) continue
       const doomed = childRec.entries
       childRec.spec = undefined

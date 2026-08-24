@@ -254,7 +254,7 @@ export class LocalFileSystem extends FileSystem {
     })
   }
 
-  /* v8 ignore next 5 -- the post-write probe finding the file absent requires a
+  /* the post-write probe finding the file absent requires a
    * concurrent unlink between rename and stat; fall back to a sentinel version. */
   private versionAfterWrite(after: { version: FsVersion } | null, target: FsTarget): FsVersion {
     if (after) return after.version

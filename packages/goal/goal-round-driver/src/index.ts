@@ -206,7 +206,7 @@ export function apply(ctx: Context): void {
 
   /** Coalesce triggers onto one agent-local serialized driver. */
   function requestDrive(state: DriverState): void {
-    /* v8 ignore next -- teardown may race a final trigger after synchronously closing the step fence */
+    /* teardown may race a final trigger after synchronously closing the step fence */
     if (state.stopping) return
     state.requested = true
     if (state.run !== undefined) return
@@ -430,7 +430,7 @@ export function apply(ctx: Context): void {
         const attempt = state.attempt
         if (attempt !== undefined) {
           attempt.stale = true
-          /* v8 ignore next -- followup reserves the live agent before publishing a queued attempt */
+          /* followup reserves the live agent before publishing a queued attempt */
           if (state.agent.status === 'running') {
             state.agent.cancel({ kind: 'parent' })
             waits.push(state.agent.whenIdle())

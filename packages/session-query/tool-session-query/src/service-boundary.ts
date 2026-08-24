@@ -165,7 +165,7 @@ function renderFullError(error: unknown): string {
     diagnostics.push(current.stack ?? String(current))
     current = current.cause
   }
-  /* v8 ignore next -- defensive containment for a cyclic Error.cause graph */
+  /* defensive containment for a cyclic Error.cause graph */
   if (current instanceof Error) diagnostics.push('[circular error cause]')
   else if (current !== undefined) diagnostics.push(renderFullError(current))
   return diagnostics.join('\nCaused by: ')

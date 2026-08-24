@@ -86,7 +86,7 @@ export async function runUpdateWorker(statusPath: string, channel: InstallChanne
   }
 }
 
-/* v8 ignore start -- exercised by the built worker process; coverage cannot cross the process boundary. */
+/* exercised by the built worker process; coverage cannot cross the process boundary. */
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [statusPath, channel, target] = process.argv.slice(2)
   if (statusPath === undefined || target === undefined
@@ -95,4 +95,3 @@ if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(
   }
   process.exitCode = await runUpdateWorker(statusPath, channel, target)
 }
-/* v8 ignore stop */

@@ -62,22 +62,22 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
   }, { global: true })
 
   ctx.on('subagent/provider-added', (provider) => {
-    /* v8 ignore next -- internal/dispatch stages the same provider object */
+    /* internal/dispatch stages the same provider object */
     if (!stagedProviders.delete(provider)) return
     providers.add(provider.name)
   }, { global: true })
   ctx.on('subagent/provider-removed', (providerName) => {
-    /* v8 ignore next -- internal/dispatch stages the same provider name */
+    /* internal/dispatch stages the same provider name */
     if (!stagedRemovals.delete(providerName)) return
     providers.delete(providerName)
   }, { global: true })
   ctx.on('subagent/start', (info) => {
-    /* v8 ignore next -- internal/dispatch stages the same lifecycle object */
+    /* internal/dispatch stages the same lifecycle object */
     if (!stagedStarts.delete(info)) return
     runs.set(info.runId, info)
   }, { global: true })
   ctx.on('subagent/end', (info) => {
-    /* v8 ignore next -- internal/dispatch stages the same lifecycle object */
+    /* internal/dispatch stages the same lifecycle object */
     if (!stagedEnds.delete(info)) return
     runs.delete(info.runId)
   }, { global: true })

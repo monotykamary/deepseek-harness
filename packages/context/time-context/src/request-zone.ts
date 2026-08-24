@@ -74,7 +74,7 @@ export function renderBrowserTimeZoneContext(context: BrowserTimeZoneContext): s
     case 'missing':
       return 'Browser time zone for this request: unavailable. '
         + 'Ask the user to clarify otherwise-unqualified dates and times.'
-    /* v8 ignore next 2 -- the closed BrowserTimeZoneContext union is exhausted above. */
+    /* the closed BrowserTimeZoneContext union is exhausted above. */
     default:
       return assertNever(context, 'BrowserTimeZoneContext')
   }

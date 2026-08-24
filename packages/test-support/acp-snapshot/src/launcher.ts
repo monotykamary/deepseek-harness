@@ -158,7 +158,7 @@ export function launchAcpTestAgent(options: AcpTestLaunchOptions): LaunchedAcpTe
         updates.push(params.update)
         for (let index = updateWaiters.length - 1; index >= 0; index--) {
           const waiter = updateWaiters[index]
-          /* v8 ignore next 1 -- index is bounded by the array length */
+          /* index is bounded by the array length */
           if (waiter === undefined) continue
           let matches: boolean
           try {

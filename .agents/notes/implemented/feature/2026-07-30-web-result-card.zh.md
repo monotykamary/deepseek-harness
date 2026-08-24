@@ -36,7 +36,7 @@ Status: implemented
 
 ## Testing
 
-`packages/web/tool-web/tests/tool-web.spec.ts` 覆盖以下内容，满足按文件 100% 的门禁：`searchMetaFromValue`/`fetchMetaFromValue` 投影，含省略不存在的可选字段，以及抓取 `truncated` 投影在仅输出上限截断正文时、以及在毫无截断时都与 render 尾部信息一致；`searchMetaFromResult`/`fetchMetaFromResult` 收窄，含一次往返与每种畸形形状的拒绝（非对象、字段类型错误、畸形来源条目）以及空来源列表的接受；`presentSearchResult`/`presentFetchResult` 类型化视图，含从参数派生的 title、无 `content` 副本、truncated 信号、错误结果回退与畸形 meta 回退；以及两次真实注册表执行，断言工具把 meta 投影到 `result.meta` 上，其注册的 `presentResult` 推导出 `card: 'web'` 视图。
+`packages/web/tool-web/tests/tool-web.spec.ts` 覆盖以下内容：`searchMetaFromValue`/`fetchMetaFromValue` 投影，含省略不存在的可选字段，以及抓取 `truncated` 投影在仅输出上限截断正文时、以及在毫无截断时都与 render 尾部信息一致；`searchMetaFromResult`/`fetchMetaFromResult` 收窄，含一次往返与每种畸形形状的拒绝（非对象、字段类型错误、畸形来源条目）以及空来源列表的接受；`presentSearchResult`/`presentFetchResult` 类型化视图，含从参数派生的 title、无 `content` 副本、truncated 信号、错误结果回退与畸形 meta 回退；以及两次真实注册表执行，断言工具把 meta 投影到 `result.meta` 上，其注册的 `presentResult` 推导出 `card: 'web'` 视图。
 
 ## Related
 

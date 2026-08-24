@@ -240,6 +240,7 @@ export function gatesForMode(selected: Mode): Gate[] {
         pnpmScript('test', 'test'),
         pnpmScript('issue-management', 'test:issue-management', { label: 'Issue management policy' }),
         pnpmScript('duplication', 'duplication'),
+        observationalTestGate(),
         snapshotGate(),
         pnpmScript('build', 'build'),
         pnpmScript('build:web', 'build:web'),
@@ -285,6 +286,7 @@ function ciPrimaryGates(): Gate[] {
     pnpmScript('typecheck', 'typecheck:contracts-ready', { needs: ['typert-contracts'] }),
     lintGate({ needs: ['typert-contracts'] }),
     pnpmScript('duplication', 'duplication'),
+    observationalTestGate(),
     ...coverageGates(),
     ...nodeCompatSmokeGates(),
     snapshotGate(),
@@ -486,6 +488,7 @@ function ciWindowsCompleteGates(): Gate[] {
     ciBuildGate(),
     pnpmScript('windows-site', 'docs:build', { label: 'production site' }),
     ...coverage,
+    observationalTestGate(),
     ...observational,
   ]
 }
@@ -520,10 +523,8 @@ function lintGate(options: { needs?: string[] } = {}): Gate {
   })
 }
 
-// The heavy suites run uninstrumented beside the thresholded gate: their
-// compiler- and subprocess-bound fixtures pay a multiple of their runtime
-// under v8 instrumentation while contributing nothing the thresholds need
-// (membership rules in scripts/coverage-exempt.ts).
+// Slow correctness suites run uninstrumented beside aggregate coverage. Their
+// failures remain blocking; only their unnecessary v8 instrumentation is removed.
 //
 // DSH_COVERAGE_MAX_WORKERS is the ordinary lane's worker budget, so the two
 // parallel gates split it instead of each claiming it whole. When
@@ -540,12 +541,19 @@ function coverageWorkerArgs(): { instrumented: string[]; exempt: string[] } {
   const [flag] = positiveIntArg('DSH_COVERAGE_MAX_WORKERS', '--maxWorkers')
   if (flag === undefined) return { instrumented: [], exempt: [] }
   const total = Number.parseInt(flag.split('=')[1] ?? '', 10)
-  const exempt = Math.max(1, Math.floor(total / 3))
+  const exempt = Math.max(1, Math.floor(total / 2))
   const instrumented = Math.max(1, total - exempt)
   return {
     instrumented: [`--maxWorkers=${String(instrumented)}`],
     exempt: [`--maxWorkers=${String(exempt)}`],
   }
+}
+
+function observationalTestGate(): Gate {
+  return pnpmScript('observational-tests', 'test:observational', {
+    label: 'observational tests',
+    allowFailure: true,
+  })
 }
 
 function coverageGates(): Gate[] {

@@ -200,7 +200,7 @@ export class TeamTaskBoard {
           next = { ...current, status: 'deleted' }
           break
         }
-        /* v8 ignore next 2 -- TeamTaskAction is closed and every member is handled above. */
+        /* TeamTaskAction is closed and every member is handled above. */
         default:
           throw new TeamError(`unsupported task action ${String(request.action)}`, 'TEAM_INVALID_ARGUMENT')
       }
@@ -245,7 +245,7 @@ export class TeamTaskBoard {
     try {
       assertTaskGraphCandidate(state.tasks, candidate)
     } catch (error: unknown) {
-      /* v8 ignore next -- the shared validator is the only statement in the try and throws this exact error. */
+      /* the shared validator is the only statement in the try and throws this exact error. */
       if (!(error instanceof TeamTaskGraphError)) throw error
       throw new TeamError(error.message, TASK_GRAPH_ERROR_CODES[error.violation], { cause: error })
     }

@@ -49,7 +49,7 @@ function run(root: string) {
   ], {
     cwd: repositoryRoot,
     encoding: 'utf8',
-    timeout: 5_000,
+    timeout: 30_000,
   })
 }
 

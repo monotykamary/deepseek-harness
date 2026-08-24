@@ -448,7 +448,7 @@ export class SlotRegistry extends Service {
   /** Drop one reference; the last holder's unload drops the record (instances go with it — engine stores need no explicit dispose). */
   private _release(handle: EngineStoreHandle): void {
     const record = this._stores.get(handle)
-    /* v8 ignore next -- defensive: release only runs from a disposer whose
+    /* defensive: release only runs from a disposer whose
      * register acquired the same handle, so the record must exist; kept so a
      * future call site cannot underflow the axis. */
     if (record === undefined) return

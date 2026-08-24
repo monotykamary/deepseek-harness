@@ -40,7 +40,7 @@ export function abortable<T>(work: Promise<T>, signal?: AbortSignal): Promise<T>
   const onAbort = (): void => { canceled.reject(abortError(signal)) }
   signal.addEventListener('abort', onAbort, { once: true })
   const normalized = work.catch((error: unknown) => {
-    /* v8 ignore next -- owned LSP promises reject with Error; coercion defends the generic helper. */
+    /* owned LSP promises reject with Error; coercion defends the generic helper. */
     throw error instanceof Error ? error : new Error(String(error))
   })
   return Promise.race([normalized, canceled.promise])

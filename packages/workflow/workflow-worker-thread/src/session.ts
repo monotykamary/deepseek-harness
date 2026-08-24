@@ -188,7 +188,7 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
       case HostToWorkerType.ChildDisposed:
         children.onChildDisposed(message.callId)
         break
-      /* v8 ignore next 2 -- closed engine-owned union; the arm only makes adding a message type a compile error */
+      /* closed engine-owned union; the arm only makes adding a message type a compile error */
       default:
         assertNever(message, 'host-to-worker message')
     }

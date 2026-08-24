@@ -104,24 +104,24 @@ const install: InvariantInstaller = (ctx, fail) => {
   }, { global: true })
 
   ctx.on('workflow/start', (info) => {
-    /* v8 ignore next -- internal/dispatch stages the same run-info object */
+    /* internal/dispatch stages the same run-info object */
     if (!stagedStarts.delete(info)) return
     traces.set(info.id, { meta: JSON.stringify(info.meta), agents: new Map(), starts: 0 })
   }, { global: true })
   ctx.on('workflow/agent-start', (info, agent) => {
-    /* v8 ignore next -- internal/dispatch stages the same agent object */
+    /* internal/dispatch stages the same agent object */
     if (!stagedAgentStarts.delete(agent)) return
     const trace = traceFor(traces, info, fail)
     trace.agents.set(agent.seq, agent)
     trace.starts += 1
   }, { global: true })
   ctx.on('workflow/agent-end', (info, agent) => {
-    /* v8 ignore next -- internal/dispatch stages the same agent object */
+    /* internal/dispatch stages the same agent object */
     if (!stagedAgentEnds.delete(agent)) return
     traceFor(traces, info, fail).agents.delete(agent.seq)
   }, { global: true })
   ctx.on('workflow/end', (info, result) => {
-    /* v8 ignore next -- internal/dispatch stages the same result object */
+    /* internal/dispatch stages the same result object */
     if (!stagedEnds.delete(result)) return
     traces.delete(info.id)
   }, { global: true })

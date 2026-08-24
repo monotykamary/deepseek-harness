@@ -2,6 +2,7 @@ import { globSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import * as yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+import { requiredReadinessJobs } from './readiness.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const runnerPrivatePnpmDestination = '${{ runner.temp }}/setup-pnpm'
@@ -81,9 +82,11 @@ describe('CI workflow', () => {
     const node24 = workflow.jobs['node-24']
     const node24Coverage = workflow.jobs['node-24-coverage']
     const node24Consumers = workflow.jobs['node-24-consumers']
+    const observations = workflow.jobs['observational-tests']
     const aggregate = workflow.jobs['all-checks-passed']
-    if (!Array.isArray(windows.steps) || !Array.isArray(aggregate.needs)) {
-      throw new TypeError('Windows job must define steps and the aggregate must define needs')
+    if (!Array.isArray(windows.steps) || !Array.isArray(aggregate.needs)
+      || !aggregate.needs.every((value): value is string => typeof value === 'string')) {
+      throw new TypeError('Windows job must define steps and string aggregate dependencies')
     }
     const commandSteps = windows.steps.filter((step): step is Record<string, unknown> & { run: string } => (
       isRecord(step) && typeof step.run === 'string'
@@ -123,8 +126,11 @@ describe('CI workflow', () => {
     expect(serialWindows['runs-on']).toEqual(['self-hosted', 'dsh-win-ci', 'windows'])
     expect(serialWindows.name).toBe('serial / windows (self-hosted standby)')
 
-    // Aggregate: Wine `windows` required, native `windows-native` excluded.
-    expect(aggregate.needs).toContain('windows')
+    // Readiness is the exact conjunction in scripts/readiness.ts. Host
+    // observations remain visible but cannot alter that deterministic result.
+    expect([...aggregate.needs].sort()).toEqual([...requiredReadinessJobs].sort())
+    expect(observations).toMatchObject({ 'continue-on-error': true })
+    expect(aggregate.needs).not.toContain('observational-tests')
     expect(aggregate.needs).not.toContain('windows-native')
     expect(aggregate.needs).not.toContain('serial-windows')
 
@@ -162,7 +168,7 @@ describe('CI workflow', () => {
     expect(workflow.concurrency['cancel-in-progress']).toBe("${{ github.event_name != 'push' }}")
 
     // The PR-only ci.yml still cancels a superseded run on a new push, so a
-    // fresh head does not stack a second full 9-job run behind a stale one.
+    // fresh head does not stack another full PR run behind a stale one.
     // Unlike ci-master it has no push carve-out: every PR event supersedes.
     expect(prWorkflow.concurrency).toMatchObject({
       'cancel-in-progress': true,
@@ -258,18 +264,19 @@ describe('CI workflow', () => {
 })
 
 describe('Sandbox workflow', () => {
-  it('runs complete macOS unit parity without concurrent test files', () => {
+  it('runs macOS unit parity with host timing checks kept observational', () => {
     const workflow = loadWorkflow('.github/workflows/sandbox.yml')
     const sandbox = workflowJob(workflow, 'sandbox-e2e')
     expect(sandbox['timeout-minutes']).toBe(30)
     if (!Array.isArray(sandbox.steps)) throw new TypeError('Sandbox workflow must define steps')
     const pwsh: unknown = sandbox.steps.find(
-      (step: unknown) => isRecord(step) && step.name === 'PowerShell PTY tests (darwin parity)',
+      (step: unknown) => isRecord(step) && step.name === 'PowerShell PTY observations (darwin parity)',
     )
     if (!isRecord(pwsh)) throw new TypeError('Sandbox workflow must define the PowerShell PTY step')
     expect(pwsh).toMatchObject({
-      name: 'PowerShell PTY tests (darwin parity)',
+      name: 'PowerShell PTY observations (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
+      'continue-on-error': true,
       env: { NO_COLOR: '1' },
     })
     expect(pwsh.run).toContain('packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts')
@@ -282,7 +289,15 @@ describe('Sandbox workflow', () => {
       name: 'Unit tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
       env: { DSH_SKIP_REAL_PWSH_TESTS: '1' },
-      run: 'pnpm run test -- --maxWorkers=1 --no-file-parallelism',
+      run: 'pnpm run test',
+    })
+    const hmr: unknown = sandbox.steps.find(
+      (step: unknown) => isRecord(step) && step.name === 'HMR filesystem observations (darwin parity)',
+    )
+    expect(hmr).toMatchObject({
+      if: "matrix.runner == 'seatbelt'",
+      'continue-on-error': true,
+      run: 'pnpm run test:observational',
     })
   })
 })
@@ -517,6 +532,21 @@ describe('npm release workflows', () => {
       const workflow = loadWorkflow(`.github/workflows/${file}`)
       if (!isRecord(workflow.jobs)) throw new TypeError(`${file} must define jobs`)
       expect(Object.keys(workflow.jobs).sort()).toEqual(['pack'])
+      const pack = workflow.jobs.pack
+      if (!isRecord(pack)) throw new TypeError(`${file} must define a pack job`)
+      expect(pack.needs).toBeUndefined()
+      expect(JSON.stringify(pack)).not.toMatch(/check:ci|test:coverage|test:snapshot|check:all/u)
+      if (!Array.isArray(pack.steps)) throw new TypeError(`${file} pack must define steps`)
+      const names = pack.steps.filter(isRecord).map(step => step.name).filter((name): name is string => typeof name === 'string')
+      const required = ['Verify release version', 'Build', 'Pack release tarballs', 'Verify packed install']
+      const positions = required.map(name => names.indexOf(name))
+      expect(positions.every(position => position >= 0)).toBe(true)
+      expect(positions).toEqual([...positions].sort((left, right) => left - right))
+      for (const step of pack.steps.filter(isRecord)) {
+        if (typeof step.name === 'string' && required.includes(step.name)) {
+          expect(step['continue-on-error']).not.toBe(true)
+        }
+      }
     }
 
     // publication is workflow_dispatch-only (never a PR check) and keeps the
@@ -528,6 +558,7 @@ describe('npm release workflows', () => {
       const publish = workflow.jobs.publish
       if (!isRecord(publish)) throw new TypeError(`${file} must define a publish job`)
       expect(publish.environment).toBe('npm-publish')
+      expect(publish.needs).toBe('pack')
       expect(publish.concurrency).toMatchObject({ group: 'Release-publish' })
     }
   })

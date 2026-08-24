@@ -66,7 +66,7 @@ function bufferedRequestKey(envelope: RpcRequest<MuxFrame>): string | undefined 
     case 'approval/requested': return `a:${frame.approvalId}`
     case 'question/requested': return `q:${envelope.rpcId}`
     case 'session/queue': return 'queue'
-    /* v8 ignore next -- pendingBuffers contains only the three frame types above. */
+    /* pendingBuffers contains only the three frame types above. */
     default: return undefined
   }
 }
@@ -475,7 +475,7 @@ export class SessionManager {
       } catch (error) {
         this.listState = 'error'
         const folded = transportError<never>(error)
-        /* v8 ignore next -- the `? null` arm is unreachable: transportError always returns ok:false. */
+        /* the `? null` arm is unreachable: transportError always returns ok:false. */
         this.listError = folded.ok ? null : folded.error
       } finally {
         this.listMutations = null

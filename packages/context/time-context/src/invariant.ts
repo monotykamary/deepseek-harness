@@ -104,7 +104,7 @@ function validateReading(
     fail(`time-context reading names turn ${turn}/step ${step}, expected turn ${expected.turn}/step ${expected.step}`)
   }
   const source = event.data.source
-  /* v8 ignore next 2 -- replay and dispatch callers select this exact package-owned source before validation. */
+  /* replay and dispatch callers select this exact package-owned source before validation. */
   if (source.kind !== 'plugin' || source.plugin !== SOURCE_NAME) {
     fail('time-context source must retain package ownership')
   }
@@ -134,7 +134,7 @@ function validateReading(
     fail(`time-context step ${step} uses the wrong elapsed-time baseline ${JSON.stringify(baseline)}`)
   }
   const rendered = match[3]
-  /* v8 ignore next -- the preceding fixed regexp always supplies capture group three. */
+  /* the preceding fixed regexp always supplies capture group three. */
   if (rendered === undefined) fail('time-context reading omitted its rendered timestamp')
   const renderedTime = Date.parse(rendered.replace(/\[[^\]]+\]$/, ''))
   if (!Number.isFinite(renderedTime) || !Number.isSafeInteger(event.time)

@@ -108,7 +108,7 @@ function loadAssembledPlugins(): readonly AssembledPlugin[] {
   }
   return orderByModuleGraph([...plugins.values()]).map(({ id }) => {
     const plugin = plugins.get(id)
-    /* v8 ignore next -- orderByModuleGraph returns the input row identities */
+    /* orderByModuleGraph returns the input row identities */
     if (plugin === undefined) throw new Error(`assembled boot: ordered unknown client package ${id}`)
     return plugin
   })

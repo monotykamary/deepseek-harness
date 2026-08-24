@@ -119,7 +119,7 @@ describe('SessionProvider', () => {
     function Body({ id }: { id: string }) {
       const mounted = useRef(false)
       useEffect(() => {
-        /* v8 ignore next -- strict-mode double-invoke guard, not a branch under test */
+        /* strict-mode double-invoke guard, not a branch under test */
         if (!mounted.current) { mounted.current = true; mounts += 1 }
       }, [])
       return <div>{id}</div>

@@ -139,10 +139,10 @@ export class ConnectionController {
       const ac = new AbortController()
       this.current = ac
 
-      /* v8 ignore next -- initializer placeholder: the Promise executor
+      /* initializer placeholder: the Promise executor
        * below runs synchronously and replaces it before anyone can call it. */
       let muxOpened = (): void => {}
-      /* v8 ignore next -- same placeholder pattern as muxOpened. */
+      /* same placeholder pattern as muxOpened. */
       let hostOpened = (): void => {}
       const streamsOpen = Promise.all([
         new Promise<void>((resolve) => { muxOpened = resolve }),

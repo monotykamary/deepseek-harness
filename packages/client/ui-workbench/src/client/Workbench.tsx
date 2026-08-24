@@ -10,7 +10,7 @@ import type {
 } from './contract.ts'
 import css from './Workbench.module.css'
 
-/* v8 ignore next 3 -- closed WorkbenchSurfaceIcon union backstop. */
+/* closed WorkbenchSurfaceIcon union backstop. */
 function assertNever(value: never): never {
   throw new Error(`unknown workbench surface icon: ${String(value)}`)
 }
@@ -22,7 +22,7 @@ function SurfaceIcon({ icon }: { readonly icon: WorkbenchSurfaceIcon }) {
     case 'files': return <FolderOpen size={12} />
     case 'terminal': return <CodeXml size={12} />
     case 'generic': return <CodeXml size={12} />
-    /* v8 ignore next -- closed WorkbenchSurfaceIcon union backstop. */
+    /* closed WorkbenchSurfaceIcon union backstop. */
     default: return assertNever(icon)
   }
 }
@@ -114,7 +114,7 @@ export function Workbench({
     else return
     event.preventDefault()
     const item = openPanels[next]
-    /* v8 ignore next -- the handler exists only on a rendered tab, so the modulo index resolves. */
+    /* the handler exists only on a rendered tab, so the modulo index resolves. */
     if (item === undefined) throw new Error('workbench tab navigation resolved no panel')
     actions.activatePanel(item.panel.id)
     tabRefs.current.get(item.panel.id)?.focus()

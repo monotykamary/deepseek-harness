@@ -140,7 +140,7 @@ export function instructionScopeKey(displayPath: string): string {
  */
 export function decodeScopeKey(scope: string): { directory: string; candidateName: string } {
   const separator = scope.indexOf(SCOPE_SEPARATOR)
-  /* v8 ignore next -- every scope key is produced by candidateScopeKey, which always inserts the separator. */
+  /* every scope key is produced by candidateScopeKey, which always inserts the separator. */
   if (separator < 0) return { directory: scope, candidateName: '' }
   return { directory: scope.slice(0, separator), candidateName: scope.slice(separator + 1) }
 }
@@ -198,7 +198,7 @@ export function renderInstructionChanges(
     intro: '',
     section(file) {
       const item = byAbsolutePath.get(file.absolutePath)
-      /* v8 ignore next -- the renderer receives exactly the files used to construct this map. */
+      /* the renderer receives exactly the files used to construct this map. */
       return item === undefined ? '' : changedSectionText({ ...item, file })
     },
   }
@@ -294,7 +294,7 @@ function renderInstructionContext(
   }
 
   const mostSpecific = files.at(-1)
-  /* v8 ignore next -- callers only reach this after a non-empty fullText was built. */
+  /* callers only reach this after a non-empty fullText was built. */
   if (mostSpecific === undefined) return { text: '', omitted: [], truncated: [], represented: [] }
   const omitted = files.slice(0, -1).map(file => ({ absolutePath: file.absolutePath, displayPath: file.displayPath }))
   const originalBytes = byteLength(mostSpecific.content)

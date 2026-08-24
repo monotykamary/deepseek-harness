@@ -28,7 +28,7 @@ export interface TodoPanelProps {
 }
 
 /** Local exhaustiveness helper — client packages do not depend on `dsh-llm`. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if status is forged */
+/* closed-union backstop; only reached if status is forged */
 function assertNever(value: never): never {
   throw new Error(`unreachable todo status: ${String(value)}`)
 }
@@ -50,7 +50,7 @@ function StatusGlyph({ status }: { status: TodoItem['status'] }) {
     case 'completed': return <CompletedGlyph />
     case 'in_progress': return <ProgressGlyph />
     case 'pending': return <PendingGlyph />
-    /* v8 ignore next -- closed TodoItem status union */
+    /* closed TodoItem status union */
     default: return assertNever(status)
   }
 }

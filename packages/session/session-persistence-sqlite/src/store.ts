@@ -301,7 +301,7 @@ export class SqliteStore implements PersistenceBackend<number> {
     try {
       this.db.exec(sql('rollback'))
     } catch (rollbackError: unknown) {
-      /* v8 ignore next -- requires SQLite to fail both an operation and its immediate rollback. */
+      /* requires SQLite to fail both an operation and its immediate rollback. */
       throw new AggregateError([error, rollbackError], `${this.name} ${operation} failed and rollback also failed`)
     }
     throw error
@@ -310,7 +310,7 @@ export class SqliteStore implements PersistenceBackend<number> {
   private incrementRevision(id: SessionId): void {
     const updated = this.db.prepare(sql('update-session-revision'))
       .run(id)
-    /* v8 ignore next -- materialized writes follow coordinator create(); other writes upsert in this transaction. */
+    /* materialized writes follow coordinator create(); other writes upsert in this transaction. */
     if (Number(updated.changes) !== 1) throw new Error(`session ${id} metadata row is missing`)
   }
 
@@ -405,12 +405,11 @@ async function validateParentDirectory(path: string): Promise<void> {
     throw new Error(`session database parent "${path}" must be a real directory`)
   }
   const uid = process.getuid?.()
-  /* v8 ignore start -- Windows exposes neither process.getuid nor meaningful
+  /* Windows exposes neither process.getuid nor meaningful
    * uid/mode bits; POSIX tests cover owner and mode rejection. */
   if (uid !== undefined && (parent.uid !== uid || (parent.mode & 0o022) !== 0)) {
     throw new Error(`session database parent "${path}" must be owned by the current user and not group/world-writable`)
   }
-  /* v8 ignore stop */
 }
 
 async function validateDatabaseFile(path: string): Promise<void> {
@@ -419,12 +418,11 @@ async function validateDatabaseFile(path: string): Promise<void> {
     throw new Error(`session database "${path}" must be a regular file, not a symbolic link`)
   }
   const uid = process.getuid?.()
-  /* v8 ignore start -- Windows exposes neither process.getuid nor meaningful
+  /* Windows exposes neither process.getuid nor meaningful
    * uid/mode bits; POSIX tests cover owner and mode rejection. */
   if (uid !== undefined && (file.uid !== uid || (file.mode & 0o077) !== 0)) {
     throw new Error(`session database "${path}" must be owned by the current user and accessible only by that user`)
   }
-  /* v8 ignore stop */
 }
 
 async function validateDatabaseFileIfPresent(path: string): Promise<void> {
@@ -446,7 +444,7 @@ function loadNodeSqlite(): Promise<typeof import('node:sqlite')> {
 /** Import Node 22's SQLite dependency without its process-wide experimental warning. */
 async function importNodeSqlite(): Promise<typeof import('node:sqlite')> {
   const emitWarning = Reflect.get(process, 'emitWarning')
-  /* v8 ignore start -- Node 22 alone emits this warning; primary coverage runs on Node 24. */
+  /* Node 22 alone emits this warning; primary coverage runs on Node 24. */
   const filteredEmitWarning = (warning: string | Error, ...args: unknown[]): void => {
     const message = warning instanceof Error ? warning.message : warning
     const first = args[0]
@@ -467,5 +465,4 @@ async function importNodeSqlite(): Promise<typeof import('node:sqlite')> {
   } finally {
     Reflect.set(process, 'emitWarning', emitWarning)
   }
-  /* v8 ignore stop */
 }

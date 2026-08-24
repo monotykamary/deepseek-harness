@@ -163,7 +163,7 @@ export interface ClaudeCodeRunSpec {
 }
 
 function thrown(value: unknown): Error {
-  /* v8 ignore next -- typed SDK and subprocess failures reject with Error. */
+  /* typed SDK and subprocess failures reject with Error. */
   return value instanceof Error ? value : new Error(String(value))
 }
 

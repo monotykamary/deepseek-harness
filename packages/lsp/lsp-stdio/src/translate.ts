@@ -35,7 +35,7 @@ export function requestMethod(operation: LspOperation): string {
     case 'findReferences': return 'textDocument/references'
     case 'goToImplementation': return 'textDocument/implementation'
     case 'hover': return 'textDocument/hover'
-    /* v8 ignore next -- exhaustive over the closed LspOperation union; unreachable. */
+    /* exhaustive over the closed LspOperation union; unreachable. */
     default: return assertNever(operation, 'requestMethod')
   }
 }
@@ -47,7 +47,7 @@ function capabilityValue(capabilities: WireServerCapabilities, operation: LspOpe
     case 'findReferences': return capabilities.referencesProvider
     case 'goToImplementation': return capabilities.implementationProvider
     case 'hover': return capabilities.hoverProvider
-    /* v8 ignore next -- exhaustive over the closed LspOperation union; unreachable. */
+    /* exhaustive over the closed LspOperation union; unreachable. */
     default: return assertNever(operation, 'capabilityValue')
   }
 }

@@ -361,7 +361,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       signal?.throwIfAborted()
       const headerFrame = decodedFrames.next()
       signal?.throwIfAborted()
-      /* v8 ignore next -- a non-empty structural frame list makes the decoder yield its first frame or throw. */
+      /* a non-empty structural frame list makes the decoder yield its first frame or throw. */
       if (headerFrame.done) throw new Error('empty or header-less Zstandard session log')
       assertZstdHeaderFrame(headerFrame.value)
       const scanner = new SessionLogScanner(headerFrame.value)
@@ -392,7 +392,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
         signal?.throwIfAborted()
         recoveredPlaintext = await decompressZstdPrefix(buffer.subarray(tornStart))
       } catch {
-        /* v8 ignore next -- decoder failure plus concurrent abort is timing-dependent */
+        /* decoder failure plus concurrent abort is timing-dependent */
         if (signal?.aborted) signal.throwIfAborted()
         // A structurally incomplete final frame may end before Node's decoder can
         // emit any plaintext; the complete prior frames remain recoverable.
@@ -410,7 +410,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
         },
       }
     } catch (error) {
-      /* v8 ignore next -- decoder failure plus concurrent abort is timing-dependent */
+      /* decoder failure plus concurrent abort is timing-dependent */
       if (signal?.aborted) signal.throwIfAborted()
       throw error
     } finally {
@@ -517,7 +517,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     const finalPath = logPath(this.root, meta.cwd, meta.id, this.compression)
     await this.rejectOppositeArtifact(meta.cwd, meta.id)
     const content = await this.encodeMaterialization(meta, events)
-    /* v8 ignore next -- native Windows coverage exercises this platform dispatch; Linux covers the POSIX peer */
+    /* native Windows coverage exercises this platform dispatch; Linux covers the POSIX peer */
     if (process.platform === 'win32') {
       await this.materializeWin32(project, dir, finalPath, meta.id, content)
     } else {
@@ -525,7 +525,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     }
   }
 
-  /* v8 ignore start -- Windows uses the Win32 durable-publish path; POSIX coverage exercises this peer. */
+  /* Windows uses the Win32 durable-publish path; POSIX coverage exercises this peer. */
   private async materializePosix(
     project: string,
     dir: string,
@@ -551,7 +551,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     } finally {
       // Remove an unpublished temp on failure. After publication, defer cleanup
       // until the directory entry is durable so cleanup cannot reject a live log.
-      /* v8 ignore next -- link failure is the TOCTOU/IO race guarded above; not reachable in test */
+      /* link failure is the TOCTOU/IO race guarded above; not reachable in test */
       if (!linked) await rm(tmp, { force: true })
     }
     // link() succeeded — the log is published. fsync the directory so the new
@@ -564,12 +564,11 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     try {
       await rm(tmp, { force: true })
     } catch {
-      /* v8 ignore next -- redundant temp link; publish already durable, rm failure is an unreachable IO edge */
+      /* redundant temp link; publish already durable, rm failure is an unreachable IO edge */
     }
   }
-  /* v8 ignore stop */
 
-  /* v8 ignore start -- native Windows coverage exercises this integration path */
+  /* native Windows coverage exercises this integration path */
   private async materializeWin32(
     project: string,
     dir: string,
@@ -589,7 +588,6 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       throw error
     }
   }
-  /* v8 ignore stop */
 
   private async rejectExistingLog(finalPath: string, id: SessionId): Promise<void> {
     // Never publish over an existing committed log: materialize is the first
@@ -597,7 +595,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     // different session shares this id on disk — reject loudly. (createCore
     // already guards the create path, so this is unreachable-in-practice TOCTOU
     // defense.)
-    /* v8 ignore next 3 -- createCore guards collisions before materialize; this is a TOCTOU backstop */
+    /* createCore guards collisions before materialize; this is a TOCTOU backstop */
     if (await this.exists(finalPath)) {
       throw new Error(`refusing to materialize "${id}": a log already exists on disk (load/resume it instead)`)
     }
@@ -632,7 +630,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
   }
 
   /** fsync a POSIX directory so a just-created/renamed entry is crash-durable. */
-  /* v8 ignore start -- Windows uses write-through namespace operations; POSIX coverage exercises directory fsync. */
+  /* Windows uses write-through namespace operations; POSIX coverage exercises directory fsync. */
   private async syncDirPosix(dir: string): Promise<void> {
     const handle = await open(dir, 'r')
     try {
@@ -641,7 +639,6 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       await handle.close()
     }
   }
-  /* v8 ignore stop */
 
   /**
    * Append and fsync event lines. On a partial write or sync failure, restore the
@@ -757,7 +754,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
           signal?.throwIfAborted()
           plaintext = await decompressZstdFrame(content.subarray(first.start, first.end))
         } catch (error) {
-          /* v8 ignore next -- decoder failure plus concurrent abort is timing-dependent */
+          /* decoder failure plus concurrent abort is timing-dependent */
           if (signal?.aborted) signal.throwIfAborted()
           throw new Error('corrupt Zstandard session log: header frame failed validation', { cause: error })
         }
@@ -840,9 +837,9 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       return actual === expected
     } catch (error) {
       signal?.throwIfAborted()
-      /* v8 ignore else -- non-ENOENT realpath failures require an external permission or I/O fault */
+      /* non-ENOENT realpath failures require an external permission or I/O fault */
       if (isENOENT(error)) return false
-      /* v8 ignore next -- non-ENOENT realpath failures are external I/O faults, propagated unchanged */
+      /* non-ENOENT realpath failures are external I/O faults, propagated unchanged */
       throw error
     }
   }
@@ -936,17 +933,17 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       // than letting load or collision checks proceed under false absence.
       // Windows reports ENOENT, not ENOTDIR, for `regular-file/child`; verify
       // the immediate parent so a blocked session directory remains a storage fault.
-      /* v8 ignore else -- Windows reports file-valued parents as ENOENT; POSIX covers direct ENOTDIR. */
+      /* Windows reports file-valued parents as ENOENT; POSIX covers direct ENOTDIR. */
       if (isENOENT(error)) {
         await this.assertLogParentAllowsAbsence(path)
         return false
       }
-      /* v8 ignore next -- Windows repairs ENOTDIR from ENOENT above; POSIX covers direct ENOTDIR. */
+      /* Windows repairs ENOTDIR from ENOENT above; POSIX covers direct ENOTDIR. */
       throw error
     }
   }
 
-  /* v8 ignore start -- native Windows coverage exercises this repair; POSIX open reports ENOTDIR before this point. */
+  /* native Windows coverage exercises this repair; POSIX open reports ENOTDIR before this point. */
   private async assertLogParentAllowsAbsence(path: string): Promise<void> {
     try {
       const parent = dirname(path)
@@ -961,7 +958,6 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
       throw error
     }
   }
-  /* v8 ignore stop */
 }
 
 export default JsonlSessionPersistence

@@ -152,10 +152,10 @@ class DescriptorStore {
     for (const descriptor of descriptors) {
       const endpoint = typertEndpoint(descriptor)
       const entry = this.entries.get(endpoint)
-      /* v8 ignore next -- duplicate registration is rejected, so no later owner can replace this entry before its effect disposes. */
+      /* duplicate registration is rejected, so no later owner can replace this entry before its effect disposes. */
       if (entry?.owner !== owner) continue
       this.entries.delete(endpoint)
-      /* v8 ignore next -- ids and endpoints are committed and withdrawn together under the same unique owner. */
+      /* ids and endpoints are committed and withdrawn together under the same unique owner. */
       if (this.ids.get(descriptor.id) === entry) this.ids.delete(descriptor.id)
       removed.push(endpoint)
     }
@@ -205,7 +205,7 @@ class RemoteStore {
       packages.set(contribution.package, owner)
       descriptors.commit(owner, contribution.descriptors)
       yield () => {
-        /* v8 ignore else -- duplicate package registration is rejected, so this effect remains the package's unique owner. */
+        /* duplicate package registration is rejected, so this effect remains the package's unique owner. */
         if (packages.get(contribution.package) === owner) packages.delete(contribution.package)
         descriptors.withdraw(owner, contribution.descriptors)
       }
@@ -279,7 +279,7 @@ class LookupStore {
       resolvers.set(key, entry)
       changes.emit({ kind: 'lookup', key })
       yield () => {
-        /* v8 ignore next -- duplicate configuration is rejected, so this effect remains the key's unique owner. */
+        /* duplicate configuration is rejected, so this effect remains the key's unique owner. */
         if (resolvers.get(key) !== entry) return
         resolvers.delete(key)
         changes.emit({ kind: 'lookup', key })
@@ -313,7 +313,7 @@ class LookupStore {
       providers.set(key, entry)
       changes.emit({ kind: 'lookup', key })
       yield () => {
-        /* v8 ignore next -- duplicate registration is rejected, so this effect remains the key's unique owner. */
+        /* duplicate registration is rejected, so this effect remains the key's unique owner. */
         if (providers.get(key) !== entry) return
         providers.delete(key)
         changes.emit({ kind: 'lookup', key })
@@ -391,7 +391,7 @@ class ContextStore {
       hostResolvers.set(key, entry)
       changes.emit({ kind: 'host-context', key })
       yield () => {
-        /* v8 ignore next -- duplicate configuration is rejected, so this effect remains the key's unique owner. */
+        /* duplicate configuration is rejected, so this effect remains the key's unique owner. */
         if (hostResolvers.get(key) !== entry) return
         hostResolvers.delete(key)
         changes.emit({ kind: 'host-context', key })
@@ -425,7 +425,7 @@ class ContextStore {
       table.set(key, entry)
       changes.emit({ kind, key })
       yield () => {
-        /* v8 ignore next -- duplicate registration is rejected, so this effect remains the key's unique owner. */
+        /* duplicate registration is rejected, so this effect remains the key's unique owner. */
         if (table.get(key) !== entry) return
         table.delete(key)
         changes.emit({ kind, key })
@@ -508,10 +508,10 @@ export class TypertRegistry extends Service implements TypertRegistryContract {
       for (const record of schemaRecords) schemas.set(record.key, record)
       localStore.commit(owner, invocations)
       yield () => {
-        /* v8 ignore else -- duplicate package-face registration is rejected, so this effect remains its unique owner. */
+        /* duplicate package-face registration is rejected, so this effect remains its unique owner. */
         if (packages.get(packageRecord.key) === packageRecord) packages.delete(packageRecord.key)
         for (const record of schemaRecords) {
-          /* v8 ignore else -- duplicate schema registration is rejected, so this contribution remains each record's unique owner. */
+          /* duplicate schema registration is rejected, so this contribution remains each record's unique owner. */
           if (schemas.get(record.key) === record) schemas.delete(record.key)
         }
         localStore.withdraw(owner, invocations)

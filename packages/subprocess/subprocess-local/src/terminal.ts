@@ -347,7 +347,7 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
     // inspector, so a missing exit event is itself the outcome.
     if (this.platform !== 'win32') return
     if (this.exited) return
-    /* v8 ignore next -- stopShellWindows() verified the shell is gone or threw;
+    /* stopShellWindows() verified the shell is gone or threw;
        the identity re-check is a defensive fence for a future caller. */
     if (this.rootIdentity !== undefined && this.inspector.isAlive(this.rootIdentity)) return
     this.exited = true

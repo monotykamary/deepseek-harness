@@ -273,7 +273,7 @@ function WorkspaceScopeMenu({
         }}
         onAction={(id, target) => {
           const workspace = workspaces.find(candidate => workspaceScopeItemId(candidate.workspaceId) === id)
-          /* v8 ignore next -- action-bearing rows are produced only by the Workspace map above. */
+          /* action-bearing rows are produced only by the Workspace map above. */
           if (workspace === undefined) return
           setOpen(false)
           setActionAnchor(target.getBoundingClientRect())
@@ -310,7 +310,7 @@ function WorkspaceScopeMenu({
         onSelect={(id) => {
           const workspace = actionWorkspace
           closeActions()
-          /* v8 ignore next -- the menu disappears before it can dispatch without a Workspace. */
+          /* the menu disappears before it can dispatch without a Workspace. */
           if (workspace === null) return
           if (id === 'rename') onRename(workspace)
           else if (id === 'delete') onDelete(workspace)
@@ -802,11 +802,11 @@ function SessionTree({
                   ? undefined
                   : {
                     rename: () => {
-                    /* v8 ignore next -- narrowing guard: the actions object exists only for real-workspace groups. */
+                    /* narrowing guard: the actions object exists only for real-workspace groups. */
                       if (group.workspaceId !== undefined) onRenameRequest(group.workspaceId, group.label)
                     },
                     delete: () => {
-                    /* v8 ignore next -- narrowing guard: the actions object exists only for real-workspace groups. */
+                    /* narrowing guard: the actions object exists only for real-workspace groups. */
                       if (group.workspaceId !== undefined) onDeleteRequest(group.workspaceId, group.label)
                     },
                   }}
@@ -826,11 +826,11 @@ function SessionTree({
                   active: sameGroupDrag,
                   marker: sameGroupDrag && drag.over?.id === node.id ? drag.over.half : null,
                   hover: (half: 'before' | 'after') => {
-                  /* v8 ignore next -- narrowing guard: Rows gates hover on `active`, which is false while the drag state is null. */
+                  /* narrowing guard: Rows gates hover on `active`, which is false while the drag state is null. */
                     setDrag(d => (d === null ? d : { ...d, over: { id: node.id, half } }))
                   },
                   drop: (half: 'before' | 'after') => {
-                  /* v8 ignore next -- narrowing guard: Rows gates drop on `active`, which is false while the drag state is null. */
+                  /* narrowing guard: Rows gates drop on `active`, which is false while the drag state is null. */
                     if (drag === null) return
                     commitSessionDrag(drag, { id: node.id, half })
                   },
@@ -1382,7 +1382,7 @@ export function WorkspaceBrowser({
     setDeleteError(null)
   }
   const confirmDelete = () => {
-    /* v8 ignore next -- the Modal is absent without a target and its button is disabled while deleting. */
+    /* the Modal is absent without a target and its button is disabled while deleting. */
     if (deleting || deleteTarget === null) return
     setDeleting(true)
     setDeleteCommittedId(null)

@@ -183,7 +183,7 @@ export function apply(ctx: Context): void {
             .map(entry => project(ctx.agents, entry, entry))
             .filter(entry => entry !== undefined)
         }
-        /* v8 ignore next 2 -- the resolver normalizes the schema-validated closed scope before dispatch. */
+        /* the resolver normalizes the schema-validated closed scope before dispatch. */
         default:
           return assertNever(request.scope, 'list_agents scope')
       }
