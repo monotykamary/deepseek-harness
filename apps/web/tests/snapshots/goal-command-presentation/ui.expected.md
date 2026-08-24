@@ -2,7 +2,6 @@
   - navigation "Session hierarchy":
     - button "workspace" [disabled]
   - text: Standard mode
-  - button "Open files": Files
   - button "Toggle bottom panel"
   - button "Open right panel"
   - tablist:

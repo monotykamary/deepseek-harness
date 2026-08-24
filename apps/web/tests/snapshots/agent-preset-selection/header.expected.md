@@ -3,7 +3,6 @@
   - text: /
   - button "1 subagent"
 - text: Minimal mode
-- button "Open files": Files
 - button "Session log"
 - button "Toggle bottom panel"
 - button "Open right panel"

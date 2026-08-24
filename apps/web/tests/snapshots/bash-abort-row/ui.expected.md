@@ -1,7 +1,6 @@
 - banner:
   - navigation "Session hierarchy":
     - 'button "Run two shell commands: wait" [disabled]'
-  - button "Open files": Files
   - button "Session log"
   - button "Toggle bottom panel"
   - button "Open right panel"

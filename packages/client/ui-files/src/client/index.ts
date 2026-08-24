@@ -1,15 +1,13 @@
-/** Browser plugin registering the Files workbench surface and session-header opener. */
+/** Browser plugin registering the Files workbench surface. */
 import type { ClientContext, SessionId } from '@monotykamary/dsh-client-runtime/client'
 import type {
   WorkspaceDirectoryListing, WorkspaceFileLocator, WorkspaceFilePreview, WorkspaceFileVersion,
   WorkspaceFileWriteResult,
 } from '@monotykamary/dsh-api-remotes/client'
 import type { WorkbenchSurfaceId } from '@monotykamary/dsh-client-ui-workbench/client'
-import type {} from '@monotykamary/dsh-client-ui-conversation/client'
 import type {} from '@monotykamary/dsh-client-locale/client'
-import { FilesHeaderAction } from './FilesHeaderAction.tsx'
 import { FilesPanel } from './FilesPanel.tsx'
-import type { FilesHeaderInjected, FilesInjected } from './contract.ts'
+import type { FilesInjected } from './contract.ts'
 import { en, NS, zh, type FilesKey } from './locales.ts'
 import { createFilesStore } from './store.ts'
 
@@ -30,7 +28,7 @@ function remoteFailure(operation: 'list' | 'read' | 'write', result: { error: { 
 }
 
 /**
- * Register Files as a workbench surface and session-header action.
+ * Register Files as a workbench surface.
  * @param ctx - Client context carrying the selected Remote namespace and UI services.
  */
 export function apply(ctx: ClientContext): void {
@@ -84,14 +82,4 @@ export function apply(ctx: ClientContext): void {
       write: (file, content, version, signal) => write(sessionId, file, content, version, signal),
     }),
   }, FilesPanel))
-
-  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
-    name: 'conversation.session.header.actions',
-    id: 'workspace-files',
-    order: 30,
-    locale: NS,
-    inject: (sessionId: SessionId): FilesHeaderInjected => ({
-      openFiles: () => { ctx.workbench.open(sessionId, FILES_SURFACE_ID) },
-    }),
-  }, FilesHeaderAction))
 }

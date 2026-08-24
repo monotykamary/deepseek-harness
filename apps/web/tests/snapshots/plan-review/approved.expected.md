@@ -2,7 +2,6 @@
   - navigation "Session hierarchy":
     - 'button "Plan a small change: add" [disabled]'
   - text: Standard mode
-  - button "Open files": Files
   - button "Session log"
   - button "Toggle bottom panel"
   - button "Open right panel"

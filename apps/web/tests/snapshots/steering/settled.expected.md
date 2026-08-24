@@ -2,7 +2,6 @@
   - navigation "Session hierarchy":
     - button "Use the ask_user_question tool to" [disabled]
   - text: Standard mode
-  - button "Open files": Files
   - button "Session log"
   - button "Toggle bottom panel"
   - button "Open right panel"

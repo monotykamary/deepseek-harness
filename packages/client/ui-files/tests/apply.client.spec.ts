@@ -11,8 +11,7 @@ import { apply, inject } from '../src/client/index.ts'
 import { apply as applyNode } from '../src/index.ts'
 import { NS } from '../src/client/locales.ts'
 import { FilesPanel } from '../src/client/FilesPanel.tsx'
-import { FilesHeaderAction } from '../src/client/FilesHeaderAction.tsx'
-import type { FilesHeaderInjected, FilesInjected } from '../src/client/contract.ts'
+import type { FilesInjected } from '../src/client/contract.ts'
 
 usePinnedBrowserLanguages('zh-CN')
 afterEach(cleanup)
@@ -74,19 +73,16 @@ describe('ui-files browser plugin', () => {
     expect(inject).toEqual(['slots', 'locale', 'workbench', 'remote', 'remote.workspaceFiles'])
   })
 
-  it('registers Files in the workbench and session header with bound Remote calls', async () => {
+  it('registers Files in the workbench with bound Remote calls', async () => {
     const b = await bench()
     declare(b.slots)
     await b.ctx.plugin({ inject: [...inject], apply }).await()
     const surface = b.slots.entries('workbench.surface')[0]!
-    const action = b.slots.entries('conversation.session.header.actions')[0]!
     expect(surface.component).toBe(FilesPanel)
     expect(surface.options).toMatchObject({ id: 'files', order: 20 })
     expect(surface.store).toBeDefined()
     expect(surface.locale).toBe(NS)
     expect(resolveSlotLabel(surface.options.label)).toBe('文件')
-    expect(action.component).toBe(FilesHeaderAction)
-    expect(action.options).toMatchObject({ id: 'workspace-files', order: 30 })
     expect(b.workbench.registerPresentation).toHaveBeenCalledOnce()
     const [presentationId, presentation] = b.workbench.registerPresentation.mock.calls[0]!
     expect(presentationId).toBe('files')
@@ -103,9 +99,7 @@ describe('ui-files browser plugin', () => {
     expect(b.read).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, signal)
     expect(b.write).toHaveBeenCalledWith(sid, { segments: ['a.ts'] }, 'b', 'v1', signal)
 
-    const header = (action.inject as unknown as (id: SessionId) => FilesHeaderInjected)(sid)
-    header.openFiles()
-    expect(b.workbench.open).toHaveBeenCalledWith(sid, 'files')
+    expect(b.slots.entries('conversation.session.header.actions')).toHaveLength(0)
     await b.ctx.fiber.dispose()
   })
 

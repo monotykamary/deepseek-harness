@@ -7,7 +7,6 @@ export type FilesKey = keyof typeof zh
 /** Simplified Chinese Files dictionary. */
 export const zh = {
   'tab': '文件',
-  'open': '打开文件',
   'launcher.description': '浏览和编辑工作区文件',
   'tree.aria': '工作区文件',
   'tree.filter': '筛选已加载的文件',
@@ -44,7 +43,6 @@ export const zh = {
 /** English Files dictionary, checked against the Chinese key set. */
 export const en: Record<FilesKey, string> = {
   'tab': 'Files',
-  'open': 'Open files',
   'launcher.description': 'Browse and edit workspace files',
   'tree.aria': 'Workspace files',
   'tree.filter': 'Filter loaded files',

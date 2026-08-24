@@ -1,7 +1,6 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Inline code links" [disabled]
-  - button "Open files": Files
   - button "Session log"
   - button "Toggle bottom panel"
   - button "Open right panel"

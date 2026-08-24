@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-Web Workbench 的 Session 范围工作区树与自动保存源码编辑器。该浏览器插件注册 **Files** `workbench.surface` 条目、对应图标与启动器说明，以及 `conversation.session.header.actions` 中的 **打开文件** 操作；全部贡献都遵循插件 effect 生命周期。标题栏操作会把所属 Session 传给 `ctx.workbench`；稳定的 `files` 标签页不存在时会被打开并激活，已经打开时则会被复用。
+Web Workbench 的 Session 范围工作区树与自动保存源码编辑器。该浏览器插件注册 **Files** `workbench.surface` 条目、对应图标与启动器说明；全部贡献都遵循插件 effect 生命周期。
 
 每个驻留 Session 拥有一个临时 Files store。打开界面时通过 `remote.workspaceFiles` 延迟列出根目录；展开目录时只列出该目录，选择文件时请求一个完整且有上限的文本值及不透明 provider 版本。目录结果与文件值会缓存到显式刷新发生时。请求代次与 `AbortSignal` 防止过期的根目录、子目录或读取响应覆盖较新的状态。重新加载页面会丢弃该 store。
 
