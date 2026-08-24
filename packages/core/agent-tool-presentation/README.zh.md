@@ -14,13 +14,13 @@ preset 能拥有的是这份注册表的**呈现方式**。`ctx.tools.presentAs(
 
 `native` 立即生效。code 类模式则等待 `ctx.codeRuntime`——这是一个宿主平面服务（[`dsh-code-runtime-worker-thread`](../../code-runtime/code-runtime-worker-thread/README.zh.md)）：若某个 preset 在未组装运行时的部署上选择 Code Mode，本行就停在 pending，`dsh-agent-presets` 会指名此 id 拒绝挂载。另一种做法——先乐观应用——会把失败推迟到该会话的第一次请求，那时操作者对 preset 和组装都已无从下手。
 
-`mode` 是必填而非有默认值：不带这一行的 preset 本来就会拿到部署默认值，省略它等于这一行白组装了。
+`mode` 是必填而非有默认值：不带这一行的 preset 本来就会拿到部署默认值，省略它等于这一行白组装了。`runCodeLabel` 默认为 `required`；`inferred` 仅对 `code` 或 `both` 有效，它会把 `run_code.description` 变为可选，并在没有非空标签时选择从已记录程序中确定性派生的标题。
 
 一个 agent 只声明一次呈现方式。同一份组装里的第二次声明会被拒绝而不是合并：对「模型看到哪种形态」给出两个答案是矛盾，不是覆盖。
 
 ## 模型体验
 
-间接生效，取决于它在 `dsh-tools` 中选择的投影：`code` 呈现 `run_code`、一份生成的 SDK 段，以及「只有 `run_code` 可被直接调用」这条规则，`native` 呈现每个工具的 schema。该选择同时决定了**什么可以执行**：在 `code` 下，注册表会把模型直呼其他任何工具名解析为 `UNKNOWN_TOOL`，因此这一行正是让「通告面」与「可调用面」对每个被它覆盖的 agent 保持一致的东西（[执行器塌缩 note](../../../.agents/notes/implemented/bug-fix/2026-08-07-code-mode-executor-collapse.zh.md)）。
+间接生效，取决于它在 `dsh-tools` 中选择的投影：`code` 呈现 `run_code`、一份生成的 SDK 段，以及「只有 `run_code` 可被直接调用」这条规则，`native` 呈现每个工具的 schema。`runCodeLabel` 会同步改变传输 schema 与 SDK 的调用说明，不添加独立提示词段。该选择同时决定了**什么可以执行**：在 `code` 下，注册表会把模型直呼其他任何工具名解析为 `UNKNOWN_TOOL`，因此这一行正是让「通告面」与「可调用面」对每个被它覆盖的 agent 保持一致的东西（[执行器塌缩 note](../../../.agents/notes/implemented/bug-fix/2026-08-07-code-mode-executor-collapse.zh.md)）。
 
 #### KV Cache effect
 

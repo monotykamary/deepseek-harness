@@ -25,7 +25,7 @@ The app does not install commands, user interaction, session navigation, configu
 | `maxParallelToolCalls` | agent-loop default | Positive-integer tool-call concurrency cap; `1` is serial. |
 | `persona` | — | Deployment persona template for `dsh-system-prompt`. |
 | `toolOrder` | lexicographic | Explicit model-facing tool order for `dsh-system-prompt`. |
-| `tools` | `{ mode: 'native' }` | Native, Code Mode, or combined model tool transport. |
+| `tools` | `{ mode: 'native', runCodeLabel: 'required' }` | Native, Code Mode, or combined transport plus the Code Mode run-label policy. |
 | `dshHome` | `$DSH_HOME` or `~/.dsh` | Harness home shared by bash and local skill discovery. |
 | `sessionTitle` | spine example limits | Durable fallback-title limits; titles remain off the ACP wire. |
 | `persistenceRoot` | `./.sessions` | JSONL backend root and parent directory of the derived `session-query.db` index. |

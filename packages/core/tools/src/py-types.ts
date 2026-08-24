@@ -17,6 +17,7 @@
 import { assertSupportedJsonSchema } from './json-schema.ts'
 import type { JsonSchemaNode, JsonSchemaScalar } from './json-schema.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
+import type { RunCodeLabelMode } from './code-mode.ts'
 
 /**
  * The reference grammar's `xid_start xid_continue*` — the set
@@ -742,6 +743,14 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 
 The available tools:`
 
+function sdkInstructions(labelMode: RunCodeLabelMode): string {
+  if (labelMode === 'required') return SDK_INSTRUCTIONS
+  return SDK_INSTRUCTIONS.replace(
+    '`run_code` takes two required arguments: `code` — the body of an async Python function (top-level `await` and `return` both work) — and `description`, a short summary of what the program does.',
+    '`run_code` takes one required argument: `code` — the body of an async Python function (top-level `await` and `return` both work). `description` is optional; DSH infers the run title when it is omitted.',
+  )
+}
+
 /**
  * Render the full `tools:sdk` prompt section under `runtime.language ===
  * 'python'`: the Python-flavored usage instructions plus one named `TypedDict`
@@ -758,9 +767,10 @@ The available tools:`
  * never carries a duplicate.
  * @param schemas - the tool schemas plus canonical output schemas to declare
  *   (the caller excludes `run_code` itself).
+ * @param labelMode - whether the outer run label is required or inferred.
  * @returns the complete section text.
  */
-export function renderToolsSdkPy(schemas: ToolSdkSchema[]): string {
+export function renderToolsSdkPy(schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode = 'required'): string {
   const sorted = [...schemas].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
   const state: RenderState = { classes: [], usedClassNames: new Set(), nextClassCounter: new Map(), typing: new Set(['Protocol']) }
   // ONE ordered member stream, matching the documented lexicographic contract
@@ -814,5 +824,5 @@ export function renderToolsSdkPy(schemas: ToolSdkSchema[]): string {
   const classBlock = state.classes.length > 0 ? `${state.classes.join('\n\n')}\n\n` : ''
   const errorDeclaration = 'class ToolCallError(Exception):\n    toolName: str'
   const declaration = `from typing import ${imports.join(', ')}\n\n${errorDeclaration}\n\n${classBlock}class Tools(Protocol):\n${body}\n\ntools: Tools`
-  return `${SDK_INSTRUCTIONS}\n\n\`\`\`python\n${declaration}\n\`\`\``
+  return `${sdkInstructions(labelMode)}\n\n\`\`\`python\n${declaration}\n\`\`\``
 }

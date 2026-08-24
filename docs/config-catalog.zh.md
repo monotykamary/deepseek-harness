@@ -313,10 +313,12 @@ export interface Config {
    * composed for nothing.
    */
   mode: ToolPresentationMode
+  /** Whether Code Mode requires a model-authored label or derives one from the recorded program. */
+  runCodeLabel?: RunCodeLabelMode
 }
 ```
 
-依赖：[`ToolPresentationMode`](subsystems/tools.zh.md)
+依赖：[`RunCodeLabelMode`](subsystems/tools.zh.md) · [`ToolPresentationMode`](subsystems/tools.zh.md)
 
 来源：[`packages/core/agent-tool-presentation/src/index.ts:38`](../packages/core/agent-tool-presentation/src/index.ts)
 
@@ -3106,6 +3108,8 @@ export interface Config {
    * in `toolOrder` are invalid.
    */
   mode?: ToolPresentationMode
+  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  runCodeLabel?: RunCodeLabelMode
   /**
    * Concurrency cap for a `run_code` program's overlapping sub-calls
    * (default 10, the loop scheduler's own default). Sub-calls follow the
@@ -3118,9 +3122,12 @@ export interface Config {
 
 /** How the registry presents its tools to the model (see {@link Config.mode}). */
 export type ToolPresentationMode = 'native' | 'code' | 'both'
+
+/** How a Code Mode presentation obtains the run card and compaction label. */
+export type RunCodeLabelMode = 'required' | 'inferred'
 ```
 
-来源：[`packages/core/tools/src/index.ts:654`](../packages/core/tools/src/index.ts)
+来源：[`packages/core/tools/src/index.ts:684`](../packages/core/tools/src/index.ts)
 
 <a id="monotykamarydsh-typert-loader"></a>
 

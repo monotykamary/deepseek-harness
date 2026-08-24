@@ -22,7 +22,7 @@ import type { ToolCallView, ToolResultView } from './presentation.ts'
 import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode } from './json-schema.ts'
 import { createRunCodeTool, RUN_CODE_NAME, SDK_SECTION_ORDER } from './code-mode.ts'
-import type { CodeSdkLanguage } from './code-mode.ts'
+import type { CodeSdkLanguage, RunCodeLabelMode } from './code-mode.ts'
 import { renderToolsSdk } from './ts-types.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
 import { renderToolsSdkPy } from './py-types.ts'
@@ -57,10 +57,13 @@ const COLLAPSE_SECTION_ORDER = 99
  */
 const CODE_ONLY_INSTRUCTION = `\`${RUN_CODE_NAME}\` is the only tool you can call directly — a tool call naming any other tool fails. Reach every tool the SDK declares below from inside the program.`
 
-const SDK_RENDERERS: Record<string, (schemas: ToolSdkSchema[]) => string> = {
+const SDK_RENDERERS: Record<string, (schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode) => string> = {
   typescript: renderToolsSdk,
   python: renderToolsSdkPy,
-} satisfies Record<CodeSdkLanguage, (schemas: ToolSdkSchema[]) => string>
+} satisfies Record<CodeSdkLanguage, (schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode) => string>
+
+export { inferRunCodeTitle, resolveRunCodeTitle, type RunCodeTitleInput } from './code-mode-title.ts'
+export type { RunCodeLabelMode } from './code-mode.ts'
 
 export {
   defineTool,
@@ -671,6 +674,12 @@ function errorInfo(error: unknown): ToolErrorInfo | undefined {
 /** How the registry presents its tools to the model (see {@link Config.mode}). */
 export type ToolPresentationMode = 'native' | 'code' | 'both'
 
+/** Optional behavior attached to one scoped presentation declaration. */
+export interface ToolPresentationOptions {
+  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  readonly runCodeLabel?: RunCodeLabelMode
+}
+
 /** Plugin config: how the registered tools are presented to the model. */
 export interface Config {
   /**
@@ -684,6 +693,8 @@ export interface Config {
    * in `toolOrder` are invalid.
    */
   mode?: ToolPresentationMode
+  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  runCodeLabel?: RunCodeLabelMode
   /**
    * Concurrency cap for a `run_code` program's overlapping sub-calls
    * (default 10, the loop scheduler's own default). Sub-calls follow the
@@ -731,6 +742,12 @@ interface ToolView {
  */
 export type ToolGuard = (execution: Readonly<ToolExecution>) => string | undefined
 
+/** One scope-owned model presentation declaration. */
+interface ToolPresentationDeclaration {
+  readonly mode: ToolPresentationMode
+  readonly runCodeLabel: RunCodeLabelMode
+}
+
 /** One scope's complete tool-registry contribution. */
 class ToolLayer implements ScopeLayer {
   readonly tools: NamedEntries<ToolDefinition>
@@ -741,7 +758,7 @@ class ToolLayer implements ScopeLayer {
    * deployment default. One cell rather than an entry table: two answers to
    * "which form does the model see" is a contradiction, not a merge.
    */
-  mode: ToolPresentationMode | undefined
+  presentation: ToolPresentationDeclaration | undefined
 
   constructor(scope: ScopeKey | undefined) {
     this.tools = new NamedEntries(name => new Error(scope === undefined
@@ -752,7 +769,7 @@ class ToolLayer implements ScopeLayer {
   /** Whether every contribution table in this aggregate layer is empty. */
   isEmpty(): boolean {
     return this.tools.isEmpty() && this.restrictions.isEmpty() && this.guards.isEmpty()
-      && this.mode === undefined
+      && this.presentation === undefined
   }
 
   /** Whether every compiled restriction in this layer admits a global tool name. */
@@ -810,6 +827,7 @@ export class ToolRuntime extends Service {
 
   static Config: z<Config> = z.object({
     mode: z.union(['native', 'code', 'both'] as const).default('native'),
+    runCodeLabel: z.union(['required', 'inferred'] as const).default('required'),
     maxParallelSubCalls: z.natural().min(1).default(10),
   })
 
@@ -841,6 +859,8 @@ export class ToolRuntime extends Service {
   )
   /** Presentation for scopes that declare none; {@link presentAs} shadows it per scope. */
   private readonly defaultMode: ToolPresentationMode
+  /** Code Mode label policy for scopes that declare no presentation. */
+  private readonly defaultRunCodeLabel: RunCodeLabelMode
   private readonly maxParallelSubCalls: number
   /**
    * Reserved presentation transport, kept outside the filterable registration
@@ -848,13 +868,17 @@ export class ToolRuntime extends Service {
    * a code mode is no longer known when the service is constructed, and the
    * transport is stateless beyond its closures over `this`.
    */
-  private codeTransport: ToolDefinition | undefined
+  private readonly codeTransports = new Map<RunCodeLabelMode, ToolDefinition>()
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'tools')
-    // The schema already defaulted an omitted mode; the ?? narrows the
-    // optional-input type for direct (non-Loader) construction in tests.
+    // The schema defaults omitted presentation fields; ?? narrows the optional
+    // input type for direct (non-Loader) construction in tests.
     this.defaultMode = config.mode ?? 'native'
+    this.defaultRunCodeLabel = config.runCodeLabel ?? 'required'
+    if (this.defaultMode === 'native' && this.defaultRunCodeLabel !== 'required') {
+      throw new Error('dsh-tools: runCodeLabel "inferred" requires mode "code" or "both"')
+    }
     this.maxParallelSubCalls = resolveMaxParallelSubCalls(config.maxParallelSubCalls)
     ctx.systemPrompt.tools(context => this.wireSchemas(context.scope))
     if (this.defaultMode !== 'native') {
@@ -913,7 +937,7 @@ export class ToolRuntime extends Service {
         const render = SDK_RENDERERS[runtime.language]
         /* v8 ignore next -- requireCodeRuntime rejects an unknown language before this runs. */
         if (render === undefined) throw new Error(`dsh-tools: no SDK renderer for ${runtime.language}`)
-        return render(this.sdkSchemas(context.scope))
+        return render(this.sdkSchemas(context.scope), this.runCodeLabelFor(context.scope))
       },
     }
   }
@@ -931,10 +955,20 @@ export class ToolRuntime extends Service {
     // SEES, which is exactly the class of fact the chain inherits.
     const layers = this.layers.chainLayers(scope)
     for (let index = layers.length - 1; index >= 0; index -= 1) {
-      const mode = layers[index]?.mode
-      if (mode !== undefined) return mode
+      const presentation = (layers[index] as ToolLayer).presentation
+      if (presentation !== undefined) return presentation.mode
     }
     return this.defaultMode
+  }
+
+  /** Resolve the label policy attached to the nearest presentation declaration. */
+  private runCodeLabelFor(scope?: ScopeKey): RunCodeLabelMode {
+    const layers = this.layers.chainLayers(scope)
+    for (let index = layers.length - 1; index >= 0; index -= 1) {
+      const presentation = (layers[index] as ToolLayer).presentation
+      if (presentation !== undefined) return presentation.runCodeLabel
+    }
+    return this.defaultRunCodeLabel
   }
 
   /**
@@ -944,10 +978,13 @@ export class ToolRuntime extends Service {
    * it, and a scoped registration must not shadow it. The visibility resolver
    * appends it after resolving the filterable global/scoped capability layers,
    * and only for scopes whose mode actually presents it.
+   * @param labelMode - validation and title policy for the requesting scope.
    * @returns the shared transport definition.
    */
-  private requireCodeTransport(): ToolDefinition {
-    this.codeTransport ??= createRunCodeTool(this, {
+  private requireCodeTransport(labelMode: RunCodeLabelMode): ToolDefinition {
+    const existing = this.codeTransports.get(labelMode)
+    if (existing !== undefined) return existing
+    const transport = createRunCodeTool(this, {
       requireRuntime: () => this.requireCodeRuntime(this.defaultMode),
       // The language-aware description/parameters getters read the runtime
       // without demanding one, so a native-default process can still project
@@ -955,8 +992,10 @@ export class ToolRuntime extends Service {
       peekRuntime: () => this.ctx.get('codeRuntime'),
       maxParallel: this.maxParallelSubCalls,
       shapeDispatchLog: dispatch => this.shapeDispatchLog(dispatch),
+      labelMode,
     })
-    return this.codeTransport
+    this.codeTransports.set(labelMode, transport)
+    return transport
   }
 
   /**
@@ -968,10 +1007,15 @@ export class ToolRuntime extends Service {
    * composes Code Mode agents beside native ones in the same process, and a
    * process-global override would be the `mode` config field instead.
    * @param mode - the presentation the covered agents' models see.
+   * @param options - Code Mode behavior attached to the same scoped declaration.
    * @returns the exact disposer that restores the deployment default.
    */
-  presentAs(mode: ToolPresentationMode): () => void {
+  presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): () => void {
     const ctx = this.ctx
+    const runCodeLabel = options.runCodeLabel ?? 'required'
+    if (mode === 'native' && runCodeLabel !== 'required') {
+      throw new Error('tools.presentAs(): runCodeLabel "inferred" requires mode "code" or "both"')
+    }
     if (scopeOf(ctx) === undefined) {
       throw new Error('tools.presentAs() requires a scoped context (agent.ctx): a context-global presentation is the `mode` config field on the tools row')
     }
@@ -979,11 +1023,11 @@ export class ToolRuntime extends Service {
       yield this.layers.effect(
         ctx,
         (layer) => {
-          if (layer.mode !== undefined) {
-            throw new Error(`tools.presentAs("${mode}") conflicts with "${layer.mode}" already declared for this scope; one composition selects one presentation`)
+          if (layer.presentation !== undefined) {
+            throw new Error(`tools.presentAs("${mode}") conflicts with "${layer.presentation.mode}" already declared for this scope; one composition selects one presentation`)
           }
-          layer.mode = mode
-          return () => { layer.mode = undefined }
+          layer.presentation = { mode, runCodeLabel }
+          return () => { layer.presentation = undefined }
         },
         { label: 'tools.presentAs()' },
       )
@@ -996,7 +1040,6 @@ export class ToolRuntime extends Service {
         yield ctx.systemPrompt.section(this.sdkSection())
       }
     }.bind(this), 'tools.presentAs()')
-    // oxlint-disable-next-line typescript/no-misused-promises -- synchronous composite teardown; direct return preserves disposer identity
     return dispose
   }
 
@@ -1214,7 +1257,7 @@ export class ToolRuntime extends Service {
     // changes. Per scope: a native agent must not find `run_code` in its
     // dispatch table because some other agent in the process presents it.
     if (this.modeFor(scope) !== 'native') {
-      visible.set(RUN_CODE_NAME, this.requireCodeTransport())
+      visible.set(RUN_CODE_NAME, this.requireCodeTransport(this.runCodeLabelFor(scope)))
     }
     return { visible, knownNames, restrictableNames }
   }

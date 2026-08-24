@@ -11,13 +11,17 @@ import type { ContentBlock } from '@monotykamary/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@monotykamary/dsh-code-runtime'
 import { snapshotJsonValue } from '@monotykamary/dsh-session'
 import type { JsonValue } from '@monotykamary/dsh-session'
-import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
+import { defineTool, parameterSchemaSpecToJsonSchema, ToolArgsError } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
+import { resolveRunCodeTitle } from './code-mode-title.ts'
 import type { CodeDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
 import type {} from './types.ts'
 
 /** The model-facing name of the Code Mode tool. */
 export const RUN_CODE_NAME = 'run_code'
+
+/** How a Code Mode presentation obtains the run card and compaction label. */
+export type RunCodeLabelMode = 'required' | 'inferred'
 
 /** The `tools:sdk` section order: inside the 100–199 tool-guidance band, after per-tool guidance sections. */
 export const SDK_SECTION_ORDER = 150
@@ -31,8 +35,10 @@ export const SDK_SECTION_ORDER = 150
  * receives a TypeScript schema beside a Python SDK (or vice versa).
  */
 interface RunCodeFlavor {
-  /** The tool `description` the model sees for this language. */
+  /** The strict-label tool `description` the model sees for this language. */
   readonly description: string
+  /** The inferred-label tool `description` the model sees for this language. */
+  readonly inferredDescription: string
   /** The `code` parameter's description for this language. */
   readonly codeDescription: string
 }
@@ -51,6 +57,13 @@ const TYPESCRIPT_FLAVOR: RunCodeFlavor = {
     + 'does. Call tools as `await tools.name(args)` per the declarations in the system '
     + 'prompt. Only what you print or return is program output — curate it. Image-bearing '
     + 'subtool results are attached after the run.',
+  inferredDescription:
+    'Execute a TypeScript program against the available tools. Takes one required '
+    + 'argument: `code`, the BODY of an async function (erasable syntax only; top-level '
+    + '`await` and `return` work). Optional `description` labels the run; when omitted, '
+    + 'DSH derives a title from the program. Call tools as `await tools.name(args)` per '
+    + 'the declarations in the system prompt. Only what you print or return is program '
+    + 'output — curate it. Image-bearing subtool results are attached after the run.',
   codeDescription: 'The program: the body of an async TypeScript function.',
 }
 
@@ -67,6 +80,13 @@ const PYTHON_FLAVOR: RunCodeFlavor = {
     + '`await tools.name(args)` per the declarations in the system prompt. Use '
     + '`print(...)` and/or `return <value>` for program output — curate it. Image-bearing '
     + 'subtool results are attached after the run.',
+  inferredDescription:
+    'Execute a Python program against the available tools. Takes one required argument: '
+    + '`code`, the BODY of an async function (top-level `await` and `return` work). '
+    + 'Optional `description` labels the run; when omitted, DSH derives a title from the '
+    + 'program. Call tools as `await tools.name(args)` per the declarations in the system '
+    + 'prompt. Use `print(...)` and/or `return <value>` for program output — curate it. '
+    + 'Image-bearing subtool results are attached after the run.',
   codeDescription: 'The program: the body of an async Python function.',
 }
 
@@ -112,6 +132,10 @@ const RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION
  * guard owns is the runtime-supplied language neither table knows, which never
  * yields a wrong-language schema for a real runtime.
  */
+function flavorDescription(flavor: RunCodeFlavor, labelMode: RunCodeLabelMode): string {
+  return labelMode === 'required' ? flavor.description : flavor.inferredDescription
+}
+
 function resolveFlavor(peekRuntime: () => CodeRuntime | undefined): RunCodeFlavor {
   const runtime = peekRuntime()
   if (runtime === undefined) {
@@ -280,11 +304,13 @@ export interface RunCodeBridgeOptions {
   maxParallel: number
   /** Runs the contained `tools/code-dispatch-log` waterfall over one settled sub-dispatch (the registry's private invoker). */
   shapeDispatchLog: (dispatch: CodeDispatchLog) => Promise<ContentBlock[]>
+  /** Whether model-authored UI text is mandatory or inferred from the recorded program when omitted. */
+  labelMode: RunCodeLabelMode
 }
 
 /**
- * Build the `run_code` {@link ToolDefinition}: required `code` and
- * `description` parameters, executed through the dispatch bridge described
+ * Build the `run_code` {@link ToolDefinition}: required `code`, a label policy
+ * supplied by the owning presentation, and the dispatch bridge described
  * above. The
  * registry reserves it as presentation infrastructure under non-native modes,
  * outside the filterable global/scoped capability layers.
@@ -294,7 +320,7 @@ export interface RunCodeBridgeOptions {
  * @returns the registry-ready definition.
  */
 export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeOptions): ToolDefinition {
-  const { requireRuntime, peekRuntime, maxParallel, shapeDispatchLog } = options
+  const { requireRuntime, peekRuntime, maxParallel, shapeDispatchLog, labelMode } = options
   const definition = defineTool({
     name: RUN_CODE_NAME,
     // The description and `code` parameter description are placeholders here:
@@ -308,7 +334,6 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
       code: { type: 'string', required: true, description: TYPESCRIPT_FLAVOR.codeDescription },
       description: {
         type: 'string',
-        required: true,
         description: RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION,
       },
     },
@@ -328,8 +353,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
       },
     },
     async execute(args, exec): Promise<RunCodeOutput> {
-      if (args.description.trim().length === 0) {
-        throw new Error('invalid description: expected a non-empty string')
+      if (labelMode === 'required'
+        && (typeof args.description !== 'string' || args.description.trim().length === 0)) {
+        throw new ToolArgsError(['description: expected a non-empty string'])
       }
       const runtime = requireRuntime()
 
@@ -653,11 +679,11 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         exec.signal.removeEventListener('abort', onOuterAbort)
       }
     },
-    // The model-authored description is the call's always-visible UI label
-    // (the bash `description` precedent); the program itself rides rawInput.
+    // The explicit or lexically inferred title is a pure projection of the
+    // recorded arguments; the program itself rides rawInput.
     presentCall: args => ({
       card: 'generic',
-      title: args.description,
+      title: resolveRunCodeTitle(args),
       kind: 'execute',
       rawInput: args.code,
     }),
@@ -671,7 +697,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
   // is the least invasive point that still emits the loaded runtime's language.
   Object.defineProperty(definition, 'description', {
     enumerable: true,
-    get: () => resolveFlavor(peekRuntime).description,
+    get: () => flavorDescription(resolveFlavor(peekRuntime), labelMode),
   })
   Object.defineProperty(definition, 'parameters', {
     enumerable: true,
@@ -679,7 +705,11 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
     // the emitted schema always matches the validated specification.
     get: () => parameterSchemaSpecToJsonSchema({
       code: { type: 'string', required: true, description: resolveFlavor(peekRuntime).codeDescription },
-      description: { type: 'string', required: true, description: RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION },
+      description: {
+        type: 'string',
+        ...(labelMode === 'required' ? { required: true as const } : {}),
+        description: RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION,
+      },
     }) as unknown as Record<string, unknown>,
   })
   return definition

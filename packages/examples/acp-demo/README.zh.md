@@ -25,7 +25,7 @@ ACP（Agent Client Protocol）自动化服务器应用：默认 agent（智能�
 | `maxParallelToolCalls` | agent loop（智能体循环）默认值 | 正整数工具调用并发上限；`1` 表示串行。 |
 | `persona` | 无 | 供 `dsh-system-prompt` 使用的部署 persona 模板。 |
 | `toolOrder` | 字典序 | 供 `dsh-system-prompt` 使用的显式面向模型工具顺序。 |
-| `tools` | `{ mode: 'native' }` | Native、Code Mode 或组合式模型工具传输。 |
+| `tools` | `{ mode: 'native', runCodeLabel: 'required' }` | Native、Code Mode 或组合式传输，以及 Code Mode 运行标签策略。 |
 | `dshHome` | `$DSH_HOME` 或 `~/.dsh` | bash 与本地 skill（技能）发现共享的 harness 主目录。 |
 | `sessionTitle` | 主干示例限制 | 持久后备标题限制；标题仍不会进入 ACP wire。 |
 | `persistenceRoot` | `./.sessions` | JSONL 后端根目录，以及派生 `session-query.db` 索引的父目录。 |

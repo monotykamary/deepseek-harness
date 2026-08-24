@@ -42,6 +42,7 @@ class FakeRuntime extends CodeRuntime {
 
 interface SetupOptions {
   mode?: Config['mode']
+  runCodeLabel?: Config['runCodeLabel']
   maxParallelSubCalls?: number
   runtime?: false | { language?: string }
   toolOrder?: string[]
@@ -50,7 +51,11 @@ interface SetupOptions {
 async function setup(options: SetupOptions = {}) {
   const ctx = new Context()
   await ctx.plugin(SystemPrompt, { ...options.toolOrder ? { toolOrder: options.toolOrder } : {} })
-  await ctx.plugin(ToolRuntime, { mode: options.mode ?? 'code', ...options.maxParallelSubCalls !== undefined ? { maxParallelSubCalls: options.maxParallelSubCalls } : {} })
+  await ctx.plugin(ToolRuntime, {
+    mode: options.mode ?? 'code',
+    ...options.runCodeLabel !== undefined ? { runCodeLabel: options.runCodeLabel } : {},
+    ...options.maxParallelSubCalls !== undefined ? { maxParallelSubCalls: options.maxParallelSubCalls } : {},
+  })
   let runtime: FakeRuntime | undefined
   if (options.runtime !== false) {
     await ctx.plugin(FakeRuntime, options.runtime ?? {})
@@ -1355,7 +1360,7 @@ describe('the run_code dispatch bridge', () => {
     const { ctx } = await setup({ mode: 'code' })
     const result = await runCode(ctx, 'return 1', { description: '   ' })
     expect(result.isError).toBe(true)
-    expect((result.content[0] as { text: string }).text).toContain('invalid description')
+    expect((result.content[0] as { text: string }).text).toContain('description: expected a non-empty string')
   })
 
   it.each([
@@ -1778,6 +1783,76 @@ describe('per-agent presentation', () => {
     expect(native.sections.some(section => section.name === 'tools:sdk')).toBe(false)
   })
 
+  it('supports inferred labels as a process-level Code Mode policy', async () => {
+    const { ctx, systemPrompt } = await setup({ mode: 'code', runCodeLabel: 'inferred' })
+    const assembly = await systemPrompt.assemble()
+    const runCode = assembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
+    expect((runCode.parameters as { required?: string[] }).required).toEqual(['code'])
+    expect(assembly.sections.find(section => section.name === 'tools:sdk')?.text)
+      .toContain('`description` is optional')
+
+    const code = 'return 1'
+    expect(ctx.tools.get(RUN_CODE_NAME)?.presentCall?.({ code }))
+      .toMatchObject({ title: 'Run code', rawInput: code })
+    const result = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: CallId('global-inferred-run'),
+      name: RUN_CODE_NAME,
+      arguments: { code },
+    })
+    expect(result.isError).toBe(false)
+  })
+
+  it('rejects an inferred label policy when process-level mode is native', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, {})
+    expect(() => new ToolRuntime(ctx, { mode: 'native', runCodeLabel: 'inferred' }))
+      .toThrow('runCodeLabel "inferred" requires mode "code" or "both"')
+  })
+
+  it('lets one preset infer run labels while strict Code Mode remains unchanged', async () => {
+    const { ctx, systemPrompt } = await setup({ mode: 'native' })
+    registerEcho(ctx)
+    const inferred = await mintAgentScope(ctx, 'inferred')
+    const strict = await mintAgentScope(ctx, 'strict')
+    inferred.scope.ctx.tools.presentAs('code', { runCodeLabel: 'inferred' })
+    strict.scope.ctx.tools.presentAs('code')
+
+    const inferredAssembly = await systemPrompt.assemble({ scope: inferred.agent })
+    const strictAssembly = await systemPrompt.assemble({ scope: strict.agent })
+    const inferredSchema = inferredAssembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
+    const strictSchema = strictAssembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
+    expect((inferredSchema.parameters as { required?: string[] }).required).toEqual(['code'])
+    expect((strictSchema.parameters as { required?: string[] }).required).toEqual(['code', 'description'])
+    expect(inferredAssembly.sections.find(section => section.name === 'tools:sdk')?.text)
+      .toContain('`description` is optional')
+    expect(strictAssembly.sections.find(section => section.name === 'tools:sdk')?.text)
+      .toContain('two required arguments')
+
+    const code = 'return await tools.echo({ value: "ok", description: "Inspect release output" })'
+    const inferredTool = ctx.tools.get(RUN_CODE_NAME, inferred.agent)!
+    expect(inferredTool.presentCall?.({ code })).toMatchObject({ title: 'Inspect release output', rawInput: code })
+    expect(inferredTool.presentCall?.({ code, description: 'Declared title' })).toMatchObject({ title: 'Declared title' })
+
+    const accepted = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: CallId('inferred-run'),
+      name: RUN_CODE_NAME,
+      arguments: { code },
+      agent: inferred.agent,
+    })
+    expect(accepted.isError).toBe(false)
+
+    const denied = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: CallId('strict-run'),
+      name: RUN_CODE_NAME,
+      arguments: { code: 'return 1' },
+      agent: strict.agent,
+    })
+    expect(denied.error?.info).toEqual({ name: 'ToolArgsError', code: 'INVALID_ARGS' })
+  })
+
   it('inherits a STANDING preset scope\'s mode down the chain, agents beside it unaffected', async () => {
     const { bindScopeParent } = await import('@monotykamary/dsh-scope')
     const { ctx, systemPrompt } = await setup({ mode: 'native' })
@@ -1879,6 +1954,13 @@ describe('per-agent presentation', () => {
     // silently keeping either one would make the composition unreadable.
     expect(() => scope.ctx.tools.presentAs('both'))
       .toThrow('conflicts with "code" already declared')
+  })
+
+  it('rejects inferred labels on a scoped native presentation', async () => {
+    const { ctx } = await setup({ mode: 'code' })
+    const { scope } = await mintAgentScope(ctx)
+    expect(() => scope.ctx.tools.presentAs('native', { runCodeLabel: 'inferred' }))
+      .toThrow('runCodeLabel "inferred" requires mode "code" or "both"')
   })
 
   it('refuses an unscoped declaration', async () => {

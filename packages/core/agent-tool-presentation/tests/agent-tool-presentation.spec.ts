@@ -65,13 +65,15 @@ describe('the tool-presentation row', () => {
 
   it('gives its own agent Code Mode and leaves the rest native', async () => {
     const ctx = await host()
-    const coded = await mount(ctx, { mode: 'code' }, 'coded')
+    const coded = await mount(ctx, { mode: 'code', runCodeLabel: 'inferred' }, 'coded')
     const plain = await mount(ctx, { mode: 'native' }, 'plain')
 
     const codedAssembly = await ctx.systemPrompt.assemble({ scope: coded.agent })
     const plainAssembly = await ctx.systemPrompt.assemble({ scope: plain.agent })
 
     expect(codedAssembly.tools.map(tool => tool.name)).toEqual([RUN_CODE_NAME])
+    expect((codedAssembly.tools[0]?.parameters as { required?: string[] }).required).toEqual(['code'])
+    expect(codedAssembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('`description` is optional')
     expect(codedAssembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('echo')
     expect(plainAssembly.tools.map(tool => tool.name)).toEqual(['echo'])
   })
@@ -119,6 +121,12 @@ describe('the tool-presentation row', () => {
 
     const assembly = await ctx.systemPrompt.assemble({ scope: agent })
     expect(assembly.tools.map(tool => tool.name)).toEqual([RUN_CODE_NAME])
+  })
+
+  it('rejects an inferred run label on native presentation', async () => {
+    const ctx = await host()
+    await expect(mount(ctx, { mode: 'native', runCodeLabel: 'inferred' }))
+      .rejects.toThrow('requires mode "code" or "both"')
   })
 
   it('requires a mode rather than defaulting one', () => {

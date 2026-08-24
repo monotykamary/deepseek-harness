@@ -45,6 +45,7 @@ const EDITING_CORDIS_SKILL = fileURLToPath(new URL(
 // The Code Mode overlay configs (include-patched variants of cordis.yml; the
 // replay swap resolves each one's sibling `*cordis.snapshot.yml`).
 const CODE_MODE_CONFIG = fileURLToPath(new URL('../code-mode.cordis.yml', import.meta.url))
+const CODE_MODE_INFERRED_CONFIG = fileURLToPath(new URL('../code-mode-inferred.cordis.yml', import.meta.url))
 const CODE_MODE_IMAGE_CONFIG = fileURLToPath(new URL('../code-mode-image.cordis.yml', import.meta.url))
 const CODE_MODE_WORKSPACE_CONTEXT_CONFIG = fileURLToPath(new URL('../code-mode-workspace-context.cordis.yml', import.meta.url))
 const BOTH_MODE_CONFIG = fileURLToPath(new URL('../both-mode.cordis.yml', import.meta.url))
@@ -622,6 +623,17 @@ const SCENARIOS: Scenario[] = [
   // tools:sdk section rides in the prompt, and the program's tool calls land as
   // tool/code-dispatch events. Each overlay composes and pins its own header class.
   { name: 'code-mode-turn', hasModelTurn: true, recorded: true, pinsHeader: true, headerClass: 'code', configPath: CODE_MODE_CONFIG },
+  // Authored from code-mode-turn with the outer description removed. The real
+  // transport accepts the recorded program, and this class pins its optional
+  // schema plus policy-aware SDK sentence through the assembled application.
+  {
+    name: 'code-mode-inferred-label',
+    hasModelTurn: true,
+    recorded: false,
+    pinsHeader: true,
+    headerClass: 'code-inferred-label',
+    configPath: CODE_MODE_INFERRED_CONFIG,
+  },
   {
     name: 'code-mode-read-image',
     hasModelTurn: true,

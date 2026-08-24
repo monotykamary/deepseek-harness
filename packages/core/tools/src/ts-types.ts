@@ -9,6 +9,7 @@
 import type { ToolSchema } from '@monotykamary/dsh-llm'
 import { assertSupportedJsonSchema } from './json-schema.ts'
 import type { JsonSchemaNode, JsonSchemaScalar } from './json-schema.ts'
+import type { RunCodeLabelMode } from './code-mode.ts'
 /** Internal Code Mode projection: the model-facing schema plus the canonical output schema. */
 export interface ToolSdkSchema extends ToolSchema {
   /** Validated canonical value returned by the tool binding. */
@@ -258,6 +259,14 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 
 The available tools:`
 
+function sdkInstructions(labelMode: RunCodeLabelMode): string {
+  if (labelMode === 'required') return SDK_INSTRUCTIONS
+  return SDK_INSTRUCTIONS.replace(
+    '`run_code` takes two required arguments: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped) — and `description`, a short summary of what the program does.',
+    '`run_code` takes one required argument: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). `description` is optional; DSH infers the run title when it is omitted.',
+  )
+}
+
 /**
  * Render the full `tools:sdk` prompt section: the fixed usage instructions
  * plus one `declare const tools` interface covering every given tool.
@@ -268,9 +277,10 @@ The available tools:`
  * by name, so the input never carries a duplicate.
  * @param schemas - the tool schemas to declare (the caller excludes
  *   `run_code` itself).
+ * @param labelMode - whether the outer run label is required or inferred.
  * @returns the complete section text.
  */
-export function renderToolsSdk(schemas: ToolSdkSchema[]): string {
+export function renderToolsSdk(schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode = 'required'): string {
   const sorted = [...schemas].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
   const argsMembers: string[] = []
   const outputMembers: string[] = []
@@ -289,5 +299,5 @@ export function renderToolsSdk(schemas: ToolSdkSchema[]): string {
     ['declare const tools: {', '  [K in ToolName]: (args: ToolArgsMap[K]) => Promise<ToolOutputMap[K]>;', '}'].join('\n'),
   ].join('\n\n')
   const jsonValue = 'type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }'
-  return `${SDK_INSTRUCTIONS}\n\n\`\`\`ts\n${jsonValue}\n\n${declaration}\n\`\`\``
+  return `${sdkInstructions(labelMode)}\n\n\`\`\`ts\n${jsonValue}\n\n${declaration}\n\`\`\``
 }

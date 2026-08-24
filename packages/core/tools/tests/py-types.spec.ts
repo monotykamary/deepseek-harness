@@ -175,6 +175,12 @@ describe('renderToolsSdkPy', () => {
     expect(text).toContain('two required arguments')
   })
 
+  it('renders the inferred run-label invocation with optional description', () => {
+    const text = renderToolsSdkPy([bash], 'inferred')
+    expect(text).toContain('takes one required argument')
+    expect(text).toContain('`description` is optional')
+  })
+
   it('renders required as plain fields and optional as NotRequired, with per-field description comments', () => {
     const tool: ToolSdkSchema = {
       name: 'search',
