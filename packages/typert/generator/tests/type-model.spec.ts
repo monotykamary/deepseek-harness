@@ -136,7 +136,11 @@ describe('WorkspaceAnalyzer', { timeout: 60_000 }, () => {
     expect(clientPackage).toMatchObject({ objects: [], schemas: [] })
     expect(clientPackage?.exports).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: 'ReexportedBox', aliases: ['ReexportedBox', 'Box'] }),
-      expect.objectContaining({ name: 'ReexportedZodType', aliases: ['ReexportedZodType', 'ZodType'] }),
+      expect.objectContaining({
+        name: 'ReexportedZodType',
+        aliases: ['ReexportedZodType', 'ZodType'],
+        symbol: '<external>:zod/v4/classic/schemas.d.cts#ZodType',
+      }),
     ]))
     const host = model.faces.find(face => face.face === 'host')
     expect(host?.graph.nodes).toContainEqual(expect.objectContaining({

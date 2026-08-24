@@ -2476,8 +2476,13 @@ class FaceAnalyzer {
   private symbolId(symbol: ts.Symbol): SymbolId {
     const declaration = preferredDeclaration(symbol)
     if (declaration === undefined) return `symbol:${symbol.name}`
+    const sourceFile = declaration.getSourceFile().fileName
     const location = this.location(declaration)
-    return `${this.packageNameForFile(declaration.getSourceFile().fileName)}:${location.file}#${symbol.name}`
+    const packageName = this.packageNameForFile(sourceFile)
+    if (packageName !== '<external>') return `${packageName}:${location.file}#${symbol.name}`
+    const external = externalPackageLocationForFile(sourceFile)
+    const file = external === undefined ? location.file : `${external.package}/${external.file}`
+    return `<external>:${file}#${symbol.name}`
   }
 
   private registrationForFile(file: string): PackageRegistration | undefined {
@@ -3046,14 +3051,24 @@ function moduleIdentity(specifier: string): ModuleIdentity | undefined {
 }
 
 function externalModuleIdentityForFile(file: string): ModuleIdentity | undefined {
+  const external = externalPackageLocationForFile(file)
+  if (external === undefined) return undefined
+  return { package: external.package, subpath: '.' }
+}
+
+function externalPackageLocationForFile(
+  file: string,
+): { readonly package: string; readonly file: string } | undefined {
   const normalized = slash(file)
   const marker = '/node_modules/'
   const index = normalized.lastIndexOf(marker)
   if (index < 0) return undefined
   const parts = normalized.slice(index + marker.length).split('/')
   const packageLength = (parts[0] as string).startsWith('@') ? 2 : 1
-  const packageName = parts.slice(0, packageLength).join('/')
-  return { package: packageName, subpath: '.' }
+  return {
+    package: parts.slice(0, packageLength).join('/'),
+    file: parts.slice(packageLength).join('/'),
+  }
 }
 
 function isStandardLibraryFile(file: string): boolean {
