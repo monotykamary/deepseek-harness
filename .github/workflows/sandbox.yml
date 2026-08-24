@@ -98,13 +98,13 @@ jobs:
           [ "$status" -eq 0 ]
           echo "$out" | grep -qE 'Test Files[[:space:]]+2 passed \(2\)'
 
-      # The required unit inventory excludes host watcher observations, so this
-      # platform parity run uses ordinary Vitest fanout.
+      # The required unit inventory excludes host watcher observations. Bound
+      # both project-level fork pools to fit the hosted macOS runner's memory.
       - name: Unit tests (darwin parity)
         if: matrix.runner == 'seatbelt'
         env:
           DSH_SKIP_REAL_PWSH_TESTS: '1'
-        run: pnpm run test
+        run: pnpm run test -- --maxWorkers=2
 
       - name: HMR filesystem observations (darwin parity)
         if: matrix.runner == 'seatbelt'

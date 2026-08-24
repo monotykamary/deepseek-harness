@@ -16,6 +16,8 @@ Required tests synchronize on causal state. A test whose host timing cannot be c
 
 Coverage is an aggregate floor of 80% for statements, branches, functions, and lines across measured package source. Coverage suppression directives are absent, and only types, self-executing entries, generated build-only entries, intentionally uninstrumented generator source, and source unavailable on the current host remain outside measurement. Slow deterministic correctness suites run uninstrumented beside coverage and remain blocking.
 
+The hosted macOS deterministic parity run caps Vitest at two workers. This bound keeps both project-level fork pools within the runner's fixed memory while preserving the complete required unit inventory; a process crash remains blocking rather than being reclassified as an observation.
+
 Release workflows start version verification, official build, pack, packed-install verification, and artifact upload without depending on full CI jobs. For family `f`, release feedback succeeds exactly when `Version_f(r) ∧ Build_f(r) ∧ Pack_f(r) ∧ Install_f(r)` succeeds; registry publication additionally requires the protected environment and the pack job. Full rehearsals can continue independently without delaying this feedback path.
 
 ## Alternatives considered

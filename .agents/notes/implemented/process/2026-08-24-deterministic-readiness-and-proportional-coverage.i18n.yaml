@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-24-deterministic-readiness-and-proportional-coverage.md
-2026-08-24-deterministic-readiness-and-proportional-coverage.md: ebd6ff17ba8ce89cfe0846c37bb518c45351b144
-2026-08-24-deterministic-readiness-and-proportional-coverage.zh.md: f1d0fbaaf548c6d847ce2d79027129613191ca04
+2026-08-24-deterministic-readiness-and-proportional-coverage.md: d5b4bcb2e0afa66828ed977337a2db79871d7931
+2026-08-24-deterministic-readiness-and-proportional-coverage.zh.md: 803450202012e73868d93391b8571b63690f8ef6

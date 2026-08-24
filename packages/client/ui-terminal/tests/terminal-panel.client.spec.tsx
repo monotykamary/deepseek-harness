@@ -421,9 +421,7 @@ describe('TerminalPanel', () => {
 
   it('ignores stale pane callbacks and closes connections that resolve after teardown', async () => {
     const mounted = mount()
-    await screen.findByTestId('viewport')
-    const stale = mocks.callbackHistory[0]
-    if (stale === undefined) throw new Error('missing terminal callbacks')
+    const stale = await nextConnectionCallbacks(0)
     mounted.unmount()
     stale.output(new Uint8Array([9]))
     stale.exit({ kind: 'exited', exitCode: 0, signal: null })
