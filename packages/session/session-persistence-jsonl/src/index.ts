@@ -145,8 +145,12 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
   private coordinator: PersistenceCoordinator<JsonlTornMarker>
   private rootEncodingCheck: Promise<void> | undefined
 
-  constructor(ctx: Context, public config: Config) {
+  /** Configuration supplied when this backend was constructed. */
+  public config: Config
+
+  constructor(ctx: Context, config: Config) {
     super(ctx)
+    this.config = config
     // Resolve once so later process.cwd() changes cannot split one backend across roots.
     this.root = resolve(config.root)
     // Programmatic wrappers may construct the backend without Schemastery normalization.
