@@ -103,6 +103,11 @@ function expandActions(): void {
   if (toggle !== null) fireEvent.click(toggle)
 }
 
+async function nextConnectionCallbacks(after: number): Promise<BrowserTerminalConnectionCallbacks> {
+  await waitFor(() => { expect(mocks.callbackHistory.length).toBeGreaterThan(after) })
+  return mocks.callbackHistory.at(-1)!
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.callbackHistory.length = 0
@@ -375,16 +380,19 @@ describe('TerminalPanel', () => {
   })
 
   it('renders output, retries disconnects, and removes exited panes through the detached kill path', async () => {
+    const beforeConnect = mocks.callbackHistory.length
     const mounted = mount()
     await screen.findByTestId('viewport')
-    mocks.callbacks?.output(new Uint8Array([1, 2]))
+    const callbacks = await nextConnectionCallbacks(beforeConnect)
+    callbacks.output(new Uint8Array([1, 2]))
     expect(mocks.surface.write).toHaveBeenCalledWith(new Uint8Array([1, 2]))
-    mocks.callbacks?.disconnected(Object.assign(new Error('transport down'), { code: 'DISCONNECTED' }))
+    callbacks.disconnected(Object.assign(new Error('transport down'), { code: 'DISCONNECTED' }))
     expect(await screen.findByText('transport down')).toBeTruthy()
+    const beforeRetry = mocks.callbackHistory.length
     fireEvent.click(screen.getByRole('button', { name: 'Retry connection' }))
-    await waitFor(() => { expect(mocks.connect.mock.calls.length).toBeGreaterThan(1) })
+    const retryCallbacks = await nextConnectionCallbacks(beforeRetry)
 
-    mocks.callbacks?.exit({ kind: 'exited', exitCode: 0, signal: null })
+    retryCallbacks.exit({ kind: 'exited', exitCode: 0, signal: null })
     await waitFor(() => { expect(mounted.container.querySelector('[data-testid="viewport"]')).toBeNull() })
     expect(mocks.killDetached).toHaveBeenCalledWith(expect.any(Function), 'session-1', 'terminal-1')
   })
@@ -462,10 +470,12 @@ describe('TerminalPanel', () => {
     expect(await screen.findByText('plain connect failure')).toBeTruthy()
     second.unmount()
 
+    const beforeThird = mocks.callbackHistory.length
     const third = mount()
     await screen.findByTestId('viewport')
     expandActions()
-    mocks.callbacks?.disconnected(undefined)
+    const thirdCallbacks = await nextConnectionCallbacks(beforeThird)
+    thirdCallbacks.disconnected(undefined)
     expect(await screen.findByText(en.disconnected)).toBeTruthy()
     mocks.killDetached.mockRejectedValueOnce('kill down')
     fireEvent.click(screen.getByRole('button', { name: 'Kill terminal' }))
@@ -505,10 +515,12 @@ describe('TerminalPanel', () => {
   })
 
   it('creates a replacement group after the last pane exits', async () => {
+    const beforeConnect = mocks.callbackHistory.length
     const mounted = mount()
     await screen.findByTestId('viewport')
     expandActions()
-    mocks.callbacks?.killed('terminal-1')
+    const callbacks = await nextConnectionCallbacks(beforeConnect)
+    callbacks.killed('terminal-1')
     await screen.findByText(en.empty)
     fireEvent.click(screen.getAllByRole('button', { name: 'New terminal' }).at(-1)!)
     await waitFor(() => { expect(mounted.container.querySelector('[data-terminal-pane]')).toBeTruthy() })
