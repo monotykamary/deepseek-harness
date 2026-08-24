@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/node-addon-landlock-run-workspace",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "license": "BSD-3-Clause",

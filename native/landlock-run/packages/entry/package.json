@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/node-addon-landlock-run",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Landlock self-restrict-then-exec launcher for sandboxing subprocesses on Linux: per-platform prebuilt static binaries plus the JS seam that resolves, probes, and speaks their CLI contract",
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@monotykamary/node-addon-landlock-run-linux-arm64",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Prebuilt landlock-run Landlock launcher binary for linux-arm64 (static musl) — resolved as a file path by @monotykamary/node-addon-landlock-run, never imported",
   "repository": {
     "type": "git",
