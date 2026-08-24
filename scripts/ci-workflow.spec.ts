@@ -263,13 +263,21 @@ describe('Sandbox workflow', () => {
     const sandbox = workflowJob(workflow, 'sandbox-e2e')
     expect(sandbox['timeout-minutes']).toBe(30)
     if (!Array.isArray(sandbox.steps)) throw new TypeError('Sandbox workflow must define steps')
+    const pwsh: unknown = sandbox.steps.find(
+      (step: unknown) => isRecord(step) && step.name === 'PowerShell PTY tests (darwin parity)',
+    )
+    expect(pwsh).toEqual({
+      name: 'PowerShell PTY tests (darwin parity)',
+      if: "matrix.runner == 'seatbelt'",
+      run: 'pnpm exec vitest run packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts packages/terminal/terminal-bash/tests/local.spec.ts --maxWorkers=1 --no-file-parallelism',
+    })
     const parity: unknown = sandbox.steps.find(
       (step: unknown) => isRecord(step) && step.name === 'Unit tests (darwin parity)',
     )
     expect(parity).toEqual({
       name: 'Unit tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
-      run: 'pnpm run test -- --maxWorkers=1 --no-file-parallelism',
+      run: 'pnpm run test -- --maxWorkers=1 --no-file-parallelism --exclude=packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts --exclude=packages/terminal/terminal-bash/tests/local.spec.ts',
     })
   })
 })
