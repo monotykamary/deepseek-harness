@@ -28,13 +28,16 @@
       - strong: "@monotykamary/dsh"
       - code: 0.1.0 → 999.0.0
     - listitem:
+      - strong: dsh-tool-repair
+      - code: 0.1.0
+    - listitem:
       - strong: dsh-fabric
-      - code: 0.1.4
+      - code: 0.1.5
     - listitem:
       - strong: dsh-fovea
-      - code: 0.4.4
+      - code: 0.5.0
     - listitem:
       - strong: dsh-factory
-      - code: 0.1.0
+      - code: 0.1.1
   - button "Check again"
   - button "Update DSH"
