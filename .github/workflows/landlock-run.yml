@@ -31,8 +31,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-
 defaults:
   run:
     working-directory: native/landlock-run

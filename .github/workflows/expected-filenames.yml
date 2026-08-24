@@ -10,8 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-
 jobs:
   expected-filenames:
     name: no golden filenames

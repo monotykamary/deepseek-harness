@@ -8,8 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-
 jobs:
   e2b:
     runs-on: ubuntu-latest

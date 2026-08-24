@@ -125,6 +125,7 @@ dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 ven
 | 根 `AGENTS.md` | 「vendored 包是 `private: true`」这条约定不再成立 |
 | `vendor/README.md` | 记录「`src` 加入 `cordis` 的 `files`」这条本地修改 |
 | native 三包 | `publishConfig.access: public`，且其 workflow 不传 `--access` |
+| workflow schema | 没有 workflow 级值时省略 `env`；`ci-workflow.spec.ts` 扫描每个 workflow、job 与 step，因为空值 `env` mapping 会让 GitHub 在创建 job 前拒绝 workflow |
 
 ### 与先前提案的关系
 

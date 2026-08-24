@@ -18,8 +18,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-
 jobs:
   # Keyless real-kernel sandbox proofs (sandbox Agent Note § Testing): each ladder
   # rung is only provable on a host where it enforces, so this job fans out

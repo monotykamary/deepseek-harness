@@ -125,6 +125,7 @@ The verification also packs the Landlock entry, which `dsh-sandbox-local` declar
 | root `AGENTS.md` | the convention that vendored packages are `private: true` no longer holds |
 | `vendor/README.md` | records `src` joining `cordis`'s `files` as a local modification |
 | the three native packages | `publishConfig.access: public`, and their workflow passes no `--access` |
+| workflow schemas | omit `env` when no workflow-wide values exist; `ci-workflow.spec.ts` scans every workflow, job, and step because a null `env` mapping makes GitHub reject the workflow before creating jobs |
 
 ### Relationship to the earlier proposal
 

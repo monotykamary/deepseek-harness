@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { globSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import * as yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
@@ -6,6 +6,28 @@ import { describe, expect, it } from 'vitest'
 const root = resolve(import.meta.dirname, '..')
 const runnerPrivatePnpmDestination = '${{ runner.temp }}/setup-pnpm'
 const nativeWindowsPnpmDestination = '${{ runner.temp }}/setup-pnpm-js'
+
+describe('GitHub workflow schema', () => {
+  it('uses mappings for every declared workflow, job, and step environment', () => {
+    const invalid: string[] = []
+    for (const file of globSync('.github/workflows/*.yml', { cwd: root }).sort()) {
+      const workflow = loadWorkflow(file)
+      if ('env' in workflow && !isRecord(workflow.env)) invalid.push(`${file}: env`)
+      if (!isRecord(workflow.jobs)) continue
+      for (const [jobName, job] of Object.entries(workflow.jobs)) {
+        if (!isRecord(job)) continue
+        if ('env' in job && !isRecord(job.env)) invalid.push(`${file}: jobs.${jobName}.env`)
+        if (!Array.isArray(job.steps)) continue
+        for (const [index, step] of job.steps.entries()) {
+          if (isRecord(step) && 'env' in step && !isRecord(step.env)) {
+            invalid.push(`${file}: jobs.${jobName}.steps[${String(index)}].env`)
+          }
+        }
+      }
+    }
+    expect(invalid).toEqual([])
+  })
+})
 
 describe('CI workflow', () => {
   it('isolates every pnpm action setup destination per runner', () => {
