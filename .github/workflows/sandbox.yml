@@ -49,7 +49,7 @@ jobs:
             runner: seatbelt
     name: sandbox e2e (${{ matrix.runner }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
@@ -84,11 +84,12 @@ jobs:
 
       # The unit suite runs on ubuntu in `checks`; this is the one darwin leg
       # in the workflow, so run it here too — the platform-dependent unit
-      # expectations (Seatbelt path canonicalization: /tmp IS /private/tmp)
-      # take their darwin branch only on this runner.
+      # expectations take their darwin branch only on this runner. Keep files
+      # serial: default fork fanout on the standard hosted runner starves real
+      # PTYs and FSEvents long enough to create false readiness/watch failures.
       - name: Unit tests (darwin parity)
         if: matrix.runner == 'seatbelt'
-        run: pnpm run test
+        run: pnpm run test -- --maxWorkers=1 --no-file-parallelism
 
       - name: Sandbox e2e (real kernel confinement, world-verified)
         # NO_COLOR: vitest force-enables ANSI color under GITHUB_ACTIONS even
