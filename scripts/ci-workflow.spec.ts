@@ -289,7 +289,7 @@ describe('Sandbox workflow', () => {
       name: 'Unit tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
       env: { DSH_SKIP_REAL_PWSH_TESTS: '1' },
-      run: 'pnpm run test -- --maxWorkers=2',
+      run: 'pnpm run test -- --maxWorkers=1',
     })
     const hmr: unknown = sandbox.steps.find(
       (step: unknown) => isRecord(step) && step.name === 'HMR filesystem observations (darwin parity)',

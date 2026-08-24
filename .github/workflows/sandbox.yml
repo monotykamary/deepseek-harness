@@ -104,7 +104,7 @@ jobs:
         if: matrix.runner == 'seatbelt'
         env:
           DSH_SKIP_REAL_PWSH_TESTS: '1'
-        run: pnpm run test -- --maxWorkers=2
+        run: pnpm run test -- --maxWorkers=1
 
       - name: HMR filesystem observations (darwin parity)
         if: matrix.runner == 'seatbelt'
