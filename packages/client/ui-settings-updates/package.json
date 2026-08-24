@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-settings-updates",
   "description": "Distribution Updates page and Settings badge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publishConfig": {
     "access": "public"
   },
