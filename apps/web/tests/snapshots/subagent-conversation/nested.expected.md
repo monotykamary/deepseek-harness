@@ -4,28 +4,19 @@
     - text: /
     - 'button "Switch subagent: event-sourcing researcher"': event-sourcing researcher
     - text: /
-    - button "example editor" [disabled]
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+    - 'button "Switch subagent: example editor"': example editor
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Give one concrete event sourcing example. {{clock}}
-- button "Copy":
-  - img
+- button "Copy"
 - status:
   - strong: This subagent is read-only for now
   - text: The parent session is offline; reopen it to continue sending messages.
 - text: session not found
-- button "Retry connection":
-  - img
-  - text: Retry connection
-- button "Show terminal actions":
-  - img
+- button "Retry connection"
+- button "Show terminal actions"

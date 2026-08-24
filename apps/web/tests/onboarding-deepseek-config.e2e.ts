@@ -32,6 +32,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
   beforeAll(async () => {
     scaffold = await launchWebScaffold({
       deepSeekMissingCredential: true,
+      showOnboarding: true,
       installationDiagnostics: [{
         id: 'sandbox',
         severity: 'blocking',

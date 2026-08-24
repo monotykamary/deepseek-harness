@@ -1,42 +1,25 @@
 - banner:
   - navigation "Session hierarchy":
     - 'button "Run two shell commands: wait" [disabled]'
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: "Run two shell commands: wait for cancellation, then write skipped.txt. {{clock}}"
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- 'button "Failed Bash Error: tool call aborted" [expanded]':
-  - img
-  - text: "Failed Bash Error: tool call aborted"
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- 'button "Failed Bash Error: tool call aborted" [expanded]'
 - text: "IN { \"command\": \"node -e \\\"require('node:fs').writeFileSync('started.txt', 'started'); setInterval(() => {}, 1000)\\\"\", \"description\": \"Wait until cancellation\" } OUT Error: tool call aborted"
 - button "Inspect"
-- 'button "Failed Bash Error: tool call aborted before dispatch"':
-  - img
-  - text: "Failed Bash Error: tool call aborted before dispatch"
+- 'button "Failed Bash Error: tool call aborted before dispatch"'
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
 - text: 1 turns · 1 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 0% Input 10 tok · Output 10 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

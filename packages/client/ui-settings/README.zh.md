@@ -15,5 +15,5 @@
 
 ## 已知限制与暂缓事项
 
-- **不受信任的浏览器没有持久化设置**：设置传输跟随运营者可达面——loopback 与部署的可信表面（`--trusted-host`、tailnet、portless）读写 Host 文档，而经不受信任权威访问的浏览器以 `unavailable` 起步且从不跨线路，它支撑的每一行在那里都是无效的。
+- **不受信任的浏览器没有持久化设置**：设置传输跟随运营者可达面——loopback 与部署的可信表面（`--trusted-host`、tailnet、portless）读写 Host 文档。非 loopback 浏览器在首次握手前保持 `loading` 且不发送特权请求；明确的不受信任判定会把它转为 `unavailable`，它支撑的每一行在那里都是无效的。
 - **每次写入仅一个字段**：`set` 只发送单个 `set` op，因此需要同时改动两个字段的行没有事务可用，会发布两个 revision。

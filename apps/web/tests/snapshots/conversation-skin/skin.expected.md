@@ -2,13 +2,13 @@
 
 ## Light palette
 
-- canvas token: rgb(252, 252, 252)
+- canvas token: #fcfcfc
 - conversation canvas: rgb(252, 252, 252)
 - header canvas: rgb(252, 252, 252)
 - header divider: rgb(228, 228, 231)
 - composer fill: color(srgb 1 1 1 / 0.8)
 - composer outline: rgba(0, 0, 0, 0.08)
-- composer backdrop: blur(12px) saturate(1.14)
+- composer backdrop: none
 - composer radius: 22px
 - composer shadow: rgba(0, 0, 0, 0.4) 0px 12px 28px -18px
 - user message: rgb(244, 244, 245)
@@ -22,13 +22,13 @@
 
 ## Dark palette
 
-- canvas token: rgb(10, 10, 10)
+- canvas token: #0a0a0a
 - conversation canvas: rgb(10, 10, 10)
 - header canvas: rgb(10, 10, 10)
 - header divider: rgb(25, 25, 25)
 - composer fill: color(srgb 0.0776471 0.0776471 0.0776471 / 0.8)
 - composer outline: rgba(255, 255, 255, 0.05)
-- composer backdrop: blur(16px) saturate(1.08)
+- composer backdrop: none
 - composer radius: 22px
 - composer shadow: rgba(255, 255, 255, 0.03) 0px 1px 0px 0px inset
 - user message: rgb(20, 20, 20)
@@ -67,7 +67,7 @@
 - compact drawer opens: true
 - compact drawer dismisses: true
 - compact Chat horizontal overflow: 0px
-- mobile header disclosure tier: 1
+- mobile header disclosure tier: 0
 - mobile header row overflow: 0px
 
 ## Trajectory top fade clearance

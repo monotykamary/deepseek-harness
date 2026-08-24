@@ -1,62 +1,34 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Use the ask_user_question tool to" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Use the ask_user_question tool to ask me exactly one question with id "checkpoint", question "Ready to continue?", header "Checkpoint", and options labeled "Yes" and "No". After I answer, reply with one short sentence acknowledging my answer and stop. {{clock}}
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- button "Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that.":
-  - img
-  - img
-  - text: Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that.
-- button "Ask question 1/1 answered":
-  - img
-  - img
-  - text: Ask question 1/1 answered
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- button "Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that."
+- button "Ask question 1/1 answered"
 - text: "Interjection: include the word BANANA in your final reply. {{clock}}"
-- button "Copy":
-  - img
-- button "Think The user selected \"Yes\" and wants me to include the word \"BANANA\" in my final reply. Let me acknowledge their answer.":
-  - img
-  - img
-  - text: Think The user selected "Yes" and wants me to include the word "BANANA" in my final reply. Let me acknowledge their answer.
+- button "Copy"
+- button "Think The user selected \"Yes\" and wants me to include the word \"BANANA\" in my final reply. Let me acknowledge their answer."
 - paragraph: Great, let's move forward. BANANA!
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "6% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 98% Input 15.8K tok · Output 156 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

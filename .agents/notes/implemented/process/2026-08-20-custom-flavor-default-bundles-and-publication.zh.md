@@ -12,7 +12,7 @@ Status: implemented
 
 ### 交付的 profile 即定制组合
 
-`PROFILE_TEMPLATES.web` 为 `['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea']`，`PROFILE_TEMPLATES.headless` 为 `['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea']`。两个组件包都是 `dsh` 应用的依赖，因此与每个随附组件包一样从安装锚点解析；`healProfilesModuleFallback` 把它们（连同其 `dsh-fabric-*` 与 `@monotykamary/*` 闭包）符号链接进 `$DSH_HOME/profiles/node_modules`。`INSTALLATION_OWNED_PROFILE_TUPLES` 记录了变更前的精确 web 元组，因此既有的自动初始化 web profile 会在下次启动时迁移到新组合，而任何用户改过的列表保持不动。
+`PROFILE_TEMPLATES.web` 为 `['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory']`，`PROFILE_TEMPLATES.headless` 为 `['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea']`。三个配套 Bundle 都是 `dsh` 应用的依赖，因此与每个随附 Bundle 一样从安装锚点解析；`healProfilesModuleFallback` 把它们及其依赖闭包符号链接进 `$DSH_HOME/profiles/node_modules`。`LEGACY_PROFILE_TUPLES` 识别较早的安装所有元组，并在赋予模板所有权时保留追加的用户层。名称与模板匹配的受管 profile 还会在加载时把当前由模板拥有的每个 Bundle 移出 `dsh.profile.bundles` 并持久化其余条目；扩展随附模板因此能吸收用户已安装的配套 Bundle，而不会把它组合两次，自定义 profile 与重复的纯用户层仍会明确报错。
 
 ### 本地开发默认解析已发布的组件包
 

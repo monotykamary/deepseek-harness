@@ -1,7 +1,7 @@
 /** Published dsh web + pnpm dev:web → browser HMR, with no page reload. */
 
 import { existsSync, globSync } from 'node:fs'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
@@ -71,6 +71,9 @@ async function stopTree(child: SubprocessHandle): Promise<void> {
 it('hot-reloads a real client-plugin source edit without refreshing the page', async () => {
   const world = await mkdtemp(join(tmpdir(), 'dsh-web-hmr-world-'))
   const sourcePath = join(REPO_ROOT, 'packages/client/ui-conversation/src/client/locales.ts')
+  const distPath = join(REPO_ROOT, 'apps/web/dist')
+  const distBackup = join(world, 'dist-backup')
+  await cp(distPath, distBackup, { recursive: true })
   const binPath = join(REPO_ROOT, 'apps/cli/lib/bin.js')
   if (!existsSync(binPath)) throw new Error('HMR browser test needs the built dsh bin; run pnpm run build first')
   const clientBuildEnvironment = readClientBuildRecord(REPO_ROOT).environment
@@ -97,7 +100,11 @@ it('hot-reloads a real client-plugin source edit without refreshing the page', a
       REPO_ROOT,
       { ...clientBuildEnvironment },
     ))
-    await waitForOutput(watcher, /dev-web: watching/, 'pnpm run dev:web')
+    await waitForOutput(
+      watcher,
+      /dev-web: watching[\s\S]*built in/u,
+      'pnpm run dev:web initial Vite build',
+    )
     host = subprocessCtx.subprocess.spawn(spawnSpec(
       [process.execPath, binPath, 'web', '--no-open', '--port', '0'],
       world,
@@ -127,13 +134,15 @@ it('hot-reloads a real client-plugin source edit without refreshing the page', a
   } catch (error) {
     failures.push(error)
   } finally {
-    await writeFile(sourcePath, originalSource).catch((error: unknown) => failures.push(error))
     if (watcher !== undefined) await stopTree(watcher).catch((error: unknown) => failures.push(error))
+    if (host !== undefined) await stopTree(host).catch((error: unknown) => failures.push(error))
+    await browser?.close().catch((error: unknown) => failures.push(error))
+    await writeFile(sourcePath, originalSource).catch((error: unknown) => failures.push(error))
     await Promise.all(originalClientBundles.map(async ([path, content]) => {
       await writeFile(path, content).catch((error: unknown) => failures.push(error))
     }))
-    if (host !== undefined) await stopTree(host).catch((error: unknown) => failures.push(error))
-    await browser?.close().catch((error: unknown) => failures.push(error))
+    await rm(distPath, { recursive: true, force: true }).catch((error: unknown) => failures.push(error))
+    await cp(distBackup, distPath, { recursive: true }).catch((error: unknown) => failures.push(error))
     await subprocessFiber?.dispose().catch((error: unknown) => failures.push(error))
     await rm(world, { recursive: true, force: true }).catch((error: unknown) => failures.push(error))
   }

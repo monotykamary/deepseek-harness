@@ -1,59 +1,32 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Use the ask_user_question tool to" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: "Use the ask_user_question tool to ask me exactly one multi-select question with id \"color\", question \"Which color do you prefer?\", header \"Pick one\", and two options: label \"Blue\" with description \"A cool recessive hue that reads as calm and trustworthy in long reading sessions and dense dashboards.\", and label \"Green\" with description \"A restful mid-spectrum hue with the highest perceived brightness, easiest on the eye over long sessions.\" Set multi_select to true. After I answer, reply with the single word DONE and stop. {{clock}}"
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- button "Think The user wants me to use the ask_user_question tool with specific parameters. Let me do exactly that.":
-  - img
-  - img
-  - text: Think The user wants me to use the ask_user_question tool with specific parameters. Let me do exactly that.
-- button "Ask question 1/1 answered":
-  - img
-  - img
-  - text: Ask question 1/1 answered
-- button "Think The user answered \"Blue\". I should now reply with the single word DONE and stop.":
-  - img
-  - img
-  - text: Think The user answered "Blue". I should now reply with the single word DONE and stop.
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- button "Think The user wants me to use the ask_user_question tool with specific parameters. Let me do exactly that."
+- button "Ask question 1/1 answered"
+- button "Think The user answered \"Blue\". I should now reply with the single word DONE and stop."
 - paragraph: DONE
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "3% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 95% Input 8.6K tok · Output 180 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

@@ -83,7 +83,7 @@
     "js-yaml": "^4.2.0",
     "node-addon-require-builtin": "^0.1.4",
     "dsh-fabric": "0.1.4",
-    "dsh-fovea": "0.4.3",
+    "dsh-fovea": "0.4.4",
     "dsh-factory": "0.1.0",
     "@monotykamary/dsh-distribution-update": "workspace:^"
   },
@@ -107,7 +107,7 @@
     "distribution": {
       "companions": {
         "dsh-fabric": "0.1.4",
-        "dsh-fovea": "0.4.3",
+        "dsh-fovea": "0.4.4",
         "dsh-factory": "0.1.0"
       }
     }

@@ -112,6 +112,13 @@ export function resolveProfileDir(name: string, home: string = resolveDshHome())
   return join(home, PROFILES_DIR, name)
 }
 
+const WEB_PROFILE_TEMPLATE = [
+  '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory',
+] as const
+const HEADLESS_PROFILE_TEMPLATE = [
+  '@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea',
+] as const
+
 /**
  * The shipped profile templates auto-initialized on first use, by name.
  *
@@ -122,8 +129,13 @@ export function resolveProfileDir(name: string, home: string = resolveDshHome())
  * of the `dsh` app and resolve from the installation anchor.
  */
 export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
-  web: ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory'],
-  headless: ['@monotykamary/dsh-base', '@monotykamary/dsh-headless', 'dsh-fabric', 'dsh-fovea'],
+  web: WEB_PROFILE_TEMPLATE,
+  headless: HEADLESS_PROFILE_TEMPLATE,
+}
+
+/** Resolve one shipped template by identity. */
+function shippedTemplate(name: string): readonly string[] | undefined {
+  return PROFILE_TEMPLATES[name]
 }
 
 /** Legacy installation-owned tuples accepted during managed-profile migration. */
@@ -131,11 +143,11 @@ const LEGACY_PROFILE_TUPLES: Record<string, readonly (readonly string[])[]> = {
   web: [
     ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app'],
     ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea'],
-    PROFILE_TEMPLATES.web ?? [],
+    WEB_PROFILE_TEMPLATE,
   ],
   headless: [
     ['@monotykamary/dsh-base', '@monotykamary/dsh-web-app', '@monotykamary/dsh-headless'],
-    PROFILE_TEMPLATES.headless ?? [],
+    HEADLESS_PROFILE_TEMPLATE,
   ],
 }
 
@@ -311,30 +323,50 @@ function hasBundlePrefix(values: readonly string[], prefix: readonly string[]): 
   return prefix.length <= values.length && prefix.every((value, index) => values[index] === value)
 }
 
+/** Persist one profile's template identity and remaining user-managed layers. */
+function writeNormalizedProfile(
+  dir: string,
+  manifest: ProfileManifest,
+  profile: DshProfileManifest,
+  template: string,
+  bundles: readonly string[],
+): ProfileManifest {
+  const normalized: ProfileManifest = {
+    ...manifest,
+    dsh: {
+      ...manifest.dsh,
+      profile: { ...profile, template, bundles: [...bundles] },
+    },
+  }
+  writeProfileManifest(dir, normalized)
+  return normalized
+}
+
 /**
- * Migrate a recognized shipped tuple to explicit template ownership while
- * preserving bundle layers appended by the user. A profile already carrying
- * a template is left untouched.
+ * Transfer installation-owned layers out of a managed profile's user list, or
+ * migrate a recognized legacy shipped tuple to explicit template ownership.
  */
 function normalizeShippedProfile(name: string, dir: string, manifest: ProfileManifest): ProfileManifest {
   const profile = manifest.dsh?.profile
-  if (profile?.template !== undefined) return manifest
-  const bundles = profile?.bundles
+  if (profile === undefined) return manifest
+  const template = profile.template
+  if (template !== undefined) {
+    const ownedTemplate = shippedTemplate(template)
+    if (ownedTemplate === undefined || template !== name) return manifest
+    const bundles = profile.bundles ?? []
+    const templateBundles = new Set(ownedTemplate)
+    const userBundles = bundles.filter(bundle => !templateBundles.has(bundle))
+    if (userBundles.length === bundles.length) return manifest
+    return writeNormalizedProfile(dir, manifest, profile, template, userBundles)
+  }
+  const bundles = profile.bundles
   const candidates = LEGACY_PROFILE_TUPLES[name]
   if (bundles === undefined || candidates === undefined) return manifest
   const owned = [...candidates]
     .sort((left, right) => right.length - left.length)
     .find(candidate => hasBundlePrefix(bundles, candidate))
   if (owned === undefined) return manifest
-  const normalized: ProfileManifest = {
-    ...manifest,
-    dsh: {
-      ...manifest.dsh,
-      profile: { ...profile, template: name, bundles: bundles.slice(owned.length) },
-    },
-  }
-  writeProfileManifest(dir, normalized)
-  return normalized
+  return writeNormalizedProfile(dir, manifest, profile, name, bundles.slice(owned.length))
 }
 
 /**
@@ -400,7 +432,7 @@ export function loadProfile(
 ): Profile {
   const dir = resolveProfileDir(name, home)
   if (!existsSync(join(dir, 'package.json'))) {
-    const template = PROFILE_TEMPLATES[name]
+    const template = shippedTemplate(name)
     if (template === undefined) {
       throw new Error(
         `${binName}: profile ${JSON.stringify(name)} does not exist; create it with 'dsh plugin --profile ${name} add <package>'`,
@@ -411,10 +443,11 @@ export function loadProfile(
   const manifest = normalizeShippedProfile(name, dir, readProfileManifest(binName, dir))
   const profile = manifest.dsh?.profile
   const template = profile?.template
-  if (template !== undefined && PROFILE_TEMPLATES[template] === undefined) {
+  const templateBundles = template === undefined ? [] : shippedTemplate(template)
+  if (templateBundles === undefined) {
     throw new Error(`${binName}: profile ${JSON.stringify(name)} names unknown shipped template ${JSON.stringify(template)}`)
   }
-  const bundles = [...template === undefined ? [] : PROFILE_TEMPLATES[template] ?? [], ...profile?.bundles ?? []]
+  const bundles = [...templateBundles, ...profile?.bundles ?? []]
   if (new Set(bundles).size !== bundles.length) {
     throw new Error(`${binName}: profile ${JSON.stringify(name)} composes a bundle more than once`)
   }

@@ -3,4 +3,3 @@
     - strong: ui-settings
     - img "已挂载"
     - text: 已启用
-    - img

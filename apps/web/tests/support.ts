@@ -39,6 +39,19 @@ const GROUPED_WORKSPACE_VIEW = {
 }
 
 /**
+ * Seed the grouped Workspace baseline before a page's first navigation.
+ * The init script preserves view state a scenario writes before later reloads.
+ * @param page - fresh Playwright page that has not navigated yet.
+ */
+export async function seedGroupedWorkspaceView(page: Page): Promise<void> {
+  await page.addInitScript((seed) => {
+    if (localStorage.getItem('dsh.workspace.view.v6') === null) {
+      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify(seed))
+    }
+  }, GROUPED_WORKSPACE_VIEW)
+}
+
+/**
  * Open the standard browser-test page advertising English before client boot.
  * This keeps role locators and goldens deterministic while leaving the Host
  * settings document free to override the provisional browser-derived locale;
@@ -50,15 +63,7 @@ const GROUPED_WORKSPACE_VIEW = {
  */
 export async function newEnglishPage(browser: Browser, height = 1000): Promise<Page> {
   const page = await browser.newPage({ viewport: { width: 1680, height }, locale: 'en-US' })
-  // Seed the grouped baseline only on the first load: an init script runs
-  // before every navigation, and unconditional re-seeding would clobber view
-  // state a scenario deliberately writes (e.g. the flat-view persistence
-  // spec) before its reloads.
-  await page.addInitScript((seed) => {
-    if (localStorage.getItem('dsh.workspace.view.v6') === null) {
-      localStorage.setItem('dsh.workspace.view.v6', JSON.stringify(seed))
-    }
-  }, GROUPED_WORKSPACE_VIEW)
+  await seedGroupedWorkspaceView(page)
   return page
 }
 

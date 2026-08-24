@@ -1,6 +1,6 @@
 /** Assembled keyless snapshot for the default `dsh web` browser handoff. */
 
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,6 +39,14 @@ describe.skipIf(!builtArtifactsExist)('dsh web browser-open assembled snapshot',
   it('hands the reachable page to the default browser after the shipped tree settles', async () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-web-browser-open-snapshot-'))
     tempRoots.push(root)
+    const home = join(root, '.dsh')
+    const profileDir = join(home, 'profiles', 'web')
+    mkdirSync(profileDir, { recursive: true })
+    writeFileSync(join(profileDir, 'package.json'), JSON.stringify({
+      name: 'dsh-profile-web',
+      private: true,
+      dsh: { profile: { template: 'web', bundles: ['dsh-factory'] } },
+    }))
     const result = await execa(process.execPath, [
       '--import', openerHook,
       builtBin,
@@ -68,6 +76,9 @@ describe.skipIf(!builtArtifactsExist)('dsh web browser-open assembled snapshot',
       throw new Error(`dsh web browser-open evidence missing\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`)
     }
     const opened = JSON.parse(openLine.slice('dsh browser-open: '.length)) as BrowserOpenRecord
+    const migrated = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8')) as {
+      dsh: { profile: { bundles: string[] } }
+    }
 
     expect({
       exitCode: result.exitCode,
@@ -78,6 +89,7 @@ describe.skipIf(!builtArtifactsExist)('dsh web browser-open assembled snapshot',
       bootManifest: opened.bootManifest,
       apiKeyPresent: opened.apiKeyPresent,
       dshHomePresent: opened.dshHomePresent,
+      userBundles: migrated.dsh.profile.bundles,
       stderr: result.stderr,
     }).toMatchInlineSnapshot(`
       {
@@ -90,6 +102,7 @@ describe.skipIf(!builtArtifactsExist)('dsh web browser-open assembled snapshot',
         "readyUrl": "http://127.0.0.1:{{port}}",
         "status": 200,
         "stderr": "",
+        "userBundles": [],
       }
     `)
   })

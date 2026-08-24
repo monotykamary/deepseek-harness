@@ -13,7 +13,7 @@ import { CallId, createAssistantMessage, createToolResultMessage, createUserMess
 import { SESSION_FORMAT_VERSION, Session, SessionId } from '@monotykamary/dsh-session'
 import type {} from '@monotykamary/dsh-session-title'
 import {
-  launchWebScaffold, seedSession, watchConsole, webSnapshotMode, type WebScaffold,
+  createdFileMutation, launchWebScaffold, seedSession, watchConsole, webSnapshotMode, type WebScaffold,
 } from './scaffold.ts'
 import { newEnglishPage, saveFailureShot } from './support.ts'
 
@@ -62,7 +62,7 @@ function mentionFixture(): string {
       source: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
     }),
   }, { surfaceOp: 'append' })
-  for (const call of calls) {
+  for (const [index, call] of calls.entries()) {
     const source = session.append('tool/call', {
       turn: 1,
       step: 1,
@@ -78,6 +78,7 @@ function mentionFixture(): string {
         content: text(`Created ${call.path}`),
         isError: false,
       }),
+      mutations: [createdFileMutation(call.path, `content of ${call.path}\n`, index)],
     }, { surfaceOp: 'append', sourceEventSeqs: [source.seq] })
   }
   session.append('step/start', { turn: 1, step: 2 })
@@ -154,7 +155,7 @@ describe('web e2e: inline-code mentions of produced files', () => {
     expect(await mentions.first().getAttribute('aria-label')).toBe('Open site/report.html')
     expect(await mentions.first().getAttribute('title')).toBe('site/report.html')
     // The turn still ends with its produced-files row (all three writes).
-    expect(await page.getByText('Produced', { exact: true }).count()).toBe(1)
+    expect(await page.getByText('Changed files (3)', { exact: true }).count()).toBe(1)
 
     expect(tripwire.pageErrors).toEqual([])
     expect(tripwire.warnings).toEqual([])

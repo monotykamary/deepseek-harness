@@ -17,8 +17,8 @@
 
 /* Wide markdown tables (the renderer's ≥4-column md-table-wide hook) span
    the whole transcript width instead of clipping at the 748px message
-   column, while the table content keeps starting at its normal x (the lead
-   padding compensates the negative margin) — deepsuite chat TableWrapper
+   column, while the table content keeps starting at its normal x (relative
+   inline positioning moves the widened box; lead padding restores content) — deepsuite chat TableWrapper
    parity, with 100cqw (the ChatView scroll container) standing in for its
    JS-measured --dsl-virtual-list-width. `--dsh-table-spare` clamps to zero
    when the transcript is narrower than the message column, so narrow
@@ -33,7 +33,8 @@
   /* The base .tableScroll caps at the column (max-width: 100%); the breakout
      is exactly the case that must exceed it. */
   max-width: none;
-  transform: translateX(calc(-1 * var(--dsh-table-lead)));
+  position: relative;
+  inset-inline-start: calc(0px - var(--dsh-table-lead));
   padding-left: var(--dsh-table-lead);
 }
 

@@ -37,8 +37,6 @@
       - strong: No tests or config changes
       - text: unless they already exist and directly validate the flag's presence.
   - status
-  - button "Chat about it":
-    - img
-    - text: Chat about it
+  - button "Chat about it"
   - button "Refuse"
   - button "Approve"

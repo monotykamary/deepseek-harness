@@ -1,47 +1,24 @@
 - dialog "设置":
   - navigation:
     - text: 设置
-    - button "通用设置":
-      - img
-      - text: 通用设置
-    - button "模型":
-      - img
-      - text: 模型
-    - button "插件":
-      - img
-      - text: 插件
-    - button "Agent 预设":
-      - img
-      - text: Agent 预设
+    - button "通用设置"
+    - button "模型"
+    - button "插件"
+    - button "Agent 预设"
+    - button "更新"
   - button "打开配置文件"
-  - button "关闭":
-    - img
-    - text: 关闭
+  - button "关闭"
   - text: Agent 预设 对此后新建的会话生效。运行中的会话保持它开始时的预设。
-  - button "标准模式":
-    - text: 标准模式
-    - img
+  - button "标准模式"
   - text: 权限 选择新会话的默认权限模式
-  - button "Workspace Write":
-    - text: Workspace Write
-    - img
+  - button "Workspace Write"
   - text: 语言
-  - button "中文":
-    - text: 中文
-    - img
+  - button "中文"
   - text: 外观
-  - button "浅色":
-    - img
-    - text: 浅色
-  - button "深色":
-    - img
-    - text: 深色
-  - button "跟随系统" [pressed]:
-    - img
-    - text: 跟随系统
+  - button "浅色"
+  - button "深色"
+  - button "跟随系统" [pressed]
   - text: 繁忙时 Enter 键行为 仅在智能体运行时生效；Cmd/Ctrl+Enter 使用另一行为
-  - button "排队发送":
-    - text: 排队发送
-    - img
+  - button "排队发送"
   - text: 自动生成会话标题 开启后，新会话使用其当前模型自动生成一句标题；关闭时使用截断的默认标题。
   - button "自动生成会话标题"

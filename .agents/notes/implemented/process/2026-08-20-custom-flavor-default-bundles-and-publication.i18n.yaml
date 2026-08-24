@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-20-custom-flavor-default-bundles-and-publication.md
-2026-08-20-custom-flavor-default-bundles-and-publication.md: f0fbb9cd3b13ef081edf99e5ccf211d76f6c0797
-2026-08-20-custom-flavor-default-bundles-and-publication.zh.md: 5ca643ad9e3606ee2bb18480313ffaad8fc9d222
+2026-08-20-custom-flavor-default-bundles-and-publication.md: 59b114a72a34a2a05a4803edcd38664c210a3a72
+2026-08-20-custom-flavor-default-bundles-and-publication.zh.md: 38f1103a47d87609f0121b69fa475d668b88763e

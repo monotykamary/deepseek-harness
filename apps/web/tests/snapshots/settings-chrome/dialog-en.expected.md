@@ -1,45 +1,24 @@
 - dialog "Settings":
   - navigation:
     - text: Settings
-    - button "General":
-      - img
-      - text: General
-    - button "Models":
-      - img
-      - text: Models
-    - button "Plugins":
-      - img
-      - text: Plugins
-    - button "Agent presets":
-      - img
-      - text: Agent presets
+    - button "General"
+    - button "Models"
+    - button "Plugins"
+    - button "Agent presets"
+    - button "Updates"
   - button "Open configuration file"
-  - button "Close":
-    - img
-    - text: Close
+  - button "Close"
   - text: Agent preset Applies to sessions you start from now on. Running sessions keep the preset they began with.
-  - button "Standard mode":
-    - text: Standard mode
-    - img
+  - button "Standard mode"
   - text: Permission Choose the default permission mode for new sessions
-  - button "Workspace Write":
-    - text: Workspace Write
-    - img
+  - button "Workspace Write"
   - text: Language
-  - button "English":
-    - text: English
-    - img
+  - button "English"
   - text: Appearance
-  - button "Light":
-    - img
-    - text: Light
-  - button "Dark":
-    - img
-    - text: Dark
-  - button "System" [pressed]:
-    - img
-    - text: System
+  - button "Light"
+  - button "Dark"
+  - button "System" [pressed]
   - text: Enter behavior while busy Busy only; Cmd/Ctrl+Enter uses the other behavior
-  - button "Queue":
-    - text: Queue
-    - img
+  - button "Queue"
+  - text: Auto-generate session titles When on, new sessions get a one-line title from their current model; when off, they use the truncated default title.
+  - button "Auto-generate session titles"

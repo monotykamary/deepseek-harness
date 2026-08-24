@@ -1,8 +1,1 @@
-- 'treeitem "workspace Plan awaiting review Session actions for Plan a small change: add Plan a small change: add standard now" [selected]':
-  - img
-  - text: workspace Plan awaiting review
-  - 'button "Session actions for Plan a small change: add"':
-    - img
-  - text: "Plan a small change: add"
-  - img
-  - text: standard now
+- 'treeitem "workspace Plan awaiting review Plan a small change: add now" [selected]'

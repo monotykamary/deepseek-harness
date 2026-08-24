@@ -219,6 +219,10 @@ describe('createFixtureApi', () => {
       ns: 'llm-deepseek',
       value: { apiKeyEnv: 'DEEPSEEK_API_KEY' },
       secrets: [{ path: ['apiKey'], set: false }],
+    }, {
+      ns: 'ui-onboarding',
+      value: { welcomeNoticeVersion: '2026-08-23.1' },
+      secrets: [],
     }])
 
     const initial = await api.credentials.describe(req({ refs: ['DEEPSEEK_API_KEY', 'TEST_API_KEY'] }))

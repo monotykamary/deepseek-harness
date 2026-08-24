@@ -187,7 +187,7 @@ describe.skipIf(MODE === 'record')('web e2e: durable workflow run in Chat', () =
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     const workflow = page.getByRole('button', { name: /^snapshot-flow/ })
     await workflow.waitFor({ timeout: 15_000 })
-    expect(await workflow.getAttribute('aria-expanded')).toBe('false')
+    await expect.poll(() => workflow.getAttribute('aria-expanded'), { timeout: 10_000 }).toBe('false')
     const snapshot = await captureStableAria(page, '[data-chat-flow]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(UI_EXPECTED, snapshot, MODE)
     await workflow.click()

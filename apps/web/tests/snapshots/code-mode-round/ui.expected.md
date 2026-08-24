@@ -1,64 +1,34 @@
 - banner:
   - navigation "Session hierarchy":
     - 'button "Using ONE run_code program: run" [disabled]'
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: "Using ONE run_code program: run bash `echo CODE_ROUND_OK`, then read the file missing.txt catching its error in the program. Return an object with both outcomes. Then reply DONE and stop. {{clock}}"
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- 'button "Think The user wants me to write a single `run_code` program that:"':
-  - img
-  - img
-  - text: "Think The user wants me to write a single `run_code` program that:"
-- button "Code Run bash echo and catch missing file read":
-  - img
-  - img
-  - text: Code Run bash echo and catch missing file read
-- img
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- 'button "Think The user wants me to write a single `run_code` program that:"'
+- button "Code Run bash echo and catch missing file read"
 - text: Bash Echo CODE_ROUND_OK Failed
-- 'button "Read Error: cannot read \"{{cwd}}/workspace/missing.txt\": not found"':
-  - img
-  - text: "Read Error: cannot read \"{{cwd}}/workspace/missing.txt\": not found"
-- button "Think The program ran successfully. Let me now reply DONE as instructed.":
-  - img
-  - img
-  - text: Think The program ran successfully. Let me now reply DONE as instructed.
+- 'button "Read Error: cannot read \"{{cwd}}/workspace/missing.txt\": not found"'
+- button "Think The program ran successfully. Let me now reply DONE as instructed."
 - paragraph: DONE
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "7% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 52% Input 17.2K tok · Output 252 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

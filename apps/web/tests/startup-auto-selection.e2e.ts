@@ -52,7 +52,7 @@ describe('web e2e: startup auto-selection', () => {
   let tripwire: ReturnType<typeof watchConsole>
 
   beforeAll(async () => {
-    scaffold = await launchWebScaffold({})
+    scaffold = await launchWebScaffold({ showOnboarding: true })
     browser = await chromium.launch()
     page = await newEnglishPage(browser)
     tripwire = watchConsole(page)
@@ -69,10 +69,13 @@ describe('web e2e: startup auto-selection', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-first-workspace-stable-tree'))
     await page.locator(`${ROOT_PHASE}[data-phase="hero"]`).waitFor({ timeout: 15_000 })
     const headline = page.getByText('Into the Unknown', { exact: true })
-    await page.getByRole('heading', { name: 'A complete coding-agent workbench' }).waitFor()
+    const welcome = page.getByRole('dialog', { name: 'A complete coding-agent workbench' })
+    await welcome.waitFor()
     expect(await page.getByText('Factory task orchestration', { exact: true }).isVisible()).toBe(true)
     expect(await page.getByText('Fovea code intelligence', { exact: true }).isVisible()).toBe(true)
     expect(await page.getByText('Fabric execution', { exact: true }).isVisible()).toBe(true)
+    await welcome.getByRole('button', { name: 'Continue' }).click()
+    await welcome.waitFor({ state: 'detached', timeout: 15_000 })
     const fishHitbox = headline.locator('xpath=preceding-sibling::span[1]')
     const fish = fishHitbox.locator('svg')
     expect(await fish.evaluate(node => getComputedStyle(node).color))

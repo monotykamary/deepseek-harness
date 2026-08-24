@@ -1,30 +1,19 @@
 - banner:
   - navigation "Session hierarchy":
     - button "workspace" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
+  - button "Open files": Files
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - group "Command input": /goal
-- 'button "goal No goal is currently set. Usage: /goal [<objective>|clear|edit <objective>|pause|resume]"':
-  - img
-  - img
-  - text: "goal No goal is currently set. Usage: /goal [<objective>|clear|edit <objective>|pause|resume]"
+- 'button "goal No goal is currently set. Usage: /goal [<objective>|clear|edit <objective>|pause|resume]"'
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

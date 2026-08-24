@@ -27,10 +27,11 @@ export interface SettingsDescribeView {
 /** Mirror state every derived settings surface renders from. */
 export interface SettingsMirrorSnapshot {
   /**
-   * `unavailable` is the terminal ineligible state (the page authority is not
-   * on the operator-eligible plane); `ready` persists across later failed
-   * refreshes (the held view keeps serving); `idle` means no answer is held
-   * and no read is running, so `ensure` will start one.
+   * `unavailable` is the resolved ineligible state (the page authority is not
+   * on the operator-eligible plane); `loading` also represents a non-loopback
+   * handshake whose verdict is pending. `ready` persists across later failed
+   * refreshes or generation loss, while `idle` means an eligible mirror holds
+   * no answer and `ensure` will start its read.
    */
   status: 'idle' | 'loading' | 'ready' | 'unavailable'
   /** The last good answer; undefined until the first success. */
@@ -41,8 +42,8 @@ export interface SettingsMirrorSnapshot {
 
 /** Observable operator-eligible plane verdict (loopback or a trusted surface). */
 export interface EligibilitySource {
-  /** @returns the current sync verdict (stable reference until the next change). */
-  getSnapshot(): boolean
+  /** @returns true/false after resolution, or undefined before a non-loopback handshake. */
+  getSnapshot(): boolean | undefined
   /**
    * Observe verdict replacements.
    * @param listener - invoked after each snapshot change.
@@ -103,8 +104,9 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
     private readonly api: SettingsFace,
     private readonly eligible: EligibilitySource,
   ) {
+    const verdict = eligible.getSnapshot()
     this.store = createSnapshotStore<SettingsMirrorSnapshot>({
-      status: eligible.getSnapshot() ? 'idle' : 'unavailable',
+      status: verdict === true ? 'idle' : verdict === false ? 'unavailable' : 'loading',
       view: undefined,
       error: null,
     })
@@ -124,17 +126,22 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
    */
   private onEligibilityChange(): void {
     if (this.disposed) return
-    if (this.eligible.getSnapshot()) {
-      const before = this.store.getSnapshot()
-      if (before.status === 'unavailable') {
+    const verdict = this.eligible.getSnapshot()
+    const before = this.store.getSnapshot()
+    if (verdict === true) {
+      if (before.view === undefined && this.inFlight === undefined
+        && (before.status === 'unavailable' || before.status === 'loading')) {
         this.store.set({ status: 'idle', view: undefined, error: null })
         void this.load()
       }
       return
     }
-    const before = this.store.getSnapshot()
     if (before.view === undefined) {
-      this.store.set({ status: 'unavailable', view: undefined, error: null })
+      this.store.set({
+        status: verdict === undefined ? 'loading' : 'unavailable',
+        view: undefined,
+        error: null,
+      })
     }
   }
 
@@ -158,7 +165,7 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
    * @returns settlement after this call's freshness is reflected.
    */
   load(): Promise<void> {
-    if (this.disposed || !this.eligible.getSnapshot()) return Promise.resolve()
+    if (this.disposed || this.eligible.getSnapshot() !== true) return Promise.resolve()
     if (this.inFlight !== undefined) {
       this.rerun = true
       return this.inFlight
@@ -176,7 +183,7 @@ export class SettingsDescribeMirror implements SettingsDescribeFace {
    * @returns settlement of the current or newly started read, if any.
    */
   ensure(): Promise<void> {
-    if (this.disposed || !this.eligible.getSnapshot()) return Promise.resolve()
+    if (this.disposed || this.eligible.getSnapshot() !== true) return Promise.resolve()
     if (this.inFlight !== undefined) return this.inFlight
     if (this.getSnapshot().status === 'idle') return this.load()
     return Promise.resolve()

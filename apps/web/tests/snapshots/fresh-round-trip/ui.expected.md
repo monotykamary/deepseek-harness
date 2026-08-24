@@ -1,59 +1,32 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Use the bash tool to" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: "Use the bash tool to run exactly: echo WEB_E2E_OK. Then reply with the single word DONE and stop. {{clock}}"
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- button "Think The user wants me to run a simple bash command and reply with \"DONE\".":
-  - img
-  - img
-  - text: Think The user wants me to run a simple bash command and reply with "DONE".
-- button "Bash Echo the test string":
-  - img
-  - img
-  - text: Bash Echo the test string
-- button "Think The command executed successfully and output \"WEB_E2E_OK\". I just need to reply with \"DONE\".":
-  - img
-  - img
-  - text: Think The command executed successfully and output "WEB_E2E_OK". I just need to reply with "DONE".
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- button "Think The user wants me to run a simple bash command and reply with \"DONE\"."
+- button "Bash Echo the test string"
+- button "Think The command executed successfully and output \"WEB_E2E_OK\". I just need to reply with \"DONE\"."
 - paragraph: DONE
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "6% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 99% Input 15.7K tok · Output 111 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

@@ -53,6 +53,7 @@ import SessionStore, {
   packChunkRuns,
   SESSION_FORMAT_VERSION,
   SessionId,
+  type FileMutation,
   type Session,
   type SessionEvent,
   type SessionHeader,
@@ -76,6 +77,27 @@ export function webSnapshotMode(): WebSnapshotMode {
   if (value === undefined || value === '' || value === 'replay') return 'replay'
   if (value === 'record' || value === 'refresh') return value
   throw new Error(`DSH_SNAPSHOT must be replay, record, or refresh; got ${JSON.stringify(value)}`)
+}
+
+/**
+ * Build a valid durable creation receipt for a programmatic browser fixture.
+ * @param path - created path exposed to the deliverables projection.
+ * @param newText - complete created text and applied diff content.
+ * @param commitOrder - ToolRuntime commit order within the fixture session.
+ * @returns one versioned creation receipt.
+ */
+export function createdFileMutation(path: string, newText: string, commitOrder: number): FileMutation {
+  return {
+    version: 1,
+    commitOrder,
+    beforeSha1: null,
+    afterSha1: '1'.repeat(40),
+    beforeSha256: null,
+    afterSha256: '2'.repeat(64),
+    path,
+    operation: 'create',
+    diffs: [{ oldText: null, newText }],
+  }
 }
 
 /** The shipped composition under test: the dsh-base and dsh-web-app bundle patches over the empty profile root. */
@@ -289,6 +311,8 @@ export interface LaunchOptions {
   installationDiagnostics?: readonly InstallationDiagnostic[]
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
+  /** Leave product onboarding unacknowledged for a dedicated first-run scenario. */
+  showOnboarding?: boolean
 }
 
 /** Dispose the booted tree and remove both owned temp roots, reporting every independent cleanup failure. */
@@ -336,6 +360,15 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
   // paths at load, and an in-process boot must NEVER touch the developer's
   // real ~/.dsh document or credential file.
   const harnessHome = options.harnessHome ?? join(workspaceCwd, '.dsh-home')
+  const settingsPath = join(harnessHome, 'settings.yaml')
+  if (options.showOnboarding !== true && !existsSync(settingsPath)) {
+    await mkdir(harnessHome, { recursive: true })
+    await writeFile(
+      settingsPath,
+      'ui-onboarding:\n  welcomeNoticeVersion: "2026-08-23.1"\n',
+      { flag: 'wx', mode: 0o600 },
+    )
+  }
   // Skill discovery is model-visible input, and its roots now resolve inside a
   // PRESET — a subtree this lane's include patches cannot reach, because the
   // roster mounts it directly per session rather than as a row of the booted
@@ -452,12 +485,12 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     {
       id: 'web-runtime',
       config: {
+        openBrowser: false,
         printUrl: false,
         surfaceContext,
         ...(options.tailnetSurface === true ? { tailnet: true } : {}),
       },
     },
-    { id: 'web-runtime', config: { openBrowser: false, printUrl: false, surfaceContext } },
     ...options.remoteAuthority === undefined
       ? []
       : [{ id: 'connection', config: { trustedHosts: [options.remoteAuthority] } }],

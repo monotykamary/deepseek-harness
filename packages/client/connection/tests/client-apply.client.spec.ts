@@ -84,16 +84,16 @@ describe('connection client apply', () => {
   it('reports non-loopback page authority through the connection handle', async () => {
     ;(globalThis as Win).location = { hostname: '192.0.2.20', search: '' }
     expect((await mount()).isLoopback).toBe(false)
-    // No trusted surface verdict yet: not operator-eligible.
-    expect((await mount()).isOperatorEligible.getSnapshot()).toBe(false)
+    // A non-loopback authority stays pending until host.describe returns its verdict.
+    expect((await mount()).isOperatorEligible.getSnapshot()).toBeUndefined()
   })
 
   it('flips operator eligibility on when the handshake confirms a trusted surface', async () => {
     ;(globalThis as Win).location = { hostname: 'dsh.localhost', search: '?fixture' }
     const handle = await mount()
     expect(handle.isLoopback).toBe(false)
-    expect(handle.isOperatorEligible.getSnapshot()).toBe(false)
-    const verdicts: boolean[] = []
+    expect(handle.isOperatorEligible.getSnapshot()).toBeUndefined()
+    const verdicts: Array<boolean | undefined> = []
     const off = handle.isOperatorEligible.subscribe(() => {
       verdicts.push(handle.isOperatorEligible.getSnapshot())
     })
@@ -105,7 +105,8 @@ describe('connection client apply', () => {
     } finally {
       loop.stop()
     }
-    expect(handle.isOperatorEligible.getSnapshot()).toBe(false)
+    expect(handle.isOperatorEligible.getSnapshot()).toBeUndefined()
+    expect(verdicts).toEqual([true, undefined])
     off()
   })
 

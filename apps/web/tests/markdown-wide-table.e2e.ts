@@ -38,7 +38,7 @@ import {
   webSnapshotMode,
   type WebScaffold,
 } from './scaffold.ts'
-import { newEnglishPage, saveFailureShot } from './support.ts'
+import { newEnglishPage, saveFailureShot, seedGroupedWorkspaceView } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/markdown-wide-table', import.meta.url))
 const GEOMETRY_EXPECTED = fileURLToPath(
@@ -161,6 +161,10 @@ interface TableReading {
   wideHook: boolean
   /** Resolved lead padding (the breakout's alignment compensation). */
   paddingLeft: number
+  /** The wrapper's transformed left x, for breakout diagnostics. */
+  wrapperLeft: number
+  /** Resolved transform matrix, for breakout diagnostics. */
+  transform: string
   /** The table's own left x, for the content-alignment relation. */
   tableLeft: number
 }
@@ -181,6 +185,8 @@ function readTables(page: Page): Promise<TableReading[]> {
         height: wrapper.getBoundingClientRect().height,
         wideHook: wrapper.classList.contains('md-table-wide'),
         paddingLeft: Number.parseFloat(getComputedStyle(wrapper).paddingLeft),
+        wrapperLeft: wrapper.getBoundingClientRect().left,
+        transform: getComputedStyle(wrapper).transform,
         tableLeft: table.getBoundingClientRect().left,
       }
     })
@@ -200,6 +206,7 @@ interface TableStop {
  * @param target - the page whose pane to close.
  */
 async function closeDetailsPane(target: Page): Promise<void> {
+  if (await target.locator('[data-details-collapsed]').count() > 0) return
   await target.getByRole('button', { name: 'Close details', exact: true }).waitFor({ timeout: 10_000 })
   await target.evaluate(() => {
     document.querySelector<HTMLElement>('button[aria-label="Close details"]')?.click()
@@ -338,7 +345,10 @@ describe('web e2e: markdown tables fill the column, wide ones break out and scro
         // column's left edge (compared to the fill table's content).
         expect(wide!.clientWidth, `wide breakout at ${String(stop.width)}`).toBeGreaterThan(columnWidth + 8)
         expect(wide!.paddingLeft, `lead at ${String(stop.width)}`).toBeGreaterThan(0)
-        expect(Math.abs(wide!.tableLeft - fill!.tableLeft), `alignment at ${String(stop.width)}`).toBeLessThan(1.5)
+        expect(
+          Math.abs(wide!.tableLeft - fill!.tableLeft),
+          `alignment at ${String(stop.width)} (${JSON.stringify({ fill, wide })})`,
+        ).toBeLessThan(1.5)
       } else {
         // Below the message column there is no spare width: the breakout
         // clamps to neutral and the wrapper stays the column's width.
@@ -421,6 +431,7 @@ describe('web e2e: markdown tables fill the column, wide ones break out and scro
       locale: 'en-US',
     })
     const hidpiTripwire = watchConsole(hidpiPage)
+    await seedGroupedWorkspaceView(hidpiPage)
     try {
       onTestFailed(() => saveFailureShot(hidpiPage, 'web-e2e-markdown-wide-table-hidpi'))
       await hidpiPage.goto(scaffold.baseUrl, { waitUntil: 'load' })

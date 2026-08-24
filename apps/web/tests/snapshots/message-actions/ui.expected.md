@@ -1,72 +1,43 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Use the read tool twice" [disabled]
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: "Use the read tool twice in one assistant message: read a.txt and b.txt. Then reply with the single word DONE and stop. 7/25 {{clock}}"
-- button "Copy":
-  - img
+- button "Copy"
 - tooltip "Copy"
-- button "Think The user wants me to read a.txt and b.txt, then reply with \"DONE\". Let me do both reads in parallel.":
-  - img
-  - img
-  - text: Think The user wants me to read a.txt and b.txt, then reply with "DONE". Let me do both reads in parallel.
+- button "Think The user wants me to read a.txt and b.txt, then reply with \"DONE\". Let me do both reads in parallel."
 - paragraph: I will read both files before answering.
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation" [disabled]:
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation" [disabled]
 - text: Available only on the last message of a completed turn 7/25 {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
 - button "Read a.txt":
-  - img
-  - img
   - text: Read
   - button "a.txt"
 - button "Read b.txt":
-  - img
-  - img
   - text: Read
   - button "b.txt"
-- button "Think Both files have been read. a.txt contains \"alpha\" and b.txt contains \"beta\". I'll now reply with DONE as instructed.":
-  - img
-  - img
-  - text: Think Both files have been read. a.txt contains "alpha" and b.txt contains "beta". I'll now reply with DONE as instructed.
+- button "Think Both files have been read. a.txt contains \"alpha\" and b.txt contains \"beta\". I'll now reply with DONE as instructed."
 - text: Stopped Now give the final answer. 7/25 {{clock}}
-- button "Copy":
-  - img
+- button "Copy"
 - paragraph: DONE
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: 7/25 {{clock}} Ran for {{duration}}
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
 - text: 2 turns · 3 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 98% Input 7.8K tok · Output 103 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

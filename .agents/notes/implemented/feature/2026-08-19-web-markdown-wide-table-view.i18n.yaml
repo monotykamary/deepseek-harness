@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-web-markdown-wide-table-view.md
-2026-08-19-web-markdown-wide-table-view.md: fc025f6755caa2ca160b02f0c03ae80fd04cc1c7
-2026-08-19-web-markdown-wide-table-view.zh.md: a9e3f664680f94111b735f5e76e1b14a312df801
+2026-08-19-web-markdown-wide-table-view.md: 5004d26f380ae8c1f2d282845f0a01ada3ba22f1
+2026-08-19-web-markdown-wide-table-view.zh.md: 36473886768b28f1a13eacd430d8e31decc03bf0

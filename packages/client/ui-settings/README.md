@@ -15,5 +15,5 @@ None; this package neither assembles nor sends a provider request.
 
 ## Known Limitations and Deferred Work
 
-- **Untrusted browsers get no durable settings** — the settings transport follows the operator-eligible plane: loopback and the deployment's trusted surfaces (`--trusted-host`, tailnet, portless) read and write the Host document, while a browser reached through an untrusted authority starts `unavailable` and never crosses the wire; every row it backs is inert there.
+- **Untrusted browsers get no durable settings** — the settings transport follows the operator-eligible plane: loopback and the deployment's trusted surfaces (`--trusted-host`, tailnet, portless) read and write the Host document. A non-loopback browser stays `loading` without a privileged request until its first handshake; an explicit untrusted verdict moves it to `unavailable`, and every row it backs is inert there.
 - **One field per write** — `set` sends a single `set` op, so a row that must move two fields together has no transaction and publishes two revisions.

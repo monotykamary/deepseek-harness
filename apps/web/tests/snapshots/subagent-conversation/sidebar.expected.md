@@ -1,16 +1,9 @@
 - tree "Sessions":
-  - treeitem "workspace Workspace actions for workspace New session in workspace" [expanded]:
-    - img
+  - treeitem "workspace New session in workspace" [expanded]:
     - text: workspace
-    - button "Workspace actions for workspace":
-      - img
-    - button "New session in workspace":
-      - img
-  - treeitem "workspace now Session actions for Ask a research subagent to Ask a research subagent to standard":
-    - img
+    - button "New session in workspace"
+  - treeitem "workspace now Snooze session Settle session Ask a research subagent to":
     - text: workspace now
-    - button "Session actions for Ask a research subagent to":
-      - img
+    - button "Snooze session"
+    - button "Settle session": Settle
     - text: Ask a research subagent to
-    - img
-    - text: standard

@@ -2,7 +2,6 @@
   - button "Use actual duration": Duration
   - button "Collapse turns": Turns
   - button "Collapse calls": Calls
-  - img
   - searchbox "Search trajectory"
 - region "Trajectory timeline":
   - tooltip "ASSISTANT {{clock}} → {{clock}} Total {{duration}} · TTFT {{duration}} · Decoding {{duration}}"

@@ -275,16 +275,16 @@
     "margins": 2,
     "zindexes": 0
   },
-  "packages/client/ui-workspace/src/client/WorkspaceBrowser.module.css": {
-    "margins": 10,
-    "zindexes": 1
-  },
   "packages/client/ui-workspace/src/client/WorkspacePicker.module.css": {
     "margins": 1,
     "zindexes": 0
   },
   "packages/client/ui-workspace/src/client/rows/Rows.module.css": {
     "margins": 0,
+    "zindexes": 1
+  },
+  "packages/client/ui-workspace/src/client/rows/WorkspaceBrowser.module.css": {
+    "margins": 10,
     "zindexes": 1
   },
   "packages/client/web/src/base.css": {

@@ -1,55 +1,31 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Reply with the single word" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Reply with the single word LIGHTHOUSE and stop. {{clock}}
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- button "Think The user wants me to reply with a single word. Let me comply.":
-  - img
-  - img
-  - text: Think The user wants me to reply with a single word. Let me comply.
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- button "Think The user wants me to reply with a single word. Let me comply."
 - paragraph: LIGHTHOUSE
-- button "Copy":
-  - img
-- button "Good response":
-  - img
-- button "Bad response":
-  - img
-- button "Branch into a new conversation":
-  - img
+- button "Copy"
+- button "Good response"
+- button "Bad response"
+- button "Branch into a new conversation"
 - text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
-- 'button "feedback Feedback recorded for session session-{{uuid}} Anonymous user: {{uuid}}. Session sharing is not configured."':
-  - img
-  - img
-  - text: "feedback Feedback recorded for session session-{{uuid}} Anonymous user: {{uuid}}. Session sharing is not configured."
+- 'button "feedback Feedback recorded for session session-{{uuid}} Anonymous user: {{uuid}}. Session sharing is not configured."'
 - textbox "Message the agent"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "6% of context used"
 - button "Send message" [disabled]
 - text: 1 turns · 1 steps LLM {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 99% Input 7.8K tok · Output 21 tok
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

@@ -15,5 +15,8 @@
     - article:
       - heading "Fabric 执行层" [level=2]
       - paragraph: 类型化工具、Provider 集成与编排，让复杂智能体工作流可观察、可扩展。
+    - article:
+      - heading "Factory 任务编排" [level=2]
+      - paragraph: 持久依赖图、周期性 Agent 工作、隔离 checkout lane 与 Triage，将提示词转化为可审阅的生产运行。
     - paragraph: 一切皆为 Cordis 插件——技能、工作流、子智能体、Provider、UI 界面乃至 Harness 本身。
     - button "继续"

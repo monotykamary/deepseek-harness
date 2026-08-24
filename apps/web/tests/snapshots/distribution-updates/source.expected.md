@@ -13,15 +13,28 @@
     - text: "Install channel:"
     - strong: source
   - text: Update available
+  - heading "Host readiness" [level=3]
+  - list:
+    - listitem:
+      - strong: "DSH home is writable: {{cwd}}/.dsh-home"
+    - listitem:
+      - strong: Bash is available.
+    - listitem:
+      - strong: macOS Seatbelt sandbox is available.
+    - listitem:
+      - strong: Desktop handoff is available.
   - list:
     - listitem:
       - strong: "@monotykamary/dsh"
-      - code: 0.1.0-rc.11 → 999.0.0
+      - code: 0.1.0 → 999.0.0
     - listitem:
       - strong: dsh-fabric
-      - code: 0.1.0
+      - code: 0.1.4
     - listitem:
       - strong: dsh-fovea
-      - code: 0.2.0
+      - code: 0.4.4
+    - listitem:
+      - strong: dsh-factory
+      - code: 0.1.0
   - button "Check again"
   - button "Update DSH"

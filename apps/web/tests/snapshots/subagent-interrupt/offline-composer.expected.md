@@ -3,35 +3,23 @@
     - button "Ask a research subagent to"
     - text: /
     - 'button "Switch subagent: event-sourcing researcher"': event-sourcing researcher
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Explain event sourcing in one sentence. {{clock}}
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
 - paragraph: partial
 - status: Deep diving...
 - textbox "Parent session offline; sending is unavailable but you can still stop the run" [disabled]
-- button "Commands" [disabled]:
-  - img
+- button "Commands" [disabled]
 - 'button "Access mode, current: Custom" [disabled]': Custom
 - button "Stop generating"
 - button "Send message" [disabled]
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

@@ -1,59 +1,37 @@
 - banner:
   - navigation "Session hierarchy":
     - button "Use the ask_user_question tool to" [disabled]
-  - img
   - text: Standard mode
-  - button "Open files":
-    - img
-    - text: Files
-  - button "Session log":
-    - text: Session log
-    - img
+  - button "Open files": Files
+  - button "Session log"
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
 - text: Use the ask_user_question tool to ask me exactly one question with id "checkpoint", question "Ready to continue?", header "Checkpoint", and options labeled "Yes" and "No". After I answer, reply with one short sentence acknowledging my answer and stop. {{clock}}
-- button "Copy":
-  - img
-- button "Context injection @monotykamary/dsh-system-prompt":
-  - img
-  - img
-  - text: Context injection @monotykamary/dsh-system-prompt
-- button "Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that.":
-  - img
-  - img
-  - text: Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that.
+- button "Copy"
+- button "Context injection @monotykamary/dsh-system-prompt"
+- button "Think The user wants me to use the ask_user_question tool to ask them a specific question with the given parameters. Let me do exactly that."
 - text: Running
-- button "Ask question waiting":
-  - img
-  - img
-  - text: Ask question waiting
+- button "Ask question waiting"
 - status: Deep diving...
 - text: "Interjection: include the word BANANA in your final reply."
-- button "Copy":
-  - img
+- button "Copy"
 - region "Ready to continue?":
   - text: Checkpoint
   - heading "Ready to continue?" [level=2]
-  - button "Collapse the question card" [expanded]:
-    - img
-  - button "Dismiss all questions":
-    - img
+  - button "Collapse the question card" [expanded]
+  - button "Dismiss all questions"
   - radiogroup:
     - radio "Yes": 1 Yes
     - radio "No": 2 No
     - textbox "Type your answer"
-  - button "Previous question" [disabled]:
-    - img
+  - button "Previous question" [disabled]
   - text: 1 / 1
-  - button "Next question" [disabled]:
-    - img
+  - button "Next question" [disabled]
   - status
   - button "Skip this question"
   - button "Submit" [disabled]
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"

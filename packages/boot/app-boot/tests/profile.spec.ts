@@ -217,6 +217,45 @@ describe('loadProfile', () => {
     expect(readProfileManifest('t', custom).dsh?.profile).toEqual({
       template: 'web', bundles: ['custom-bundle'],
     })
+
+    const userHome = tmp()
+    const user = resolveProfileDir('web', userHome)
+    initProfile(user, ['custom-bundle'])
+    expect(loadProfile('t', 'web', anchor, userHome).layers.map(layer => layer.packageName))
+      .toEqual(['custom-bundle'])
+    expect(readProfileManifest('t', user).dsh?.profile).toEqual({ bundles: ['custom-bundle'] })
+  })
+
+  it('transfers newly installation-owned layers out of a managed profile user list', () => {
+    const anchor = stageInstallation({
+      '@monotykamary/dsh-base': { patch: '[]\n' },
+      '@monotykamary/dsh-web-app': { patch: '[]\n' },
+      'dsh-fabric': { patch: '[]\n' },
+      'dsh-fovea': { patch: '[]\n' },
+      'dsh-factory': { patch: '[]\n' },
+      'custom-bundle': { patch: '[]\n' },
+    })
+    const home = tmp()
+    const dir = resolveProfileDir('web', home)
+    initProfile(dir, [])
+    writeProfileManifest(dir, { name: 'dsh-profile-web', dsh: { profile: { template: 'web' } } })
+    expect(loadProfile('t', 'web', anchor, home).layers.map(layer => layer.packageName))
+      .toEqual(PROFILE_TEMPLATES.web)
+
+    writeProfileManifest(dir, {
+      name: 'dsh-profile-web',
+      dsh: { profile: { template: 'web', bundles: ['custom-bundle', 'dsh-factory'] } },
+    })
+
+    const profile = loadProfile('t', 'web', anchor, home)
+
+    expect(profile.layers.map(layer => layer.packageName)).toEqual([
+      '@monotykamary/dsh-base', '@monotykamary/dsh-web-app', 'dsh-fabric', 'dsh-fovea', 'dsh-factory',
+      'custom-bundle',
+    ])
+    expect(readProfileManifest('t', dir).dsh?.profile).toEqual({
+      template: 'web', bundles: ['custom-bundle'],
+    })
   })
 
   it('rejects unknown templates and duplicate resolved layers', () => {

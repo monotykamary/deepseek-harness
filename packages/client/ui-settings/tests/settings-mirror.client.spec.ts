@@ -33,8 +33,11 @@ function deferred<T>() {
 }
 
 /** A static or flippable operator-eligible source for direct mirror construction. */
-function eligibleSource(initial = true): { source: EligibilitySource; set: (value: boolean) => void } {
-  let current = initial
+function eligibleSource(initial: boolean | 'pending' = true): {
+  source: EligibilitySource
+  set: (value: boolean | undefined) => void
+} {
+  let current: boolean | undefined = initial === 'pending' ? undefined : initial
   const listeners = new Set<() => void>()
   return {
     source: {
@@ -127,16 +130,18 @@ describe('SettingsDescribeMirror', () => {
     expect(describeCall).not.toHaveBeenCalled()
   })
 
-  it('a trusted surface flips the mirror on after its handshake and parks it again after', async () => {
+  it('a trusted surface stays pending until its handshake, then reads and retains the view', async () => {
     const describeCall = vi.fn().mockResolvedValue(described([view('theme', 1)]))
-    const { source, set } = eligibleSource(false)
+    const { source, set } = eligibleSource('pending')
     const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, source)
-    expect(mirror.getSnapshot().status).toBe('unavailable')
+    expect(mirror.getSnapshot().status).toBe('loading')
+    await mirror.ensure()
+    expect(describeCall).not.toHaveBeenCalled()
     set(true)
     await vi.waitFor(() => { expect(mirror.getSnapshot().status).toBe('ready') })
     expect(describeCall).toHaveBeenCalledTimes(1)
-    // Leaving the plane pauses reads; the held view keeps serving.
-    set(false)
+    // Generation loss returns to pending; the held view keeps serving.
+    set(undefined)
     expect(mirror.getSnapshot()).toMatchObject({ status: 'ready', error: null })
     await mirror.load()
     expect(describeCall).toHaveBeenCalledTimes(1)
@@ -147,11 +152,11 @@ describe('SettingsDescribeMirror', () => {
     expect(describeCall).toHaveBeenCalledTimes(1)
   })
 
-  it('parks an unanswered mirror on unavailable when the plane is left', async () => {
+  it('parks an unanswered mirror on unavailable when a pending handshake refuses it', async () => {
     const describeCall = vi.fn()
-    const { source, set } = eligibleSource(true)
+    const { source, set } = eligibleSource('pending')
     const mirror = new SettingsDescribeMirror({ settings: { describe: describeCall } } as never, source)
-    expect(mirror.getSnapshot().status).toBe('idle')
+    expect(mirror.getSnapshot().status).toBe('loading')
     set(false)
     expect(mirror.getSnapshot()).toEqual({ status: 'unavailable', view: undefined, error: null })
     await mirror.ensure()

@@ -89,12 +89,12 @@ export interface ConnectionHandle {
   readonly isLoopback: boolean
   /**
    * Whether the current page authority sits on the deployment's
-   * operator-eligible plane. Starts at the boot loopback fact and follows
-   * each connection handshake: a trusted surface (or the operator tier) flips
-   * it on once the host reports the per-request verdict, and a generation
-   * loss retracts it with the description.
+   * operator-eligible plane. `undefined` is the non-loopback pre-handshake
+   * state; a trusted surface (or the operator tier) resolves it true, an
+   * untrusted surface resolves it false, and generation loss returns it to
+   * pending with the description.
    */
-  readonly isOperatorEligible: { getSnapshot(): boolean; subscribe(listener: () => void): () => void }
+  readonly isOperatorEligible: { getSnapshot(): boolean | undefined; subscribe(listener: () => void): () => void }
   /** Generation-scoped Host facts, including the account home and native path-open capability. */
   readonly hostDescription: HostDescriptionSource
   /** Generic logical RPC channels over the same Connection transport. */
@@ -140,7 +140,7 @@ export function apply(ctx: Context): void {
     api,
     isLoopback: loopback,
     isOperatorEligible: {
-      getSnapshot: () => loopback || (description !== undefined && description.operatorEligible === true),
+      getSnapshot: () => loopback ? true : description?.operatorEligible,
       subscribe: (listener) => {
         descriptionListeners.add(listener)
         return () => { descriptionListeners.delete(listener) }

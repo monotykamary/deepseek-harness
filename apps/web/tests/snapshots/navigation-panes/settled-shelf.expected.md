@@ -7,9 +7,7 @@
 
 - tree "Sessions":
   - button "Settled" [expanded]
-  - treeitem "{{workspace}} {{duration}} Session actions for {{workspace}} {{workspace}}":
-    - img
+  - treeitem "{{workspace}} {{duration}} Un-settle session {{workspace}}":
     - text: {{workspace}} {{duration}}
-    - button "Session actions for {{workspace}}":
-      - img
+    - button "Un-settle session"
     - text: {{workspace}}

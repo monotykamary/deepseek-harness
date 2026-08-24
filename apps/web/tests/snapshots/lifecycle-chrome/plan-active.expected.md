@@ -1,63 +1,34 @@
-- button "Collapse sidebar":
-  - img
-- button "New session":
-  - img
-  - text: New Session
+- button "New session"
+- button "Collapse sidebar"
+- button "New session": New Session
 - searchbox "Search sessions"
-- button "Filter sessions by workspace":
-  - img
-  - text: All Folders
-- button "Add workspace":
-  - img
+- button "Filter sessions by workspace": All Folders
+- button "Add workspace"
 - tree "Sessions":
-  - treeitem "workspace Workspace actions for workspace New session in workspace" [expanded]:
-    - img
+  - treeitem "workspace New session in workspace" [expanded]:
     - text: workspace
-    - button "Workspace actions for workspace":
-      - img
-    - button "New session in workspace":
-      - img
-- button "Settings":
-  - img
-  - text: Settings
+    - button "New session in workspace"
+- button "Settings"
 - banner:
   - button "Toggle bottom panel"
-  - button "Open right panel":
-    - img
+  - button "Open right panel"
 - text: Into the Unknown Preview
-- button "Choose workspace":
-  - img
-  - text: workspace
-  - img
-- button "Standard mode":
-  - img
-  - text: Standard mode
-  - img
+- button "Choose workspace": workspace
+- button "Standard mode"
 - textbox "Describe what you want to build"
-- button "Commands":
-  - img
+- button "Commands"
 - 'button "Access mode, current: Workspace Write"': Workspace Write
 - button "Plan mode on, press to turn off": Plan
-- button "Select model, current DeepSeek-V4-Flash":
-  - text: DeepSeek-V4-Flash
-  - img
+- button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
 - textbox "Terminal input"
-- button "Show terminal actions":
-  - img
+- button "Show terminal actions"
 - tablist "Workbench"
-- button "Close workbench":
-  - img
+- button "Close workbench"
 - tabpanel:
   - heading "Open a surface" [level=2]
   - paragraph: Choose what to show in the right panel.
   - button "Inspect": Inspect Inspect the selected tool call arguments and result
-  - button "Changes":
-    - img
-    - text: Changes Review loaded file changes in this Session
-  - button "Files":
-    - img
-    - text: Files Browse and edit workspace files
-  - button "Terminal":
-    - img
-    - text: Terminal Open an interactive persistent terminal
+  - button "Changes": Changes Review loaded file changes in this Session
+  - button "Files": Files Browse and edit workspace files
+  - button "Terminal": Terminal Open an interactive persistent terminal

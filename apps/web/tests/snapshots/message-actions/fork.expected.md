@@ -1,28 +1,19 @@
 - tree "Sessions":
   - treeitem "Ungrouped New session in Ungrouped" [expanded]:
-    - img
     - text: Ungrouped
-    - button "New session in Ungrouped":
-      - img
-  - treeitem "Ungrouped now Session actions for Use the read tool twice (2) Use the read tool twice (2) standard" [selected]:
-    - img
+    - button "New session in Ungrouped"
+  - treeitem "Ungrouped now Snooze session Settle session Use the read tool twice (2)" [selected]:
     - text: Ungrouped now
-    - button "Session actions for Use the read tool twice (2)":
-      - img
+    - button "Snooze session"
+    - button "Settle session": Settle
     - text: Use the read tool twice (2)
-    - img
-    - text: standard
-  - treeitem "Ungrouped now Session actions for Use the read tool twice (1) Use the read tool twice (1) standard":
-    - img
+  - treeitem "Ungrouped now Snooze session Settle session Use the read tool twice (1)":
     - text: Ungrouped now
-    - button "Session actions for Use the read tool twice (1)":
-      - img
+    - button "Snooze session"
+    - button "Settle session": Settle
     - text: Use the read tool twice (1)
-    - img
-    - text: standard
-  - treeitem "Ungrouped 1min Session actions for Use the read tool twice Use the read tool twice":
-    - img
+  - treeitem "Ungrouped 1min Snooze session Settle session Use the read tool twice":
     - text: Ungrouped 1min
-    - button "Session actions for Use the read tool twice":
-      - img
+    - button "Snooze session"
+    - button "Settle session": Settle
     - text: Use the read tool twice

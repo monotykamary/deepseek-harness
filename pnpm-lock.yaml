@@ -318,8 +318,8 @@ importers:
         specifier: 0.1.0
         version: 0.1.0(c12feb36f8c0a87a83fb41ef9728accb)
       dsh-fovea:
-        specifier: 0.4.3
-        version: 0.4.3(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-commands@packages+interaction+commands)(@monotykamary/dsh-fs@packages+fs+fs)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-spill@packages+spill+spill)(@monotykamary/dsh-subprocess@packages+subprocess+subprocess)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tools@packages+core+tools)
+        specifier: 0.4.4
+        version: 0.4.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-commands@packages+interaction+commands)(@monotykamary/dsh-fs@packages+fs+fs)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-spill@packages+spill+spill)(@monotykamary/dsh-subprocess@packages+subprocess+subprocess)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tools@packages+core+tools)
       js-yaml:
         specifier: ^4.2.0
         version: 4.2.0
@@ -13551,8 +13551,8 @@ packages:
     resolution: {integrity: sha512-wNzau0dS8lDDzpqbsSBe4KlKKO+eQvSGw6jNF/csqWv8+SlYLnKaF6qZCZpchMfiL9Xth+FelZnJ6pidk4+RDg==}
     engines: {node: ^22.19.0 || >=24.0.0}
 
-  dsh-fovea@0.4.3:
-    resolution: {integrity: sha512-CMJaGJNoGjASIn+/sv+AhoYwCKAcUGZNb4wTRUd8tOpc/Z1YpCELkjmKKH+PZjyvT4s1Eb7kdrqP+dbYEhBXRA==}
+  dsh-fovea@0.4.4:
+    resolution: {integrity: sha512-bL2px8Ac+78YqVAxHd5WkqQhdCbkRDY7EMMZ0idias0RdxgwRUp+6QWGaqGuf5RED2jsIi1S0DWqgFZULznX4A==}
     engines: {node: ^22.19.0 || >=24.0.0}
     peerDependencies:
       '@monotykamary/cordis': ^4.0.1
@@ -19491,7 +19491,7 @@ snapshots:
       - '@monotykamary/dsh-worktree'
       - '@monotykamary/schemastery'
 
-  dsh-fovea@0.4.3(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-commands@packages+interaction+commands)(@monotykamary/dsh-fs@packages+fs+fs)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-spill@packages+spill+spill)(@monotykamary/dsh-subprocess@packages+subprocess+subprocess)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tools@packages+core+tools):
+  dsh-fovea@0.4.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-commands@packages+interaction+commands)(@monotykamary/dsh-fs@packages+fs+fs)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-spill@packages+spill+spill)(@monotykamary/dsh-subprocess@packages+subprocess+subprocess)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tools@packages+core+tools):
     dependencies:
       '@ast-grep/cli': 0.45.1
       '@monotykamary/cordis': link:vendor/cordis

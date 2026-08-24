@@ -94,7 +94,7 @@ minimumReleaseAgeExclude:
   - dsh-fabric-schema@0.1.4
   - dsh-fabric-system-prompt@0.1.4
   - dsh-fabric@0.1.4
-  - dsh-fovea@0.4.3
+  - dsh-fovea@0.4.4
   - dsh-factory-client-ui@0.1.0
   - dsh-factory-domain@0.1.0
   - dsh-factory-protocol@0.1.0

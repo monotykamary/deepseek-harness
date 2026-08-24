@@ -10,9 +10,9 @@ Status: implemented
 
 ## 决策
 
-/api 载体现在为每个 `host.describe` 应答标注该请求的运营者可达性判定：`operatorEligible`，用特权门禁完全相同的准入表达式计算（属主为 null 且（运营者 Bearer 令牌或可信表面））。裸载体与进程内载体保持该字段缺省。`ctx.connection` 暴露 `isOperatorEligible`，一个可观察源：从启动时的回环事实出发，跟随握手——带标注的 describe 到达时可信表面将其翻转为真，generation 失效时随描述一起撤回。
+/api 载体为每个 `host.describe` 应答标注该请求的运营者可达性判定：`operatorEligible`，用特权门禁完全相同的准入表达式计算（属主为 null 且（运营者 Bearer 令牌或可信表面））。裸载体与进程内载体保持该字段缺省。`ctx.connection.isOperatorEligible` 是三态值：loopback 从启动起就是 `true`；非 loopback 页面在握手把它解析成标注的 `true` 或 `false` 之前为 `undefined`；generation 失效时随描述一起回到 `undefined`。待定与拒绝分开，因此首屏消费方不会在可信表面的判定到达前把它误作终态不可用。
 
-`dsh-client-ui-settings` 据此构建 describe 镜像与所有绑定 scope，取代构造期的 host/memory 二选一：只有判定成立时读取才跨线路；不受信任的页面把镜像停在 `unavailable`（即那句友好的「settings are unavailable in this browser」），写入保持惰性；可信表面在首次握手后把镜像翻转开启，并随之发起一次读取。设置文档打开操作与 deliverables 原生打开门禁同样跟随该平面，使可信表面获得 2026-08-18 决策承诺的完整特权面 UI。
+`dsh-client-ui-settings` 据此构建 describe 镜像与所有绑定 scope，取代构造期的 host/memory 二选一。非 loopback 判定待定时，尚无应答的镜像保持 `loading` 且不发送特权读取；`true` 启动一次读取，明确的 `false` 则把镜像停在 `unavailable`（即友好的「settings are unavailable in this browser」），写入保持惰性。已有视图在 generation 失效时继续服务。待定状态也让 settings 支撑的 onboarding 保持未决，因此可信 tailnet 或 portless 页面会先读取持久化确认，再决定是否阻塞应用。设置文档打开操作与 deliverables 原生打开门禁同样跟随该平面。
 
 ## 备选方案
 
