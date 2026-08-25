@@ -284,6 +284,9 @@ export class TeamRoster {
         request: {
           prompt: request.prompt,
           parent: root,
+          ...request.model === undefined
+            ? {}
+            : { agentOptions: { model: request.model } },
         },
         signal,
       })

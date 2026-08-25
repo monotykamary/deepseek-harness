@@ -142,6 +142,8 @@ export interface SpawnTeammateRequest {
   readonly prompt: ContentBlock[]
   readonly context: 'fresh' | 'fork'
   readonly provider: string
+  /** Model id pinned on the child's agent options; omit to inherit the Lead's model. */
+  readonly model?: string
   readonly signal: AbortSignal
 }
 

@@ -1689,4 +1689,20 @@ describe('Team mailbox and waiting', () => {
       phase: 'failed', error: 'settled elsewhere',
     })
   })
+
+  it('pins an explicit model on the spawned teammate agent options', async () => {
+    const { ctx, lead } = await setup(['hang'])
+    const spawned = await ctx.agentTeams.spawnTeammate(lead, {
+      name: 'reviewer',
+      description: 'reviewer responsibility',
+      prompt: content('reviewer initial'),
+      context: 'fresh',
+      provider: 'spawn',
+      model: 'mock-special',
+      signal: SIGNAL,
+    })
+    expect(spawned.member.name).toBe('reviewer')
+    const child = await waitRunning(ctx, spawned.member.id)
+    expect(child.options.model).toBe('mock-special')
+  })
 })

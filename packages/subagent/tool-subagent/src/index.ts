@@ -324,6 +324,10 @@ export function apply(ctx: Context, config: Config): void {
           required: true,
           description: wording.promptDescription,
         },
+        model: {
+          type: 'string',
+          description: 'Model id for the subagent (provider adapter id); omit to inherit this session model or the configured agentOptions.',
+        },
         ...backgroundEnabled ? {
           run_in_background: {
             type: 'boolean' as const,
@@ -383,11 +387,17 @@ export function apply(ctx: Context, config: Config): void {
         }
 
         const maxDepth = typeof config.maxDepth === 'number' ? config.maxDepth : undefined
+        const modelOption = typeof args.model === 'string' && args.model.trim() !== ''
+          ? args.model.trim()
+          : undefined
+        const agentOptions = config.agentOptions !== undefined || modelOption !== undefined
+          ? { ...config.agentOptions, ...modelOption !== undefined ? { model: modelOption } : {} }
+          : undefined
         const request = {
           label: args.description,
           prompt: [{ type: 'text', text: args.prompt }] as ContentBlock[],
           parent,
-          ...config.agentOptions !== undefined ? { agentOptions: config.agentOptions } : {},
+          ...agentOptions !== undefined ? { agentOptions } : {},
           ...config.persona !== undefined ? { persona: config.persona } : {},
           ...config.toolFilter !== undefined ? { toolFilter: config.toolFilter } : {},
           ...maxDepth !== undefined ? { maxDepth } : {},

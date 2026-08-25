@@ -182,6 +182,10 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
           enum: ['fresh', 'fork'],
           description: 'fresh starts without Lead history; fork inherits completed Lead turns. Defaults to fresh.',
         },
+        model: {
+          type: 'string',
+          description: 'Model id for the teammate (provider adapter id); omit to inherit the Lead model.',
+        },
       },
       output: jsonOutput(SPAWN_VALUE_SCHEMA),
       async execute(args, exec) {
@@ -193,6 +197,9 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
           prompt: [{ type: 'text', text: args.prompt }],
           context,
           provider: context === 'fork' ? config.forkProvider : config.freshProvider,
+          ...typeof args.model === 'string' && args.model.trim() !== ''
+            ? { model: args.model.trim() }
+            : {},
           signal: exec.signal,
         })
       },

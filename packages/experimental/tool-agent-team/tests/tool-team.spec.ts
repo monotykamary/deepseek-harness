@@ -146,6 +146,20 @@ describe('dsh-tool-team', () => {
     await vi.waitFor(() => { expect(ctx.agents.get(childId)).toBeUndefined() }, { timeout: 5_000 })
   })
 
+  it('passes the spawn model through to the teammate agent options', async () => {
+    const { ctx, lead } = await setup(['hang'])
+    const spawned = await execute(ctx, lead, 'spawn_teammate', {
+      name: 'model-worker',
+      description: 'run on another model',
+      prompt: 'stay',
+      model: 'mock-special',
+    })
+    expect(spawned.isError).toBe(false)
+    const child = await waitRunning(ctx, spawnedChildId(spawned))
+    expect(child.options.model).toBe('mock-special')
+    await execute(ctx, lead, 'interrupt_agent', { target: 'model-worker' })
+  })
+
   it('returns actionable no-progress output and renders structured wait cancellation', async () => {
     const inactiveSetup = await setup([textResponse('worker done')])
     const inactiveSpawn = await execute(inactiveSetup.ctx, inactiveSetup.lead, 'spawn_teammate', {
