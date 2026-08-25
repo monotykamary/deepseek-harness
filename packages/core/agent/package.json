@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-agent",
   "description": "Agent interface, registry, initiator scope, and event vocabulary for the DeepSeek Harness",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publishConfig": {
     "access": "public"
   },

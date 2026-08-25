@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-llm-pi-ai",
   "description": "pi-ai-backed DeepSeek adapter for the DeepSeek Harness LLM seam (design-verification twin of dsh-llm-deepseek)",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publishConfig": {
     "access": "public"
   },

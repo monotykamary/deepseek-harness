@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-terminal-web",
   "description": "Trusted full-duplex WebSocket consumer for Agent-owned persistent terminals",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publishConfig": {
     "access": "public"
   },

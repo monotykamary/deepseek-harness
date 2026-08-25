@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-plan",
   "description": "Plan-mode composer control: the conversation.input.plan seat over the plan projection and the /plan command channel",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publishConfig": {
     "access": "public"
   },
