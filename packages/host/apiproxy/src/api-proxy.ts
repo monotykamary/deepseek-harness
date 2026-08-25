@@ -1117,6 +1117,31 @@ function changedWorkspaceView(workspaceId: string, value: unknown): WorkspaceVie
  * @param defaults - host routing and project-directory defaults.
  * @returns the ApiProxy implementation.
  */
+/** A model switch requested in provider/model form before per-adapter resolution. */
+export interface SessionModelTarget {
+  provider: string
+  model: string
+  reasoningEffort?: string
+}
+
+/**
+ * In-process authority over one session agent's live model selection, exposed
+ * as ctx.sessionModels for server plugins. Implementations match the web
+ * session.models/session.selectModel RPC semantics exactly.
+ */
+export interface SessionModels {
+  /** The selection prompt assembly will snapshot for the agent's next request. */
+  current(agent: Agent): ModelSelection
+  /** The served catalog grouped by provider, plus per-provider failures. */
+  catalog(): Promise<{ groups: ModelProviderGroup[]; failures: ModelCatalogFailure[] }>
+  /**
+   * Resolved-apply-and-persist a selection for the agent, serialized against
+   * image admission for the same agent. Rejects when no adapter resolves the
+   * requested pair.
+   */
+  select(agent: Agent, target: SessionModelTarget): Promise<ModelSelection>
+}
+
 export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiProxy {
   const sessionExportCompressionLevel = defaults.sessionExportCompressionLevel
     ?? DEFAULT_SESSION_LOG_COMPRESSION_LEVEL
@@ -1200,6 +1225,49 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     if (agent === undefined) throw new Error('api-proxy: agent setup has no scoped agent')
     selectionFor(agent)
   }
+
+  /**
+   * In-process model-selection authority, shared with server plugins through
+   * ctx.sessionModels. The web RPC handlers delegate here, so plugin requests
+   * reuse the exact resolve/apply/persist semantics (including serialization
+   * against image admission) instead of forking them.
+   */
+  const sessionModels: SessionModels = {
+    current(agent) {
+      return { ...selectionFor(agent).current }
+    },
+    catalog() {
+      return buildModelCatalog(ctx)
+    },
+    async select(agent, target) {
+      return serializeImageAdmission(agent, async () => {
+        const resolved = await ctx.llm.resolveCallConfig({
+          provider: target.provider,
+          model: target.model,
+          ...target.reasoningEffort === undefined
+            ? {}
+            : { reasoningEffort: ReasoningEffortId(target.reasoningEffort) },
+        })
+        const selected: ModelSelection = {
+          provider: resolved.provider,
+          model: resolved.model,
+          ...resolved.reasoningEffort === undefined
+            ? {}
+            : { reasoningEffort: resolved.reasoningEffort },
+        }
+        selectionFor(agent).current = selected
+        try {
+          await defaults.saveDefaultModelSelection?.(selected)
+        } catch (error: unknown) {
+          ctx.logger.warn(
+            `api-proxy: the model switch applies to this session but was not saved as the default: ${String(error)}`,
+          )
+        }
+        return { ...selected }
+      })
+    },
+  }
+  ctx.provide('sessionModels', sessionModels)
 
   /**
    * Reject an attempt to run an existing session under a different preset.
@@ -2308,49 +2376,30 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const { sessionId } = request.payload
         const found = await agentFor(sessionId)
         if ('error' in found) return err(request, found.error)
-        const current = selectionFor(found.agent).current
-        const { groups, failures } = await buildModelCatalog(ctx)
+        const current = sessionModels.current(found.agent)
+        const { groups, failures } = await sessionModels.catalog()
         const routable = routeServed(current.provider)
-        return ok(request, { current: { ...current }, routable, groups, failures })
+        return ok(request, { current, routable, groups, failures })
       },
 
       async selectModel(request) {
         const { sessionId, provider, model, reasoningEffort } = request.payload
         const found = await agentFor(sessionId)
         if ('error' in found) return err(request, found.error)
-        return serializeImageAdmission(found.agent, async () => {
-          try {
-            const resolved = await ctx.llm.resolveCallConfig({
-              provider,
-              model,
-              ...reasoningEffort === undefined
-                ? {}
-                : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
-            })
-            const selected: ModelSelection = {
-              provider: resolved.provider,
-              model: resolved.model,
-              ...resolved.reasoningEffort === undefined
-                ? {}
-                : { reasoningEffort: resolved.reasoningEffort },
-            }
-            selectionFor(found.agent).current = selected
-            try {
-              await defaults.saveDefaultModelSelection?.(selected)
-            } catch (error: unknown) {
-              ctx.logger.warn(
-                `api-proxy: the model switch applies to this session but was not saved as the default: ${String(error)}`,
-              )
-            }
-            return ok(request, { selected: { ...selected } })
-          } catch (error: unknown) {
-            return err(request, {
-              code: 'model-unavailable',
-              message: error instanceof Error ? error.message : String(error),
-              details: { provider, model },
-            })
-          }
-        })
+        try {
+          const selected = await sessionModels.select(found.agent, {
+            provider,
+            model,
+            ...reasoningEffort === undefined ? {} : { reasoningEffort },
+          })
+          return ok(request, { selected })
+        } catch (error: unknown) {
+          return err(request, {
+            code: 'model-unavailable',
+            message: error instanceof Error ? error.message : String(error),
+            details: { provider, model },
+          })
+        }
       },
 
       async rename(request) {

@@ -17,6 +17,7 @@ import z from '@monotykamary/schemastery'
 import type {} from '@monotykamary/dsh-agent-default-model'
 import type { ApiProxy } from './api/index.ts'
 import { createApiProxy, DEFAULT_COLD_BLANK_PROBE_MAX_BYTES } from './api-proxy.ts'
+import type { SessionModels } from './api-proxy.ts'
 import {
   DEFAULT_SESSION_LOG_COMPRESSION_LEVEL,
   type SessionLogCompressionLevel,
@@ -28,12 +29,18 @@ export { toFetchHandler } from './fetch/handler.ts'
 export { AbstractApiClient, InProcessApiClient } from './fetch/client.ts'
 export type { IApiClient } from './fetch/client.ts'
 export { createApiProxy } from './api-proxy.ts'
-export type { ApiProxyDefaults } from './api-proxy.ts'
+export type { ApiProxyDefaults, SessionModels, SessionModelTarget } from './api-proxy.ts'
 
 declare module '@monotykamary/cordis' {
   interface Context {
     /** The host-side ApiProxy implementation (the transport-agnostic gateway face). */
     apiProxy: ApiProxy
+    /**
+     * In-process per-session model selection authority provided by the
+     * ApiProxy gateway. Server plugins use it to read, list, and switch a
+     * session's live model with the exact web-RPC semantics.
+     */
+    sessionModels: SessionModels
   }
 }
 

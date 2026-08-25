@@ -374,6 +374,37 @@ describe('Web session model selection', () => {
     await ctx.fiber.dispose()
   })
 
+  it('exposes the selection authority to server plugins through ctx.sessionModels', async () => {
+    const { ctx, agent, sessionId } = await harness()
+    const api = createApiProxy(ctx, {
+      defaultModelSelection: () => ({ provider: 'deepseek-official', model: 'deepseek-chat' }),
+      cwd: '/tmp',
+    })
+
+    expect(ctx.sessionModels.current(agent)).toEqual({ provider: 'deepseek-official', model: 'deepseek-chat' })
+    const catalog = await ctx.sessionModels.catalog()
+    expect(catalog.groups[0]).toMatchObject({ id: 'deepseek-official' })
+
+    const selected = await ctx.sessionModels.select(agent, {
+      provider: 'deepseek-official',
+      model: 'deepseek-reasoner',
+    })
+    expect(selected).toEqual({
+      provider: 'deepseek-official',
+      model: 'deepseek-reasoner',
+      reasoningEffort: 'high',
+    })
+    // The plugin-driven switch and the web RPC read one selection.
+    expect(expectValue(await api.sessions.models(request({ sessionId }))).current)
+      .toEqual({ provider: 'deepseek-official', model: 'deepseek-reasoner', reasoningEffort: 'high' })
+
+    await expect(ctx.sessionModels.select(agent, { provider: 'missing', model: 'model' }))
+      .rejects.toThrow('no adapter registered')
+    expect(ctx.sessionModels.current(agent))
+      .toEqual({ provider: 'deepseek-official', model: 'deepseek-reasoner', reasoningEffort: 'high' })
+    await ctx.fiber.dispose()
+  })
+
   it('reads the Agent default live for a session whose log names no selection', async () => {
     const { ctx, sessionId } = await harness()
     let stored = { provider: 'deepseek-official', model: 'deepseek-chat' }
