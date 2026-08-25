@@ -1111,12 +1111,6 @@ function changedWorkspaceView(workspaceId: string, value: unknown): WorkspaceVie
   }
 }
 
-/**
- * Implement ApiProxy over a composed host context.
- * @param ctx - a context with the Host spine and Workspace registry mounted.
- * @param defaults - host routing and project-directory defaults.
- * @returns the ApiProxy implementation.
- */
 /** A model switch requested in provider/model form before per-adapter resolution. */
 export interface SessionModelTarget {
   provider: string
@@ -1130,18 +1124,34 @@ export interface SessionModelTarget {
  * session.models/session.selectModel RPC semantics exactly.
  */
 export interface SessionModels {
-  /** The selection prompt assembly will snapshot for the agent's next request. */
+  /**
+   * The selection prompt assembly will snapshot for the agent's next request.
+   * @param agent - agent whose current selection is requested.
+   * @returns the agent's current model selection.
+   */
   current(agent: Agent): ModelSelection
-  /** The served catalog grouped by provider, plus per-provider failures. */
+  /**
+   * The served catalog grouped by provider, plus per-provider failures.
+   * @returns the available model groups and provider failures.
+   */
   catalog(): Promise<{ groups: ModelProviderGroup[]; failures: ModelCatalogFailure[] }>
   /**
    * Resolved-apply-and-persist a selection for the agent, serialized against
    * image admission for the same agent. Rejects when no adapter resolves the
    * requested pair.
+   * @param agent - agent whose selection will change.
+   * @param target - provider and model selection to resolve and apply.
+   * @returns the persisted model selection.
    */
   select(agent: Agent, target: SessionModelTarget): Promise<ModelSelection>
 }
 
+/**
+ * Implement ApiProxy over a composed host context.
+ * @param ctx - a context with the Host spine and Workspace registry mounted.
+ * @param defaults - host routing and project-directory defaults.
+ * @returns the ApiProxy implementation.
+ */
 export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiProxy {
   const sessionExportCompressionLevel = defaults.sessionExportCompressionLevel
     ?? DEFAULT_SESSION_LOG_COMPRESSION_LEVEL

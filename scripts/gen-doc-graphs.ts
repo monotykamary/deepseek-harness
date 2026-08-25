@@ -582,6 +582,13 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'The transport-agnostic host gateway face: it dispatches browser API calls, and each open host stream subscribes to the events it forwards rather than being pushed to through a broadcast verb.',
   },
   {
+    key: 'sessionModels',
+    pkg: 'apiproxy',
+    title: 'Live session model selection',
+    mode: 'core',
+    note: 'Shares one resolve, apply, and persistence path between in-process server plugins and the session model RPC methods.',
+  },
+  {
     key: 'dynamicCordisRunner',
     pkg: 'cordis-host-runner',
     title: 'Dynamic Cordis package host runner',

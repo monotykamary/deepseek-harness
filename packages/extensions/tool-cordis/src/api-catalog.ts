@@ -1177,6 +1177,31 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'sessionModels',
+    summary: 'In-process authority over one session agent\'s live model selection, exposed as ctx.sessionModels for server plugins.',
+    description: 'In-process authority over one session agent\'s live model selection, exposed as ctx.sessionModels for server plugins. Implementations match the web session.models/session.selectModel RPC semantics exactly.',
+    methods: [
+      {
+        signature: 'current(agent: Agent): ModelSelection',
+        description: 'The selection prompt assembly will snapshot for the agent\'s next request.',
+        parameters: [{ name: 'agent', description: 'agent whose current selection is requested.' }],
+        returns: 'the agent\'s current model selection.',
+      },
+      {
+        signature: 'catalog(): Promise<{ groups: ModelProviderGroup[]; failures: ModelCatalogFailure[] }>',
+        description: 'The served catalog grouped by provider, plus per-provider failures.',
+        parameters: [],
+        returns: 'the available model groups and provider failures.',
+      },
+      {
+        signature: 'select(agent: Agent, target: SessionModelTarget): Promise<ModelSelection>',
+        description: 'Resolved-apply-and-persist a selection for the agent, serialized against image admission for the same agent. Rejects when no adapter resolves the requested pair.',
+        parameters: [{ name: 'agent', description: 'agent whose selection will change.' }, { name: 'target', description: 'provider and model selection to resolve and apply.' }],
+        returns: 'the persisted model selection.',
+      },
+    ],
+  },
+  {
     key: 'sessionPersistence',
     summary: 'Durable append-only session storage.',
     description: 'Durable append-only session storage. Implementations preserve contiguous, losslessly JSON-serializable events; append resolves only after durability, and load balances a complete interrupted tail without rewriting committed events.',
@@ -3867,6 +3892,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MessageSourceMap {\n    user: {\n        kind: \'user\';\n    };\n    plugin: {\n        kind: \'plugin\';\n        plugin: string;\n    } & ContextFormed;\n    model: ModelMessageSource;\n    tool: ToolMessageSource;\n}',
   },
   {
+    name: 'ModelCatalogFailure',
+    declaration: 'export interface ModelCatalogFailure {\n    id: string;\n    name: string;\n    message: string;\n}',
+  },
+  {
+    name: 'ModelCatalogModel',
+    declaration: 'export interface ModelCatalogModel {\n    id: string;\n    name: string;\n    description?: string;\n    reasoning?: ModelReasoning;\n}',
+  },
+  {
     name: 'ModelMessageSource',
     declaration: 'export interface ModelMessageSource extends AssistantProvenance {\n    kind: \'model\';\n}',
   },
@@ -3877,6 +3910,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ModelModalityMap',
     declaration: 'export interface ModelModalityMap {\n    text: \'text\';\n    image: \'image\';\n}',
+  },
+  {
+    name: 'ModelProviderGroup',
+    declaration: 'export interface ModelProviderGroup {\n    id: string;\n    name: string;\n    models: ModelCatalogModel[];\n}',
+  },
+  {
+    name: 'ModelReasoning',
+    declaration: 'export interface ModelReasoning {\n    efforts: ModelReasoningEffort[];\n    defaultEffort?: string;\n}',
+  },
+  {
+    name: 'ModelReasoningEffort',
+    declaration: 'export interface ModelReasoningEffort {\n    id: string;\n    name: string;\n    description?: string;\n}',
   },
   {
     name: 'ObjectJsonSchema',
@@ -4263,6 +4308,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SessionLogSnapshot {\n    session: SessionHeader;\n    events: SessionEvent[];\n}',
   },
   {
+    name: 'SessionModelTarget',
+    declaration: 'export interface SessionModelTarget {\n    provider: string;\n    model: string;\n    reasoningEffort?: string;\n}',
+  },
+  {
     name: 'SessionPersistenceRevision',
     declaration: 'export type SessionPersistenceRevision = Branded<\'SessionPersistenceRevision\'>;',
   },
@@ -4512,7 +4561,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SpawnTeammateRequest',
-    declaration: 'export interface SpawnTeammateRequest {\n    readonly name: string;\n    readonly description: string;\n    readonly prompt: ContentBlock[];\n    readonly context: \'fresh\' | \'fork\';\n    readonly provider: string;\n    readonly signal: AbortSignal;\n}',
+    declaration: 'export interface SpawnTeammateRequest {\n    readonly name: string;\n    readonly description: string;\n    readonly prompt: ContentBlock[];\n    readonly context: \'fresh\' | \'fork\';\n    readonly provider: string;\n    readonly model?: string;\n    readonly signal: AbortSignal;\n}',
   },
   {
     name: 'SpawnTeammateResult',

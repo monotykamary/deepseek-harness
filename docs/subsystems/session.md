@@ -659,6 +659,41 @@ The backends that consume this contract are on [persistence.md](persistence.md).
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
+<a id="ctxsessionmodels--sessionmodels"></a>
+
+### `ctx.sessionModels` — `SessionModels`
+
+In-process authority over one session agent's live model selection, exposed as ctx.sessionModels for server plugins. Implementations match the web session.models/session.selectModel RPC semantics exactly.
+
+```ts cordis-catalog
+/**
+ * The selection prompt assembly will snapshot for the agent's next request.
+ * @param agent - agent whose current selection is requested.
+ * @returns the agent's current model selection.
+ */
+current(agent: Agent): ModelSelection
+
+/**
+ * The served catalog grouped by provider, plus per-provider failures.
+ * @returns the available model groups and provider failures.
+ */
+catalog(): Promise<{ groups: ModelProviderGroup[]; failures: ModelCatalogFailure[] }>
+
+/**
+ * Resolved-apply-and-persist a selection for the agent, serialized against
+ * image admission for the same agent. Rejects when no adapter resolves the
+ * requested pair.
+ * @param agent - agent whose selection will change.
+ * @param target - provider and model selection to resolve and apply.
+ * @returns the persisted model selection.
+ */
+select(agent: Agent, target: SessionModelTarget): Promise<ModelSelection>
+```
+
+Types: [Agent](core.md) · [ModelSelection](core.md)
+
+Source: [`packages/host/apiproxy/src/api-proxy.ts`](../../packages/host/apiproxy/src/api-proxy.ts)
+
 <a id="ctxsessions--sessionstore"></a>
 
 ### `ctx.sessions` — `SessionStore`

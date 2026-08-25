@@ -1518,6 +1518,10 @@ Delegate a self-contained task to a subagent (a separate agent that works in its
       "type": "string",
       "description": "The complete, self-contained task for the subagent. It does not share this conversation's context, so include everything it needs."
     },
+    "model": {
+      "type": "string",
+      "description": "Model id for the subagent (provider adapter id); omit to inherit this session model or the configured agentOptions."
+    },
     "run_in_background": {
       "type": "boolean",
       "description": "Whether to run as a background job and return its id. Defaults to false; collect with job_output or stop with job_kill."
@@ -1826,6 +1830,10 @@ Create one named, durable teammate. Only the Team Lead may call this tool.
         "fresh",
         "fork"
       ]
+    },
+    "model": {
+      "type": "string",
+      "description": "Model id for the teammate (provider adapter id); omit to inherit the Lead model."
     }
   },
   "required": [

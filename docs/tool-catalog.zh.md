@@ -1524,6 +1524,10 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
       "type": "string",
       "description": "The complete, self-contained task for the subagent. It does not share this conversation's context, so include everything it needs."
     },
+    "model": {
+      "type": "string",
+      "description": "Model id for the subagent (provider adapter id); omit to inherit this session model or the configured agentOptions."
+    },
     "run_in_background": {
       "type": "boolean",
       "description": "Whether to run as a background job and return its id. Defaults to false; collect with job_output or stop with job_kill."
@@ -1832,6 +1836,10 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
         "fresh",
         "fork"
       ]
+    },
+    "model": {
+      "type": "string",
+      "description": "Model id for the teammate (provider adapter id); omit to inherit the Lead model."
     }
   },
   "required": [

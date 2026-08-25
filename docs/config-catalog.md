@@ -863,7 +863,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src/index.ts)
+Source: [`packages/host/apiproxy/src/index.ts:48`](../packages/host/apiproxy/src/index.ts)
 
 <a id="monotykamarydsh-host-directory-picker-browse"></a>
 
