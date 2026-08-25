@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-session-title",
   "description": "Automatic LLM session-title preference: the General settings toggle over the session-title-llm settings section",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-conversation",
   "description": "Conversation domain: skeleton, ordered chat flow, composer, and workbench inspector contribution",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publishConfig": {
     "access": "public"
   },
