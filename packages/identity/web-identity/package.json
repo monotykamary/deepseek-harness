@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-web-identity",
   "description": "Web identity authority for dsh web: header and passkey providers that resolve a per-request session owner, gate the API plane, and partition sessions by user",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publishConfig": {
     "access": "public"
   },
