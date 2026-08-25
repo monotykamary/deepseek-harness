@@ -25,11 +25,10 @@ import { validateTarballPayload } from '../publication-payload.ts'
 const INSTALL_SECTIONS = ['dependencies', 'optionalDependencies'] as const
 
 /**
- * Peer declarations also order the publication, but they cannot constrain it.
- * npm never installs a peer on the package's behalf — an unmet peer is a
- * warning, not a resolution failure — and sibling packages legitimately declare
- * each other as peers, which makes these edges the ones that close cycles. They
- * order what they can and are dropped where they would deadlock.
+ * Peer declarations also order publication, but sibling peer cycles prevent a
+ * total order. npm auto-installs missing peers and can reject incompatible
+ * ranges, so these edges order what they can and the staged registry install
+ * validates the complete graph before user-facing dist-tags move.
  */
 const PEER_SECTIONS = ['peerDependencies'] as const
 
@@ -160,9 +159,9 @@ export abstract class ReleaseFamily {
    *
    * Install edges are honoured absolutely — a cycle among them is a defect this
    * reports rather than works around. Peer edges order what they can and are
-   * dropped where honouring one would deadlock: sibling packages declare each
-   * other as peers, and npm treats an unmet peer as a warning rather than a
-   * resolution failure ([rationale](../../.agents/notes/implemented/process/2026-08-10-npm-release-sequences.md)).
+   * dropped where honouring one would deadlock: sibling packages legitimately
+   * declare peer cycles. The staged registry install validates npm's complete
+   * resolution before promotion ([rationale](../../.agents/notes/implemented/process/2026-08-10-npm-release-sequences.md)).
    * Every dropped edge is reported, because dropping one is a decision about a
    * real release rather than an implementation detail.
    * @param members - this family's members.

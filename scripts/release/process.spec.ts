@@ -7,4 +7,10 @@ describe('release process capture', () => {
     const output = capture(process.execPath, ['-e', `process.stdout.write('x'.repeat(${String(bytes)}))`])
     expect(output).toHaveLength(bytes)
   })
+
+  it('bounds a stalled command and retains its diagnostics', () => {
+    expect(() => capture(process.execPath, [
+      '-e', "process.stdout.write('started'); setInterval(() => {}, 1_000)",
+    ], { timeoutMs: 100 })).toThrow(/ETIMEDOUT[\s\S]*started/u)
+  })
 })

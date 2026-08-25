@@ -11,36 +11,21 @@
  * vendored family's pack output too, while publishing only its own
  * ([rationale](../../.agents/notes/implemented/process/2026-08-10-npm-release-sequences.md)).
  *
- * What this proves is that `files` selected a complete payload and that the
- * published dependency ranges resolve. A workspace link or a stale `lib/` in the
- * checkout cannot stand in for a missing file here.
+ * This proves that `files` selected a complete payload and non-peer runtime
+ * dependencies install from the supplied family tarballs. The staged registry
+ * check separately proves ordinary npm peer resolution. A workspace link or a
+ * stale `lib/` cannot stand in for a missing file here.
  */
 
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { consumerEnvironment } from './consumer.ts'
 import { parseArgs } from 'node:util'
 import { releaseFamily } from './families.ts'
 import { capture, isEntry } from './process.ts'
 import { packedIdentity } from './tarball.ts'
-
-/**
- * Environment for the installed artifact: no host Node hooks, no host DeepSeek
- * Harness home, and no ambient npm user agent that would confuse npm.
- * @param consumerRoot - the throwaway consumer directory.
- * @returns The child environment.
- */
-function consumerEnvironment(consumerRoot: string): NodeJS.ProcessEnv {
-  const environment = { ...process.env }
-  delete environment.npm_config_user_agent
-  delete environment.NPM_CONFIG_USER_AGENT
-  delete environment.NODE_OPTIONS
-  delete environment.NODE_PATH
-  environment.DSH_HOME = resolve(consumerRoot, '.dsh')
-  environment.DSH_AGENTS_HOME = resolve(consumerRoot, '.agents')
-  return environment
-}
 
 /**
  * Every packed tarball in the given directories, as `file:` dependency entries.
@@ -104,9 +89,9 @@ function main(): void {
     // use their own optional platform package to provide the native prebuild.
     // The Landlock entry itself is a plain dependency of dsh-sandbox-local and
     // its tarball is supplied through --from. Every packed package is already
-    // a top-level file dependency; legacy peer mode avoids npm repeatedly
-    // reconciling the family's cyclic peer graph, while release:verify owns
-    // peer-range and publish-order correctness.
+    // a top-level file dependency. Legacy peer mode keeps this payload check
+    // out of the family's cyclic peer graph; staged registry installation owns
+    // ordinary npm peer resolution before user-facing dist-tags move.
     capture(
       'npm',
       [

@@ -187,8 +187,8 @@ describe('release families', () => {
       member('packages/a/right', '@monotykamary/dsh-right', { peerDependencies: { '@monotykamary/dsh-left': 'workspace:^' } }),
     ]
 
-    // Sibling packages declare each other as peers, and npm treats an unmet peer
-    // as a warning, so this pair has to publish rather than fail the release.
+    // Sibling packages legitimately declare peer cycles. Publication keeps a
+    // deterministic partial order; staged npm installation validates the whole graph.
     const plan = dsh.publishOrder(members)
     expect(plan.order.map(entry => entry.name)).toEqual([
       '@monotykamary/dsh-right',

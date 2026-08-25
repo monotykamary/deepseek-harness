@@ -16,6 +16,8 @@ export interface RunOptions {
   readonly cwd?: string
   /** Child environment; defaults to this process's. */
   readonly env?: NodeJS.ProcessEnv
+  /** Maximum command duration in milliseconds. */
+  readonly timeoutMs?: number
 }
 
 /** What a command produced, for a caller that decides what a failure means. */
@@ -38,8 +40,11 @@ export interface CommandResult {
 export function attempt(command: string, args: readonly string[], options: RunOptions = {}): CommandResult {
   const result = spawnSync(command, [...args], {
     cwd: options.cwd, env: options.env, encoding: 'utf8', maxBuffer: RELEASE_CAPTURE_MAX_BYTES,
+    timeout: options.timeoutMs,
   })
-  if (result.error !== undefined) throw result.error
+  if (result.error !== undefined) {
+    throw new Error(`${command} ${args.join(' ')} failed: ${result.error.message}\n${result.stdout}\n${result.stderr}`)
+  }
   return { status: result.status, stdout: result.stdout, stderr: result.stderr }
 }
 
@@ -68,6 +73,7 @@ export function attemptEchoed(command: string, args: readonly string[], options:
     env: options.env,
     encoding: 'utf8',
     maxBuffer: RELEASE_CAPTURE_MAX_BYTES,
+    timeout: options.timeoutMs,
     // 'inherit' would leave nothing to capture, so the streams are piped and
     // echoed instead.
     stdio: ['inherit', 'pipe', 'pipe'],
@@ -101,7 +107,9 @@ export function capture(command: string, args: readonly string[], options: RunOp
  * @param options - working directory and environment.
  */
 export function run(command: string, args: readonly string[], options: RunOptions = {}): void {
-  const result = spawnSync(command, [...args], { cwd: options.cwd, env: options.env, stdio: 'inherit' })
+  const result = spawnSync(command, [...args], {
+    cwd: options.cwd, env: options.env, stdio: 'inherit', timeout: options.timeoutMs,
+  })
   if (result.error !== undefined) throw result.error
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} exited with ${String(result.status)}`)
 }

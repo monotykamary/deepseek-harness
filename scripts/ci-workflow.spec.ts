@@ -560,6 +560,19 @@ describe('npm release workflows', () => {
       expect(publish.environment).toBe('npm-publish')
       expect(publish.needs).toBe('pack')
       expect(publish.concurrency).toMatchObject({ group: 'Release-publish' })
+      if (file === 'release-publish.yml') {
+        if (!Array.isArray(publish.steps)) throw new TypeError(`${file} publish must define steps`)
+        const steps = publish.steps.filter(isRecord)
+        const names = steps.map(step => step.name).filter((name): name is string => typeof name === 'string')
+        const required = ['Stage tarballs', 'Verify registry install', 'Promote verified release']
+        const positions = required.map(name => names.indexOf(name))
+        expect(positions.every(position => position >= 0)).toBe(true)
+        expect(positions).toEqual([...positions].sort((left, right) => left - right))
+        expect(steps.find(step => step.name === 'Stage tarballs')?.run).toMatch(/release:publish .* --stage/u)
+        for (const step of steps.filter(entry => required.includes(String(entry.name)))) {
+          expect(step['continue-on-error']).not.toBe(true)
+        }
+      }
     }
   })
 })

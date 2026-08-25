@@ -27,7 +27,7 @@ Loader 结算会在导入或生命周期失败时返回拒绝结果，并携带�
 
 Loader 并发挂载各个条目，因此当其他环节失败时，某个界面可能已经持有终端：此时不经过整棵树自身的拆卸就退出，会把 raw 模式、bracketed paste 和键盘协议残留在用户的 shell 上，而尚未返回的终端查询响应会在下一个提示符处显示为字面文本。配置树失败会经 `boot()` 结算：它先 dispose 部分构建的上下文（从而执行该界面自身的 shutdown），再抛出带标签的 rejection。对于 `boot()` 看不到的 rejection（插件游离的异步工作在挂载期间或挂载完成后失败），持有终端的 bin 会传入 `release`，在提交退出前 dispose 整棵树；`dsh` 在 `boot()` 的 `prepare` 回调中捕获根上下文，而不是取其返回值，使该回调覆盖整个挂载窗口。release 执行期间，处理函数保持注册并处于锁定状态：被报告的始终是第一个 rejection，后续拒绝（包括拆卸自身产生的拒绝）会被忽略，而不会变成未捕获错误、在拆卸中途杀死进程。
 
-`cordis:group` 与 `cordis:include` 一并注册，使一份组装能把一个提供方与它的消费方放进同一个 `isolate` realm。两者都通过宿主的模块管线加载，而非被包含树自身的说明符解析，这正是让本工作区之外的组装——放在 harness home 下的 agent preset——能够使用 group 行的原因。
+`cordis:group` 与 `cordis:include` 一并注册，使一份组装能把一个提供方与它的消费方放进同一个 `isolate` realm。两者都通过宿主的模块管线加载，而非被包含树自身的说明符解析，这正是让本工作区之外的组装——放在 harness home 下的 agent preset——能够使用 group 行的原因。启动应用会把这两个 builtin 作为普通依赖直接安装，而不依赖 npm 自动安装运行时 peer。
 
 配置中的裸插件 specifier（`@monotykamary/dsh-*`、npm 包）通过 Cordis Loader 的内部模块 loader 解析。默认情况下，它们从配置目录解析；封闭运行时会向 `boot` 或 `mountRootInclude` 传入 `bareModuleBaseUrl`，使已安装包树保持权威，即使配置位于另一个 Node 项目中也不受遮蔽。相对 specifier 始终以配置目录为基准解析。仓库 bin 会安装 Loader 的可选对等依赖（peer dependency） `node-addon-require-builtin`；外部调用方必须提供该组件，或者把插件安装到普通 Node import 解析可以找到的位置。构建后的 `dsh-app-boot` 产物内嵌静态挂载的 Include 实现，但仍将 Loader 保持为外部依赖，因此 include 树与宿主会绑定到同一个 Loader peer。`pnpm dsh` 源码路径还会将 manifest（元数据清单）声明的 workspace 包映射到其 TypeScript 源码；其配置门禁要求每个随附的原始／Web 裸插件都出现在解析所用 manifest 的 `dependencies` 中。
 

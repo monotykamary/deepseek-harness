@@ -20,6 +20,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@monotykamary/cordis-plugin-group": "workspace:^",
     "@monotykamary/cordis-plugin-hmr": "workspace:^",
     "@monotykamary/cordis-plugin-include": "workspace:^",
     "@monotykamary/cordis-plugin-loader": "workspace:^",
@@ -86,7 +87,7 @@
     "dsh-multiprovider": "0.1.1",
     "dsh-fabric": "0.1.7",
     "dsh-fovea": "0.5.1",
-    "dsh-factory": "0.1.4",
+    "dsh-factory": "0.1.8",
     "@monotykamary/dsh-distribution-update": "workspace:^"
   },
   "devDependencies": {
@@ -112,7 +113,7 @@
         "dsh-multiprovider": "0.1.1",
         "dsh-fabric": "0.1.7",
         "dsh-fovea": "0.5.1",
-        "dsh-factory": "0.1.4"
+        "dsh-factory": "0.1.8"
       }
     }
   }

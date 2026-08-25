@@ -125,7 +125,15 @@ jobs:
           name: dsh-npm-tarballs
           path: dist/npm
 
-      - name: Publish tarballs
+      - name: Stage tarballs
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm run release:publish --family dsh --from dist/npm
+        run: pnpm run release:publish --family dsh --from dist/npm --stage
+
+      - name: Verify registry install
+        run: pnpm run release:verify-registry-install --family dsh --from dist/npm
+
+      - name: Promote verified release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm run release:promote --family dsh --from dist/npm

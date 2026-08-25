@@ -12,77 +12,15 @@
  * the same artifact safe.
  */
 
-import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { parseArgs } from 'node:util'
+import { integrityOf, registryState } from './npm-package.ts'
+import { publicationTagArgs } from './npm-tags.ts'
+import { isTransientNpmWriteFailure, NPM_WRITE_ATTEMPTS, NPM_WRITE_SPACING_MS } from './npm-write.ts'
 import { releaseFamily } from './families.ts'
-import { attempt, attemptEchoed, isEntry } from './process.ts'
+import { attemptEchoed, isEntry } from './process.ts'
 import { packedIdentity, readPublishOrder } from './tarball.ts'
-
-/**
- * Registry codes that answer a write which did not settle, rather than a
- * rejection of what was sent. `E409 Failed to save packument` is the one this
- * sequence actually hits: publishing several packages in a row can outrun the
- * registry's own processing. A rejected payload (`E403` over an existing
- * version, a malformed manifest) never clears on a retry and must surface.
- */
-const TRANSIENT_PUBLISH_CODES = ['E409', 'E429', 'E500', 'E502', 'E503', 'E504', 'ETIMEDOUT', 'ECONNRESET', 'EAI_AGAIN'] as const
-
-/** How many times one tarball's publish is attempted before the run fails. */
-const PUBLISH_ATTEMPTS = 4
-
-/**
- * Shortest gap between two publishes, and the first retry backoff.
- *
- * The registry needs a moment to commit a packument before the next write; back
- * to back publishes are what produce `E409`.
- */
-const PUBLISH_SPACING_MS = 2_000
-
-/** What the registry knows about one version. */
-type RegistryState =
-  | { readonly kind: 'absent' }
-  | { readonly kind: 'present'; readonly integrity: string }
-
-/**
- * Whether a failed publish is worth another attempt.
- * @param output - combined npm output.
- * @returns True when the registry reported a write it did not commit.
- */
-function isTransientFailure(output: string): boolean {
-  return TRANSIENT_PUBLISH_CODES.some(code => output.includes(`code ${code}`))
-}
-
-/**
- * The subresource integrity string npm records for a tarball.
- * @param tarball - absolute tarball path.
- * @returns A `sha512-<base64>` string.
- */
-function integrityOf(tarball: string): string {
-  return `sha512-${createHash('sha512').update(readFileSync(tarball)).digest('base64')}`
-}
-
-/**
- * Ask the registry whether a version exists, and with what integrity.
- * @param name - package name.
- * @param version - package version.
- * @returns The registry state for that version.
- */
-function registryState(name: string, version: string): RegistryState {
-  const result = attempt('npm', ['view', `${name}@${version}`, 'dist.integrity', '--json'])
-  if (result.status !== 0) {
-    const output = `${result.stdout}${result.stderr}`
-    if (output.includes('E404') || output.includes('404 Not Found')) return { kind: 'absent' }
-    throw new Error(`npm view ${name}@${version} failed:\n${output}`)
-  }
-  const parsed: unknown = JSON.parse(result.stdout)
-  if (typeof parsed !== 'string' || parsed === '') {
-    throw new Error(`registry reported no dist.integrity for ${name}@${version}`)
-  }
-  return { kind: 'present', integrity: parsed }
-}
 
 /**
  * Publish one tarball, retrying a registry write that did not settle.
@@ -93,11 +31,11 @@ function registryState(name: string, version: string): RegistryState {
  * @param tarball - absolute tarball path.
  * @param name - package name the tarball declares.
  * @param version - package version the tarball declares.
+ * @param staged - whether to leave user-facing dist-tags unchanged.
  */
-async function publishTarball(tarball: string, name: string, version: string): Promise<void> {
-  // A prerelease version never takes the latest dist-tag.
-  const tagArgs = version.includes('-') ? ['--tag', 'next'] : []
-  for (let tries = 1; tries <= PUBLISH_ATTEMPTS; tries += 1) {
+async function publishTarball(tarball: string, name: string, version: string, staged: boolean): Promise<void> {
+  const tagArgs = publicationTagArgs(version, staged)
+  for (let tries = 1; tries <= NPM_WRITE_ATTEMPTS; tries += 1) {
     // No --access: the sequences do not share one access level, so a
     // command-line flag could not serve both and would override the manifest
     // that does. Each packed manifest decides, and
@@ -111,13 +49,13 @@ async function publishTarball(tarball: string, name: string, version: string): P
       console.log(`release publish: ${name}@${version} landed despite a reported failure, continuing`)
       return
     }
-    if (tries === PUBLISH_ATTEMPTS || !isTransientFailure(output)) {
+    if (tries === NPM_WRITE_ATTEMPTS || !isTransientNpmWriteFailure(output)) {
       throw new Error(`npm publish ${name}@${version} failed:\n${output}`)
     }
-    const backoff = PUBLISH_SPACING_MS * 2 ** (tries - 1)
+    const backoff = NPM_WRITE_SPACING_MS * 2 ** (tries - 1)
     console.log(
       `release publish: ${name}@${version} hit a transient registry failure`
-      + ` (attempt ${String(tries)} of ${String(PUBLISH_ATTEMPTS)}), retrying in ${String(backoff)}ms`,
+      + ` (attempt ${String(tries)} of ${String(NPM_WRITE_ATTEMPTS)}), retrying in ${String(backoff)}ms`,
     )
     await sleep(backoff)
   }
@@ -126,11 +64,11 @@ async function publishTarball(tarball: string, name: string, version: string): P
 /** Publish the family named by `--family` from the directory named by `--from`. */
 async function main(): Promise<void> {
   const { values } = parseArgs({
-    options: { family: { type: 'string' }, from: { type: 'string' } },
+    options: { family: { type: 'string' }, from: { type: 'string' }, stage: { type: 'boolean' } },
     allowPositionals: false,
   })
   if (values.family === undefined || values.from === undefined) {
-    throw new Error('usage: publish.ts --family <dsh|vendor> --from <packed directory>')
+    throw new Error('usage: publish.ts --family <dsh|vendor> --from <packed directory> [--stage]')
   }
 
   const family = releaseFamily(values.family)
@@ -163,15 +101,16 @@ async function main(): Promise<void> {
     }
     // Space out the writes: the gap belongs between publishes, so a run that
     // only skips does not wait at all.
-    if (published > 0) await sleep(PUBLISH_SPACING_MS)
-    await publishTarball(tarball, name, version)
+    if (published > 0) await sleep(NPM_WRITE_SPACING_MS)
+    await publishTarball(tarball, name, version, values.stage ?? false)
     console.log(`release publish: ${progress} ${name}@${version} published`)
     published += 1
   }
 
   console.log(
     `release publish: family ${family.id}, ${total} member(s),`
-    + ` ${String(published)} published, ${String(skipped)} already present`,
+    + ` ${String(published)} published, ${String(skipped)} already present`
+    + (values.stage === true ? ' under the release-candidate tag' : ''),
   )
 }
 

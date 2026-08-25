@@ -32,7 +32,7 @@ function reportPublishOrder(family: ReleaseFamily, plan: PublishPlan): void {
   console.log(
     `release verify: ${String(plan.droppedPeerEdges.length)} peer declaration(s) publish unordered,`
     + ' because the peer cannot precede the package declaring it without contradicting a dependency edge'
-    + ' or its own cycle. npm treats an unmet peer as a warning, so this orders nothing and blocks nothing:',
+    + ' or its own cycle. The staged registry install validates the complete peer graph before promotion:',
   )
   for (const edge of plan.droppedPeerEdges) console.log(`  ${edge.consumer} -> ${edge.peer}`)
 }

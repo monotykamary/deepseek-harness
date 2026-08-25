@@ -128,6 +128,9 @@ importers:
       '@monotykamary/cordis':
         specifier: workspace:^
         version: link:../../vendor/cordis
+      '@monotykamary/cordis-plugin-group':
+        specifier: workspace:^
+        version: link:../../vendor/group
       '@monotykamary/cordis-plugin-hmr':
         specifier: workspace:^
         version: link:../../vendor/hmr
@@ -312,8 +315,8 @@ importers:
         specifier: 0.1.7
         version: 0.1.7(d3e6466978d00973ca0736c632accdc9)
       dsh-factory:
-        specifier: 0.1.4
-        version: 0.1.4(6d8f67e810b50f78d20367cd4be1f266)
+        specifier: 0.1.8
+        version: 0.1.8(80023380dd35511fd48ddd34018b9e82)
       dsh-fovea:
         specifier: 0.5.1
         version: 0.5.1(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-commands@packages+interaction+commands)(@monotykamary/dsh-fs@packages+fs+fs)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-spill@packages+spill+spill)(@monotykamary/dsh-subprocess@packages+subprocess+subprocess)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tools@packages+core+tools)
@@ -13474,10 +13477,10 @@ packages:
     resolution: {integrity: sha512-yM/Ca2ow2llxK+EvUh/D4vmCF45WHMO6JfRZfOZ39O+2Gsirno39r5qVYMgIiQRHWAzYUFkTWnYwVzJ2M/Z+5g==}
     engines: {node: ^22.19.0 || >=24.0.0}
 
-  dsh-factory-client-ui@0.1.4:
-    resolution: {integrity: sha512-r6W8CeZKi3+01ymnjiKeAH/Ab0c790jqleSa+PuhyC5vxb/jm+DjUFv71lJTsqEzaBRjj3+SzV74f4Z6iIuLtA==}
+  dsh-factory-client-ui@0.1.8:
+    resolution: {integrity: sha512-GRBO1WbGyai/VmiaOG+a620nbCn+HvSSebazgQrGmWtxpbdGwlDxXzMgiJ8QElTm4FZ+aVRVZdu96jRRJZHnNw==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
       '@monotykamary/dsh-api-gateway': ^0.1.0-rc.11
       '@monotykamary/dsh-api-remotes': ^0.1.0-rc.11
       '@monotykamary/dsh-client-connection': ^0.1.0-rc.11
@@ -13493,10 +13496,10 @@ packages:
       '@monotykamary/dsh-client-ui-workspace': ^0.1.0-rc.12
       '@monotykamary/dsh-typert-protocol': ^0.1.0-rc.11
 
-  dsh-factory-domain@0.1.4:
-    resolution: {integrity: sha512-O18dsDPI7oAqokNZbrba7vMBFfp0jUfF2Zjb9Nw23YlfWXKc5sabJpAflDlE1Qsbatm8cZ6NdV/FoFiwc1Mq8g==}
+  dsh-factory-domain@0.1.8:
+    resolution: {integrity: sha512-nAPr98WrMeTT6pHA9+bb/IWAEWzCnjdAsc2MBB+/8ZNttycXo9ID3lH88XeFUfe/inCivbAfM8Dt+Rf8+y5kUg==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
       '@monotykamary/dsh-agent': ^0.1.0-rc.11
       '@monotykamary/dsh-agent-default-model': ^0.1.0-rc.11
       '@monotykamary/dsh-llm': ^0.1.0-rc.11
@@ -13504,19 +13507,17 @@ packages:
       '@monotykamary/dsh-typert-protocol': ^0.1.0-rc.11
       '@monotykamary/dsh-worktree': ^0.1.0-rc.11
 
-  dsh-factory-protocol@0.1.4:
-    resolution: {integrity: sha512-1PhQrVaCUefVQ9bygvzEyKpuEWfWxi8zzGZE0s7AP1UhupxHuJ02l71rI2h54K3OrFRfeoBjc3pkJ1286CgdOw==}
+  dsh-factory-protocol@0.1.8:
+    resolution: {integrity: sha512-MGPukMlHKMN2+xbjECtW4cZqteqJwYlmrbtkKsc28lvCsqSOcQP1yCHTHRD+rYKtGTKHDdtKkZ1D7wnnrxbrcQ==}
     peerDependencies:
       '@monotykamary/dsh-brand': ^0.1.0-rc.1
 
-  dsh-factory-scheduler@0.1.4:
-    resolution: {integrity: sha512-f2HAUZ5BCMM6WswtC6MV8oJMAltdpn3PLoAhqwIJ6M6qgT3wxFod/i9tMka2xC7b3KdXTQykJbx9X8S2ZyeEtg==}
+  dsh-factory-scheduler@0.1.8:
+    resolution: {integrity: sha512-zmrKChFZMtkR2AOsl0Rs9WFFndhLGS1cUBtvF94QdwXZN2rvI3TYL9CxVIP1tkycJM+a9JVOzR01+6AgTy7l2g==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
       '@monotykamary/dsh-agent': ^0.1.0-rc.11
       '@monotykamary/dsh-agent-default-model': ^0.1.0-rc.11
-      '@monotykamary/dsh-agent-loop': ^0.1.0-rc.11
-      '@monotykamary/dsh-agent-loop-testkit': ^0.1.0-rc.11
       '@monotykamary/dsh-agent-presets': ^0.1.0-rc.11
       '@monotykamary/dsh-attachment': ^0.1.0-rc.11
       '@monotykamary/dsh-llm': ^0.1.0-rc.11
@@ -13529,21 +13530,21 @@ packages:
       '@monotykamary/dsh-user-questions': ^0.1.0-rc.11
       '@monotykamary/dsh-worktree': ^0.1.0-rc.11
 
-  dsh-factory-store-sqlite@0.1.4:
-    resolution: {integrity: sha512-IIJQiyRgzRFxzN0+z1T+Ci4B+xHm8+SOBUV6RrnlGzlp+XRRZ8ENNNidwvIxT3njLAVkMXwEt/WBxU/6S1Jdtw==}
+  dsh-factory-store-sqlite@0.1.8:
+    resolution: {integrity: sha512-JkdHQZawiG4sTERUM2m0FxlIPRmB7Luqb1GVKC+Wcl08pnLt9hYZJXFGz/sWhIpFFYBly6S6HXfpl/rq8AfYXg==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
       '@monotykamary/schemastery': ^3.17.1
 
-  dsh-factory-store@0.1.4:
-    resolution: {integrity: sha512-wla1Pj7ZhTjVQ/oU44IigCTggfd16D2PUEm5IB3FDc+S3V5AVNKDqeYZIMMFOPGHIqtswj0s6zvvGJ6VIzYK/g==}
+  dsh-factory-store@0.1.8:
+    resolution: {integrity: sha512-W2FMPLbnvGvDBLnc1IcNjwot9xrIuwIosKKQDXxSG9RiKfsLT5H6ewzJKb+FN1Mm/rzYjVVJ8HYq6vUdKeRz6A==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
 
-  dsh-factory-tools@0.1.4:
-    resolution: {integrity: sha512-2q8cL0AqkJx1GVMUQSdHzwyljeMVFPkRplWIuWbDDtdkMuiCYTVC0IGIEGglkR6e0MET2Jx/bWUIsoWz9vIsrA==}
+  dsh-factory-tools@0.1.8:
+    resolution: {integrity: sha512-oABZvV624tpuBTF1LGiUl8W5NNx+D/il8UQ8hQflNqlJ2PiBFfm+gviR+7S+5BhBSlw+PM/+6OjelpTcduhKKQ==}
     peerDependencies:
-      '@monotykamary/cordis': ^4.3.2
+      '@monotykamary/cordis': ^4.0.1
       '@monotykamary/dsh-agent': ^0.1.0-rc.11
       '@monotykamary/dsh-llm': ^0.1.0-rc.11
       '@monotykamary/dsh-session': ^0.1.0-rc.11
@@ -13552,8 +13553,8 @@ packages:
       '@monotykamary/dsh-tool-session-mutations': ^0.1.0-rc.11
       '@monotykamary/dsh-tools': ^0.1.0-rc.11
 
-  dsh-factory@0.1.4:
-    resolution: {integrity: sha512-L2KRW0X2h1VryRwvm+kLVUGyv145LHmt8GP6HGKmJxIEs9RiZXZMV2wRY1oW+KD9V+GEs8UR8HDHQoWlCR9eXg==}
+  dsh-factory@0.1.8:
+    resolution: {integrity: sha512-aPa8IvcarRegy9deRJUgcVU1IEnQD5owlDaoLYtaaFioM3P++OBAN45ul70zf9wWP55BCqMm75quQ6ZaCEJ2Mg==}
     engines: {node: ^22.19.0 || >=24.0.0}
 
   dsh-fovea@0.5.1:
@@ -19370,8 +19371,9 @@ snapshots:
       - '@monotykamary/dsh-workspace'
       - '@monotykamary/schemastery'
 
-  dsh-factory-client-ui@0.1.4(7b013d1ebdfe0ea0be610dba851cb5b5):
+  dsh-factory-client-ui@0.1.8(7b013d1ebdfe0ea0be610dba851cb5b5):
     dependencies:
+      '@chenglou/pretext': 0.0.8
       '@monotykamary/cordis': link:vendor/cordis
       '@monotykamary/dsh-api-gateway': link:packages/api/gateway
       '@monotykamary/dsh-api-remotes': link:packages/api/remotes
@@ -19387,8 +19389,8 @@ snapshots:
       '@monotykamary/dsh-client-ui-slots': link:packages/client/ui-slots
       '@monotykamary/dsh-client-ui-workspace': link:packages/client/ui-workspace
       '@monotykamary/dsh-typert-protocol': link:packages/typert/protocol
-      dsh-factory-domain: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-domain: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
       react: 18.3.1
       zod: 4.4.3
     transitivePeerDependencies:
@@ -19399,7 +19401,7 @@ snapshots:
       - '@monotykamary/dsh-session-title'
       - '@monotykamary/dsh-worktree'
 
-  dsh-factory-domain@0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree):
+  dsh-factory-domain@0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree):
     dependencies:
       '@monotykamary/cordis': link:vendor/cordis
       '@monotykamary/dsh-agent': link:packages/core/agent
@@ -19410,24 +19412,22 @@ snapshots:
       '@monotykamary/dsh-worktree': link:packages/workspace/worktree
       '@monotykamary/schemastery': link:vendor/schemastery
       croner: 9.1.0
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
-      dsh-factory-store: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-store: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
       zod: 4.4.3
     transitivePeerDependencies:
       - '@monotykamary/dsh-brand'
 
-  dsh-factory-protocol@0.1.4(@monotykamary/dsh-brand@packages+util+brand):
+  dsh-factory-protocol@0.1.8(@monotykamary/dsh-brand@packages+util+brand):
     dependencies:
       '@monotykamary/dsh-brand': link:packages/util/brand
       zod: 4.4.3
 
-  dsh-factory-scheduler@0.1.4(925f59e7c18aad6c1b6eaadc7ec57a47):
+  dsh-factory-scheduler@0.1.8(953fafb09d52062ad86cb5ccea26411a):
     dependencies:
       '@monotykamary/cordis': link:vendor/cordis
       '@monotykamary/dsh-agent': link:packages/core/agent
       '@monotykamary/dsh-agent-default-model': link:packages/core/agent-default-model
-      '@monotykamary/dsh-agent-loop': link:packages/core/agent-loop
-      '@monotykamary/dsh-agent-loop-testkit': link:packages/test-support/agent-loop-testkit
       '@monotykamary/dsh-agent-presets': link:packages/preset/agent-presets
       '@monotykamary/dsh-attachment': link:packages/attachment/attachment
       '@monotykamary/dsh-llm': link:packages/llm/llm
@@ -19440,32 +19440,32 @@ snapshots:
       '@monotykamary/dsh-user-questions': link:packages/interaction/user-questions
       '@monotykamary/dsh-worktree': link:packages/workspace/worktree
       '@monotykamary/schemastery': link:vendor/schemastery
-      dsh-factory-domain: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
-      dsh-factory-tools: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-domain: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-tools: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
     transitivePeerDependencies:
       - '@monotykamary/dsh-brand'
       - '@monotykamary/dsh-session-title'
       - '@monotykamary/dsh-skill'
       - '@monotykamary/dsh-typert-protocol'
 
-  dsh-factory-store-sqlite@0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/schemastery@vendor+schemastery):
+  dsh-factory-store-sqlite@0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/schemastery@vendor+schemastery):
     dependencies:
       '@monotykamary/cordis': link:vendor/cordis
       '@monotykamary/schemastery': link:vendor/schemastery
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
-      dsh-factory-store: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-store: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
     transitivePeerDependencies:
       - '@monotykamary/dsh-brand'
 
-  dsh-factory-store@0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand):
+  dsh-factory-store@0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand):
     dependencies:
       '@monotykamary/cordis': link:vendor/cordis
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
     transitivePeerDependencies:
       - '@monotykamary/dsh-brand'
 
-  dsh-factory-tools@0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree):
+  dsh-factory-tools@0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree):
     dependencies:
       '@monotykamary/cordis': link:vendor/cordis
       '@monotykamary/dsh-agent': link:packages/core/agent
@@ -19475,8 +19475,8 @@ snapshots:
       '@monotykamary/dsh-system-prompt': link:packages/core/system-prompt
       '@monotykamary/dsh-tool-session-mutations': link:packages/session-query/tool-session-mutations
       '@monotykamary/dsh-tools': link:packages/core/tools
-      dsh-factory-domain: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-domain: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
     transitivePeerDependencies:
       - '@monotykamary/dsh-agent-default-model'
       - '@monotykamary/dsh-brand'
@@ -19484,21 +19484,19 @@ snapshots:
       - '@monotykamary/dsh-typert-protocol'
       - '@monotykamary/dsh-worktree'
 
-  dsh-factory@0.1.4(6d8f67e810b50f78d20367cd4be1f266):
+  dsh-factory@0.1.8(80023380dd35511fd48ddd34018b9e82):
     dependencies:
-      dsh-factory-client-ui: 0.1.4(7b013d1ebdfe0ea0be610dba851cb5b5)
-      dsh-factory-domain: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
-      dsh-factory-protocol: 0.1.4(@monotykamary/dsh-brand@packages+util+brand)
-      dsh-factory-scheduler: 0.1.4(925f59e7c18aad6c1b6eaadc7ec57a47)
-      dsh-factory-store: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
-      dsh-factory-store-sqlite: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/schemastery@vendor+schemastery)
-      dsh-factory-tools: 0.1.4(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-client-ui: 0.1.8(7b013d1ebdfe0ea0be610dba851cb5b5)
+      dsh-factory-domain: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
+      dsh-factory-protocol: 0.1.8(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-scheduler: 0.1.8(953fafb09d52062ad86cb5ccea26411a)
+      dsh-factory-store: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)
+      dsh-factory-store-sqlite: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/schemastery@vendor+schemastery)
+      dsh-factory-tools: 0.1.8(@monotykamary/cordis@vendor+cordis)(@monotykamary/dsh-agent-default-model@packages+core+agent-default-model)(@monotykamary/dsh-agent@packages+core+agent)(@monotykamary/dsh-brand@packages+util+brand)(@monotykamary/dsh-llm@packages+llm+llm)(@monotykamary/dsh-session-title@packages+session+session-title)(@monotykamary/dsh-session@packages+core+session)(@monotykamary/dsh-skill@packages+skill+skill)(@monotykamary/dsh-system-prompt@packages+core+system-prompt)(@monotykamary/dsh-tool-session-mutations@packages+session-query+tool-session-mutations)(@monotykamary/dsh-tools@packages+core+tools)(@monotykamary/dsh-typert-protocol@packages+typert+protocol)(@monotykamary/dsh-worktree@packages+workspace+worktree)
     transitivePeerDependencies:
       - '@monotykamary/cordis'
       - '@monotykamary/dsh-agent'
       - '@monotykamary/dsh-agent-default-model'
-      - '@monotykamary/dsh-agent-loop'
-      - '@monotykamary/dsh-agent-loop-testkit'
       - '@monotykamary/dsh-agent-presets'
       - '@monotykamary/dsh-api-gateway'
       - '@monotykamary/dsh-api-remotes'

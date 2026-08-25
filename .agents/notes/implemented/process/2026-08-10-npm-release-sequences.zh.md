@@ -32,7 +32,7 @@ Status: implemented
 
 每条序列有一条 bump-and-commit 命令：算出目标版本，写进相关 manifest，跑 `pnpm install --lockfile-only`，再把 manifest 连 lockfile 一起 commit。发布版本因此在仓库里查得到。tag 由人工在 commit 合入 master 后打；CI 不写仓库，也不需要写权限。
 
-`release:dsh` 接受 `major`、`minor`、`patch` 或显式版本号，把同一个版本写进可发布族、`packages/*/*` 下的每个私有包**以及 workspace 根**。私有包不会获得发布 tag，仍位于 pack 与 publish 之外；它们跟随版本是因为 workspace 约束要求每个 dsh 包的版本等于根版本。根的检查接受预发布段。像 `0.0.1-rc.1` 这样的预发布号先把 pack、已安装产物探针和一次真实私有发布跑通，数字版本随后。dist-tag 沿用 `landlock-run-release.yml` 已有的判定：版本带预发布段就 `--tag next`，否则进 `latest`。
+`release:dsh` 接受 `major`、`minor`、`patch` 或显式版本号，把同一个版本写进可发布族、`packages/*/*` 下的每个私有包**以及 workspace 根**。私有包不会获得发布 tag，仍位于 pack 与 publish 之外；它们跟随版本是因为 workspace 约束要求每个 dsh 包的版本等于根版本。根的检查接受预发布段。像 `0.0.1-rc.1` 这样的预发布号先把 pack、已安装产物探针和一次真实私有发布跑通，数字版本随后。最终 dist-tag 沿用 `landlock-run-release.yml` 已有的判定：版本带预发布段就提升到 `next`，否则提升到 `latest`。dsh 序列先把所有 tarball 发到 `release-candidate`，再让普通 npm 从 registry 安装该精确版本的 `@monotykamary/dsh`；只有可执行文件报告预期版本后，最终 tag 才会移动。
 
 ### vendor：谁改了谁发版，tag 就是账本
 
@@ -74,6 +74,8 @@ tag 只是 commit 指针，不是发布成功的证明。bump 会向 registry �
 
 registry 的两个行为决定了「怎么尝试一次发布」。写入之间至少间隔两秒并带退避重试，因为连续背靠背发多个包会超出 registry 自身的处理速度，换来 `E409 Failed to save packument`。而每次重试都先重查 registry：报出来的失败可能对应一次其实已经落地的写入，所以「该版本现在存在且 integrity 与本 tarball 相同」算作已发布，而不是又一个待放置的版本。
 
+dsh 序列把版本上传与面向用户的 dist-tag 分开。`publish --stage` 只写 `release-candidate`，不动 `latest` 与 `next`；`verify-registry-install` 在有限时限内以普通 npm 全局安装（不使用 legacy peer 模式），并运行 `dsh --version`；随后 `promote` 按依赖优先顺序推进最终 tag，且拒绝把 tag 移到更旧的 semver。安装失败会占用一个不可变的候选版本，但不会通过 `latest` 或 `next` 暴露。
+
 ### workspace 内部引用走 `workspace:` 协议
 
 所有指向 workspace 成员的引用都用 `workspace:^`，由 `pnpm pack` 替换成匹配目标版本的范围：兄弟包的 `peerDependencies` 跟随族版本，指向 vendored 包的引用跟随那个包自己的版本线。Landlock 平台包保留 `workspace:*`（发布成精确版本），因为平台包与它的入口必须版本完全一致。
@@ -99,9 +101,11 @@ registry 的两个行为决定了「怎么尝试一次发布」。写入之间�
 | `publishOrder` | 按 npm 会安装的依赖段加 peer 声明做拓扑序，同层按包名排；安装依赖成环是报错而不是随意定序，任何排不进去的 peer 边被丢弃并点名 |
 | `pack` | 把整族打进一个目录并记录上传顺序 |
 | `verify` | 族的版本基线、完整打印出来的发布顺序；发布时还要求本次运行来自该族的 tag、且成员可发布 |
-| `verify-packed-install` | 把每个传入 tarball 列为顶层 file 依赖，以 npm legacy peer 模式安装以免反复协调家族的循环 peer 图，再驱动可执行文件；`verify` 另行负责 peer 范围与发布顺序 |
-| `publish` | 上面那三态 |
-| `process` / `tarball` | 启动命令、读取打包 tarball 的唯一正家，其中的入口守卫让每个脚本都可被 import；捕获型命令预留 64 MiB，而不是 Node 默认的 1 MiB |
+| `verify-packed-install` | 把每个传入 tarball 列为顶层 file 依赖，以 npm legacy peer 模式验证 payload 与非 peer 运行闭包而不协调循环 peer 图，再驱动可执行文件 |
+| `verify-registry-install` | 用普通 peer 解析从 npm 安装精确的 staged dsh 版本，拒绝任何 `ERESOLVE` override，执行时限，并驱动可执行文件 |
+| `publish` | 上面那三态；dsh 使用 `release-candidate`，没有 staged 可执行安装检查的序列直接发到最终 tag |
+| `promote` | registry 安装通过后才推进 `latest` 或 `next`，并拒绝 semver 回退 |
+| `process` / `tarball` | 有时限地启动命令、读取打包 tarball 的唯一正家，其中的入口守卫让每个脚本都可被 import；捕获型命令预留 64 MiB，而不是 Node 默认的 1 MiB |
 
 dsh 族套用仓库的发布 payload 策略（拒绝源码与声明映射）。vendored 族保留上游 payload，因为那些 manifest 导出 `./src/*`，去掉 `src` 会发出一个导出映射指向不存在文件的包。
 
@@ -109,7 +113,7 @@ dsh 族套用仓库的发布 payload 策略（拒绝源码与声明映射）。v
 
 `pack` job 一趟遍历整个发布集，把每个成员打进同一个目录，写出上传顺序，整个目录作为一份 artifact 上传；它位于 `release.yml` / `release-vendor.yml`。发布集是一个整体——绝不会出现一半的包已经上了 registry、另一半还在构建。
 
-`pack` 无凭据，在每个 pull request 和每次 master push 上跑，所以一个 pull request 就能证明发布集仍能完整打出来。发布则位于独立的 `release-publish.yml` / `release-vendor-publish.yml` 工作流，仅 `workflow_dispatch`（因此不会作为 PR check 出现）：它重新打包当前树，再按顺序逐个发布，挂在 `npm-publish` environment 后面等人工审批。pack 的 run 按 ref 分组，并发的 pull request 不会互相顶掉；全局 `Release-publish` 分组落在 `publish` job 上，因为 dist-tag 是共享的 registry 状态。
+`pack` 无凭据，在每个 pull request 和每次 master push 上跑，所以一个 pull request 就能证明发布集仍能完整打出来。发布位于独立的 `release-publish.yml` / `release-vendor-publish.yml` 工作流，仅 `workflow_dispatch`（因此不会作为 PR check 出现），并挂在 `npm-publish` environment 后面等人工审批。dsh job 先 staged 发布每个条目，执行精确 registry 安装，只提升验证过的版本；vendor 没有已安装可执行入口，仍直接发布。pack 的 run 按 ref 分组，并发的 pull request 不会互相顶掉；全局 `Release-publish` 分组落在 `publish` job 上，因为 dist-tag 是共享的 registry 状态。
 
 dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 vendored 框架声明成 peer，而那些包属于另一条序列，无凭据的 job 无法从私有 registry 取到——所以 dsh 的 `pack` job 为验证而打包 vendored 族，发布的仍只有 dsh 那一份。发布工作流（`release-publish.yml`）重新打包当前树，只发布 dsh 族。
 
@@ -145,7 +149,7 @@ dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 ven
 
 **只按版本号判断「是否已发布」，不比对内容。** 参照流程根本不查 registry：publish 逐个上传，重复版本由 npm 拒绝。只按版本号跳过会漏掉「改了代码没 bump」，而这是唯一会安静地把旧字节留在 registry 上的错误。代价是引入一次 registry 查询和对构建可复现性的依赖。
 
-**只做打包后安装验证，不起本地 registry。** 参照流程是把 tarball 解包成一棵树、用普通 Node 驱动，这绕过了版本范围解析。曾提议在 CI 里起本地 registry 补这一层，被否：产物正确性已由既有测试覆盖，发布路径由 master 的排练覆盖，而 pull request 只需证明发布集能打出来。用 `file:` 说明符安装依然会对每个内部依赖走一遍范围解析。
+**发布前运行本地 registry。** 本地 registry 可以验证未发布的 semver 范围，但会给每次无凭据 pack run 增加 registry 软件与代理状态。打包检查改为用提供的 `file:` tarball 负责 payload 完整性；受保护的 dsh 发布则先把不可变版本 staged 到 npm 本身，在提升前验证真实 resolver 与 registry metadata。
 
 **按入口闭包挑一部分包发。** 从 `@monotykamary/dsh` 与 `@monotykamary/dsh-web-frontend` 沿 `dependencies` 爬得到 156 个包，比全量少 61 个。但本仓的插件是 `cordis.yml` 按名字挂载的、不是被 import 的：`vendor/cordis-plugin-group` 与 `vendor/cordis-plugin-logger-console` 落在依赖闭包之外，却是运行时必需。照代码依赖挑的失败形态是「消费方装完起不来」，而且要额外持续证明「没漏任何挂载项」。私有 scope 下多出来的包对组织外不可见。`python/`、根 `examples/`、`docs/` 与 `website/` 不是成员。
 
@@ -161,7 +165,7 @@ dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 ven
 
 发布脚本是带入口守卫的可 import 模块，其判断都有单测覆盖：tag 命名、发布顺序与环报告、版本基线运算、payload 变更判据，以及各族的 payload 策略。第一版带过的两个缺陷——publish 命令在 import 时执行了 pack 命令、变更判据对 `vendor/cordis` 的源码改动失明——正是这类测试在对应接缝上能抓住的。
 
-一个 pull request 会为两条序列跑完整的 pack（无凭据），并把打包好的 dsh tarball 装进一次性 consumer，用普通 Node 驱动 `dsh --version`。这个探针刻意只有一条命令：它证明 `files` 选出了完整 payload、发布出去的范围可解析，不涉及任何交互行为。
+一个 pull request 会为两条序列跑完整的 pack（无凭据），并把打包好的 dsh tarball 装进一次性 consumer，用普通 Node 驱动 `dsh --version`。这个探针证明 `files` 选出了完整 payload，且非 peer 运行依赖可安装；受保护的发布另以精确的普通 npm registry 安装验证已发布 peer 范围。两种探针都不声称覆盖交互行为。
 
 代价：
 
@@ -171,5 +175,6 @@ dsh 的验证会一并安装 vendored 族的 pack 产物。harness 的包把 ven
 - **私有包需要凭据才能安装。** 任何消费方——CI、沙箱 e2e、外部使用者——都要持有 scope 凭据，Landlock 三包也在其中；它们从未发布过，所以没有切断既有的匿名安装路径。
 - **`repository` 指向的组织与运行 workflow 的组织不同。** 用 token 发布不受影响；npm provenance（OIDC）要求二者一致，届时要么把 `repository` 改指过去，要么从它指向的组织发布。
 - **字节可复现性是假定的，没有实测。** 「integrity 相同则跳过」这一态建立在「同一 commit 两次 pack 得到相同字节」之上。目前没有任何东西测量过它：若构建嵌入了绝对路径或时间，重跑会误报失败。在第一次可能被重跑的发布之前实测，若不成立就退到比对 tarball 内逐文件内容哈希。
-- **用较旧的 artifact 重跑 publish 会把 `latest` 拉回旧版。** 发布是按版本决定的，所以在较新版本之后重发较旧的一批，会让稳定 dist-tag 再次指向旧版。排练用的是预发布版本，它永远不占 `latest`。
+- **registry 安装失败会占用候选版本。** npm 版本不可变，因此 staged 版本若不能被普通 resolver 安装，修复时必须再 bump 一次；面向用户的 tag 留在上一个已验证版本。
+- **registry 安装是发布期网络检查。** 它下载完整的公开应用依赖图，并受二十分钟时限约束；pull request 保留更快的无凭据 payload 检查。
 - **首发是一次大步。** 九个 vendored 包与整个 dsh 集一次发出，任何 payload 缺陷都会集中在同一次发布里暴露——这正是先用预发布版本把完整链路走一遍的理由。
