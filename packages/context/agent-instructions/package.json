@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-agent-instructions",
   "description": "Trusted user policy and workspace context loader for agent instruction files",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "publishConfig": {
     "access": "public"
   },
