@@ -107,9 +107,9 @@ export interface ContinuableSubagentDescriptorInput extends SubagentDescriptorIn
   readonly mode: 'continuable'
   /** Initial delegation `description` used for durable enumeration. */
   readonly label: string
-  /** Requested child `agentOptions.provider`. */
+  /** Resolved child `agentOptions.provider`. */
   readonly agentProvider?: string
-  /** Requested child `agentOptions.model`. */
+  /** Resolved child `agentOptions.model`. */
   readonly agentModel?: string
   /** Requested per-child persona. */
   readonly persona?: string

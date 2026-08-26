@@ -6,6 +6,7 @@ import { Context } from '@monotykamary/cordis'
 import Loader from '@monotykamary/cordis-plugin-loader'
 import { CallId } from '@monotykamary/dsh-llm'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
+import CommandRuntime from '@monotykamary/dsh-commands'
 import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH } from '@monotykamary/dsh-tools'
 import { assembleContextFor, type Agent } from '@monotykamary/dsh-agent'
 import AgentRegistry from '@monotykamary/dsh-agent'
@@ -68,6 +69,24 @@ function text(result: { content: { type: string; text?: string }[] }): string {
 }
 
 describe('dsh-tool-subagent', () => {
+  it('rejects invalid direct-command configuration at plugin load', () => {
+    expect(() => {
+      tool.apply(new Context(), {
+        provider: 'mock',
+        backgroundMode: 'continuable',
+        commandName: 'Delegate!',
+        maxDepth: 'provider-managed',
+      })
+    }).toThrow('commandName \"Delegate!\" must match')
+    expect(() => {
+      tool.apply(new Context(), {
+        provider: 'mock',
+        commandName: 'delegate',
+        maxDepth: 'provider-managed',
+      })
+    }).toThrow('commandName requires `backgroundMode: continuable`')
+  })
+
   it('rejects continuable background policy when the provider cannot prepare continuable children', async () => {
     let failure: unknown
     try {
@@ -100,12 +119,12 @@ describe('dsh-tool-subagent', () => {
     expect(text(result)).toBe('child says hi')
   })
 
-  it('exposes description + prompt + model + run_in_background to the model (no provider/type parameter)', async () => {
+  it('exposes description, prompt, provider/model route, and scheduling to the model', async () => {
     const ctx = await setup({ provider: 'mock' })
     const schema = ctx.tools.schemas().find(s => s.name === 'subagent')
     expect(schema).toBeDefined()
     const props = (schema!.parameters as { properties?: Record<string, unknown> }).properties ?? {}
-    expect(Object.keys(props).sort()).toEqual(['description', 'model', 'prompt', 'run_in_background'])
+    expect(Object.keys(props).sort()).toEqual(['description', 'model', 'prompt', 'provider', 'run_in_background'])
     expect(schema!.description).toContain('job_output')
   })
 
@@ -113,7 +132,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await setup({ provider: 'mock', enableRunInBackground: false })
     const schema = ctx.tools.schemas().find(s => s.name === 'subagent')
     const props = (schema!.parameters as { properties?: Record<string, unknown> }).properties ?? {}
-    expect(Object.keys(props).sort()).toEqual(['description', 'model', 'prompt'])
+    expect(Object.keys(props).sort()).toEqual(['description', 'model', 'prompt', 'provider'])
     expect(schema!.description).not.toContain('job_output')
   })
 
@@ -276,8 +295,8 @@ describe('dsh-tool-subagent', () => {
     expect(seen?.agentOptions).toEqual({ model: 'child-model' })
   })
 
-  it('lets a call-time model override configured agentOptions while keeping the rest', async () => {
-    let seen: { agentOptions?: { model?: string; maxTokens?: number } } | undefined
+  it('lets a call-time provider/model route override configured agentOptions while keeping the rest', async () => {
+    let seen: { agentOptions?: { provider?: string; model?: string; maxTokens?: number } } | undefined
     const ctx = new Context()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
@@ -298,8 +317,16 @@ describe('dsh-tool-subagent', () => {
     })
     await ctx.plugin(tool, { provider: 'capture', agentOptions: { model: 'child-model', maxTokens: 4096 }, maxDepth: 'provider-managed' })
 
-    await callSubagent(ctx, { description: 'd', prompt: 'p', model: 'call-model' })
-    expect(seen?.agentOptions).toEqual({ model: 'call-model', maxTokens: 4096 })
+    await callSubagent(ctx, { description: 'd', prompt: 'p', provider: 'other-provider', model: 'call-model' })
+    expect(seen?.agentOptions).toEqual({ provider: 'other-provider', model: 'call-model', maxTokens: 4096 })
+  })
+
+  it('rejects a provider override without an explicit model before starting a child', async () => {
+    const ctx = await setup({ provider: 'mock' })
+    const result = await callSubagent(ctx, { description: 'd', prompt: 'p', provider: 'other-provider' })
+
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('provider override requires an explicit model override')
   })
 
   it('defaults toolName and omits agentOptions when apply() is called directly (schema bypass)', async () => {
@@ -1114,17 +1141,61 @@ describe('dsh-tool-subagent continuable background mode', () => {
     roots.push(root)
     await ctx.plugin(JsonlSessionPersistence, { root })
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(CommandRuntime)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     await ctx.plugin(LocalJobRegistry)
     await ctx.plugin(ToolTasks, {})
-    await ctx.plugin(tool, { provider: 'spawn', backgroundMode: 'continuable' })
-    ctx.llm.registerAdapter(['mock'], new MockAdapter([
+    const toolFiber = await ctx.plugin(tool, { provider: 'spawn', backgroundMode: 'continuable', commandName: 'delegate', commandForkProvider: 'spawn' })
+    ctx.llm.registerAdapter(['mock', 'other-provider'], new MockAdapter([
       textResponse('continuable answer'),
     ]))
     const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
-    return { ctx, parent }
+    return { ctx, parent, toolFiber }
   }
+
+  it('registers /delegate, starts a cross-provider child without a parent model turn, and unregisters with the plugin', async () => {
+    const { ctx, parent, toolFiber } = await continuableSetup()
+    expect(ctx.commands.list(parent)).toContainEqual(expect.objectContaining({
+      name: 'delegate',
+      input: { hint: '[--provider <id> --model <id>] [--fork] <task>', images: true },
+    }))
+
+    const execution = await ctx.commands.execute(
+      parent,
+      '/delegate --provider other-provider --model luna inspect the authentication failures',
+      [],
+      testToolSignal,
+    )
+    expect(execution?.result).toMatchObject({ kind: 'success' })
+    const childId = /Started background subagent (\S+)\./u.exec(execution?.result.text ?? '')?.[1]
+    expect(childId).toBeDefined()
+    await vi.waitFor(() => {
+      expect(ctx.agents.get(SessionId(childId!))).toBeUndefined()
+    }, { timeout: 5_000 })
+    const child = await ctx.sessionPersistence.load(SessionId(childId!))
+    const header = child.events.find(event => event.type === 'request/header')
+    expect(header?.type === 'request/header' && header.data.header.config).toMatchObject({
+      provider: 'other-provider',
+      model: 'luna',
+    })
+    expect(parent.session.events.filter(event => event.type === 'command/run')).toHaveLength(1)
+    expect(parent.session.events.filter(event => event.type === 'command/done')).toHaveLength(1)
+
+    await toolFiber.dispose()
+    expect(ctx.commands.list(parent).some(command => command.name === 'delegate')).toBe(false)
+  })
+
+  it('returns command grammar errors without creating a child', async () => {
+    const { ctx, parent } = await continuableSetup()
+    const before = ctx.sessions.list().length
+    const execution = await ctx.commands.execute(parent, '/delegate --provider other-provider missing model', [], testToolSignal)
+
+    expect(execution?.result.kind).toBe('error')
+    if (execution?.result.kind !== 'error') throw new Error('expected command grammar error')
+    expect(execution.result.text).toContain('--provider requires --model')
+    expect(ctx.sessions.list()).toHaveLength(before)
+  })
 
   it('classifies continuable background calls concurrency-safe', async () => {
     const { ctx } = await continuableSetup()

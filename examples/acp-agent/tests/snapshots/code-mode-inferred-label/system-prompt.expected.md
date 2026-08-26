@@ -30,7 +30,8 @@ Use subagent in the background by default. Start independent delegations togethe
 `run_code` takes one required argument: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). `description` is optional; DSH infers the run title when it is omitted. Inside the program:
 
 - Call tools as `await tools.name(args)` — quoted access for exotic names: `tools["my-tool"](args)`. Every call resolves to the tool's typed canonical JSON value. Tool arguments must be lossless JSON.
-- A FAILED tool call rejects with `ToolCallError`, whose `toolName` identifies the failed tool and whose `message` is human-readable — `try/catch` it to handle and continue.
+- For a capability omitted from the declarations below, call `await tools.describe(name)` for its exact run-scoped schema, then `await tools.call({ name, args })`. Do not guess arguments.
+- A FAILED tool call rejects with `ToolCallError`, whose `toolName` identifies the failed tool or discovery helper and whose `message` is human-readable — `try/catch` it to handle and continue.
 - Independent read-only calls MAY overlap under `Promise.all` (safe calls run concurrently; mutating calls run alone, in submission order). Sequence dependent work with `await`.
 - Emit results with `return` and/or `console.log(...)`. Only what you print or return is program output. A successful tool result containing an image is attached after the run so you can inspect it on the next step; every other intermediate result stays out of the conversation, so extract just what you need.
 
@@ -143,6 +144,10 @@ interface ToolArgsMap {
     description: string;
     /** The complete, self-contained task for the subagent. It does not share this conversation's context, so include everything it needs. */
     prompt: string;
+    /** LLM provider route for the child. Requires an explicit model; omit both fields to inherit the parent or configured agentOptions. */
+    provider?: string;
+    /** Provider-owned model id for the child. With provider omitted, overrides only the model on the inherited or configured provider. */
+    model?: string;
     /** Whether to run in the background and return a durable subagent id immediately. Defaults to true. Set false to wait for the result when your next action depends on it. */
     run_in_background?: boolean;
   } & Record<string, JsonValue>;
@@ -152,6 +157,10 @@ interface ToolArgsMap {
     description: string;
     /** The task for the subagent. It already sees this conversation's completed turns, so build on them freely and state only what is new. */
     prompt: string;
+    /** LLM provider route for the child. Requires an explicit model; omit both fields to inherit the parent or configured agentOptions. */
+    provider?: string;
+    /** Provider-owned model id for the child. With provider omitted, overrides only the model on the inherited or configured provider. */
+    model?: string;
   } & Record<string, JsonValue>;
   /** Record and update a structured task list for the current work. Send the ENTIRE list every call — it REPLACES the previous list (there are no partial updates, no per-item edits). Use it to plan multi-step work and show progress: add one todo per concrete step before you start. Mark every todo being actively worked on `in_progress` — several at once when work genuinely runs in parallel (e.g. concurrent subagents or background commands), one for sequential work; while work remains, at least one task should be `in_progress`. Mark a todo `completed` the moment it is done (do not batch completions), and allow no `in_progress` item only once all work is complete. Skip the list for trivial single-step tasks. Statuses: `pending` (not started), `in_progress` (being worked on now), `completed` (finished). */
   todo_write: {
@@ -432,12 +441,23 @@ interface ToolOutputMap {
 
 type ToolName = keyof ToolOutputMap
 
+type CodeDiscoveryHelperName = "call" | "describe"
+
+interface ToolDescriptor {
+  name: string;
+  description: string;
+  parameters: JsonValue;
+}
+
 declare class ToolCallError extends Error {
   readonly name: "ToolCallError";
-  readonly toolName: ToolName;
+  readonly toolName: ToolName | CodeDiscoveryHelperName;
 }
 
 declare const tools: {
   [K in ToolName]: (args: ToolArgsMap[K]) => Promise<ToolOutputMap[K]>;
+} & {
+  describe(name: string | { name: string }): Promise<ToolDescriptor>;
+  call(request: { name: string; args?: JsonValue }): Promise<JsonValue>;
 }
 ```

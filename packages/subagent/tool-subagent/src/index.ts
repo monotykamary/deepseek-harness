@@ -1,5 +1,5 @@
 /**
- * Model-facing delegation through one configured `ctx.subagents` provider.
+ * Model- and human-facing delegation through one configured `ctx.subagents` provider.
  * Provider lifecycle controls tool registration and context-sensitive schema
  * wording. Foreground calls always dispose the run after collection.
  * Background policy is selected by this plugin's configuration: one-shot
@@ -11,19 +11,23 @@
 import type { Context } from '@monotykamary/cordis'
 import z from '@monotykamary/schemastery'
 import { defineTool } from '@monotykamary/dsh-tools'
-import type { AgentOptions } from '@monotykamary/dsh-agent'
+import type { Agent, AgentOptions } from '@monotykamary/dsh-agent'
 import type { ContentBlock } from '@monotykamary/dsh-llm'
 import type { JsonValue } from '@monotykamary/dsh-session'
 import { assertSubagentMaxDepth, settleRun } from '@monotykamary/dsh-subagent'
 import type { SubagentProvider, SubagentResult, SubagentRun } from '@monotykamary/dsh-subagent'
 import type { JobOutcome } from '@monotykamary/dsh-jobs'
 import type {} from '@monotykamary/dsh-system-prompt'
+import type { CommandInvocation, CommandResult } from '@monotykamary/dsh-commands'
 
 export const name = 'tool-subagent'
 export const inject = ['tools', 'subagents', 'systemPrompt']
 
 /** Prompt order after bounded delegation policy and before child reporting. */
 const SUBAGENT_SECTION_ORDER = 116.5
+
+/** Human command names use the registry's lowercase portable grammar. */
+const COMMAND_NAME = /^[a-z][a-z0-9_-]*$/u
 
 /** Config: which registered provider this tool delegates to, plus child defaults. */
 export interface Config {
@@ -50,6 +54,10 @@ export interface Config {
    * Agent options applied to every child; omitted fields use child-loop defaults.
    */
   agentOptions?: AgentOptions
+  /** Optional human command name for direct continuable delegation (for example `delegate`). */
+  commandName?: string
+  /** Optional continuable provider selected by the command's `--fork` flag. */
+  commandForkProvider?: string
   /**
    * Per-child persona that shadows `deployment:persona`. Requires the
    * provider's `persona` capability; omission preserves the deployment persona.
@@ -89,6 +97,8 @@ export const Config: z<Config> = z.object({
     model: z.string(),
     maxTokens: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER),
   }).default(undefined as unknown as { provider: string; model: string; maxTokens: number }),
+  commandName: z.string(),
+  commandForkProvider: z.string(),
   persona: z.string(),
   // Preserve omission; Schemastery's `{ allow: [] }` default would deny every tool.
   toolFilter: z.object({
@@ -273,6 +283,133 @@ function resolveDelegationRun(
   }
 }
 
+interface RequestedModelRoute {
+  readonly provider?: string
+  readonly model?: string
+}
+
+/** Merge one call's explicit route over deployment child defaults. */
+function resolveAgentOptions(configured: AgentOptions | undefined, requested: RequestedModelRoute): AgentOptions | undefined {
+  const provider = requested.provider?.trim() || undefined
+  const model = requested.model?.trim() || undefined
+  if (provider !== undefined && model === undefined) {
+    throw new Error('a subagent provider override requires an explicit model override')
+  }
+  if (configured === undefined && provider === undefined && model === undefined) return undefined
+  return {
+    ...configured,
+    ...provider === undefined ? {} : { provider },
+    ...model === undefined ? {} : { model },
+  }
+}
+
+interface ParsedDelegateCommand extends RequestedModelRoute {
+  readonly fork: boolean
+  readonly task: string
+}
+
+/** Parse the prefix-only `/delegate` flag grammar; all remaining text is the task. */
+function parseDelegateCommand(rawInput: string): ParsedDelegateCommand | string {
+  let rest = rawInput.trim()
+  let provider: string | undefined
+  let model: string | undefined
+  let fork = false
+  const consumeValue = (flag: 'provider' | 'model'): string | undefined => {
+    const match = new RegExp(`^--${flag}(?:=([^\\s]+)|\\s+([^\\s]+))(?:\\s+|$)`, 'u').exec(rest)
+    if (match === null) return undefined
+    const value = match[1] ?? match[2]
+    /* one of the two value captures exists whenever the expression matches */
+    if (value === undefined) return undefined
+    rest = rest.slice(match[0].length).trimStart()
+    return value
+  }
+  while (rest.startsWith('--')) {
+    if (rest === '--') {
+      rest = ''
+      break
+    }
+    if (/^--(?:\s|$)/u.test(rest)) {
+      rest = rest.replace(/^--(?:\s+|$)/u, '')
+      break
+    }
+    if (/^--fork(?:\s+|$)/u.test(rest)) {
+      if (fork) return 'duplicate --fork flag'
+      fork = true
+      rest = rest.replace(/^--fork(?:\s+|$)/u, '')
+      continue
+    }
+    const providerValue = consumeValue('provider')
+    if (providerValue !== undefined) {
+      if (provider !== undefined) return 'duplicate --provider flag'
+      provider = providerValue
+      continue
+    }
+    const modelValue = consumeValue('model')
+    if (modelValue !== undefined) {
+      if (model !== undefined) return 'duplicate --model flag'
+      model = modelValue
+      continue
+    }
+    const unknown = /^([^\s]+)/u.exec(rest)?.[1] ?? rest
+    return `unknown delegation flag ${JSON.stringify(unknown)}`
+  }
+  const task = rest.trim()
+  if (task.length === 0) return 'delegation task is required'
+  if (provider !== undefined && model === undefined) return '--provider requires --model'
+  return { fork, task, ...provider === undefined ? {} : { provider }, ...model === undefined ? {} : { model } }
+}
+
+/** Derive a short child label without changing the delegated task text. */
+function commandLabel(task: string): string {
+  return task.split(/\s+/u).slice(0, 5).join(' ').slice(0, 80)
+}
+
+/** Build the shared child request for model and human continuable starts. */
+function delegationRequest(
+  config: Config,
+  parent: Agent,
+  label: string,
+  prompt: ContentBlock[],
+  agentOptions: AgentOptions | undefined,
+) {
+  const maxDepth = typeof config.maxDepth === 'number' ? config.maxDepth : undefined
+  return {
+    label,
+    prompt,
+    parent,
+    ...agentOptions === undefined ? {} : { agentOptions },
+    ...config.persona === undefined ? {} : { persona: config.persona },
+    ...config.toolFilter === undefined ? {} : { toolFilter: config.toolFilter },
+    ...maxDepth === undefined ? {} : { maxDepth },
+  }
+}
+
+/** Start one direct human delegation without opening a parent model turn. */
+async function executeDelegateCommand(
+  ctx: Context,
+  config: Config,
+  invocation: CommandInvocation,
+): Promise<CommandResult> {
+  const parsed = parseDelegateCommand(invocation.rawInput)
+  const usage = `Usage: /${config.commandName ?? 'delegate'} [--provider <id> --model <id>] [--fork] <task>`
+  if (typeof parsed === 'string') return { kind: 'error', text: `${parsed}. ${usage}` }
+  const label = commandLabel(parsed.task)
+  const prompt: ContentBlock[] = [...invocation.attachments, { type: 'text', text: parsed.task }]
+  const agentOptions = resolveAgentOptions(config.agentOptions, parsed)
+  let selectedSubagentProvider = config.provider
+  if (parsed.fork) {
+    if (config.commandForkProvider === undefined) return { kind: 'error', text: `--fork is unavailable for this command. ${usage}` }
+    selectedSubagentProvider = config.commandForkProvider
+  }
+  const started = await ctx.subagents.startContinuable({
+    provider: selectedSubagentProvider,
+    label,
+    request: delegationRequest(config, invocation.agent, label, prompt, agentOptions),
+    signal: invocation.signal,
+  })
+  return { kind: 'success', text: `Started background subagent ${started.childId}.` }
+}
+
 export function apply(ctx: Context, config: Config): void {
   // Direct apply() bypasses Schemastery's numeric constraints. A direct-apply
   // omission stays capless (the schema default only runs through the loader).
@@ -284,6 +421,37 @@ export function apply(ctx: Context, config: Config): void {
   const backgroundEnabled = config.enableRunInBackground !== false
   const continuable = (config.backgroundMode ?? 'one-shot') === 'continuable'
   const toolName = config.toolName ?? 'subagent'
+  const commandName = config.commandName
+  if (commandName !== undefined && !COMMAND_NAME.test(commandName)) {
+    throw new Error(`tool-subagent: commandName ${JSON.stringify(commandName)} must match ${String(COMMAND_NAME)}`)
+  }
+  if (commandName !== undefined && !continuable) {
+    throw new Error('tool-subagent: commandName requires `backgroundMode: continuable`')
+  }
+  if (config.commandForkProvider !== undefined && commandName === undefined) {
+    throw new Error('tool-subagent: commandForkProvider requires commandName')
+  }
+  if (commandName !== undefined) {
+    ctx.inject(['commands'], (commandCtx) => {
+      const active = new Set<Promise<CommandResult>>()
+      const handler = (invocation: CommandInvocation): Promise<CommandResult> => {
+        const operation = executeDelegateCommand(ctx, config, invocation)
+        active.add(operation)
+        const retire = (): void => { active.delete(operation) }
+        void operation.then(retire, retire)
+        return operation
+      }
+      commandCtx.effect(function* () {
+        yield async () => { await Promise.allSettled(active) }
+        yield commandCtx.commands.register({
+          name: commandName,
+          description: 'Delegate a task directly to a background subagent',
+          input: { hint: '[--provider <id> --model <id>] [--fork] <task>', images: true },
+          handler,
+        })
+      }, 'tool-subagent command lifecycle')
+    })
+  }
   // Mirror provider lifecycle because sibling load order and HMR replacement
   // can change provider availability while this fiber remains active.
   let disposeTool: (() => void) | undefined
@@ -324,9 +492,13 @@ export function apply(ctx: Context, config: Config): void {
           required: true,
           description: wording.promptDescription,
         },
+        provider: {
+          type: 'string',
+          description: 'LLM provider route for the child. Requires an explicit model; omit both fields to inherit the parent or configured agentOptions.',
+        },
         model: {
           type: 'string',
-          description: 'Model id for the subagent (provider adapter id); omit to inherit this session model or the configured agentOptions.',
+          description: 'Provider-owned model id for the child. With provider omitted, overrides only the model on the inherited or configured provider.',
         },
         ...backgroundEnabled ? {
           run_in_background: {
@@ -386,22 +558,17 @@ export function apply(ctx: Context, config: Config): void {
           throw new Error('subagent tool requires a calling agent (exec.agent was undefined)')
         }
 
-        const maxDepth = typeof config.maxDepth === 'number' ? config.maxDepth : undefined
-        const modelOption = typeof args.model === 'string' && args.model.trim() !== ''
-          ? args.model.trim()
-          : undefined
-        const agentOptions = config.agentOptions !== undefined || modelOption !== undefined
-          ? { ...config.agentOptions, ...modelOption !== undefined ? { model: modelOption } : {} }
-          : undefined
-        const request = {
-          label: args.description,
-          prompt: [{ type: 'text', text: args.prompt }] as ContentBlock[],
+        const agentOptions = resolveAgentOptions(config.agentOptions, {
+          ...typeof args.provider === 'string' ? { provider: args.provider } : {},
+          ...typeof args.model === 'string' ? { model: args.model } : {},
+        })
+        const request = delegationRequest(
+          config,
           parent,
-          ...agentOptions !== undefined ? { agentOptions } : {},
-          ...config.persona !== undefined ? { persona: config.persona } : {},
-          ...config.toolFilter !== undefined ? { toolFilter: config.toolFilter } : {},
-          ...maxDepth !== undefined ? { maxDepth } : {},
-        }
+          args.description,
+          [{ type: 'text', text: args.prompt }] as ContentBlock[],
+          agentOptions,
+        )
 
         const runSpec = resolveDelegationRun(args, { backgroundEnabled, continuable })
         if (runSpec.runInBackground) {

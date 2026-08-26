@@ -16,6 +16,10 @@
 
 `agent.followup()` 没有逐消息的完成状态或结果；后台任务的完成与轮次边界存在竞争；`reader.close()` 在 EOF 和 dispose（资源释放）两种情况下都会触发。切勿把 `agent/status` 或 `whenIdle()` 当作某次 `followup()` 的结果：多条已排队的后续消息、steering（中途引导）和注入工作可能共用同一个 `running` 区间，而取消或资源释放可能丢弃尚未启动的项。真正拥有一次运行的自动化调用方必须显式定义其区间——例如从消息的持久 inbox 回执到整个 agent（智能体）下一次进入 `idle`——并将选取的任何输出描述为整个区间的输出，而不是把因果关系归于该消息。这条守则是双向的：如果等待的转换永远不会发生，等待就会挂起，因此应显式处理「无需等待」的分支。
 
+## 负责被丢弃的拒绝
+
+在有文档说明的分离点，应在交付前观察拒绝并返回原始 Promise。等待方保留失败；被丢弃的工作无法到达 `unhandledRejection`。绝不筛除全局处理器（[Code Mode 事故](../.agents/notes/implemented/bug-fix/2026-08-26-code-mode-binding-rejection-containment.zh.md)）。
+
 <a id="dispose-must-reach-quiescence-not-just-request-it"></a>
 
 ## dispose 必须达到完全停稳，而不仅仅是请求停止

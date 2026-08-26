@@ -14,7 +14,7 @@
 | [`subagent-codex/`](subagent-codex/README.zh.md) | 启动真实的 Codex app-server 子 agent | 注册到 `ctx.subagents` |
 | [`subagent-claude-code/`](subagent-claude-code/README.zh.md) | 通过官方 Claude Agent SDK 启动真实的 Claude Code 子 agent | 注册到 `ctx.subagents` |
 | [`subagent-dsh-sdk/`](subagent-dsh-sdk/README.zh.md) | 通过 TypeScript SDK 启动进程外 Harness 子 agent | 注册到 `ctx.subagents` |
-| [`tool-subagent/`](tool-subagent/README.zh.md) | 向模型公开委派操作 | 注册到 `ctx.tools` |
+| [`tool-subagent/`](tool-subagent/README.zh.md) | 向模型公开委派操作，并提供可选的直接人类命令 | 注册到 `ctx.tools`，并可选注册到 `ctx.commands` |
 | [`tool-subagent-control/`](tool-subagent-control/README.zh.md) | 向模型公开子级消息发送和列举操作 | 注册到 `ctx.tools` |
 | [`tool-subagent-report/`](tool-subagent-report/README.zh.md) | 提供从子级到父级的报告通道 | 注册到子级作用域 |
 

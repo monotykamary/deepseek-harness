@@ -24,7 +24,7 @@ Status: implemented
 
 候选条目必须是同一目录中的文件名。空条目、`.`／`..`，以及包含 `/` 或 `\` 的条目会被忽略。其他同目录名称可以显式选择加入；规则目录和导入语义不属于本约定。
 
-用户全局文件固定为 `$DSH_HOME/AGENTS.md`，不受任一候选列表影响，也没有本地覆盖层。`$DSH_HOME` 默认为 `~/.dsh`，与 `~/.codex` 或 `~/.claude` 在 harness 层的 home 角色一致，而不会引入插件专用 home。波浪号展开与默认值位于 `dsh-home-paths` 中，以便未来的 harness 功能共享同一约定。
+用户全局文件固定为 `$DSH_HOME/AGENTS.md`，不受任一候选列表影响，也没有本地覆盖层。它仍属于较低权限的持久基线；独立的 [`APPEND_SYSTEM.md` 决策](2026-08-26-trusted-user-system-instructions.zh.md)负责受信任用户系统策略。`$DSH_HOME` 默认为 `~/.dsh`，与 `~/.codex` 或 `~/.claude` 在 harness 层的 home 角色一致，而不会引入插件专用 home。波浪号展开与默认值位于 `dsh-home-paths` 中，以便未来的 harness 功能共享同一约定。
 
 ### 基线注入
 

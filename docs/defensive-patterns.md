@@ -16,6 +16,10 @@ When an implementation receives several representations of one outcome, normaliz
 
 `agent.followup()` has no per-message completion or result; a background job's completion races turn boundaries; `reader.close()` fires for both EOF and disposal. Never treat `agent/status` or `whenIdle()` as the result of one follow-up: several queued follow-ups, steering, and injected work may share one `running` interval, while cancellation or disposal can discard unstarted items. An automation caller that truly owns a run must define its interval explicitly—for example, from its message's durable inbox receipt through the next whole-agent `idle`—and describe any selected output as interval-wide rather than causally attributed to that message. The guard cuts both ways: if the awaited transition can never occur, the wait hangs, so handle the "nothing to wait for" branch explicitly.
 
+## Own dropped rejections
+
+At documented detach points, observe rejection before handoff and return the original Promise. Awaiters retain failures; dropped work cannot reach `unhandledRejection`. Never filter global handlers ([Code Mode incident](../.agents/notes/implemented/bug-fix/2026-08-26-code-mode-binding-rejection-containment.md)).
+
 ## Dispose must reach quiescence, not just request it
 
 A teardown that issues kills/aborts but returns before the work stops leaves orphans. Make cleanup async and await the children's exit (kill → await `done`), and close listener/notification registries BEFORE killing so late completions stay silent.

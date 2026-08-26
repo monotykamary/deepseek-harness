@@ -111,8 +111,12 @@ export interface Config {
 ```ts config-catalog
 /** User-facing workspace instruction loader configuration. */
 export interface Config {
-  /** Harness home containing the fixed user-global `AGENTS.md`; defaults to `$DSH_HOME` or `~/.dsh`. */
+  /** Harness home containing user-global guidance and trusted system instructions; defaults to `$DSH_HOME` or `~/.dsh`. */
   dshHome?: string
+  /** Same-directory file under the Harness home loaded as trusted system instructions. */
+  trustedSystemFile?: string
+  /** Maximum UTF-8 bytes accepted from the trusted system-instruction file. */
+  trustedSystemMaxBytes?: number
   /** Directory entries that identify the project root while walking upward from the session cwd. */
   projectRootMarkers?: string[]
   /** UTF-8 byte cap for one rendered baseline or dynamic batch; non-positive or non-finite disables loading. */
@@ -132,7 +136,7 @@ export interface Config {
 }
 ```
 
-来源：[`packages/context/agent-instructions/src/config.ts:18`](../packages/context/agent-instructions/src/config.ts)
+来源：[`packages/context/agent-instructions/src/config.ts:20`](../packages/context/agent-instructions/src/config.ts)
 
 <a id="monotykamarydsh-agent-loop"></a>
 
@@ -2947,6 +2951,10 @@ export interface Config {
    * Agent options applied to every child; omitted fields use child-loop defaults.
    */
   agentOptions?: AgentOptions
+  /** Optional human command name for direct continuable delegation (for example `delegate`). */
+  commandName?: string
+  /** Optional continuable provider selected by the command's `--fork` flag. */
+  commandForkProvider?: string
   /**
    * Per-child persona that shadows `deployment:persona`. Requires the
    * provider's `persona` capability; omission preserves the deployment persona.
@@ -2978,7 +2986,7 @@ export interface Config {
 
 依赖：[`AgentOptions`](subsystems/core.zh.md)
 
-来源：[`packages/subagent/tool-subagent/src/index.ts:29`](../packages/subagent/tool-subagent/src/index.ts)
+来源：[`packages/subagent/tool-subagent/src/index.ts:33`](../packages/subagent/tool-subagent/src/index.ts)
 
 <a id="monotykamarydsh-tool-subagent-report"></a>
 
@@ -3127,7 +3135,7 @@ export type ToolPresentationMode = 'native' | 'code' | 'both'
 export type RunCodeLabelMode = 'required' | 'inferred'
 ```
 
-来源：[`packages/core/tools/src/index.ts:684`](../packages/core/tools/src/index.ts)
+来源：[`packages/core/tools/src/index.ts:685`](../packages/core/tools/src/index.ts)
 
 <a id="monotykamarydsh-typert-loader"></a>
 

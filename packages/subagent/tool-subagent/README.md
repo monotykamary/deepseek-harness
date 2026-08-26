@@ -2,15 +2,17 @@
 
 English | [中文](README.zh.md)
 
-The model-facing delegation tool over one configured `ctx.subagents` provider. Changing the provider changes transport without changing the execution contract.
+Model- and human-facing delegation Consumers over one configured `ctx.subagents` provider. Changing the provider changes transport without changing the execution contract.
 
 ## Provider selection and lifecycle
 
-Each plugin instance binds one `provider` to one `toolName`; the model receives no provider selector. Load another distinctly named instance to expose another transport. The tool registers only while its provider exists, avoiding sibling load-order and provider-reload dependencies. Its description follows `provider.inheritsParentContext`: fresh children require standalone prompts, while forked children already see completed parent turns.
+Each plugin instance binds one subagent transport `provider` to one `toolName`; the model receives no transport selector. Load another distinctly named instance to expose another transport. The tool registers only while its provider exists, avoiding sibling load-order and provider-reload dependencies. Its description follows `provider.inheritsParentContext`: fresh children require standalone prompts, while forked children already see completed parent turns. The tool's optional `provider` and `model` arguments instead select the child LLM route: `model` alone keeps the inherited/configured provider, while `provider` requires an explicit `model`, enabling cross-provider delegation without changing transport. When both are omitted, an in-process child inherits the parent's active assembled route, or its live next-step selection while idle, rather than the parent's static creation default.
 
 A foreground call passes the execution signal through startup and execution, awaits `run.result`, and always awaits `run.dispose()` before returning. Only `completed` returns the canonical `{ kind: 'foreground', runId, output: JsonValue[] }`, rendered as the same final text. Abort, refusal, token limit, and other failures become errored tool results whose message contains the stop-reason headline, an optional provider-authored `SubagentResult.diagnostic`, and then any preserved partial assistant text. The diagnostic remains separate from `SubagentResult.output`, so a truncated answer is never reported as success or confused with infrastructure detail. If result collection and disposal both reject, the errored result preserves both failures.
 
 `backgroundMode` selects both the background route and the omitted `run_in_background` default. `one-shot` waits in the foreground by default; an explicit `true` registers a plain parent-owned Task and returns canonical `{ kind: 'background', jobId }`, rendered as `started background subagent job <id>`, even when the provider supports continuable children. Generic task tools own its later status, collection, cancellation, and notices; a failed Task keeps the stop reason and the same optional provider diagnostic in its detail. `continuable` runs in the background when the argument is omitted or `true`; an explicit `false` waits for the result in the foreground. Its background route requires a provider with the `prepareContinuable` capability, calls `ctx.subagents.startContinuable()`, and returns `{ kind: 'continuable', subagentId }`, rendered as `started subagent <childId>`. The route resolves at inbox acceptance: the child owns its own turns from there, so this call neither waits for nor collects a result. The child's transcript by that id remains the source of its detailed output, and the optional global `send_message` tool sends it more work. The continuation service delivers one settlement notice whenever the child's Activation ends, containing its outcome and any final assistant message independently of `report`. Starting continuable work does not require `send_message` to be loaded. See the [background subagent Agent Note](../../../.agents/notes/implemented/feature/2026-07-08-background-subagent-tasks.md), the [continuable subagents Agent Note](../../../.agents/notes/implemented/feature/2026-07-28-continuable-subagent-conversations.md), and the [background-first delegation Agent Note](../../../.agents/notes/implemented/feature/2026-08-11-background-first-continuable-delegation.md).
+
+When `commandName` is configured, the same Consumer registers a scoped human command while `ctx.commands` is available. `/delegate [--provider <id> --model <id>] [--fork] <task>` starts a continuable child without a parent model turn; `--fork` selects `commandForkProvider`, images accompany the child prompt, expected grammar errors preserve the composer draft, and command/plugin teardown removes admission before draining starts already in progress.
 
 `toolFilter` changes the child's global tool layer but is not a parent-derived authority ceiling. See the [agent-scope security non-goal](../../../.agents/notes/implemented/architecture/2026-07-08-agent-scope-contexts.md#security-and-authority-are-non-goals).
 
@@ -22,7 +24,9 @@ A foreground call passes the execution signal through startup and execution, awa
 | `toolName` | Model-facing name, default `subagent`; distinct for every loaded instance. |
 | `enableRunInBackground` | Exposes background mode, default `true`; disabling also rejects forced background calls. |
 | `backgroundMode` | Background lifecycle policy, default `one-shot`. `one-shot` defaults calls to foreground; `continuable` defaults them to background, requires the provider's `prepareContinuable` capability, and returns a durable child id without requiring the follow-up tool. |
-| `agentOptions` | Provider-specific child `provider`, `model`, and positive `maxTokens`; the in-process provider treats explicit values as overrides of inherited parent options. |
+| `agentOptions` | Default child LLM `provider`, `model`, and positive `maxTokens`; explicit values override the parent's effective live route. A tool call or `/delegate` flags can replace the provider/model pair. |
+| `commandName` | Optional human command name. Requires `backgroundMode: continuable`; the shipped fresh-child instance uses `delegate`. |
+| `commandForkProvider` | Optional continuable subagent provider selected by `/delegate --fork`; requires `commandName`. |
 | `persona` | Per-child persona; requires provider `persona` capability. |
 | `toolFilter` | Per-child global-tool restriction; requires `toolFilter` capability. |
 | `maxDepth` | Absolute delegation-depth cap, default `3` (`0` forbids delegation); a numeric cap requires the `depthLimit` capability and fails the mount without it. `'provider-managed'` sends no cap for an out-of-process provider whose budget belongs to the child harness. The tool stays visible at the cap; each attempted start checks the calling agent's current depth and returns an errored tool result when rejected. |
@@ -37,7 +41,7 @@ Foreground and background calls are concurrency-safe: sibling delegations in one
 
 #### What the model sees
 
-The generated default [`subagent` schema](../../../docs/tool-catalog.md#monotykamarydsh-tool-subagent) under this instance's configured name while its provider exists. Provider context inheritance changes the tool and prompt descriptions. Enabled background mode adds `run_in_background`: continuable mode documents its `true` default, runtime settlement notice, and explicit foreground override, while one-shot mode documents its `false` default and the job id collected with `job_output` or stopped with `job_kill`. While the tool is visible in an assembly's scope, a `tool:<toolName>` system-prompt section tells the model to start independent continuable delegations together, keep working while they run, and choose foreground only when its next action depends on the result; a tool restriction removes both its schema and this guidance.
+The generated default [`subagent` schema](../../../docs/tool-catalog.md#monotykamarydsh-tool-subagent) under this instance's configured name while its provider exists. Provider context inheritance changes the tool and prompt descriptions. The optional child-LLM `provider`/`model` fields permit an exact cross-provider route; provider without model fails before startup. Enabled background mode adds `run_in_background`: continuable mode documents its `true` default, runtime settlement notice, and explicit foreground override, while one-shot mode documents its `false` default and the job id collected with `job_output` or stopped with `job_kill`. While the tool is visible in an assembly's scope, a `tool:<toolName>` system-prompt section tells the model to start independent continuable delegations together, keep working while they run, and choose foreground only when its next action depends on the result; a tool restriction removes both its schema and this guidance.
 
 #### Token effect
 
@@ -46,6 +50,20 @@ Fixed schema cost per parent request; each provider instance adds one schema, an
 #### KV Cache effect
 
 Prefix-stable while provider instances, names, descriptions, and schemas are unchanged. Provider registration lifecycle may invalidate parent reuse from the first changed tool definition.
+
+### Direct human delegation
+
+#### What the model sees
+
+The parent model sees no command input or command result because `/delegate` executes in the human command plane. The child model receives the command task and admitted images as its initial user message under the selected provider/model route.
+
+#### Token effect
+
+Zero parent-model tokens and one ordinary child turn. The parent later receives the continuation service's settlement notice.
+
+#### KV Cache effect
+
+The command itself does not change the parent's request prefix. Child cache behavior follows a fresh or configured forked child; the later settlement notice is append-only in the parent.
 
 ### Foreground result
 
@@ -79,4 +97,4 @@ Append-only; newly visible content follows the reusable request prefix and does 
 
 - **Background runs expose no result through this tool** — a one-shot task's final output is collected through the generic task surface, and a continuable child's output stays in its own session, read by its subagent id. The settlement notice states how that child ended and carries any final assistant message, but it is not this call's return value and cannot be awaited here.
 - **Duplicate names across waiting one-shot instances are detected late** (`TODO(subagent-dup-toolname)`) — continuable instances reserve their prompt-section name during plugin application, but preventing provider-registration rollback for waiting one-shot instances requires a registry of intended names.
-- **Child policy is fixed per instance** — another model, persona, tool filter, or depth cap requires another distinctly named tool.
+- **Human command routing is intentionally narrow** — `/delegate` accepts prefix flags for one exact provider/model pair and an optional configured fork provider; it does not resolve aliases, reasoning effort, personas, or per-call tool filters.

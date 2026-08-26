@@ -737,7 +737,8 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 \`run_code\` takes two required arguments: \`code\` — the body of an async Python function (top-level \`await\` and \`return\` both work) — and \`description\`, a short summary of what the program does. At run time exactly two of the names declared below are bound: \`tools\` and \`ToolCallError\`. Everything else is a STATIC STUB describing argument and return types — in particular the \`TypedDict\` classes do NOT exist at run time, so build arguments as plain \`dict\`/\`list\` JSON values: \`await tools.name({"field": 1})\`, never \`FooArgs(field=1)\`, which raises \`NameError\`. Inside the program:
 
 - Call tools as \`await tools.name(args)\` — subscript access for exotic, reserved, or underscore-leading names: \`await tools["my-tool"](args)\`. Every call resolves to the tool's typed canonical JSON value (each method's return type below). Tool arguments must be lossless JSON.
-- A FAILED tool call raises \`ToolCallError\`, whose \`toolName\` identifies the failed tool and whose message is human-readable — wrap in \`try/except\` to handle and continue.
+- For a capability omitted from the declarations below, call \`await tools.describe(name)\` for its exact run-scoped schema, then \`await tools.call({"name": name, "args": args})\`. Do not guess arguments.
+- A FAILED tool call raises \`ToolCallError\`, whose \`toolName\` identifies the failed tool or discovery helper and whose message is human-readable — wrap in \`try/except\` to handle and continue.
 - Independent read-only calls MAY overlap under \`asyncio.gather\` (safe calls run concurrently; mutating calls run alone, in submission order). Sequence dependent work with \`await\`.
 - Emit the run's answer with \`print(...)\` and/or a top-level \`return <value>\`; the returned value must be lossless JSON. Only what you print and return is program output. A successful tool result containing an image is attached after the run so you can inspect it on the next step; every other intermediate result stays out of the conversation, so extract just what you need.
 
@@ -772,14 +773,15 @@ function sdkInstructions(labelMode: RunCodeLabelMode): string {
  */
 export function renderToolsSdkPy(schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode = 'required'): string {
   const sorted = [...schemas].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
-  const state: RenderState = { classes: [], usedClassNames: new Set(), nextClassCounter: new Map(), typing: new Set(['Protocol']) }
-  // ONE ordered member stream, matching the documented lexicographic contract
-  // and the TypeScript flavor (which quotes exotic keys in place rather than
-  // partitioning them out). Interleaving is free here: a comment line between
-  // two `async def` lines is not a statement, so it changes nothing about how
-  // the class body parses.
-  const members: string[] = []
-  let statements = 0
+  const state: RenderState = { classes: [], usedClassNames: new Set(), nextClassCounter: new Map(), typing: new Set(['Any', 'NotRequired', 'Protocol', 'TypedDict']) }
+  // The two runtime-owned discovery helpers lead the ONE ordered member stream;
+  // registered tool methods remain lexicographic after them, matching the
+  // TypeScript flavor's fixed helper intersection plus sorted tool map.
+  const members: string[] = [
+    `${pad(1)}async def describe(self, name: str) -> ToolDescriptor: ...`,
+    `${pad(1)}async def call(self, request: DynamicToolCall) -> Any: ...`,
+  ]
+  let statements = members.length
   for (const schema of sorted) {
     const argType = renderType(schema.parameters, `${camelCase(schema.name)}Args`, state)
     const outputType = renderType(schema.output, `${camelCase(schema.name)}Output`, state)
@@ -823,6 +825,10 @@ export function renderToolsSdkPy(schemas: ToolSdkSchema[], labelMode: RunCodeLab
   const imports = TYPING_ORDER.filter(symbol => state.typing.has(symbol))
   const classBlock = state.classes.length > 0 ? `${state.classes.join('\n\n')}\n\n` : ''
   const errorDeclaration = 'class ToolCallError(Exception):\n    toolName: str'
-  const declaration = `from typing import ${imports.join(', ')}\n\n${errorDeclaration}\n\n${classBlock}class Tools(Protocol):\n${body}\n\ntools: Tools`
+  const discoveryDeclarations = [
+    'class ToolDescriptor(TypedDict):\n    name: str\n    description: str\n    parameters: Any',
+    'class DynamicToolCall(TypedDict):\n    name: str\n    args: NotRequired[Any]',
+  ].join('\n\n')
+  const declaration = `from typing import ${imports.join(', ')}\n\n${errorDeclaration}\n\n${discoveryDeclarations}\n\n${classBlock}class Tools(Protocol):\n${body}\n\ntools: Tools`
   return `${sdkInstructions(labelMode)}\n\n\`\`\`python\n${declaration}\n\`\`\``
 }

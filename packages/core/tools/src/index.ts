@@ -21,8 +21,8 @@ import type {} from '@monotykamary/dsh-user-approval'
 import type { ToolCallView, ToolResultView } from './presentation.ts'
 import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode } from './json-schema.ts'
-import { createRunCodeTool, RUN_CODE_NAME, SDK_SECTION_ORDER } from './code-mode.ts'
-import type { CodeSdkLanguage, RunCodeLabelMode } from './code-mode.ts'
+import { CODE_DISCOVERY_HELPER_NAMES, createRunCodeTool, RUN_CODE_NAME, SDK_SECTION_ORDER } from './code-mode.ts'
+import type { CodeSdkLanguage, CodeDiscoveryHelperName, RunCodeLabelMode } from './code-mode.ts'
 import { renderToolsSdk } from './ts-types.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
 import { renderToolsSdkPy } from './py-types.ts'
@@ -104,7 +104,8 @@ export {
 export type { JsonValue } from '@monotykamary/dsh-session'
 export type { CodeDispatchEventData, CodeDispatchStartEventData } from './types.ts'
 
-export { CodeRunFailedError, RUN_CODE_NAME } from './code-mode.ts'
+export { CODE_DISCOVERY_HELPER_NAMES, CodeRunFailedError, RUN_CODE_NAME } from './code-mode.ts'
+export type { CodeDiscoveryHelperName } from './code-mode.ts'
 export { jsonSchemaToTs, renderToolsSdk } from './ts-types.ts'
 export { jsonSchemaToPy, renderToolsSdkPy } from './py-types.ts'
 export { defineContentToolFixture, type ContentToolFixtureOptions } from './testing.ts'
@@ -1100,7 +1101,8 @@ export class ToolRuntime extends Service {
 
   /**
    * Register globally or in the calling agent scope. Scoped tools shadow
-   * globals; duplicates within one layer and the reserved `run_code` name fail.
+   * globals; duplicates within one layer and the reserved `run_code`, `call`,
+   * and `describe` Code Mode names fail.
    * @param definition - tool schema, execution, and optional finalization/presentation callbacks.
    * @returns the exact disposer that unregisters the tool.
    */
@@ -1120,9 +1122,13 @@ export class ToolRuntime extends Service {
     }
     // Reserved unconditionally: any agent may select a code mode for itself,
     // so a name free to take under the deployment default would become a
-    // collision the moment a preset mounted.
+    // collision the moment a preset mounted. Discovery helpers share the
+    // `tools` namespace with registered bindings and require the same rule.
     if (name === RUN_CODE_NAME) {
       throw new Error(`tool name "${RUN_CODE_NAME}" is reserved for the Code Mode presentation transport and cannot be registered or shadowed`)
+    }
+    if ((CODE_DISCOVERY_HELPER_NAMES as readonly string[]).includes(name)) {
+      throw new Error(`tool name "${name}" is reserved for a Code Mode discovery helper and cannot be registered or shadowed`)
     }
     return this.layers.effect(
       this.ctx,
@@ -1133,7 +1139,7 @@ export class ToolRuntime extends Service {
 
   /**
    * Restrict global tools for the calling agent scope. Empty filters, unknown
-   * names, scope-local names, and reserved transport names fail. Restrictions
+   * names, scope-local names, and reserved transport/helper names fail. Restrictions
    * intersect; scoped registrations remain visible.
    * @param filter - global-tool mask: `allow` (keep only) and/or `deny` (remove).
    * @returns the exact disposer that lifts this restriction.
@@ -1152,8 +1158,14 @@ export class ToolRuntime extends Service {
       ...allow !== undefined ? { allow: new Set(allow) } : {},
       ...deny !== undefined ? { deny: new Set(deny) } : {},
     }
-    if ([...allow ?? [], ...deny ?? []].includes(RUN_CODE_NAME)) {
+    const restrictedNames = [...allow ?? [], ...deny ?? []]
+    if (restrictedNames.includes(RUN_CODE_NAME)) {
       throw new Error(`tools.restrict() cannot name reserved Code Mode presentation transport "${RUN_CODE_NAME}"; restrict end-capability tools instead`)
+    }
+    const helper = restrictedNames.find((name): name is CodeDiscoveryHelperName =>
+      (CODE_DISCOVERY_HELPER_NAMES as readonly string[]).includes(name))
+    if (helper !== undefined) {
+      throw new Error(`tools.restrict() cannot name reserved Code Mode discovery helper "${helper}"; restrict end-capability tools instead`)
     }
     const known = this.view(scope).restrictableNames
     const unknown = [...allow ?? [], ...deny ?? []].filter(name => !known.has(name))

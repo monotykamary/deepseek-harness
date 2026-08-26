@@ -544,7 +544,8 @@ presentAs(mode: ToolPresentationMode, options: ToolPresentationOptions = {}): ()
 
 /**
  * Register globally or in the calling agent scope. Scoped tools shadow
- * globals; duplicates within one layer and the reserved `run_code` name fail.
+ * globals; duplicates within one layer and the reserved `run_code`, `call`,
+ * and `describe` Code Mode names fail.
  * @param definition - tool schema, execution, and optional finalization/presentation callbacks.
  * @returns the exact disposer that unregisters the tool.
  */
@@ -552,7 +553,7 @@ register(definition: ToolDefinition): () => void
 
 /**
  * Restrict global tools for the calling agent scope. Empty filters, unknown
- * names, scope-local names, and reserved transport names fail. Restrictions
+ * names, scope-local names, and reserved transport/helper names fail. Restrictions
  * intersect; scoped registrations remain visible.
  * @param filter - global-tool mask: `allow` (keep only) and/or `deny` (remove).
  * @returns the exact disposer that lifts this restriction.

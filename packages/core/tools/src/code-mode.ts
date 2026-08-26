@@ -20,6 +20,12 @@ import type {} from './types.ts'
 /** The model-facing name of the Code Mode tool. */
 export const RUN_CODE_NAME = 'run_code'
 
+/** Run-scoped discovery helpers reserved on the Code Mode `tools` namespace. */
+export const CODE_DISCOVERY_HELPER_NAMES = ['call', 'describe'] as const
+
+/** One reserved Code Mode discovery-helper name. */
+export type CodeDiscoveryHelperName = typeof CODE_DISCOVERY_HELPER_NAMES[number]
+
 /** How a Code Mode presentation obtains the run card and compaction label. */
 export type RunCodeLabelMode = 'required' | 'inferred'
 
@@ -489,7 +495,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
       // would be narrowed away by control flow analysis.
       const runOver = (): boolean => runController.signal.aborted
 
-      const binding = (name: string): CodeBindingFunction => async (rawArgs: unknown): Promise<JsonValue> => {
+      const dispatchBinding = async (name: string, rawArgs: unknown): Promise<JsonValue> => {
         if (runOver()) {
           throw new Error(`run_code run is over (${String(runController.signal.reason)}); ${name} not dispatched`)
         }
@@ -631,6 +637,15 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         if (outcome.isError) throw new Error(outcome.message)
         return outcome.value
       }
+      const binding = (name: string): CodeBindingFunction => (rawArgs: unknown): Promise<JsonValue> => {
+        const operation = dispatchBinding(name, rawArgs)
+        // A runtime may settle its guest and drop this Promise before run_code
+        // drains queued calls. Observe rejection without replacing the original:
+        // awaiters retain the exact failure, while a dropped call cannot reach
+        // the process-level unhandledRejection handler.
+        void operation.catch(() => undefined)
+        return operation
+      }
 
       // Null-prototype + defineProperty, mirroring the worker-side namespace
       // build: a registered tool named `__proto__` must become an ordinary
@@ -638,12 +653,47 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
       // silently dropping the binding), and the runtime host resolves
       // binding names as own properties only.
       const functions: Record<string, CodeBindingFunction> = Object.create(null) as Record<string, CodeBindingFunction>
-      // Enumerate the CALLING AGENT's visible set (scoped tools join,
-      // restricted globals vanish) — the same view the SDK section declared,
-      // so a program can bind exactly what its prompt promised; sub-dispatch
-      // re-resolves per call through the same view (exec.agent threads down).
-      for (const schema of registry.schemas(exec.agent)) {
-        if (schema.name === RUN_CODE_NAME) continue
+      // Snapshot the CALLING AGENT's visible set (scoped tools join,
+      // restricted globals vanish). This is the same view the SDK section
+      // declared; sub-dispatch still re-resolves through the live view at call
+      // time, while describe() reports this run's authoritative starting set.
+      const schemas = registry.schemas(exec.agent).filter(schema => schema.name !== RUN_CODE_NAME)
+      const schemaByName = new Map(schemas.map(schema => [schema.name, schema] as const))
+      const helperName = (raw: unknown, usage: string): string => {
+        const name = typeof raw === 'string'
+          ? raw
+          : typeof raw === 'object' && raw !== null && 'name' in raw
+            ? (raw as { name?: unknown }).name
+            : undefined
+        if (typeof name !== 'string' || name.length === 0) throw new Error(`${usage} requires a non-empty tool name`)
+        return name
+      }
+      Object.defineProperty(functions, 'describe', {
+        enumerable: true,
+        value: async (raw: unknown): Promise<JsonValue> => {
+          if (runOver()) throw new Error(`run_code run is over (${String(runController.signal.reason)}); describe not resolved`)
+          const name = helperName(raw, 'tools.describe(name)')
+          const schema = schemaByName.get(name)
+          if (schema === undefined) throw new Error(`unknown tool ${JSON.stringify(name)} in this run's scoped catalog`)
+          const value = snapshotJsonValue(schema)
+          /* ToolRuntime.schemas() already returned lossless detached JSON. */
+          if (value === undefined) throw new Error(`tool ${JSON.stringify(name)} has no describable schema`)
+          return Promise.resolve(value as unknown as JsonValue)
+        },
+      })
+      Object.defineProperty(functions, 'call', {
+        enumerable: true,
+        value: async (raw: unknown): Promise<JsonValue> => {
+          if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+            throw new Error('tools.call({ name, args }) requires an object request')
+          }
+          const request = raw as { name?: unknown; args?: JsonValue }
+          const name = helperName(request, 'tools.call({ name, args })')
+          if (!schemaByName.has(name)) throw new Error(`unknown tool ${JSON.stringify(name)} in this run's scoped catalog`)
+          return binding(name)(request.args === undefined ? {} : request.args)
+        },
+      })
+      for (const schema of schemas) {
         Object.defineProperty(functions, schema.name, { enumerable: true, value: binding(schema.name) })
       }
 

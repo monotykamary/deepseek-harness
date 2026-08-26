@@ -291,6 +291,76 @@ function expectNoDerivedMessages(agent: Agent): void {
   expect(composedPrefixes.get(agent) ?? []).toEqual([])
 }
 
+describe('trusted system instructions', () => {
+  it('loads APPEND_SYSTEM.md as a system section while AGENTS.md remains outside that section', async () => {
+    const home = await tempRepo()
+    const ctx = new Context()
+    try {
+      await write(join(home, 'APPEND_SYSTEM.md'), 'Always delegate independent grunt work.')
+      await write(join(home, 'AGENTS.md'), 'Repository-style user guidance.')
+      await ctx.plugin(SystemPrompt)
+      const fiber = await mountWorkspaceContext(ctx, { dshHome: home, maxBytes: 65_536 })
+
+      const assembly = await ctx.systemPrompt.assemble()
+      expect(assembly.sections).toContainEqual({
+        name: workspaceContext.TRUSTED_SYSTEM_SECTION,
+        text: 'Always delegate independent grunt work.',
+      })
+      expect(assembly.sections.map(section => section.text).join('\n')).not.toContain('Repository-style user guidance.')
+
+      await fiber.dispose()
+      const afterDispose = await ctx.systemPrompt.assemble()
+      expect(afterDispose.sections.some(section =>
+        section.name === workspaceContext.TRUSTED_SYSTEM_SECTION)).toBe(false)
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it('contributes no system text when APPEND_SYSTEM.md is absent', async () => {
+    const home = await tempRepo()
+    const ctx = new Context()
+    try {
+      await ctx.plugin(SystemPrompt)
+      await mountWorkspaceContext(ctx, { dshHome: home, maxBytes: 65_536 })
+      expect((await ctx.systemPrompt.assemble()).sections.find(section => section.name === workspaceContext.TRUSTED_SYSTEM_SECTION)?.text).toBe('')
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects oversize, malformed UTF-8, and off-home file-name configuration at plugin load', async () => {
+    const home = await tempRepo()
+    const oversizeCtx = new Context()
+    const malformedCtx = new Context()
+    try {
+      await write(join(home, 'APPEND_SYSTEM.md'), '12345')
+      await expect(oversizeCtx.plugin(workspaceContext, {
+        dshHome: home,
+        maxBytes: 65_536,
+        trustedSystemMaxBytes: 4,
+      })).rejects.toThrow('exceeds trustedSystemMaxBytes (4)')
+
+      await writeFile(join(home, 'APPEND_SYSTEM.md'), new Uint8Array([0xff]))
+      await expect(malformedCtx.plugin(workspaceContext, {
+        dshHome: home,
+        maxBytes: 65_536,
+      })).rejects.toThrow('is not valid UTF-8')
+
+      expect(() => resolveConfig({
+        dshHome: home,
+        maxBytes: 65_536,
+        trustedSystemFile: '../policy.md',
+      })).toThrow('trustedSystemFile must be a same-directory file name')
+    } finally {
+      await Promise.allSettled([oversizeCtx.fiber.dispose(), malformedCtx.fiber.dispose()])
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+})
+
 describe('workspace context instruction discovery', () => {
   it('treats ENOTDIR while probing a host candidate as confirmed absence', async () => {
     const root = await tempRepo()

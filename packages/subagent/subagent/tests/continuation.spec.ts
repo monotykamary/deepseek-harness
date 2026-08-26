@@ -3,7 +3,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@monotykamary/cordis'
-import type { Agent } from '@monotykamary/dsh-agent'
+import { installModelSelection } from '@monotykamary/dsh-agent'
+import type { Agent, ModelSelectionRef } from '@monotykamary/dsh-agent'
 import AgentLoop from '@monotykamary/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@monotykamary/dsh-agent-loop-testkit'
 import { SessionId } from '@monotykamary/dsh-session'
@@ -281,6 +282,51 @@ describe('SubagentRuntime.startContinuable', () => {
     expect(loaded.meta.id).toBe(started.childId)
     expect(loaded.meta.parentSession).toBe(SessionId('parent'))
     expect(loaded.meta.origin).toBe('subagent')
+  })
+
+  it('snapshots the live parent route before provider preparation for creation and cold resume', async () => {
+    const { ctx } = await setup([textResponse('child answer')])
+    const selection: ModelSelectionRef = {
+      current: { provider: 'mock', model: 'selected-model' },
+      assembled: undefined,
+    }
+    const parentHandle = await ctx.agents.create({
+      sessionId: SessionId('selected-parent'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+      setup: (agentCtx) => { installModelSelection(agentCtx, agentCtx.agent!, selection) },
+    })
+    const parent = parentHandle.agent
+    parkParent(ctx, parent)
+    const prepared = Promise.withResolvers<undefined>()
+    ctx.subagents.registerProvider({
+      name: 'delayed',
+      capabilities: { outputSchema: false, depthLimit: false, toolFilter: false, persona: false },
+      inheritsParentContext: false,
+      start: async () => { throw new Error('one-shot start is not used') },
+      prepareContinuable: async () => {
+        await prepared.promise
+        return {}
+      },
+    })
+
+    const starting = ctx.subagents.startContinuable(startSpec(parent, 'delayed'))
+    selection.current = { provider: 'mock', model: 'future-model' }
+    prepared.resolve(undefined)
+    const started = await starting
+    await waitNoActivation(ctx, started.childId)
+
+    const loaded = await ctx.sessionPersistence.load(started.childId)
+    const descriptor = loaded.events.find(event => event.type === 'subagent/descriptor')
+    const header = loaded.events.find(event => event.type === 'request/header')
+    expect(descriptor?.data).toMatchObject({
+      agentProvider: 'mock',
+      agentModel: 'selected-model',
+    })
+    expect(header?.data.header.config).toMatchObject({
+      provider: 'mock',
+      model: 'selected-model',
+    })
+    await parentHandle.dispose()
   })
 
   it('rolls the child back completely when the caller signal aborts before acceptance', async () => {

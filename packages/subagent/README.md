@@ -14,7 +14,7 @@ This family lets an agent delegate work to child agents. Multiple named provider
 | [`subagent-codex/`](subagent-codex/README.md) | Starts a real Codex app-server child | registers on `ctx.subagents` |
 | [`subagent-claude-code/`](subagent-claude-code/README.md) | Starts a real Claude Code child through the official Claude Agent SDK | registers on `ctx.subagents` |
 | [`subagent-dsh-sdk/`](subagent-dsh-sdk/README.md) | Starts an out-of-process Harness child through the TypeScript SDK | registers on `ctx.subagents` |
-| [`tool-subagent/`](tool-subagent/README.md) | Exposes delegation to the model | registers on `ctx.tools` |
+| [`tool-subagent/`](tool-subagent/README.md) | Exposes model delegation and an optional direct human command | registers on `ctx.tools` and optionally `ctx.commands` |
 | [`tool-subagent-control/`](tool-subagent-control/README.md) | Exposes child messaging and listing to the model | registers on `ctx.tools` |
 | [`tool-subagent-report/`](tool-subagent-report/README.md) | Provides the child-to-parent report channel | registers in child scopes |
 

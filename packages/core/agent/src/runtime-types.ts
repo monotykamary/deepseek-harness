@@ -20,7 +20,7 @@ declare module '@monotykamary/dsh-system-prompt' {
   }
 }
 
-/** Merge-extensible agent creation options. Persona belongs to system-prompt sections. */
+/** Merge-extensible Agent creation and static-fallback options. Persona belongs to system-prompt sections. */
 export interface AgentOptions {
   /** Provider route (must have a registered adapter at call time). */
   provider?: string
@@ -64,7 +64,7 @@ export type SessionStartSource = 'startup' | 'resume' | 'clear' | 'compact'
 export interface Agent {
   /** The single identity shared with {@link session}. */
   readonly id: SessionId
-  /** The provider route and model this agent's requests use. */
+  /** Creation options and static route fallbacks; a live model selection may shadow provider/model. */
   readonly options: AgentOptions
   /** The live session this agent drives; its log is the durable source of truth. */
   readonly session: Session

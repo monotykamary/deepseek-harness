@@ -123,6 +123,7 @@ describe('startInProcessRun', () => {
       ctx: {
         get: () => undefined,
         agents: {
+          modelSelection: (agent: Agent) => ctx.agents.modelSelection(agent),
           create: async (options: Parameters<typeof ctx.agents.create>[0]) => {
             const handle = await ctx.agents.create(options)
             handle.agent.followup = () => { throw runError }
@@ -361,6 +362,7 @@ describe('startInProcessRun', () => {
         // services opportunistically; this stub composes neither.
         get: () => undefined,
         agents: {
+          modelSelection: (agent: Agent) => ctx.agents.modelSelection(agent),
           create: async (options: Parameters<typeof ctx.agents.create>[0]) => {
             const handle = await ctx.agents.create(options)
             // `create()` has detached its creation-only listener, but the

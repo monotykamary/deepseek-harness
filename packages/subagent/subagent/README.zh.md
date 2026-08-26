@@ -32,6 +32,8 @@ subagent seam 允许一个 agent（智能体）通过具名提供方把工作委
 
 同进程请求、描述符、结果和事件 payload 都是可信的类型值，并按不可变约定借用。服务不会克隆或冻结它们；序列化和不可信输入校验属于真实的进程、worker、持久化和模型边界。
 
+进程内子 agent 会在启动时一次性解析 provider/model 路由，再叠加显式请求 `agentOptions`。父 agent 运行时贡献其活跃已组装步骤捕获的模型选择；父 agent 空闲时贡献其在线的下一步骤模型选择。没有在线模型选择来源时，最新持久化 `request/header` 优先于静态 Agent options。可继续创建会在第一次等待提供方之前快照已解析的 provider/model，并把同一组值用于初始 Agent 创建与冷恢复描述符，因此父级并发切换不会使两者采用不同路由。[有效路由继承决策](../../../.agents/notes/implemented/bug-fix/2026-08-26-effective-subagent-route-inheritance.zh.md)规定优先级与捕获时机。
+
 ## 能力
 
 启动时功能通过 `provider.capabilities` 声明，因为服务必须在创建子 agent 前拒绝不受支持的一次性请求：
@@ -49,7 +51,7 @@ subagent seam 允许一个 agent（智能体）通过具名提供方把工作委
 
 ## 持久化描述符
 
-该 Service Definition 拥有版本化的 `subagent/descriptor` 会话事件词汇（`src/descriptor.ts`）：`snapshotSubagentDescriptor()` 会在提供方工作之前校验并分离记录，`foldSubagentDescriptor()` 则会在从已加载子 agent 日志中恢复描述符之前，校验当前版本的完整 payload。每次由本地会话支撑的启动都会追加一个带有提供方名称与生命周期 `mode` 的描述符。`one-shot` 描述符可以携带调用方拥有的可选持久化显示 `label`；`continuable` 描述符要求其持久化创建标签，并另外记录已解析的子 agent `agentOptions.provider`／`model`，以及用于从持久化存储恢复的可选 `persona`／`toolFilter`。这些是显式字段，绝不是可通过合并扩展的 `AgentOptions` 对象，因此无关的扩展值不会破坏继续执行。描述符省略 `subagentDepth`（持久化 header 的 `delegationDepth` 是单调下界）和 `outputSchema`（单次 Activation 的结果约定）。该事件只进入日志：不含 `surfaceOp`，不进入模型历史，并由仅追加日志跨压缩（compaction）保留。格式错误的当前版本 payload 属于损坏；本运行时无法对不受支持的版本进行分类。
+该 Service Definition 拥有版本化的 `subagent/descriptor` 会话事件词汇（`src/descriptor.ts`）：`snapshotSubagentDescriptor()` 会在提供方工作之前校验并分离记录，`foldSubagentDescriptor()` 则会在从已加载子 agent 日志中恢复描述符之前，校验当前版本的完整 payload。每次由本地会话支撑的启动都会追加一个带有提供方名称与生命周期 `mode` 的描述符。`one-shot` 描述符可以携带调用方拥有的可选持久化显示 `label`；`continuable` 描述符要求其持久化创建标签，并另外记录在提供方准备之前解析出的子 agent provider/model 路由，以及用于从持久化存储恢复的可选 `persona`／`toolFilter`。这些是显式字段，绝不是可通过合并扩展的 `AgentOptions` 对象，因此无关的扩展值不会破坏继续执行。描述符省略 `subagentDepth`（持久化 header 的 `delegationDepth` 是单调下界）和 `outputSchema`（单次 Activation 的结果约定）。该事件只进入日志：不含 `surfaceOp`，不进入模型历史，并由仅追加日志跨压缩（compaction）保留。格式错误的当前版本 payload 属于损坏；本运行时无法对不受支持的版本进行分类。
 
 ## 委派深度
 

@@ -54,14 +54,14 @@ interface AgentHandle {
 
 `Agent` is the surface every plugin (UI, hooks, orchestrators) programs against; `ctx.agents.get(id)` returns it, and the [initiator scope](#initiating-agent) carries it. The concrete implementation is package-internal to dsh-agent-loop; nothing outside the loop depends on it. The unified `send` method exposes target and wakeup routing directly; `followup`, `steer`, and `inject` are fixed-preset aliases.
 
-Source: [`packages/core/agent/src/types.ts`](../../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
 
 ```ts type-equiv
 /** Public live-agent handle. */
 interface Agent {
   /** The single identity shared with {@link session}. */
   readonly id: SessionId
-  /** The provider route and model this agent's requests use. */
+  /** Creation options and static route fallbacks; a live model selection may shadow provider/model. */
   readonly options: AgentOptions
   /** The live session this agent drives; its log is the durable source of truth. */
   readonly session: Session
@@ -155,7 +155,7 @@ type AgentStatus = 'idle' | 'running'
 `running` describes the driver-wide drain interval and may span consecutive queued turns; it does not prove a turn is still open. Disposal removes the agent from the registry and emits `agent/disposed`; it is not a terminal status value. `followup()` returns no handle: its `MessageId` identifies durable inbox insertion, claim, and discard facts, not a later assistant output or turn ending. `whenIdle()` observes the whole agent, so callers may call a receipt-to-idle interval a run only when they explicitly own that interval ([decision](../../.agents/notes/implemented/architecture/2026-07-30-followup-enqueue-and-owned-runs.md)).
 
 ```ts type-equiv
-/** Merge-extensible agent creation options. Persona belongs to system-prompt sections. */
+/** Merge-extensible Agent creation and static-fallback options. Persona belongs to system-prompt sections. */
 interface AgentOptions {
   /** Provider route (must have a registered adapter at call time). */
   provider?: string
@@ -212,7 +212,7 @@ The process-local initiator carried by `ctx.agents` is the exact `Agent` above, 
 
 Pre-step decisions use the same identified `UserMessage` type as durable user-role input. The entered batch is authoritative and preserves every message's `id` and `source`. Hook bridges map their native decision fields onto this typed result.
 
-Source: [`packages/core/agent/src/types.ts`](../../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
 
 `agent/pre-step` receives one payload carrying the exclusive claimed batch (`messages`), the proposed step's coordinates (`turn`, `step`), and the current turn's cancellation `signal`. The initial proposal runs inside an open turn before any step; a tool continuation may submit an empty claimed batch between steps:
 
@@ -559,6 +559,24 @@ Agent service (`ctx.agents`): tracks live agents and carries the initiating Agen
 Initiator methods provide same-process causal attribution only. Ambient presence is neither liveness proof nor authorization; subjects and owners remain explicit, as does identity at worker, process, persistence, and wire boundaries. Returned Promise boundaries drain during teardown, except a nested lineage that starts an owning-fiber unload is excluded from its own drain.
 
 ```ts cordis-catalog
+/**
+ * Register one Agent's live model-selection source for its scoped lifetime.
+ * The Agent's Session object remains stable across scoped Agent proxies, so a
+ * Consumer resolving through another proxy still reaches the same source.
+ * @param agent - Agent whose entry point owns the source.
+ * @param source - source of detached next-step and active-step selections.
+ * @returns disposer that removes exactly this source.
+ * @throws when the Agent already has a registered source.
+ */
+registerModelSelection(agent: Agent, source: AgentModelSelection): () => void
+
+/**
+ * Read an Agent's registered live model-selection source.
+ * @param agent - Agent whose source is requested.
+ * @returns the exact source, or undefined when its entry point declares none.
+ */
+modelSelection(agent: Agent): AgentModelSelection | undefined
+
 /**
  * Read the Agent that initiated the inherited asynchronous driver chain.
  * Use this optional form for logging, tracing, metrics, or host attribution

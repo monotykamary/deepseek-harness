@@ -34,6 +34,16 @@ Start a session and send:
 
 The agent can read and edit workspace files, run commands, delegate work, and maintain a plan. The Web UI asks before operations that require approval under the active permission policy.
 
+## Delegate one task directly
+
+Enter `/delegate <task>` to start one fresh background child without asking the current model to schedule it. Use `/delegate --model <id> <task>` for another model on the current provider, or `/delegate --provider <id> --model <id> <task>` for an exact cross-provider route. The command returns the child Session id; its conversation appears in the subagent tree, and the parent receives a settlement notice when the child finishes. Deployments with a continuable fork provider may also enable `--fork`.
+
+Use Factory or Workflow instead when the work needs dependencies, retries, schedules, worktrees, or several coordinated agents.
+
+## Set trusted personal policy
+
+Put user-owned standing policy that must have system authority in `$DSH_HOME/APPEND_SYSTEM.md` (normally `~/.dsh/APPEND_SYSTEM.md`), then restart the profile. Keep repository conventions in `AGENTS.md`: those files intentionally remain lower-authority user guidance so cloned repositories cannot install system instructions.
+
 ## Use interactive terminals
 
 Open a Session, then use **Toggle bottom panel** in the Session header to reveal a resizable terminal below the conversation. Closing this panel hides it without ending the shell; reopening it returns to the same terminal tab. Use **New terminal** for another persistent shell and **Kill terminal** when the process should end.

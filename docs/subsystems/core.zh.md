@@ -58,14 +58,14 @@ interface AgentHandle {
 
 `Agent` 是每个插件（UI、钩子、orchestrator）面向编程的 surface；`ctx.agents.get(id)` 返回它，[发起者作用域](#initiating-agent)携带它。具体实现为 dsh-agent-loop 包内部细节；循环外没有任何组件依赖它。统一的 `send` 方法直接暴露 target 与 wakeup 路由；`followup`、`steer` 与 `inject` 是固定预设的别名方法。
 
-源码：[`packages/core/agent/src/types.ts`](../../packages/core/agent/src/types.ts)
+源码：[`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
 
 ```ts type-equiv
 /** Public live-agent handle. */
 interface Agent {
   /** The single identity shared with {@link session}. */
   readonly id: SessionId
-  /** The provider route and model this agent's requests use. */
+  /** Creation options and static route fallbacks; a live model selection may shadow provider/model. */
   readonly options: AgentOptions
   /** The live session this agent drives; its log is the durable source of truth. */
   readonly session: Session
@@ -159,7 +159,7 @@ type AgentStatus = 'idle' | 'running'
 `running` 描述整个驱动器的排空区间，可能跨越连续的排队轮次；它不能证明某个轮次仍然打开。dispose 会把 agent 从注册表移除并发出 `agent/disposed`；它不是一个终态 status 值。`followup()` 不返回句柄：其 `MessageId` 标识的是持久的 inbox 插入、认领与丢弃事实，而非之后的助手输出或轮次结束。`whenIdle()` 观察的是整个 agent，因此只有当调用方明确拥有从回执到空闲的这段区间时，才能把它称为一次 run（[决策](../../.agents/notes/implemented/architecture/2026-07-30-followup-enqueue-and-owned-runs.zh.md)）。
 
 ```ts type-equiv
-/** Merge-extensible agent creation options. Persona belongs to system-prompt sections. */
+/** Merge-extensible Agent creation and static-fallback options. Persona belongs to system-prompt sections. */
 interface AgentOptions {
   /** Provider route (must have a registered adapter at call time). */
   provider?: string
@@ -220,7 +220,7 @@ cause 是由 TypeScript 强制约束的同进程输入。活跃的取消持有�
 
 pre-step 决策使用与持久 user-role 输入相同、带标识的 `UserMessage` 类型。进入步骤的批次具有权威性，并保留每条消息的 `id` 和 `source`。钩子桥接层把其原生决策字段映射到这一类型化结果上。
 
-源码：[`packages/core/agent/src/types.ts`](../../packages/core/agent/src/types.ts)
+源码：[`packages/core/agent/src/runtime-types.ts`](../../packages/core/agent/src/runtime-types.ts)
 
 `agent/pre-step` 接收一个 payload，携带独占的已领取批次（`messages`）、拟进入步骤的坐标（`turn`、`step`）与当前轮次的取消 `signal`。首次提案在已打开的轮次内、任何步骤开始前运行；工具 continuation 可以在步骤之间提交空的已领取批次：
 
@@ -569,6 +569,24 @@ Agent service (`ctx.agents`): tracks live agents and carries the initiating Agen
 Initiator methods provide same-process causal attribution only. Ambient presence is neither liveness proof nor authorization; subjects and owners remain explicit, as does identity at worker, process, persistence, and wire boundaries. Returned Promise boundaries drain during teardown, except a nested lineage that starts an owning-fiber unload is excluded from its own drain.
 
 ```ts cordis-catalog
+/**
+ * Register one Agent's live model-selection source for its scoped lifetime.
+ * The Agent's Session object remains stable across scoped Agent proxies, so a
+ * Consumer resolving through another proxy still reaches the same source.
+ * @param agent - Agent whose entry point owns the source.
+ * @param source - source of detached next-step and active-step selections.
+ * @returns disposer that removes exactly this source.
+ * @throws when the Agent already has a registered source.
+ */
+registerModelSelection(agent: Agent, source: AgentModelSelection): () => void
+
+/**
+ * Read an Agent's registered live model-selection source.
+ * @param agent - Agent whose source is requested.
+ * @returns the exact source, or undefined when its entry point declares none.
+ */
+modelSelection(agent: Agent): AgentModelSelection | undefined
+
 /**
  * Read the Agent that initiated the inherited asynchronous driver chain.
  * Use this optional form for logging, tracing, metrics, or host attribution

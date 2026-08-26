@@ -317,6 +317,7 @@
         provider: spawn
         toolName: subagent
         backgroundMode: continuable
+        commandName: delegate
 
     # Fork stays one-shot: a continuable child's `report` tool and prompt
     # section precede the inherited history a fork exists to reuse; one-shot

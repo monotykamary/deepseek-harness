@@ -34,6 +34,16 @@ DSH 会在启动时检查可写 home、shell、沙箱与桌面交接。无法可
 
 Agent（智能体）可以读取和编辑工作区文件、运行命令、委派工作并维护计划。如果根据当前权限策略，某项操作需要审批，Web UI 会先询问你。
 
+## 直接委派一个任务
+
+输入 `/delegate <task>` 可启动一个新的后台 child，而无需让当前模型负责调度。使用 `/delegate --model <id> <task>` 可选择当前 provider 上的另一个模型；使用 `/delegate --provider <id> --model <id> <task>` 可指定确切的跨 provider 路由。命令会返回 child Session id；其对话会出现在 subagent 树中，child 完成后 parent 会收到结算通知。配置了可继续 fork provider 的部署还可启用 `--fork`。
+
+当工作需要依赖关系、重试、定时、worktree 或多个协同 agent 时，请改用 Factory 或 Workflow。
+
+## 设置受信任的个人策略
+
+把必须具有 system 权限且由用户拥有的常驻策略放入 `$DSH_HOME/APPEND_SYSTEM.md`（通常是 `~/.dsh/APPEND_SYSTEM.md`），然后重启该 profile。仓库约定仍应放在 `AGENTS.md`：这些文件有意保持为较低权限的用户指引，因此克隆仓库无法安装 system 指令。
+
 ## 使用交互式终端
 
 打开一个 Session，然后使用 Session 标题栏中的**切换底部面板**，在对话下方显示可调整大小的终端。关闭该面板只会隐藏它，不会结束 shell；再次打开时会回到同一个终端标签。使用**新建终端**创建另一个持久 shell，确实要结束进程时再使用**终止终端**。

@@ -2,7 +2,8 @@ import { createUserMessage } from '@monotykamary/dsh-llm'
 import { describe, expect, it } from 'vitest'
 import { Context, symbols, type EffectMeta } from '@monotykamary/cordis'
 import Loader from '@monotykamary/cordis-plugin-loader'
-import AgentRegistry, { type Agent } from '@monotykamary/dsh-agent'
+import AgentRegistry, { installModelSelection, resolveAgentModelSelection } from '@monotykamary/dsh-agent'
+import type { Agent, ModelSelectionRef } from '@monotykamary/dsh-agent'
 import { SessionId } from '@monotykamary/dsh-session'
 import AgentLoop from '@monotykamary/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@monotykamary/dsh-agent-loop-testkit'
@@ -258,6 +259,60 @@ describe('dsh-subagent-spawn-in-process', () => {
     await run.result
     const child = ctx.agents.get(run.id)!
     expect(child.session.header.cwd).toBe('/tmp/parent-workspace')
+    await run.dispose()
+    await parentHandle.dispose()
+  })
+
+  it('inherits the live parent model instead of its static creation default', async () => {
+    const { ctx, adapter } = await setup([textResponse('selected model child')])
+    const selection: ModelSelectionRef = {
+      current: { provider: 'mock', model: 'selected-model' },
+      assembled: undefined,
+    }
+    const parentHandle = await ctx.agents.create({
+      sessionId: SessionId('selected-parent'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+      setup: (agentCtx) => { installModelSelection(agentCtx, agentCtx.agent!, selection) },
+    })
+    const parent = parentHandle.agent
+    expect(resolveAgentModelSelection(parent)).toEqual({ provider: 'mock', model: 'selected-model' })
+
+    const run = await start(ctx, 'spawn', { prompt: [{ type: 'text', text: 'p' }], parent })
+    const result = await run.result
+    const child = ctx.agents.get(run.id)
+    expect(result.stopReason).toBe('completed')
+    expect(child?.options).toMatchObject({ provider: 'mock', model: 'selected-model' })
+    expect(child?.session.requestHeader()?.config).toMatchObject({
+      provider: 'mock',
+      model: 'selected-model',
+    })
+    expect(adapter.requests[0]).toMatchObject({ model: 'selected-model' })
+    await run.dispose()
+    await parentHandle.dispose()
+  })
+
+  it('lets an explicit child model override the inherited live parent model', async () => {
+    const { ctx, adapter } = await setup([textResponse('explicit model child')])
+    const selection: ModelSelectionRef = {
+      current: { provider: 'mock', model: 'selected-model' },
+      assembled: undefined,
+    }
+    const parentHandle = await ctx.agents.create({
+      sessionId: SessionId('explicit-model-parent'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+      setup: (agentCtx) => { installModelSelection(agentCtx, agentCtx.agent!, selection) },
+    })
+
+    const run = await start(ctx, 'spawn', {
+      prompt: [{ type: 'text', text: 'p' }],
+      parent: parentHandle.agent,
+      agentOptions: { model: 'mock' },
+    })
+    const result = await run.result
+    const child = ctx.agents.get(run.id)
+    expect(result.stopReason).toBe('completed')
+    expect(child?.options).toMatchObject({ provider: 'mock', model: 'mock' })
+    expect(adapter.requests[0]).toMatchObject({ provider: 'mock', model: 'mock' })
     await run.dispose()
     await parentHandle.dispose()
   })

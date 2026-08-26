@@ -24,7 +24,7 @@ The default per-directory candidate list is `['AGENTS.md', 'CLAUDE.md']`. The li
 
 Candidate entries are same-directory file names. Empty entries, `.`/`..`, and entries containing `/` or `\` are ignored. Other same-directory names can be opted into explicitly; rule directories and import semantics are outside this contract.
 
-The user-global file is fixed at `$DSH_HOME/AGENTS.md`, is not affected by either candidate list, and has no local overlay. `$DSH_HOME` defaults to `~/.dsh`, matching the harness-level home role of `~/.codex` or `~/.claude` rather than introducing a plugin-specific home. Tilde expansion and the default live in `dsh-home-paths` so future harness features share the same convention.
+The user-global file is fixed at `$DSH_HOME/AGENTS.md`, is not affected by either candidate list, and has no local overlay. It remains part of the lower-authority durable baseline; the separate [`APPEND_SYSTEM.md` decision](2026-08-26-trusted-user-system-instructions.md) owns trusted user system policy. `$DSH_HOME` defaults to `~/.dsh`, matching the harness-level home role of `~/.codex` or `~/.claude` rather than introducing a plugin-specific home. Tilde expansion and the default live in `dsh-home-paths` so future harness features share the same convention.
 
 ### Baseline Injection
 

@@ -1163,7 +1163,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return { provider, model }
   }
   type WebModelSelectionRef = ModelSelectionRef & { current: ModelSelection }
-  const selections = new WeakMap<Agent, WebModelSelectionRef>()
+  const selections = new WeakMap<Session, WebModelSelectionRef>()
   /**
    * Serializes `agentPreset.select` per session. Two concurrent selects both
    * pass the blank check, and the second `unmountPresetFor` then finds nothing
@@ -1201,7 +1201,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
    * contribution), it must fold in between the selection and the log.
    */
   function selectionFor(agent: Agent): WebModelSelectionRef {
-    const installed = selections.get(agent)
+    const installed = selections.get(agent.session)
     if (installed !== undefined) return installed
     let picked: ModelSelection | undefined
     const selection: WebModelSelectionRef = {
@@ -1224,8 +1224,16 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
       },
       assembled: undefined,
     }
-    installModelSelection(agent.ctx, selection)
-    selections.set(agent, selection)
+    // Agent access can arrive through distinct scoped proxies, and registration
+    // effects may synchronously re-enter this lookup. Publish by stable Session
+    // first so every path joins this exact source registration.
+    selections.set(agent.session, selection)
+    try {
+      installModelSelection(agent.ctx, agent, selection)
+    } catch (error: unknown) {
+      selections.delete(agent.session)
+      throw error
+    }
     return selection
   }
 
