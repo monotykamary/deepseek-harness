@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -56,7 +56,9 @@ describe('LocalBashExecutor.run', () => {
   it('defaults cwd to process.cwd()', async () => {
     const { bash } = await setup()
     const result = await bash.run(bash.resolve({ command: 'pwd' }))
-    expect(result.stdout.text.trim()).toBe(process.cwd())
+    // Resolve both sides: a symlinked launch path leaves the child's $PWD
+    // logical while process.cwd() reports the physical directory.
+    expect(realpathSync(result.stdout.text.trim())).toBe(process.cwd())
   })
 
   it('caps per-call timeouts at maxTimeoutMs', async () => {
