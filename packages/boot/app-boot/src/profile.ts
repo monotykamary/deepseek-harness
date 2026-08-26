@@ -24,7 +24,7 @@
 
 import { createRequire } from 'node:module'
 import {
-  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync,
+  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync, symlinkSync, unlinkSync, writeFileSync,
 } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import type { EntryOptions } from '@monotykamary/cordis-plugin-loader'
@@ -382,8 +382,11 @@ function normalizeShippedProfile(name: string, dir: string, manifest: ProfileMan
  * `existsSync` follows the symlinks pnpm's isolated layout uses.
  */
 function packageDirFromAnchor(anchor: string, packageName: string): string | undefined {
+  // pnpm exposes workspace packages through symlinks. Resolve the anchor first
+  // so transitive dependencies are searched from the package's real store path.
+  const resolvedAnchor = realpathSync(anchor)
   // resolve.paths returns null only for builtins, which no bundle name is.
-  for (const searchPath of createRequire(anchor).resolve.paths(packageName) ?? []) {
+  for (const searchPath of createRequire(resolvedAnchor).resolve.paths(packageName) ?? []) {
     const candidate = join(searchPath, packageName)
     if (existsSync(join(candidate, 'package.json'))) return candidate
   }

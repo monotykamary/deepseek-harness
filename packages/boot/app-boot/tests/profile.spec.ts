@@ -356,6 +356,35 @@ describe('healProfilesModuleFallback', () => {
     expect(before).toContain('dep-of-a')
   })
 
+  it('follows workspace package symlinks when collecting transitive dependencies', () => {
+    const root = tmp()
+    const appDir = join(root, 'app')
+    const storeDir = join(root, 'store')
+    const bundleDir = join(storeDir, 'bundle-a')
+    const dependencyDir = join(storeDir, 'dep-of-a')
+    mkdirSync(join(appDir, 'node_modules'), { recursive: true })
+    mkdirSync(join(bundleDir, 'node_modules'), { recursive: true })
+    mkdirSync(dependencyDir, { recursive: true })
+    writeFileSync(join(appDir, 'package.json'), JSON.stringify({
+      name: 'dsh-app',
+      dependencies: { 'bundle-a': '0.0.0' },
+    }))
+    writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({
+      name: 'bundle-a',
+      version: '0.0.0',
+      dependencies: { 'dep-of-a': '0.0.0' },
+      dsh: { bundle: { patch: './cordis.patch.yml' } },
+    }))
+    writeFileSync(join(bundleDir, 'cordis.patch.yml'), '[]\n')
+    writeFileSync(join(dependencyDir, 'package.json'), JSON.stringify({ name: 'dep-of-a', version: '0.0.0' }))
+    symlinkSync(bundleDir, join(appDir, 'node_modules', 'bundle-a'), 'junction')
+    symlinkSync(dependencyDir, join(bundleDir, 'node_modules', 'dep-of-a'), 'junction')
+
+    const home = tmp()
+    healProfilesModuleFallback(join(appDir, 'package.json'), home)
+    expect(readlinkSync(join(home, 'profiles', 'node_modules', 'dep-of-a'))).toContain('dep-of-a')
+  })
+
   it('throws when a fallback entry is a real directory', () => {
     const anchor = stageInstallation({})
     const home = tmp()
