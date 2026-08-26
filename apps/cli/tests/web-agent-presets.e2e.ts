@@ -549,7 +549,7 @@ describe('product Bundle and user-preset intersection', () => {
             expect(tools).toEqual(expect.arrayContaining(['job_kill', 'job_list', 'job_output']))
             for (const productTool of productTools) {
               expect(toolParameterNames(productCtx, handle.agent, productTool)).toEqual([
-                'description', 'model', 'prompt', 'run_in_background',
+                'description', 'model', 'prompt', 'provider', 'run_in_background',
               ])
             }
           } finally {
