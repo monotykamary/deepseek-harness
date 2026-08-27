@@ -125,15 +125,18 @@
 
     # ── layer 2: transport/service ──────────────────────────────────────────────
 
-    # Plain route-registration carrier; host and port come from the app's
-    # webStartup provider, with these deployment fallbacks. The dist is served by
-    # the web-runtime row below through the fallback seat.
+    # Plain route-registration carrier; host, port, and the collision policy come
+    # from the app's webStartup provider, with these deployment fallbacks. An
+    # omitted --port keeps the 3080 preference but retries once with an
+    # OS-assigned port when that default is occupied; an explicit --port stays exact.
+    # The dist is served by the web-runtime row below through the fallback seat.
     - id: webserver
       name: '@monotykamary/dsh-host-webserver'
       inject: [webStartup]
       config:
         host: !!js ctx.webStartup.host ?? '127.0.0.1'
         port: !!js ctx.webStartup.port ?? 3080
+        busyPort: !!js ctx.webStartup.busyPort
 
     # Web glue owned by this bundle: resolves the built frontend dist (an
     # assembly fact of dsh-web-app, never user config), mounts the

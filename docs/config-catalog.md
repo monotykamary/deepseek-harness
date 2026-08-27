@@ -904,16 +904,18 @@ Source: [`packages/host/frontend-static/src/index.ts:28`](../packages/host/front
 ## `@monotykamary/dsh-host-webserver`
 
 ```ts config-catalog
-/** Gateway config: the listen address. */
+/** Gateway config: the listen address and collision policy. */
 export interface Config {
   /** Listen host; the two supported values are loopback and all-interfaces. */
   host: '127.0.0.1' | '0.0.0.0'
   /** Listen port; zero requests an OS-assigned port. */
   port: number
+  /** On EADDRINUSE, fail or retry once with an OS-assigned port. Defaults to `error`. */
+  busyPort?: 'error' | 'random'
 }
 ```
 
-Source: [`packages/host/webserver/src/index.ts:59`](../packages/host/webserver/src/index.ts)
+Source: [`packages/host/webserver/src/index.ts:58`](../packages/host/webserver/src/index.ts)
 
 <a id="monotykamarydsh-host-workspace-files"></a>
 

@@ -62,6 +62,7 @@ Every MCP tool has two names: the raw MCP name (sent on the wire in `tools/call`
 ## Behavior
 
 - On connect: plugin activation awaits `listTools()` and registers each tool via `ctx.tools.register()` under its public name before the composition starts its first turn. Initial connection, discovery, or registration failure is always logged; it rejects activation when `failOnStartupError` is true and otherwise activates with no tools.
+- Stdio sends are serialized per server: at most one write waits on child-stdin backpressure at a time. The MCP SDK otherwise stacks a `drain` listener per concurrent send, so parallel tool fan-out crosses Node's listener ceiling and emits MaxListenersExceededWarning for the child pipe. JSON-RPC over stdio is ordered, so serialization does not change wire semantics.
 - Listens for `notifications/tools/list_changed` → re-syncs; a fetch-phase failure keeps the previous generation registered, while a registration conflict rolls back the attempted generation and leaves no tools from that server.
 - Tool execute: `client.callTool({ name: rawName, arguments }, { signal })` with timeout + abort support—the public name is never sent to the server.
 - Canonical success is `{ content: JsonValue[], structuredContent? }`; complete JSON MCP blocks survive for programmatic callers. A supported advertised `outputSchema` validates `structuredContent`; unsupported schema vocabulary falls back to unconstrained `JsonValue`.

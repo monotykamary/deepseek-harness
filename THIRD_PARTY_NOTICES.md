@@ -179,6 +179,7 @@ pnpm applies local patches to the following packages at install time, so shipped
 
 - `@xterm/addon-image@0.10.0-beta.287` — [`patches/@xterm__addon-image@0.10.0-beta.287.patch`](patches/@xterm__addon-image@0.10.0-beta.287.patch)
 - `@xterm/addon-webgl@0.20.0-beta.290` — [`patches/@xterm__addon-webgl@0.20.0-beta.290.patch`](patches/@xterm__addon-webgl@0.20.0-beta.290.patch)
+- `dsh-fabric-code-runtime-quickjs@0.1.7` — [`patches/dsh-fabric-code-runtime-quickjs@0.1.7.patch`](patches/dsh-fabric-code-runtime-quickjs@0.1.7.patch)
 - `node-pty@1.2.0-beta.15` — [`patches/node-pty@1.2.0-beta.15.patch`](patches/node-pty@1.2.0-beta.15.patch)
 
 ## Official Claude Code platform payloads

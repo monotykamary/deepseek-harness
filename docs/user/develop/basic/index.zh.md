@@ -61,7 +61,7 @@ export function apply(ctx: Context) {
 pnpm dsh web --patch ./scratch-plugin/cordis.yml
 ```
 
-打开 `http://127.0.0.1:3080`。启动期间，终端会打印 `[hello-plugin] plugin loaded!`。
+打开 `dsh web` 打印的 URL（通常是 `http://127.0.0.1:3080`）。启动期间，终端会打印 `[hello-plugin] plugin loaded!`。
 
 ## 自动清理
 

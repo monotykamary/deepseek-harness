@@ -29,12 +29,14 @@ Match order is fixed: exact table first, then longest matching prefix, then the 
 ## Config
 
 ```ts type-equiv
-/** Gateway config: the listen address. */
+/** Gateway config: the listen address and collision policy. */
 interface Config {
   /** Listen host; the two supported values are loopback and all-interfaces. */
   host: '127.0.0.1' | '0.0.0.0'
   /** Listen port; zero requests an OS-assigned port. */
   port: number
+  /** On EADDRINUSE, fail or retry once with an OS-assigned port. Defaults to `error`. */
+  busyPort?: 'error' | 'random'
 }
 ```
 
@@ -42,7 +44,7 @@ interface Config {
 
 ## The service
 
-`WebServer` (`ctx.webServer`) listens immediately on activation; a listen failure (EADDRINUSE…) rejects initialization, and the boot process reports the failed fiber. `register(route)` adds one named route and returns its disposer; a duplicate `(kind, path)` throws because route patterns are a composition-level contract and a collision is a misconfiguration. `collectIndexInjections()` gathers structured `IndexInjection` rows over one `webserver/index-inject` emit, and `renderIndex(html)` renders them into successful root and configured index responses before applying the raw `tapIndex(transform)` escape-hatch transforms in registration order; [dsh-client-modules](../../packages/client/modules) answers the event with the boot manifest rows. `port` reads the listening port, including the port assigned by the OS when `config.port` is 0.
+`WebServer` (`ctx.webServer`) listens immediately on activation; a listen failure rejects initialization unless `busyPort` is `random`, in which case EADDRINUSE retries once with an OS-assigned port; other failures still reject and the boot process reports the failed fiber. `register(route)` adds one named route and returns its disposer; a duplicate `(kind, path)` throws because route patterns are a composition-level contract and a collision is a misconfiguration. `collectIndexInjections()` gathers structured `IndexInjection` rows over one `webserver/index-inject` emit, and `renderIndex(html)` renders them into successful root and configured index responses before applying the raw `tapIndex(transform)` escape-hatch transforms in registration order; [dsh-client-modules](../../packages/client/modules) answers the event with the boot manifest rows. `port` reads the listening port, including the port assigned by the OS when `config.port` is 0.
 
 A request whose handling throws (a malformed %-escape hitting `decodeURIComponent`, a client dropping mid-body) is logged as a warning and answered 400 — or the socket destroyed when headers are already out — never a process exit. Disposal pairs `close()` with `closeAllConnections()` because a handler may hold its response open (SSE) and such connections never end on their own; without the force-close, teardown would hang. The package never prints: the URL line belongs to the shell. Per-package operational detail, including the dev-mode bundle watch pipeline, stays in the [README](../../packages/host/webserver/README.md).
 
@@ -58,7 +60,7 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
 
 ### `ctx.webServer` — `WebServer`
 
-The browser HTTP carrier service. Activation listens immediately. Route registration order does not affect requests because configured named routes must be distinct, and the fallback handler answers anything not yet claimed during startup with 404 until its owner registers. A listen failure rejects initialization, and the boot process reports the failed fiber.
+The browser HTTP carrier service. Activation listens immediately. Route registration order does not affect requests because configured named routes must be distinct, and the fallback handler answers anything not yet claimed during startup with 404 until its owner registers. A listen failure rejects initialization unless `busyPort` is `random`, in which case an EADDRINUSE failure retries once with an OS-assigned port; other failures always reject.
 
 ```ts cordis-catalog
 /**

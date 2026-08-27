@@ -10,7 +10,6 @@
 
 import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse, Server } from 'node:http'
-import type { AddressInfo } from 'node:net'
 import type { Duplex } from 'node:stream'
 import { Context, Service } from '@monotykamary/cordis'
 import z from '@monotykamary/schemastery'
@@ -55,12 +54,14 @@ export interface WebUpgradeRoute {
   handler: (req: IncomingMessage, socket: Duplex, head: Buffer) => void | Promise<void>
 }
 
-/** Gateway config: the listen address. */
+/** Gateway config: the listen address and collision policy. */
 export interface Config {
   /** Listen host; the two supported values are loopback and all-interfaces. */
   host: '127.0.0.1' | '0.0.0.0'
   /** Listen port; zero requests an OS-assigned port. */
   port: number
+  /** On EADDRINUSE, fail or retry once with an OS-assigned port. Defaults to `error`. */
+  busyPort?: 'error' | 'random'
 }
 
 /**
@@ -68,12 +69,14 @@ export interface Config {
  * registration order does not affect requests because configured named routes
  * must be distinct, and the fallback handler answers anything not yet claimed
  * during startup with 404 until its owner registers. A listen failure rejects
- * initialization, and the boot process reports the failed fiber.
+ * initialization unless `busyPort` is `random`, in which case an EADDRINUSE
+ * failure retries once with an OS-assigned port; other failures always reject.
  */
 export class WebServer extends Service {
   static Config: z<Config> = z.object({
     host: z.union([z.const('127.0.0.1'), z.const('0.0.0.0')]).required(),
     port: z.natural().max(65535).required(),
+    busyPort: z.union([z.const('error'), z.const('random')]).default('error'),
   })
 
   private readonly exact = new Map<string, WebRoute>()
@@ -228,15 +231,41 @@ export class WebServer extends Service {
       }
     })
 
-    await new Promise<void>((resolve, reject) => {
-      this.server.once('error', reject)
-      this.server.listen(this.config.port, this.config.host, () => {
-        this.server.off('error', reject)
-        this.server.on('error', (err) => { this.ctx.logger.error(err) })
-        this.listenedPort = (this.server.address() as AddressInfo).port
-        resolve()
-      })
+    const listen = (port: number): Promise<number> => new Promise((resolve, reject) => {
+      const onError = (error: Error): void => {
+        this.server.off('listening', onListening)
+        reject(error)
+      }
+      const onListening = (): void => {
+        this.server.off('error', onError)
+        const address = this.server.address()
+        if (address === null || typeof address === 'string') {
+          reject(new Error('webserver: server reported listening without an address'))
+          return
+        }
+        resolve(address.port)
+      }
+      this.server.once('error', onError)
+      this.server.once('listening', onListening)
+      try {
+        this.server.listen(port, this.config.host)
+      } catch (error) {
+        onError(error instanceof Error ? error : new Error(String(error)))
+      }
     })
+
+    try {
+      this.listenedPort = await listen(this.config.port)
+    } catch (error) {
+      if (this.config.busyPort !== 'random' || (error as NodeJS.ErrnoException | null)?.code !== 'EADDRINUSE') {
+        throw error
+      }
+      this.listenedPort = await listen(0)
+      this.ctx.logger.warn(
+        `webserver: port ${String(this.config.port)} is busy; using OS-assigned port ${String(this.listenedPort)}`,
+      )
+    }
+    this.server.on('error', (err) => { this.ctx.logger.error(err) })
 
     // Node does not include upgraded sockets in closeAllConnections(). The service
     // owns them with the other connections, so it tracks and destroys them explicitly.

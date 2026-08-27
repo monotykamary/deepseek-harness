@@ -538,5 +538,8 @@ function validateSessionParams(params: NewSessionRequest): void {
   if (params.additionalDirectories !== undefined && params.additionalDirectories.length > 0) {
     throw invalidParams('additionalDirectories is not supported')
   }
-  if (params.mcpServers.length > 0) throw invalidParams('mcpServers is not supported')
+  // JetBrains may provide its configured MCP servers in every session/new request.
+  // DSH owns its tool composition, so accept the list for ACP compatibility but
+  // intentionally do not attach or execute those external servers.
+  void params.mcpServers
 }

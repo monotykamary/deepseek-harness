@@ -7,7 +7,47 @@ import type { Context } from '@monotykamary/cordis'
 import type { LlmCallConfig, ReasoningEffortId } from '@monotykamary/dsh-llm'
 import type { Agent } from './runtime-types.ts'
 
-/** Complete provider, model, and optional reasoning effort selected for one live Agent. */
+/** Exact-route capability probe the default LLM runtime exposes when mounted. */
+interface LlmCapabilityLookup {
+  /**
+   * Validate one call config against the route's exact model capability.
+   * Rejects {@link UNSUPPORTED_REASONING_EFFORT_CODE} for an effort the model
+   * cannot serve; other failures propagate so configuration stays loud.
+   */
+  resolveCallConfig(
+    config: { provider: string; model: string; reasoningEffort?: ReasoningEffortId },
+    signal?: AbortSignal,
+  ): Promise<LlmCallConfig>
+}
+
+/** LlmError code naming an effort the selected route/model does not serve. */
+const UNSUPPORTED_REASONING_EFFORT_CODE = 'UNSUPPORTED_REASONING_EFFORT'
+
+/** Whether one route/model can serve one reasoning effort, when capability data is reachable. */
+async function effortServed(
+  lookup: LlmCapabilityLookup,
+  provider: string,
+  model: string,
+  effort: ReasoningEffortId,
+  signal: AbortSignal | undefined,
+): Promise<boolean> {
+  try {
+    await lookup.resolveCallConfig({ provider, model, reasoningEffort: effort }, signal)
+    return true
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && 'code' in error
+      && (error as { code?: unknown }).code === UNSUPPORTED_REASONING_EFFORT_CODE
+    ) {
+      return false
+    }
+    throw error
+  }
+}
+
+/** Selected provider, model, and optional reasoning effort for one live Agent. */
 export interface ModelSelection {
   /** Registered provider route. */
   provider: string
@@ -112,18 +152,21 @@ export function installModelSelection(
   })
   const disposeRequest = agentCtx.on(
     'agent/request',
-    async (_payload, next): Promise<LlmCallConfig> => {
+    async (payload, next): Promise<LlmCallConfig> => {
       const resolved = await next()
       const selected = selection.assembled
       if (selected === undefined) return resolved
       const { reasoningEffort: _inheritedEffort, ...withoutInheritedEffort } = resolved
+      const { provider, model, reasoningEffort } = selected
+      const capability = agentCtx.get('llm') as unknown as LlmCapabilityLookup | undefined
+      const serves = reasoningEffort === undefined
+        || capability === undefined
+        || await effortServed(capability, provider, model, reasoningEffort, payload.signal)
       return {
         ...withoutInheritedEffort,
-        provider: selected.provider,
-        model: selected.model,
-        ...selected.reasoningEffort === undefined
-          ? {}
-          : { reasoningEffort: selected.reasoningEffort },
+        provider,
+        model,
+        ...reasoningEffort !== undefined && serves ? { reasoningEffort } : {},
       }
     },
   )

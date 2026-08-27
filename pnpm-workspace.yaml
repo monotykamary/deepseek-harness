@@ -114,4 +114,5 @@ patchedDependencies:
   # Adapted from localterm: ligature overhang, color-emoji muting, and device-resolution images.
   '@xterm/addon-image@0.10.0-beta.287': patches/@xterm__addon-image@0.10.0-beta.287.patch
   '@xterm/addon-webgl@0.20.0-beta.290': patches/@xterm__addon-webgl@0.20.0-beta.290.patch
+  dsh-fabric-code-runtime-quickjs@0.1.7: patches/dsh-fabric-code-runtime-quickjs@0.1.7.patch
   node-pty@1.2.0-beta.15: patches/node-pty@1.2.0-beta.15.patch

@@ -9,6 +9,7 @@
  * shipped quiescent disposer.
  */
 
+import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
@@ -43,8 +44,44 @@ const jsExprType = new yaml.Type('tag:yaml.org,2002:js', {
 })
 const configSchema = yaml.JSON_SCHEMA.extend(jsExprType)
 
+/**
+ * Reserve the composed default port when it is available. An existing listener
+ * is also a valid blocker for this regression; only this test's listener needs
+ * teardown.
+ * @returns a disposer for the listener this test owns, if any.
+ */
+async function reserveDefaultPort(): Promise<() => Promise<void>> {
+  const blocker = createServer()
+  let ownsPort = false
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error): void => {
+        blocker.off('listening', onListening)
+        reject(error)
+      }
+      const onListening = (): void => {
+        blocker.off('error', onError)
+        resolve()
+      }
+      blocker.once('error', onError)
+      blocker.once('listening', onListening)
+      blocker.listen(3080, '127.0.0.1')
+    })
+    ownsPort = true
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException | null)?.code !== 'EADDRINUSE') throw error
+  }
+  return async () => {
+    if (!ownsPort) return
+    await new Promise<void>((resolve) => { blocker.close(() => { resolve() }) })
+  }
+}
+
 /** Boot the built Web CLI, wait for its settled URL, then dispose through SIGTERM. */
-function runBuiltWeb(cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
+function runBuiltWeb(
+  cwd: string,
+  args: readonly string[] = ['--no-open', '--host', '127.0.0.1', '--port', '0'],
+): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolveRun, rejectRun) => {
     const env: NodeJS.ProcessEnv = {
       ...process.env,
@@ -57,11 +94,7 @@ function runBuiltWeb(cwd: string): Promise<{ stdout: string; stderr: string; cod
     const child = spawn(process.execPath, [
       builtBin,
       'web',
-      '--no-open',
-      '--host',
-      '127.0.0.1',
-      '--port',
-      '0',
+      ...args,
     ], {
       cwd,
       env,
@@ -123,6 +156,23 @@ describe.skipIf(!requireBuiltArtifacts)('built CLI lazy-search startup', () => {
       expect(result.stderr).not.toMatch(/ExperimentalWarning: SQLite/u)
     } finally {
       await rm(cwd, { recursive: true, force: true })
+    }
+  }, 70_000)
+
+  it('falls back from an occupied default port and reports the alternate URL', async () => {
+    const releaseDefaultPort = await reserveDefaultPort()
+    const cwd = await mkdtemp(join(tmpdir(), 'dsh-cli-port-fallback-'))
+    try {
+      const result = await runBuiltWeb(cwd, ['--no-open'])
+      const url = /dsh web: http:\/\/127\.0\.0\.1:(\d+)/u.exec(result.stdout)
+      expect(url).not.toBeNull()
+      expect(Number(url?.[1])).toBeGreaterThan(0)
+      expect(Number(url?.[1])).not.toBe(3080)
+      expect(result.code).toBe(0)
+      expect(result.stderr).not.toContain('EADDRINUSE')
+    } finally {
+      await rm(cwd, { recursive: true, force: true })
+      await releaseDefaultPort()
     }
   }, 70_000)
 })

@@ -166,4 +166,52 @@ describe('installModelSelection()', () => {
 
     await ctx.fiber.dispose()
   })
+
+  it('drops the selected effort when the route model cannot serve it, and keeps a served one', async () => {
+    const ctx = new Context()
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(SystemPrompt)
+    let serve = false
+    ctx.provide('llm', {
+      async resolveCallConfig(config: { reasoningEffort?: string }) {
+        if (serve) return config
+        const error = new Error('model cannot serve reasoning effort ' + config.reasoningEffort) as Error & { code?: string }
+        error.code = 'UNSUPPORTED_REASONING_EFFORT'
+        throw error
+      },
+    })
+    const selection: ModelSelectionRef = { current: undefined, assembled: undefined }
+    const { agent, agentCtx } = await scopedAgent(ctx, { requestHeader: () => undefined } as unknown as Agent['session'])
+    const dispose = installModelSelection(agentCtx, agent, selection)
+    const seed: LlmCallConfig = { provider: 'seed', model: 'seed', temperature: 0.2 }
+    const signal = new AbortController().signal
+
+    selection.current = {
+      provider: 'alpha',
+      model: 'a1',
+      reasoningEffort: ReasoningEffortId('high'),
+    }
+    await ctx.systemPrompt.assemble(assembleContextFor(agent))
+    await expect(agentEvents(ctx, agent).waterfall(
+      'agent/request', { turn: 1, step: 0, signal }, () => Promise.resolve(seed),
+    )).resolves.toStrictEqual({
+      provider: 'alpha',
+      model: 'a1',
+      temperature: 0.2,
+    })
+
+    serve = true
+    await expect(agentEvents(ctx, agent).waterfall(
+      'agent/request', { turn: 1, step: 1, signal }, () => Promise.resolve(seed),
+    )).resolves.toEqual({
+      provider: 'alpha',
+      model: 'a1',
+      reasoningEffort: ReasoningEffortId('high'),
+      temperature: 0.2,
+    })
+
+    dispose()
+    await ctx.fiber.dispose()
+  })
+
 })
