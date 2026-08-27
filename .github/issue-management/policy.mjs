@@ -6,6 +6,15 @@ import { pathToFileURL } from 'node:url'
 
 import config from './config.json' with { type: 'json' }
 
+const overrideRepository = process.env.GITHUB_REPOSITORY ?? ''
+if (overrideRepository !== '') {
+  const slash = overrideRepository.indexOf('/')
+  if (slash > 0) {
+    config.organization = overrideRepository.slice(0, slash)
+    config.repository = overrideRepository.slice(slash + 1)
+  }
+}
+
 const API_VERSION = '2026-03-10'
 const BODY_LIMIT = 50
 const AUDIT_MARKER = '<!-- dsh-issue-policy -->'
