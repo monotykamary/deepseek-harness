@@ -15,8 +15,8 @@ export const name = 'tool-subagent-invariant'
 export const inject = ['invariants']
 
 /**
- * No runtime invariant: this model-facing adapter has no independent lifecycle stream; execution
- * relations are owned by the capability seam it calls.
+ * No runtime invariant: these model and command adapters have no independent lifecycle stream; tool,
+ * command, and child execution relations are owned by the registries and capability service they call.
  */
 const install: InvariantInstaller = () => {}
 

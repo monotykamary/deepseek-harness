@@ -2,8 +2,10 @@
  * The web app's command-line provider: it parses the `dsh --profile web` flag
  * family (`--host`, `--port`, `--trusted-host`, `--tailnet`,
  * `--portless`, `--no-open`) and its `--help` text, then provides the
- * immutable values as {@link WEB_STARTUP_SERVICE}. Ordinary rows inject that
- * service before reading it from lazy config.
+ * immutable values as {@link WEB_STARTUP_SERVICE}. It resolves the Web default's
+ * busy-port policy: omitted `--port` may fall back once to an OS-assigned port,
+ * while an explicit port remains exact. Ordinary rows inject that service before
+ * reading it from lazy config.
  * @module @monotykamary/dsh-web-app/startup
  */
 
@@ -28,6 +30,8 @@ export interface WebStartupValues {
   host?: string
   /** `--port`, absent when the invocation did not name one. */
   port?: number
+  /** Retry with an OS-assigned port when the default is busy; explicit ports remain exact. */
+  busyPort: 'error' | 'random'
   /** Explicit `--trusted-host` authorities, in argument order. */
   trustedHosts: string[]
   /** `--tailnet`: resolve and trust the tailscale serve surface. */
@@ -72,7 +76,7 @@ function webCommand(): Command {
     .helpOption('-h, --help', 'show this help')
     .option('--host <host>', 'bind host')
     .option('--no-open', 'do not open the Web UI in the default browser')
-    .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
+    .option('--port <port>', 'listen port; default 3080 falls back once if busy; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
     .option('--tailnet', 'resolve the tailscale serve surface: trust its DNS name and announce its URL')
     .option('--portless', 'resolve the portless HTTPS surface: register the dsh alias, trust dsh.localhost, and announce it')
@@ -126,6 +130,7 @@ export function apply(ctx: Context): void {
       openBrowser: options.open,
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
+      busyPort: options.port === undefined ? 'random' : 'error',
       trustedHosts: options.trustedHost ?? [],
       tailnet: options.tailnet ?? false,
       portless: options.portless ?? false,

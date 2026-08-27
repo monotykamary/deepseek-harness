@@ -6,7 +6,7 @@ import type { Scope } from '@monotykamary/dsh-scope'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@monotykamary/dsh-code-runtime'
-import ToolRuntime, { CodeRunFailedError, RUN_CODE_NAME, TOOL_ABORTED_BEFORE_DISPATCH, defineContentToolFixture, defineTool } from '@monotykamary/dsh-tools'
+import ToolRuntime, { CODE_DISCOVERY_HELPER_NAMES, CodeRunFailedError, RUN_CODE_NAME, TOOL_ABORTED_BEFORE_DISPATCH, defineContentToolFixture, defineTool } from '@monotykamary/dsh-tools'
 import type { Config, JsonSchemaNode, PostToolDecision, ToolExecutionResult } from '@monotykamary/dsh-tools'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { Session, SessionId } from '@monotykamary/dsh-session'
@@ -255,7 +255,7 @@ describe('mode-aware wire contribution', () => {
     })
     const result = await runCode(ctx, 'return Object.keys(tools)', { agent })
     expect(result.isError).toBe(false)
-    expect(result.content).toEqual([{ type: 'text', text: 'echo' }])
+    expect(result.content).toEqual([{ type: 'text', text: 'call,describe,echo' }])
 
     lift()
     const unrestricted = await systemPrompt.assemble({ scope: agent })
@@ -285,7 +285,64 @@ describe('mode-aware wire contribution', () => {
     })
     const result = await runCode(ctx, 'return Object.keys(tools)', { agent })
     expect(result.isError).toBe(false)
-    expect(result.content).toEqual([{ type: 'text', text: 'kept' }])
+    expect(result.content).toEqual([{ type: 'text', text: 'call,describe,kept' }])
+  })
+
+  it('binds discovery helpers to the exact run-scoped catalog and dispatches dynamic calls through ToolRuntime', async () => {
+    const { ctx, runtime } = await setup({ mode: 'code' })
+    const calls = registerEcho(ctx, 'echo')
+    registerEcho(ctx, 'hidden')
+    ctx.tools.register(defineTool({
+      name: 'ping',
+      description: 'No-argument ping.',
+      parameters: {},
+      output: {
+        schema: { type: 'string' },
+        render: (_args, value) => [{ type: 'text', text: value }],
+      },
+      execute: () => Promise.resolve('pong'),
+    }))
+    const { scope, agent } = await mintAgentScope(ctx, 'discover-scope')
+    Object.assign(agent, fakeAgent().agent)
+    scope.ctx.tools.restrict({ allow: ['echo', 'ping'] })
+
+    runtime.behavior = async (request) => {
+      const functions = request.bindings[0]!.functions
+      const described = await functions.describe!('echo')
+      const hidden = await functions.describe!('hidden').then(
+        () => 'resolved',
+        (error: unknown) => error instanceof Error ? error.message : String(error),
+      )
+      const called = await functions.call!({ name: 'echo', args: { value: 'dynamic' } })
+      const calledWithoutArgs = await functions.call!({ name: 'ping' })
+      return { logs: [], value: { described, hidden, called, calledWithoutArgs, names: Object.keys(functions).sort() } }
+    }
+
+    const result = await runCode(ctx, 'discover then call', { agent })
+    if (result.isError) throw new Error(`expected discovery run success: ${result.error.message}`)
+    expect(result.value).toMatchObject({ result: {
+      described: { name: 'echo', description: 'Echo tool echo.' },
+      hidden: 'unknown tool "hidden" in this run\'s scoped catalog',
+      called: 'echo:dynamic',
+      calledWithoutArgs: 'pong',
+      names: ['call', 'describe', 'echo', 'ping'],
+    } })
+    expect(calls).toEqual([{ value: 'dynamic' }])
+  })
+
+  it.each(CODE_DISCOVERY_HELPER_NAMES)('reserves the %s discovery helper against tools and restrictions', async (helper) => {
+    const { ctx } = await setup({ mode: 'code' })
+    const definition = defineContentToolFixture({
+      name: helper,
+      description: 'Discovery helper impostor.',
+      parameters: {},
+      execute: () => Promise.resolve([{ type: 'text' as const, text: 'impostor' }]),
+    })
+    const { scope } = await mintAgentScope(ctx, `helper-${helper}`)
+
+    expect(() => ctx.tools.register(definition)).toThrow(/reserved for a Code Mode discovery helper/)
+    expect(() => scope.ctx.tools.register(definition)).toThrow(/reserved for a Code Mode discovery helper/)
+    expect(() => scope.ctx.tools.restrict({ allow: [helper] })).toThrow(/cannot name reserved Code Mode discovery helper/)
   })
 
   it.each(['code', 'both'] as const)('reserves run_code against scoped shadows and explicit restrictions in mode %s', async (mode) => {
@@ -356,7 +413,7 @@ describe('mode-aware wire contribution', () => {
     }
     const result = await runCode(ctx, 'program')
     expect(result.isError).toBe(false)
-    expect(JSON.parse((result.content[0] as { text: string }).text)).toEqual({ names: ['echo'], runCode: 'undefined' })
+    expect(JSON.parse((result.content[0] as { text: string }).text)).toEqual({ names: ['call', 'describe', 'echo'], runCode: 'undefined' })
   })
 
   it('renders byte-identical SDK text across consecutive assemblies of an unchanged tool set', async () => {
@@ -804,6 +861,30 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
     expect(starts).toEqual(['call-1:code:1'])
     expect(settles).toEqual(['call-1:code:1'])
     expect(abandoned).toEqual(['run_code run is over (run_code settled); writer tool call abandoned'])
+  })
+
+  it('contains rejected binding promises when a runtime drops unawaited calls', async () => {
+    const { ctx, runtime } = await setup({ mode: 'code' })
+    const gated = registerGated(ctx, 'writer', false)
+    const unhandled: unknown[] = []
+    const onUnhandled = (error: unknown): void => { unhandled.push(error) }
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        void tools.writer!({ id: 'w1' })
+        void tools.writer!({ id: 'w2' })
+        await expect.poll(() => gated.pending()).toBe(1)
+        return { logs: [], value: 'program-finished' }
+      }
+
+      const result = await runCode(ctx, 'program')
+      expect(result.isError).toBe(false)
+      await new Promise<void>(resolve => setImmediate(resolve))
+      expect(unhandled).toEqual([])
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
   })
 })
 

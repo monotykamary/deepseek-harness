@@ -11,3 +11,6 @@
 # Pairing records are generated from the three confirmed owner-blob pairs.
 # The worktree-local installer registers the fail-closed driver command.
 *.i18n.yaml merge=dsh-translation-pairing
+# pnpm-patch artifacts embed context lines from potentially tab-indented
+# vendor sources; skip whitespace checks that would reject legitimate context.
+patches/*.patch -whitespace

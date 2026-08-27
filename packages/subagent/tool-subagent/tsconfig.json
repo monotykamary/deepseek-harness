@@ -24,6 +24,9 @@
       "path": "../../llm/llm"
     },
     {
+      "path": "../../interaction/commands"
+    },
+    {
       "path": "../../core/tools"
     },
     {

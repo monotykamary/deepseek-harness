@@ -2,11 +2,13 @@
 
 [English](README.md) | 中文
 
-为每个会话加载与 `AGENTS.md` 兼容的工作区指令文件。该插件会将初始的用户全局指令与项目指令链注入持久历史，随后发现嵌套文件，并在成功的文件系统工具调用后报告后续变更或移除。
+为每个会话加载与 `AGENTS.md` 兼容的工作区指令文件，并提供独立的受信任用户系统策略文件。该插件把 `$DSH_HOME/APPEND_SYSTEM.md` 注册到系统提示词，将初始用户全局指令与项目指令链注入持久历史，随后发现嵌套文件，并在成功的文件系统工具调用后报告后续变更或移除。
 
 ## 生命周期
 
-每个实时会话第一次符合条件的 `agent/pre-step` 会组合基线。当下游决策让非空的第一步批次进入时，插件会将基线折入最终批次、紧随已领取的直接提示词之后，使直接提示词与持久基线一同进入步骤 1，并共同抵达第一次请求。被拒绝或为空的第一步决策会将基线留在 agent（智能体）的 `next-step` inbox，等待后续唤醒。loader 先读取 `$DSH_HOME/AGENTS.md`，随后针对项目根目录到 `agent.session.header.cwd` 的每个目录，先读取每个现有基础候选文件，再读取每个现有本地 overlay 候选文件。同一目录中，如果候选文件在去除首尾空白后字节完全一致，就会按已配置顺序折叠到最早候选文件，因此 `CLAUDE.md` 若只是复制同级 `AGENTS.md`，只会渲染一次。若之前排队的 workspace 上下文仍在等待，插件会删除并替换该确切 inbox 条目，而不会不断累积副本。恢复后的会话会保留一条兼容的可见基线，并只追加当前文件的转换；如果发现、优先级、项目根目录或预算标识发生变化，则会将一条明确取代旧基线的完整基线折入进入步骤的批次。
+插件加载时，该包会读取 Harness home 中可选的受信任系统文件，并把完整的有界内容注册为系统提示词顺序 1 的 `user:system-instructions`。文本会保持不变直到插件 reload；文件缺失时贡献空 section，内容超限、UTF-8 格式错误、名称无效和 I/O 失败则拒绝加载。
+
+每个实时会话第一次符合条件的 `agent/pre-step` 会组合较低权限的工作区基线。当下游决策让非空的第一步批次进入时，插件会将基线折入最终批次、紧随已领取的直接提示词之后，使直接提示词与持久基线一同进入步骤 1，并共同抵达第一次请求。被拒绝或为空的第一步决策会将基线留在 agent（智能体）的 `next-step` inbox，等待后续唤醒。loader 先读取 `$DSH_HOME/AGENTS.md`，随后针对项目根目录到 `agent.session.header.cwd` 的每个目录，先读取每个现有基础候选文件，再读取每个现有本地 overlay 候选文件。同一目录中，如果候选文件在去除首尾空白后字节完全一致，就会按已配置顺序折叠到最早候选文件，因此 `CLAUDE.md` 若只是复制同级 `AGENTS.md`，只会渲染一次。若之前排队的 workspace 上下文仍在等待，插件会删除并替换该确切 inbox 条目，而不会不断累积副本。恢复后的会话会保留一条兼容的可见基线，并只追加当前文件的转换；如果发现、优先级、项目根目录或预算标识发生变化，则会将一条明确取代旧基线的完整基线折入进入步骤的批次。
 
 该插件还会观察第一方 `read`、`write` 和 `edit` 调用成功后产生的不可变 `tools/result`。每个已接受的 touch 都会检查新达到的后代 scope 以及之前加载的每个 scope。每个已配置候选名称都是所在目录中的独立 scope：新出现的文件会在 agent inbox 中排入一项新增；已改变文件会排入一项替换；文件消失或成为同一目录中较早候选文件的重复项时，会排入一则移除通知。原生调用与 Code Mode 子分派共享该路径：嵌套 touch 会沿不透明的父级执行 token 逐层上浮，直到顶层结果落定；在 agent loop（智能体循环）步骤内产生的 touch，须等持久 `step/end` 后才开始异步投影。打开的步骤之外直接执行工具时，则立即投影。这样无需依赖文件系统时序，也能保持工具调用／结果／步骤的相邻关系。这种发现跟随结构化文件系统活动，而不是 shell `cd`，因为每次本地 bash 调用都启动新 shell，解析任意 shell 语法也不可靠。
 
@@ -15,6 +17,8 @@
 <a id="prompt-shape"></a>
 
 ## 提示词结构
+
+受信任用户策略是一个系统提示词 section，包含经 trim 的 `$DSH_HOME/APPEND_SYSTEM.md` 确切文本。它与下方持久工作区框架分离；仓库文件绝不会进入该 section。
 
 基线指令是持久的 user 角色消息，使用熟悉的 system-reminder 模式框定：
 
@@ -61,6 +65,8 @@ These instructions apply to work under `packages/app`. Use them as guidance when
 ```ts
 export interface Config {
   dshHome?: string
+  trustedSystemFile?: string
+  trustedSystemMaxBytes?: number
   projectRootMarkers?: string[]
   maxBytes: number
   maxSourceBytes?: number
@@ -71,7 +77,7 @@ export interface Config {
 
 `maxBytes` 必填，因此每个部署都必须显式选择提示词预算。`maxSourceBytes` 在渲染前限制每个源指令文件，默认为 1 MiB。`projectRootMarkers` 默认为 `['.git']`，`instructionFileCandidates` 默认为 `['AGENTS.md', 'CLAUDE.md']`。每个项目目录中的所有现有候选文件都会加载，在去除周围空白后与较早候选文件内容匹配的文件会被丢弃。因此，使用默认设置时，内容相同的 `AGENTS.md` 与 `CLAUDE.md` 只渲染一次（作为 `AGENTS.md`），真正不同的同级文件则同时应用。`localInstructionFileCandidates` 默认为 `['AGENTS.local.md', 'CLAUDE.local.md']`，会与同一目录的基础文件一起加载其现有 overlay（渲染在它们之后），并应用同一个每目录去重；空列表会禁用 overlay。两个列表中的候选项都必须是同一目录下的文件名，因此会忽略空项、`.`／`..` 以及包含 `/` 或 `\` 的项。
 
-用户全局文件始终是 `$DSH_HOME/AGENTS.md`，没有本地 overlay；两个候选列表只控制项目 scope。`$DSH_HOME` 默认为 `~/.dsh`，已配置的 `~`、`~/...` 与 Windows 风格 `~\...` 前缀会基于操作系统 home 目录展开。非正数或非有限渲染预算会同时禁用基线与动态加载；已配置 `maxSourceBytes` 必须是正整数。
+较低权限的用户全局文件始终是 `$DSH_HOME/AGENTS.md`，没有本地 overlay；两个候选列表只控制项目 scope。受信任系统文件默认为 `$DSH_HOME/APPEND_SYSTEM.md`；`trustedSystemFile` 接受另一个同目录文件名，`trustedSystemMaxBytes` 默认为 65,536 字节。`$DSH_HOME` 默认为 `~/.dsh`，已配置的 `~`、`~/...` 与 Windows 风格 `~\...` 前缀会基于操作系统 home 目录展开。非正数或非有限渲染预算会禁用基线与动态加载，但不会禁用独立有界的受信任系统文件；已配置 `maxSourceBytes` 必须是正整数。
 
 ## 预算与有界读取
 
@@ -80,6 +86,20 @@ export interface Config {
 即使提供方元数据省略大小，或文件在元数据探测后增长，指令内容仍会通过 `streamText()` 在 `maxSourceBytes` 下读取。超大文件会被忽略；在动态对账期间，它会暂时不可用，而不是被移除。该插件不保留进程级 cache，绝不缓存指令文本。其会话本地 scope cache 只将提供方版本用作快速失效信号；失效后，对有界读取计算的 SHA-1 仍是存储在结构化消息来源中的跨提供方内容标识。
 
 ## 模型体验
+
+### 受信任系统策略
+
+#### 模型看到的内容
+
+配置文件存在时，每次请求的系统提示词会在部署 persona 之后的 `user:system-instructions` section 中包含其经 trim 的确切 UTF-8 文本。仓库与用户全局 `AGENTS.md` 内容仍位于独立的 user-role 基线中。
+
+#### Token 影响
+
+在一个进程生命周期内，每次请求开销固定，并受 `trustedSystemMaxBytes` 约束；文件缺失或只有空白时贡献零文本。
+
+#### KV Cache 影响
+
+在插件 reload 前保持前缀稳定。reload 后若内容变化，会从这个较早的系统提示词 section 开始使复用失效。
 
 ### 基线上下文
 
@@ -164,7 +184,7 @@ The previously loaded instructions from this file no longer apply.
 ## 已知限制与暂缓事项
 
 - **发现跟随结构化 fs 工具，而非 shell 导航**：更改目录的 `bash` 命令不会触发嵌套指令发现，因为 shell 语法与每次调用 shell 状态不是可靠的文件系统 seam。
-- **刷新由 touch 驱动**：没有 watcher；外部编辑会在下一次成功的第一方 `read`、`write` 或 `edit` 时、恢复过程对账可见基线时，或进入步骤的 pre-step 恢复被遮蔽的基线时可见。
+- **刷新由 touch 驱动**：没有 watcher；外部编辑会在下一次成功的第一方 `read`、`write` 或 `edit` 时、恢复过程对账可见基线时，或进入步骤的 pre-step 恢复被遮蔽的基线时可见。受信任系统文件只在插件加载时读取，变更需要 reload。
 - **候选语义有意保持简单**：不解释小写名称、`.claude/rules/` 与 `@path` import；项目 scope 默认加载 `AGENTS.local.md`／`CLAUDE.local.md` overlay，但用户全局 `$DSH_HOME` scope 没有本地 overlay，其他自定义名称需要显式候选配置。
 - **每目录去重基于内容**：只有在去除首尾空白后字节完全一致时，才折叠同级候选文件。`CLAUDE.md` 若 symlink 到同级 `AGENTS.md`，会解析为相同内容，并像任何重复项一样折叠；从 `AGENTS.md` 漂移的独立实体副本则会与它一起完整加载。
 - **Symlink 指令文件会跨越信任边界跟随**：最终组件是 symlink 的候选文件会被解析并加载其目标，因此克隆仓库可以将树外文件内容呈现为较低优先级的工作区指引（它绝不会覆盖 system、developer 或用户直接下达的指令）。加载不受信任仓库时，请用文件系统策略门禁或 OS 沙箱限制 `ctx.fs`。

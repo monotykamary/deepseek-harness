@@ -1,6 +1,0 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-28-identified-immutable-message-values.md
-2026-07-28-identified-immutable-message-values.md: cb936ecf1ba7fc381c3915a60a342e761fc44e4d
-2026-07-28-identified-immutable-message-values.zh.md: 42e88d0e7263b29c86bf25247e6034c453f1d3d9

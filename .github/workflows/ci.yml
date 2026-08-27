@@ -1,7 +1,12 @@
 name: CI
 
+# The fork-safe ci-fork.yml is the authoritative PR gate. This upstream
+# enterprise matrix remains available only as an explicit source contract; the
+# impossible path filter prevents it from appearing on ordinary fork PRs.
 on:
   pull_request:
+    paths:
+      - '.github/ci-canonical/**'
 permissions:
   contents: read
 
@@ -273,7 +278,9 @@ jobs:
 
 
   node-compat:
-    if: github.event_name == 'pull_request'
+    # Compatibility smokes build release-shaped artifacts; run them only on the
+    # canonical repo where the build pipeline can complete, not on forks.
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-harness/deepseek-harness'
     # Each compatibility contract receives an independent standard hosted job.
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.name }}
@@ -335,7 +342,8 @@ jobs:
   # The reusable builder owns the executable, snapshot, wheel, clean-install,
   # GLIBC, and manylinux checks; release validation retains all native targets.
   python-runtime:
-    if: github.event_name == 'pull_request'
+    # Builds the release-shaped single-exe runtime; only the canonical repo runs it.
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-harness/deepseek-harness'
     name: python runtime / release-shaped Linux x64
     uses: ./.github/workflows/build-exe-for-python-sdk.yml
     with:

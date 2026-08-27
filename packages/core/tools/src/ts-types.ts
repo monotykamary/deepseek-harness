@@ -253,7 +253,8 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 \`run_code\` takes two required arguments: \`code\` — the body of an async TypeScript function (erasable syntax only — no \`enum\` or namespaces; type annotations are advisory, the code runs type-stripped) — and \`description\`, a short summary of what the program does. Inside the program:
 
 - Call tools as \`await tools.name(args)\` — quoted access for exotic names: \`tools["my-tool"](args)\`. Every call resolves to the tool's typed canonical JSON value. Tool arguments must be lossless JSON.
-- A FAILED tool call rejects with \`ToolCallError\`, whose \`toolName\` identifies the failed tool and whose \`message\` is human-readable — \`try/catch\` it to handle and continue.
+- For a capability omitted from the declarations below, call \`await tools.describe(name)\` for its exact run-scoped schema, then \`await tools.call({ name, args })\`. Do not guess arguments.
+- A FAILED tool call rejects with \`ToolCallError\`, whose \`toolName\` identifies the failed tool or discovery helper and whose \`message\` is human-readable — \`try/catch\` it to handle and continue.
 - Independent read-only calls MAY overlap under \`Promise.all\` (safe calls run concurrently; mutating calls run alone, in submission order). Sequence dependent work with \`await\`.
 - Emit results with \`return\` and/or \`console.log(...)\`. Only what you print or return is program output. A successful tool result containing an image is attached after the run so you can inspect it on the next step; every other intermediate result stays out of the conversation, so extract just what you need.
 
@@ -295,8 +296,17 @@ export function renderToolsSdk(schemas: ToolSdkSchema[], labelMode: RunCodeLabel
     argsMap,
     outputMap,
     'type ToolName = keyof ToolOutputMap',
-    ['declare class ToolCallError extends Error {', '  readonly name: "ToolCallError";', '  readonly toolName: ToolName;', '}'].join('\n'),
-    ['declare const tools: {', '  [K in ToolName]: (args: ToolArgsMap[K]) => Promise<ToolOutputMap[K]>;', '}'].join('\n'),
+    'type CodeDiscoveryHelperName = "call" | "describe"',
+    ['interface ToolDescriptor {', '  name: string;', '  description: string;', '  parameters: JsonValue;', '}'].join('\n'),
+    ['declare class ToolCallError extends Error {', '  readonly name: "ToolCallError";', '  readonly toolName: ToolName | CodeDiscoveryHelperName;', '}'].join('\n'),
+    [
+      'declare const tools: {',
+      '  [K in ToolName]: (args: ToolArgsMap[K]) => Promise<ToolOutputMap[K]>;',
+      '} & {',
+      '  describe(name: string | { name: string }): Promise<ToolDescriptor>;',
+      '  call(request: { name: string; args?: JsonValue }): Promise<JsonValue>;',
+      '}',
+    ].join('\n'),
   ].join('\n\n')
   const jsonValue = 'type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }'
   return `${sdkInstructions(labelMode)}\n\n\`\`\`ts\n${jsonValue}\n\n${declaration}\n\`\`\``

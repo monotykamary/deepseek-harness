@@ -164,7 +164,7 @@ describe('automation-only ACP bridge', () => {
     expect(harness.adapter.requests[0]?.system).toContain(`Automation persona for mock in ${process.cwd()}.`)
   })
 
-  it('requires one absolute workspace and no MCP servers', async () => {
+  it('requires one absolute workspace and ignores client MCP servers', async () => {
     harness = await makeBridgeHarness()
     await harness.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
 
@@ -174,10 +174,11 @@ describe('automation-only ACP bridge', () => {
       mcpServers: [],
       additionalDirectories: ['/tmp/other'],
     })).rejects.toThrow(/additionalDirectories/)
+
     await expect(harness.client.newSession({
       cwd: process.cwd(),
       mcpServers: [{ name: 'fs', command: 'node', args: [], env: [] }],
-    })).rejects.toThrow(/mcpServers/)
+    })).resolves.toHaveProperty('sessionId')
 
     await expect(harness.client.newSession({
       cwd: process.cwd(),

@@ -7,7 +7,8 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@monotykamary/cordis'
-import AgentRegistry, { agentEvents } from '@monotykamary/dsh-agent'
+import { createScope } from '@monotykamary/dsh-scope'
+import AgentRegistry, { agentEvents, assembleContextFor } from '@monotykamary/dsh-agent'
 import type { Agent } from '@monotykamary/dsh-agent'
 import AttachmentStore from '@monotykamary/dsh-attachment'
 import LlmRuntime, { LlmAdapter, ReasoningEffortId } from '@monotykamary/dsh-llm'
@@ -109,9 +110,15 @@ async function harness(logged?: {
     id: session.id,
     session,
     status: 'running',
-    ctx,
+    options: {},
     inbox: { nextTurn: [], nextStep: [] },
   } as unknown as Agent
+  let agentCtx!: Context
+  await ctx.plugin(Object.assign((inner: Context) => {
+    const scope = createScope(inner, agent)
+    agentCtx = scope.ctx.extend({ agent })
+    Object.defineProperty(agent, 'ctx', { value: agentCtx })
+  }, { inject: ['agents', 'systemPrompt'] }))
   ctx.agents.register(agent)
   return { ctx, agent, sessionId: session.id }
 }
@@ -314,7 +321,7 @@ describe('Web session model selection', () => {
 
     expect(expectValue(await api.sessions.models(request({ sessionId }))).current)
       .toEqual({ provider: 'deepseek-official', model: 'deepseek-chat' })
-    expect((await ctx.systemPrompt.assemble()).variables)
+    expect((await ctx.systemPrompt.assemble(assembleContextFor(agent))).variables)
       .toMatchObject({ provider: 'deepseek-official', model: 'deepseek-chat' })
 
     const selected = expectValue(await api.sessions.selectModel(request({
@@ -332,7 +339,7 @@ describe('Web session model selection', () => {
       'agent/request', { turn: 1, step: 0, signal }, () => Promise.resolve(seed),
     )).resolves.toMatchObject({ provider: 'deepseek-official', model: 'deepseek-chat' })
 
-    expect((await ctx.systemPrompt.assemble()).variables)
+    expect((await ctx.systemPrompt.assemble(assembleContextFor(agent))).variables)
       .toMatchObject({ provider: 'deepseek-official', model: 'private-preview' })
     await expect(agentEvents(ctx, agent).waterfall(
       'agent/request', { turn: 1, step: 1, signal }, () => Promise.resolve(seed),

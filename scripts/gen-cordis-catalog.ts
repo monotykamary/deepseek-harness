@@ -235,6 +235,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   AgentHandle: 'core.md',
   ModelCatalogFailure: 'session.md',
   ModelProviderGroup: 'session.md',
+  AgentModelSelection: 'core.md',
   ModelSelection: 'core.md',
   SessionModelTarget: 'session.md',
   AgentOptions: 'core.md',

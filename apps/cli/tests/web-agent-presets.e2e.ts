@@ -244,6 +244,7 @@ describe('the shipped Web composition', () => {
         'subagent', 'subagent_fork', 'todo_write', 'update_goal', 'web_search',
         'workflow', 'write',
       ])
+      expect(ctx.commands.list(handle.agent)).toContainEqual(expect.objectContaining({ name: 'delegate' }))
     } finally {
       await handle.dispose()
     }
@@ -260,6 +261,7 @@ describe('the shipped Web composition', () => {
         { name: 'deployment:persona', text: MINIMAL_PROMPT },
       ])
       expect(assembly.tools.map(tool => tool.name)).toEqual(['bash', 'changes_read', 'str_replace_editor'])
+      expect(ctx.commands.list(handle.agent).some(command => command.name === 'delegate')).toBe(false)
       expect(assembly.tools.find(tool => tool.name === 'bash')?.description).toBe(MINIMAL_BASH_DESCRIPTION)
       expect(JSON.stringify(assembly.tools.find(tool => tool.name === 'str_replace_editor')?.parameters))
         .toContain('Absolute path')
@@ -547,7 +549,7 @@ describe('product Bundle and user-preset intersection', () => {
             expect(tools).toEqual(expect.arrayContaining(['job_kill', 'job_list', 'job_output']))
             for (const productTool of productTools) {
               expect(toolParameterNames(productCtx, handle.agent, productTool)).toEqual([
-                'description', 'model', 'prompt', 'run_in_background',
+                'description', 'model', 'prompt', 'provider', 'run_in_background',
               ])
             }
           } finally {

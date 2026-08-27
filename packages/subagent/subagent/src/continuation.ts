@@ -415,10 +415,12 @@ export class SubagentContinuationManager {
     const childId = spec.childId ?? SessionId(randomUUID())
     this.assertChildIdAvailable(childId)
     const childDepth = resolveChildDepth(parent, request.maxDepth)
-    // Snapshot before any await: invalid descriptor JSON rejects the call
-    // before a child exists, and the detached value is what reaches the log.
-    const agentProvider = request.agentOptions?.provider ?? parent.options.provider
-    const agentModel = request.agentOptions?.model ?? parent.options.model
+    // Resolve and snapshot before any await: a later parent route switch belongs
+    // to the parent's future, while this exact route must agree across the child
+    // Agent and its durable cold-resume descriptor.
+    const childAgentOptions = resolveChildAgentOptions(parent, request.agentOptions, childDepth)
+    const agentProvider = childAgentOptions.provider
+    const agentModel = childAgentOptions.model
     const descriptor = snapshotSubagentDescriptor({
       mode: 'continuable',
       provider: spec.provider,
@@ -428,8 +430,7 @@ export class SubagentContinuationManager {
       ...request.persona !== undefined ? { persona: request.persona } : {},
       ...request.toolFilter !== undefined ? { toolFilter: request.toolFilter } : {},
     })
-    // Capture before the first await: a later parent switch belongs to the
-    // parent's future, not to this child.
+    // Capture policy before the first await for the same fixed-start semantics.
     const delegatedPolicies = captureDelegatedPolicyOverrides(parent)
 
     const prepared = await this.host.prepareContinuable(spec.provider, {
@@ -460,7 +461,7 @@ export class SubagentContinuationManager {
         provider: spec.provider,
         parent,
         create: { seed, meta: childSessionMeta(parent, childDepth, lineageSeedLength), delegatedPolicies },
-        agentOptions: resolveChildAgentOptions(parent, request.agentOptions, childDepth),
+        agentOptions: childAgentOptions,
         composition: { persona: request.persona, toolFilter: request.toolFilter },
         signal: spec.signal,
       })

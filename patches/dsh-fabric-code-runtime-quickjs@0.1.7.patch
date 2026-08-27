@@ -1,0 +1,49 @@
+diff --git a/lib/index.js b/lib/index.js
+index aaf6a23051b640c7e474ecf082a4e7458695b5a9..6d8d3989291f2e0e0f5008309e6107e8ac57deb1 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -4,7 +4,7 @@ import { CodeRuntime, DUNDER_MEMBER, PORTABLE_RESERVED_WORDS, RESERVED_BINDING_G
+ import path from "node:path";
+ import ts from "typescript";
+ import releaseSyncVariant from "@jitl/quickjs-singlefile-mjs-release-sync";
+-import { newQuickJSWASMModuleFromVariant } from "quickjs-emscripten-core";
++import { newQuickJSWASMModuleFromVariant, newVariant } from "quickjs-emscripten-core";
+ import { snapshotJsonValue } from "@monotykamary/dsh-session";
+ //#region src/type-checker.ts
+ const PAYLOAD_CALL_PATTERN = /\btools\.(?:edit|write)\s*\(/;
+@@ -128,8 +128,18 @@ function normalize(file) {
+ //#endregion
+ //#region src/runtime.ts
+ let modulePromise;
++// Emscripten prints the QuickJS GC-list teardown assertion to stderr before
++// throwing the catchable abort; drop exactly that line and keep every other
++// abort loud.
++const SUPPRESSED_ABORT_PATTERN = "list_empty(&rt->gc_obj_list)";
++const printErr = (text) => {
++	if (typeof text === "string" && text.includes(SUPPRESSED_ABORT_PATTERN)) return;
++	console.error(text);
++};
+ const internals = {
+-	moduleLoader: () => newQuickJSWASMModuleFromVariant(releaseSyncVariant),
++	moduleLoader: () => newQuickJSWASMModuleFromVariant(newVariant(releaseSyncVariant, {
++		emscriptenModule: { printErr }
++	})),
+ 	resetModule() {
+ 		modulePromise = void 0;
+ 	}
+@@ -423,7 +433,14 @@ async function executeQuickJs(code, bindings, options) {
+ 		if (raceFunction?.alive !== false) raceFunction?.dispose();
+ 		if (activeHandle?.alive !== false) activeHandle?.dispose();
+ 		if (gate?.alive !== false) gate?.dispose();
+-		pump();
++		for (let round = 0; round < 8; round += 1) {
++			const executed = runtime.executePendingJobs(64);
++			if (executed && typeof executed === "object" && "error" in executed) {
++				executed.error?.dispose?.();
++				break;
++			}
++			if (!executed || typeof executed !== "object" || executed.value === 0) break;
++		}
+ 		jsonParse.dispose();
+ 		jsonObject.dispose();
+ 		disposeContext(context);

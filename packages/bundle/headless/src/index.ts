@@ -113,8 +113,10 @@ async function run(ctx: Context, task: string, io: HeadlessIo): Promise<void> {
     meta: { cwd: process.cwd() },
     agentOptions: { provider: selection.provider, model: selection.model },
     setup: (agentCtx) => {
+      const agent = agentCtx.agent
+      if (agent === undefined) throw new Error('headless Agent setup has no scoped Agent')
       const selected: ModelSelectionRef = { current: selection, assembled: undefined }
-      installModelSelection(agentCtx, selected)
+      installModelSelection(agentCtx, agent, selected)
     },
   })
   await agent.whenIdle()

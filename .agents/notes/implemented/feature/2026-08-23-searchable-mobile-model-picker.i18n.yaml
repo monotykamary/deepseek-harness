@@ -1,6 +1,0 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-23-searchable-mobile-model-picker.md
-2026-08-23-searchable-mobile-model-picker.md: 7cd67556aff8742edb83d5a9045ea0b7ff59701a
-2026-08-23-searchable-mobile-model-picker.zh.md: aacd186b54d4d43e9a6e51f5f8a92f437c0ddf67

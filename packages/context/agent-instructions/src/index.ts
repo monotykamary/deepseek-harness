@@ -1,10 +1,10 @@
 /**
- * Workspace instruction loader for AGENTS.md-compatible files.
+ * Trusted user policy and workspace instruction loader for AGENTS.md-compatible files.
  *
  * Baseline instructions enter durable context before the first request; successful fs
  * tool touches project nested, changed, and removed instructions into the inbox.
- * Plugin lifecycle reads use the optional `ctx.fs` provider, so providerless products
- * mount it as a no-op.
+ * Workspace lifecycle reads use the optional `ctx.fs` provider, so providerless products
+ * mount them as a no-op; the trusted Harness-home file is a bounded host load at apply time.
  *
  * @module @monotykamary/dsh-agent-instructions
  */
@@ -15,6 +15,7 @@ import type { Agent, PreStepDecision } from '@monotykamary/dsh-agent'
 import { createUserMessage } from '@monotykamary/dsh-llm'
 import type { Session, UserMessage } from '@monotykamary/dsh-session'
 import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@monotykamary/dsh-tools'
+import type {} from '@monotykamary/dsh-system-prompt'
 import { Config, resolveConfig, workspaceBaselineIdentity, type ResolvedConfig } from './config.ts'
 import { findProjectRoot, loadBaselineInstructionSet } from './files.ts'
 import {
@@ -27,6 +28,7 @@ import {
   type AgentInstructionSource,
 } from './state.ts'
 import type { AgentInstructionChange } from './render.ts'
+import { loadTrustedSystemInstructions, TRUSTED_SYSTEM_ORDER, TRUSTED_SYSTEM_SECTION } from './trusted.ts'
 
 export { Config, name }
 export {
@@ -38,6 +40,7 @@ export type {
   LoadedInstructionFile,
 } from './files.ts'
 export { renderWorkspaceContext } from './render.ts'
+export { loadTrustedSystemInstructions, TRUSTED_SYSTEM_ORDER, TRUSTED_SYSTEM_SECTION } from './trusted.ts'
 export type { RenderedWorkspaceContext, TruncatedInstruction } from './render.ts'
 
 function visibleBaselineSource(
@@ -79,6 +82,14 @@ function filePathFromExecution(exec: ToolExecution): string | undefined {
 
 export function apply(ctx: Context, config: Config): void {
   const resolved: ResolvedConfig = resolveConfig(config)
+  const trustedSystemInstructions = loadTrustedSystemInstructions(resolved)
+  ctx.inject(['systemPrompt'], (promptCtx) => {
+    promptCtx.systemPrompt.section({
+      name: TRUSTED_SYSTEM_SECTION,
+      order: TRUSTED_SYSTEM_ORDER,
+      text: trustedSystemInstructions,
+    })
+  })
   const instructionVersions: InstructionVersionCache = new WeakMap()
   const baselinePreparations = new WeakMap<Session, {
     identity: string

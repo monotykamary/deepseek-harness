@@ -215,6 +215,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Agent service (`ctx.agents`): tracks live agents and carries the initiating Agent through one process-local asynchronous driver chain. Agent *creation* is provided by whichever plugin implements the AgentFactory (`@monotykamary/dsh-agent-loop`), registered via setFactory.\n\nInitiator methods provide same-process causal attribution only. Ambient presence is neither liveness proof nor authorization; subjects and owners remain explicit, as does identity at worker, process, persistence, and wire boundaries. Returned Promise boundaries drain during teardown, except a nested lineage that starts an owning-fiber unload is excluded from its own drain.',
     methods: [
       {
+        signature: 'registerModelSelection(agent: Agent, source: AgentModelSelection): () => void',
+        description: 'Register one Agent\'s live model-selection source for its scoped lifetime. The Agent\'s Session object remains stable across scoped Agent proxies, so a Consumer resolving through another proxy still reaches the same source.',
+        parameters: [{ name: 'agent', description: 'Agent whose entry point owns the source.' }, { name: 'source', description: 'source of detached next-step and active-step selections.' }],
+        returns: 'disposer that removes exactly this source.',
+        throws: ['when the Agent already has a registered source.'],
+      },
+      {
+        signature: 'modelSelection(agent: Agent): AgentModelSelection | undefined',
+        description: 'Read an Agent\'s registered live model-selection source.',
+        parameters: [{ name: 'agent', description: 'Agent whose source is requested.' }],
+        returns: 'the exact source, or undefined when its entry point declares none.',
+      },
+      {
         signature: 'currentInitiator(): Agent | undefined',
         description: 'Read the Agent that initiated the inherited asynchronous driver chain. Use this optional form for logging, tracing, metrics, or host attribution that also supports agentless calls. When a parent creates a child, setup reports the causal parent while `agentCtx.agent` identifies the child.',
         parameters: [],
@@ -2124,13 +2137,13 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'register(definition: ToolDefinition): () => void',
-        description: 'Register globally or in the calling agent scope. Scoped tools shadow globals; duplicates within one layer and the reserved `run_code` name fail.',
+        description: 'Register globally or in the calling agent scope. Scoped tools shadow globals; duplicates within one layer and the reserved `run_code`, `call`, and `describe` Code Mode names fail.',
         parameters: [{ name: 'definition', description: 'tool schema, execution, and optional finalization/presentation callbacks.' }],
         returns: 'the exact disposer that unregisters the tool.',
       },
       {
         signature: 'restrict(filter: ToolRestriction): () => void',
-        description: 'Restrict global tools for the calling agent scope. Empty filters, unknown names, scope-local names, and reserved transport names fail. Restrictions intersect; scoped registrations remain visible.',
+        description: 'Restrict global tools for the calling agent scope. Empty filters, unknown names, scope-local names, and reserved transport/helper names fail. Restrictions intersect; scoped registrations remain visible.',
         parameters: [{ name: 'filter', description: 'global-tool mask: `allow` (keep only) and/or `deny` (remove).' }],
         returns: 'the exact disposer that lifts this restriction.',
       },
@@ -2284,7 +2297,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
     key: 'webServer',
     summary: 'The browser HTTP carrier service.',
-    description: 'The browser HTTP carrier service. Activation listens immediately. Route registration order does not affect requests because configured named routes must be distinct, and the fallback handler answers anything not yet claimed during startup with 404 until its owner registers. A listen failure rejects initialization, and the boot process reports the failed fiber.',
+    description: 'The browser HTTP carrier service. Activation listens immediately. Route registration order does not affect requests because configured named routes must be distinct, and the fallback handler answers anything not yet claimed during startup with 404 until its owner registers. A listen failure rejects initialization unless `busyPort` is `random`, in which case an EADDRINUSE failure retries once with an OS-assigned port; other failures always reject.',
     methods: [
       {
         signature: 'register(route: WebRoute): () => void',
@@ -2954,6 +2967,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AgentHandle',
     declaration: 'export interface AgentHandle {\n    agent: Agent;\n    dispose(): Promise<void>;\n}',
+  },
+  {
+    name: 'AgentModelSelection',
+    declaration: 'export interface AgentModelSelection {\n    current(): ModelSelection | undefined;\n    assembled(): ModelSelection | undefined;\n}',
   },
   {
     name: 'AgentOptions',

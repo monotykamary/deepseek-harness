@@ -62,6 +62,7 @@ MCP 客户端桥接插件：连接外部 [Model Context Protocol](https://modelc
 ## 行为
 
 - 连接时：插件激活会等待 `listTools()`，并在组合开始首个轮次前通过 `ctx.tools.register()` 以公开名称注册每个工具。初始连接、发现或注册失败始终会记录日志；`failOnStartupError` 为 true 时拒绝激活，否则插件仍会激活但不注册工具。
+- stdio 发送按服务器串行化：同一时刻至多一个写入等待子进程 stdin 背压。MCP SDK 否则会为每个并发发送堆叠一个 `drain` 监听器，并行的工具扇出会突破 Node 的监听器上限，并对子进程管道触发 MaxListenersExceededWarning。JSON-RPC over stdio 本身有序，因此串行化不改变线路语义。
 - 监听 `notifications/tools/list_changed` → 重新同步；获取阶段失败时保留上一世代的注册，注册冲突则会回滚本次尝试的世代，并且不保留该服务器的任何工具。
 - 工具执行：`client.callTool({ name: rawName, arguments }, { signal })`，支持超时 + 中止；公开名称绝不会发给服务器。
 - 规范成功值是 `{ content: JsonValue[], structuredContent? }`；完整的 JSON MCP 块会保留给编程调用方。受支持且已声明的 `outputSchema` 会验证 `structuredContent`；不受支持的 schema 词汇会回退为不受约束的 `JsonValue`。

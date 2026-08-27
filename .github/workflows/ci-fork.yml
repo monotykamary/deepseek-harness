@@ -1,0 +1,74 @@
+name: CI (fork, GitHub-hosted)
+
+# Fork-local CI: this fork has none of upstream's self-hosted enterprise
+# runners (dsh-ubuntu-* / vm-backup / dsh-win-ci labels in ci.yml). It runs the
+# fork-safe quality gate on GitHub-hosted Ubuntu and intentionally avoids the
+# upstream enterprise/self-hosted runner lanes.
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-fork-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PRIMARY_NODE_VERSION: '24'
+  # Never report to the production telemetry endpoint baked into
+  # apps/cli/cordis.yml.
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  static:
+    name: node 24 / static
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+
+      - name: Configure pnpm store path
+        id: pnpm-store
+        run: |
+          store_root="$HOME/.local/share/pnpm/store"
+          echo "PNPM_CONFIG_STORE_DIR=$store_root" >> "$GITHUB_ENV"
+          store_path=$(PNPM_CONFIG_STORE_DIR="$store_root" pnpm store path --silent)
+          echo "path=$store_path" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-node-${{ env.PRIMARY_NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.PRIMARY_NODE_VERSION }}-pnpm-
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Static gates
+        env:
+          DSH_ARCHIVE_BASE_REF: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: pnpm run check:ci:static
+
+      - name: Unit tests
+        env:
+          NODE_ENV: test
+        run: pnpm test -- --maxWorkers=2
+
+      - name: Build
+        run: pnpm run build:official

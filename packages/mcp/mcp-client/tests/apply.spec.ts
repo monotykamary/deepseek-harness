@@ -45,7 +45,11 @@ vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
 }))
 
 vi.mock('@modelcontextprotocol/sdk/client/stdio.js', () => ({
-  StdioClientTransport: vi.fn(),
+  // serializeSends reads send at creation, so the fake constructs a minimal transport.
+  // A function (not an arrow) is required: createTransport invokes it with `new`.
+  StdioClientTransport: vi.fn(function FakeStdioTransport(this: { send: () => Promise<void> }) {
+    this.send = (): Promise<void> => Promise.resolve()
+  }),
 }))
 
 vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({

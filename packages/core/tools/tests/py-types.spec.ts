@@ -198,9 +198,8 @@ describe('renderToolsSdkPy', () => {
     expect(text).toContain('    # Max results.')
     expect(text).toContain('    limit: NotRequired[float]')
     expect(text).toContain('async def search(self, args: SearchArgs) -> str:')
-    // NotRequired is imported because an optional field used it; Any is NOT,
-    // since every type here is concrete — the import line lists only what ran.
-    expect(text).toContain('from typing import NotRequired, Protocol, TypedDict')
+    // Fixed discovery declarations require Any/NotRequired; the tool adds no broader type.
+    expect(text).toContain('from typing import Any, NotRequired, Protocol, TypedDict')
   })
 
   it('prefixes Tool when a name CamelCases to a non-letter head, and degrades a malformed schema to Any', () => {
@@ -242,7 +241,7 @@ describe('renderToolsSdkPy', () => {
     const text = renderToolsSdkPy([tool])
     expect(text).toContain('class ModeToolArgs(TypedDict):')
     expect(text).toContain('    mode: Literal["fast", "slow"]')
-    expect(text).toContain('from typing import Literal, Protocol, TypedDict')
+    expect(text).toContain('from typing import Any, Literal, NotRequired, Protocol, TypedDict')
   })
 
   it('renders one level of nested object as its own named TypedDict declared before the parent', () => {
@@ -584,7 +583,8 @@ describe('renderToolsSdkPy', () => {
       ])
       // The base is `${camelCase(name)}Args` capped to 120 code units, so the
       // `Args` suffix itself is cut off here; match the declaration instead.
-      return /^class (.+)\(TypedDict\):$/mu.exec(text)![1]!
+      const classes = [...text.matchAll(/^class (.+)\(TypedDict\):$/gmu)].map(match => match[1]!)
+      return classes.find(name => name !== 'ToolDescriptor' && name !== 'DynamicToolCall')!
     }
     // Each character is 2 code units, so an unpadded name fills the cap with 60
     // whole characters; one ASCII character of padding puts the boundary inside
@@ -793,12 +793,13 @@ describe('renderToolsSdkPy', () => {
     expect(renderToolsSdkPy([bash, bash])).toBe(renderToolsSdkPy([bash, bash]))
   })
 
-  it('renders a pass body and a minimal import for an empty tool set', () => {
+  it('renders discovery methods and their fixed imports for an empty tool set', () => {
     const text = renderToolsSdkPy([])
     expect(text).toContain('class Tools(Protocol):')
-    expect(text).toContain('    pass')
-    // Nothing but the protocol is used, so the import line is just Protocol.
-    expect(text).toContain('from typing import Protocol')
+    expect(text).toContain('    async def describe(')
+    expect(text).toContain('    async def call(')
+    expect(text).not.toContain('    pass')
+    expect(text).toContain('from typing import Any, NotRequired, Protocol, TypedDict')
   })
 
   it('omits the docstring/comment when a schema has no description', () => {
@@ -995,7 +996,7 @@ describe('renderToolsSdkPy', () => {
     expect(text).toContain('class Tools(Protocol):')
   })
 
-  it('emits pass for a subscript-only tool set (comments are not statements)', () => {
+  it('uses fixed discovery methods as statements for a subscript-only tool set', () => {
     const t: ToolSdkSchema = {
       name: 'my-exotic.tool',
       description: '',
@@ -1003,8 +1004,9 @@ describe('renderToolsSdkPy', () => {
       output: { type: 'string' },
     }
     const text = renderToolsSdkPy([t])
-    // The class body must contain a statement before the subscript comments.
-    expect(text).toMatch(/class Tools\(Protocol\):\n    pass\n    # tools\["my-exotic\.tool"\]/)
+    // Fixed discovery methods keep the class body valid before subscript comments.
+    expect(text).toMatch(/class Tools\(Protocol\):\n    async def describe[\s\S]*?    # tools\["my-exotic\.tool"\]/)
+    expect(text).not.toContain('    pass\n')
   })
 
   it('degrades an object whose field would be name-mangled (__token) to dict[str, Any]', () => {
@@ -1079,8 +1081,10 @@ describe('renderToolsSdkPy', () => {
       expect(text).toContain(`# tools[${JSON.stringify(name)}](args: dict[str, Any]) -> str`)
       expect(text).not.toContain(`async def ${name}(`)
     }
-    // No method emitted at all, so the class body needs the explicit `pass`.
-    expect(text).toContain('    pass\n')
+    // Registered tools emit no methods, but fixed discovery methods keep the class valid.
+    expect(text).toContain('    async def describe(')
+    expect(text).toContain('    async def call(')
+    expect(text).not.toContain('    pass\n')
   })
 
   it('quotes a tool name through the same JSON.stringify the Literal path depends on', () => {

@@ -9,6 +9,7 @@
  */
 
 import type { Context } from '@monotykamary/cordis'
+import { resolveAgentModelSelection } from '@monotykamary/dsh-agent'
 import type { Agent, AgentOptions, CreateAgentOptions } from '@monotykamary/dsh-agent'
 import type { SandboxMode } from '@monotykamary/dsh-sandbox'
 import type { Session, SessionId } from '@monotykamary/dsh-session'
@@ -57,9 +58,9 @@ export function resolveChildDepth(parent: Agent, maxDepth: number | undefined): 
 }
 
 /**
- * Resolve the child's `AgentOptions`: the parent's provider/model/maxTokens
- * route unless the request overrides it, stamped with the child's own
- * delegation depth.
+ * Resolve the child's `AgentOptions`: the parent's active assembled route (or
+ * live next-step selection while idle), then its durable/static fallbacks, unless
+ * the request overrides it; stamp the child's own delegation depth.
  * @param parent - the delegating parent whose route the child inherits.
  * @param requested - per-child overrides, if any.
  * @param childDepth - the resolved delegation depth to stamp.
@@ -70,8 +71,9 @@ export function resolveChildAgentOptions(
   requested: AgentOptions | undefined,
   childDepth: number,
 ): AgentOptions {
-  const parentProvider = parent.options.provider
-  const parentModel = parent.options.model
+  const parentSelection = resolveAgentModelSelection(parent)
+  const parentProvider = parentSelection?.provider ?? parent.options.provider
+  const parentModel = parentSelection?.model ?? parent.options.model
   const parentMaxTokens = parent.options.maxTokens
   return {
     ...parentProvider !== undefined ? { provider: parentProvider } : {},

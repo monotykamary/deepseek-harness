@@ -145,7 +145,9 @@ describe('partial Landlock runner-failure classification', () => {
     const dir = await mkdtemp(join(tmpdir(), 'dsh-malformed-sandbox-runner-'))
     tempDirs.push(dir)
     const runner = join(dir, 'malformed-runner')
-    await writeFile(runner, 'not a native executable or shebang script\n', { mode: 0o755 })
+    // The first word must stay unresolvable on any host: if a PATH binary
+    // matched it, the /bin/sh retry would execute that binary instead of failing.
+    await writeFile(runner, '/nonexistent/dsh-malformed-runner\n', { mode: 0o755 })
     const bash = await setupConfiguredRunner(runner)
     const request = { command: 'true' }
 

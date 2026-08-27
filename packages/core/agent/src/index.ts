@@ -11,9 +11,10 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { isPromise } from 'node:util/types'
 import { scopeTarget } from '@monotykamary/dsh-scope'
 import type { Scoped } from '@monotykamary/dsh-scope'
-import type { SessionEvent, SessionId } from '@monotykamary/dsh-session'
+import type { Session, SessionEvent, SessionId } from '@monotykamary/dsh-session'
 import type { TypertContext, TypertLookup } from '@monotykamary/dsh-typert-protocol'
 import type { Agent, AgentOptions } from './runtime-types.ts'
+import type { AgentModelSelection } from './model-selection.ts'
 
 export * from './runtime-types.ts'
 export * from './types.ts'
@@ -256,6 +257,7 @@ interface FactorySlot {
 export class AgentRegistry extends Service {
   private store = new Map<SessionId, AgentEntry>()
   private factory: FactorySlot | undefined
+  private readonly modelSelections = new WeakMap<Session, AgentModelSelection>()
   private readonly initiators = new AsyncLocalStorage<Agent | undefined>()
   private readonly initiatorRuns = new AsyncLocalStorage<InitiatorRun>()
   private initiatorState: 'active' | 'closing' | 'disposed' = 'active'
@@ -295,6 +297,40 @@ export class AgentRegistry extends Service {
       yield () => this.disposeInitiators()
       yield () => { this.closeInitiators() }
     }.bind(this), 'agents.initiatorLifecycle()')
+  }
+
+  /**
+   * Register one Agent's live model-selection source for its scoped lifetime.
+   * The Agent's Session object remains stable across scoped Agent proxies, so a
+   * Consumer resolving through another proxy still reaches the same source.
+   * @param agent - Agent whose entry point owns the source.
+   * @param source - source of detached next-step and active-step selections.
+   * @returns disposer that removes exactly this source.
+   * @throws when the Agent already has a registered source.
+   */
+  registerModelSelection(agent: Agent, source: AgentModelSelection): () => void {
+    const session = agent.session
+    const dispose = this.ctx.effect(() => {
+      if (this.modelSelections.has(session)) {
+        throw new Error(`a model selection source is already registered for agent ${String(agent.id)}`)
+      }
+      this.modelSelections.set(session, source)
+      return () => {
+        if (this.modelSelections.get(session) === source) this.modelSelections.delete(session)
+      }
+    }, 'agents.registerModelSelection()')
+    // Preserve the exact effect disposer so scoped teardown owns registration order.
+    // oxlint-disable-next-line typescript/no-misused-promises -- synchronous cleanup; direct return preserves disposer identity
+    return dispose
+  }
+
+  /**
+   * Read an Agent's registered live model-selection source.
+   * @param agent - Agent whose source is requested.
+   * @returns the exact source, or undefined when its entry point declares none.
+   */
+  modelSelection(agent: Agent): AgentModelSelection | undefined {
+    return this.modelSelections.get(agent.session)
   }
 
   /**

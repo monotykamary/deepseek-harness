@@ -74,18 +74,11 @@ describe('gate graph validation', () => {
     'node-compat',
     'check-all',
     'hygiene',
-    'doc-sync',
   ] as const)('constructs and executes preflight for a valid non-empty %s graph', async (mode) => {
     const subject = withPnpmEntrypoint(() => gatesForMode(mode))
     const execute = vi.fn(async (item: Gate) => resultFor(item))
 
     await expect(runGates(subject, subject.length, execute)).resolves.toHaveLength(subject.length)
-  })
-
-  it('keeps the public repository link policy in the documentation gate', () => {
-    const ids = withPnpmEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
-
-    expect(ids).toContain('public-repository-links')
   })
 
   it('keeps the hygiene aggregate aligned with the package script checks', () => {
@@ -101,15 +94,6 @@ describe('gate graph validation', () => {
       workers: 4,
       source: '8 available CPU(s), hygiene cap 4',
     })
-  })
-
-  it('schedules the longest documentation leaves before short checks', () => {
-    const ids = withPnpmEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
-
-    expect(ids.slice(0, 10)).toEqual([
-      'doc-typecheck', 'docs-site-build', 'doc-graphs', 'markdown-links', 'type-equivalence',
-      'cordis-catalog', 'mermaid', 'scoped-events', 'translation-pairing', 'markdown-wrap',
-    ])
   })
 
   it('launches a native pnpm entrypoint directly', () => {
@@ -352,12 +336,6 @@ describe('Typert contract preparation', () => {
     })
   })
 
-  it('keeps standalone doc sync responsible for preparation', () => {
-    const docTypecheck = withPnpmEntrypoint(() =>
-      gatesForMode('doc-sync').find(item => item.id === 'doc-typecheck'))
-
-    expect(docTypecheck?.displayCommand).toBe('pnpm run doc-typecheck')
-  })
 })
 
 describe('Node compatibility graph', () => {

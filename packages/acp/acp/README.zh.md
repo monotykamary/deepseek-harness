@@ -25,7 +25,7 @@
 |---|---|
 | `initialize` | 协商受支持的版本。只有挂载持久附件存储，且配置的确切提供方／模型解析后明确支持图片输入时，才公布图片提示词能力；音频与嵌入上下文保持 false。不公布会话、编辑器、终端、文件系统或 MCP 能力。 |
 | `authenticate` | 空操作，因为服务器不公布身份验证方法。 |
-| `session/new` | 以绝对路径作为主 `cwd` 创建新 agent；接受空的 `additionalDirectories` 和 `mcpServers`，拒绝非空值。 |
+| `session/new` | 以绝对路径作为主 `cwd` 创建新 agent；接受空的 `additionalDirectories`，而客户端提供的 `mcpServers` 会被接受但忽略，因为 DSH 拥有自身的工具组合；非空的 `additionalDirectories` 会被拒绝。 |
 | `session/prompt` | 保留文本与受支持内联图片块的顺序，将资源链接渲染为带方括号的文本引用，并拒绝音频、嵌入资源、格式错误／空输入，或在未公布能力时提交图片。它会先校验完整图片批次并重新检查会话的最新确切路由，再保存任一成员；在用户事件前提交全部图片；每个会话只允许一个正在处理的请求，并等待准入，以及消息入队后的整个 Agent 空闲和有序输出交付全部停稳。正常完全停稳时报告 `end_turn`；显式 ACP 取消、资源释放，或准入被丢弃的提示词（无轮次槽位）时报告 `cancelled`。 |
 | `session/cancel` | 标记并中止正在进行的准入，但不会取消或等待同一 Agent 上无关的既有工作；该提示词进入 Agent inbox 后，才会取消指定的 Agent 并等待自有区间停稳。不发布迟到的用户消息，提示词以 `cancelled` 结算。没有进行中的提示词时会取消自主工作；未知 id 为空操作。 |
 | `session/update` | 为已提交 `assistant/message` 中的每个非空文本或图片块发出一个 `agent_message_chunk`，并保留顺序。图片在以内联 base64 交付前会重新读取并校验完整性。省略原始增量和非消息事件。 |

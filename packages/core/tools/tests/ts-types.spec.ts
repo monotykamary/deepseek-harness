@@ -131,7 +131,7 @@ describe('renderToolsSdk', () => {
     expect(text).toContain('interface ToolOutputMap {')
     expect(text).toContain('type ToolName = keyof ToolOutputMap')
     expect(text).toContain('declare class ToolCallError extends Error')
-    expect(text).toContain('readonly toolName: ToolName;')
+    expect(text).toContain('readonly toolName: ToolName | CodeDiscoveryHelperName;')
     expect(text).toContain('declare const tools: {')
     expect(text).toContain('type JsonValue = null | boolean | number | string')
     expect(text.indexOf('bash: {')).toBeGreaterThan(0)

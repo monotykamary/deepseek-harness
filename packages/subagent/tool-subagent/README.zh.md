@@ -2,15 +2,17 @@
 
 [English](README.md) | 中文
 
-基于一个已配置 `ctx.subagents` 提供方、面向模型的委派工具。更换提供方只会改变传输，不会改变执行约定。
+基于一个已配置 `ctx.subagents` 提供方、面向模型与用户的委派 Consumer。更换提供方只会改变传输，不会改变执行约定。
 
 ## 提供方选择与生命周期
 
-每个插件实例把一个 `provider` 绑定到一个 `toolName`；模型不会收到提供方选择器。如需公开另一种传输，请加载另一个名称不同的实例。工具只在其提供方存在时注册，从而避免对同级加载顺序和提供方重新加载的依赖。工具描述遵循 `provider.inheritsParentContext`：新建子 agent（智能体）需要独立提示词，而 fork 子 agent 已能看到父级已完成轮次。
+每个插件实例把一个 subagent 传输 `provider` 绑定到一个 `toolName`；模型不会收到传输选择器。如需公开另一种传输，请加载另一个名称不同的实例。工具只在其提供方存在时注册，从而避免对同级加载顺序和提供方重新加载的依赖。工具描述遵循 `provider.inheritsParentContext`：新建子 agent（智能体）需要独立提示词，而 fork 子 agent 已能看到父级已完成轮次。工具的可选 `provider` 与 `model` 参数改为选择子级 LLM 路由：只传 `model` 会保留继承或已配置的 provider，而传 `provider` 必须同时显式传入 `model`，因此可跨 provider 委派而不改变传输。两者都省略时，进程内子 agent 会继承父级活跃的已组装路由；父级空闲时则继承其在线的下一步骤 selection，而不是父级的静态创建默认值。
 
 前台调用会让执行信号贯穿启动和执行，等待 `run.result`，并且在返回前总会等待 `run.dispose()`。只有 `completed` 会返回规范值 `{ kind: 'foreground', runId, output: JsonValue[] }`，并渲染为相同的最终文本。中止、拒绝、token 上限和其他失败都会变成出错的工具结果，其消息依次包含终止原因标题、可选的提供方 `SubagentResult.diagnostic`，以及子 agent 保留下来的部分 assistant 文本。诊断与 `SubagentResult.output` 保持分离，因此被截断的回答不会被报告为成功，也不会与基础设施说明混淆。如果结果收集与 dispose（资源释放）都 reject，出错结果会保留两项失败。
 
 `backgroundMode` 同时选择后台路由与省略 `run_in_background` 时的默认行为。`one-shot` 默认在前台等待；显式传入 `true` 时，它会注册一个归父级所有的普通 Task，并返回规范值 `{ kind: 'background', jobId }`，渲染为 `started background subagent job <id>`，即使提供方支持可继续子 agent 也不例外。通用 Task 工具负责其后续状态、收集、取消和通知；失败 Task 的 detail 会保留终止原因与同一份可选提供方诊断。`continuable` 在参数省略或为 `true` 时于后台运行；显式传入 `false` 时则在前台等待结果。其后台路由要求提供方具备 `prepareContinuable` 能力，调用 `ctx.subagents.startContinuable()`，并返回 `{ kind: 'continuable', subagentId }`，渲染为 `started subagent <childId>`。该路由在 inbox 接受时结算：子 agent 自此拥有自己的轮次，因此该调用既不等待也不收集结果。通过该 id 查看其 transcript（文本记录）仍是其详细输出的来源，可选的全局 `send_message` 工具则向其发送更多工作。每当子 agent 的 Activation 结束，继续执行服务都会投递一条结算通知，其中包含结束结果及可能存在的最终 assistant 消息，且这项投递不依赖 `report`。启动可继续工作不要求加载 `send_message`。见[后台 subagent Agent Note](../../../.agents/notes/implemented/feature/2026-07-08-background-subagent-tasks.zh.md)、[可继续的 subagent Agent Note](../../../.agents/notes/implemented/feature/2026-07-28-continuable-subagent-conversations.zh.md)和[后台优先委派 Agent Note](../../../.agents/notes/implemented/feature/2026-08-11-background-first-continuable-delegation.zh.md)。
+
+配置 `commandName` 后，只要 `ctx.commands` 可用，同一 Consumer 还会注册一个有作用域的人类命令。`/delegate [--provider <id> --model <id>] [--fork] <task>` 不经过父级模型轮次便启动可继续子 agent；`--fork` 选择 `commandForkProvider`，图片会随子级提示词传入，预期的语法错误会保留 composer 草稿，而命令／插件 teardown 会先撤销准入，再排空已经开始的启动。
 
 `toolFilter` 会改变子 agent 的全局工具层，但不是从父级派生的权限上限。见 [agent 作用域的安全非目标](../../../.agents/notes/implemented/architecture/2026-07-08-agent-scope-contexts.zh.md#security-and-authority-are-non-goals)。
 
@@ -22,7 +24,9 @@
 | `toolName` | 面向模型的名称，默认 `subagent`；每个已加载实例必须不同。 |
 | `enableRunInBackground` | 公开后台模式，默认 `true`；禁用时也会拒绝强制后台调用。 |
 | `backgroundMode` | 后台生命周期策略，默认 `one-shot`。`one-shot` 默认前台调用；`continuable` 默认后台调用，要求提供方具备 `prepareContinuable` 能力，并返回持久化子 agent ID，且不要求加载后续消息工具。 |
-| `agentOptions` | 传给具体提供方的子 agent `provider`、`model` 和正整数 `maxTokens`；进程内提供方会用显式值覆盖继承的父级选项。 |
+| `agentOptions` | 子 agent 的默认 LLM `provider`、`model` 和正整数 `maxTokens`；显式值会覆盖父级的有效在线路由。工具调用或 `/delegate` flag 可替换 provider/model 对。 |
+| `commandName` | 可选的人类命令名称。要求 `backgroundMode: continuable`；已交付的新建子实例使用 `delegate`。 |
+| `commandForkProvider` | `/delegate --fork` 选择的可选可继续 subagent 提供方；要求 `commandName`。 |
 | `persona` | 每个子 agent 独立的 persona；要求提供方具备 `persona` 能力。 |
 | `toolFilter` | 每个子 agent 独立的全局工具限制；要求提供方具备 `toolFilter` 能力。 |
 | `maxDepth` | 绝对委派深度上限，默认 `3`（`0` 禁止委派）；数值上限要求 `depthLimit` 能力，缺失时挂载失败。对于预算由子 harness 拥有的进程外提供方，`'provider-managed'` 不发送上限。工具在达到上限时仍然可见；每次尝试启动都会检查调用 agent 的当前深度，被拒绝时返回出错的工具结果。 |
@@ -37,7 +41,7 @@
 
 #### 模型看到的内容
 
-当提供方存在时，以当前实例配置的名称公开已生成的默认 [`subagent` schema](../../../docs/tool-catalog.zh.md#monotykamarydsh-tool-subagent)。提供方是否继承上下文会改变工具描述和提示词描述。启用后台模式会添加 `run_in_background`：可继续模式会记录其默认值为 `true`、运行时结算通知与显式前台覆盖；一次性模式会记录其默认值为 `false`，以及用 `job_output` 收集或用 `job_kill` 停止的 job id。当工具在本次组装的作用域中可见时，一个 `tool:<toolName>` 系统提示词 section 会指示模型同时启动相互独立的可继续委派、在它们运行时继续工作，并且仅当下一步动作依赖结果时选择前台；工具限制会同时移除其 schema 和这段指引。
+当提供方存在时，以当前实例配置的名称公开已生成的默认 [`subagent` schema](../../../docs/tool-catalog.zh.md#monotykamarydsh-tool-subagent)。提供方是否继承上下文会改变工具描述和提示词描述。可选的子级 LLM `provider`/`model` 字段允许确切的跨 provider 路由；只有 provider 而没有 model 会在启动前失败。启用后台模式会添加 `run_in_background`：可继续模式会记录其默认值为 `true`、运行时结算通知与显式前台覆盖；一次性模式会记录其默认值为 `false`，以及用 `job_output` 收集或用 `job_kill` 停止的 job id。当工具在本次组装的作用域中可见时，一个 `tool:<toolName>` 系统提示词 section 会指示模型同时启动相互独立的可继续委派、在它们运行时继续工作，并且仅当下一步动作依赖结果时选择前台；工具限制会同时移除其 schema 和这段指引。
 
 #### Token 影响
 
@@ -46,6 +50,20 @@
 #### KV Cache 影响
 
 只要提供方实例、名称、描述和 schema 不变，前缀就保持稳定。提供方注册生命周期可能从首个变化的工具定义开始，使父级复用失效。
+
+### 直接人类委派
+
+#### 模型看到的内容
+
+因为 `/delegate` 在人类命令平面执行，父级模型看不到命令输入或命令结果。子级模型会在所选 provider/model 路由下，把命令任务与已准入图片作为初始用户消息接收。
+
+#### Token 影响
+
+父级模型 token 为零，并产生一个普通子级轮次。之后父级会收到继续执行服务的结算通知。
+
+#### KV Cache 影响
+
+命令本身不会改变父级请求前缀。子级 cache 行为取决于新建或已配置的 fork 子级；之后的结算通知在父级中仅追加。
 
 ### 前台结果
 
@@ -79,4 +97,4 @@
 
 - **后台运行不通过本工具公开结果**：一次性任务的最终输出通过通用 Task 接口收集，可继续子 agent 的输出留在其自身会话中，按其 subagent id 读取。结算通知会说明该子 agent 如何结束，并携带可能存在的最终 assistant 消息，但它不是本次调用的返回值，也无法在此等待。
 - **等待中的一次性实例较晚才发现重复名称**（`TODO(subagent-dup-toolname)`）：可继续实例会在插件应用期间预留提示词 section 名称，但若要阻止等待中的一次性实例回滚提供方注册，仍需要一份预期名称注册表。
-- **每个实例的子 agent 策略固定**：其他模型、persona、工具过滤器或深度上限都需要另一个名称不同的工具。
+- **人类命令路由有意保持窄小**：`/delegate` 只接受一个确切 provider/model 对的前缀 flag 和可选的已配置 fork 提供方；它不解析别名、reasoning effort、persona 或逐调用工具过滤器。

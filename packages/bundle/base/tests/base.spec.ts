@@ -32,6 +32,11 @@ describe('dsh-base bundle', () => {
     )
     expect(rows.length).toBeGreaterThan(50)
     expect(rows.some(row => row.id === 'agent-loop')).toBe(true)
+    expect(rows.find(row => row.id === 'tool-subagent')?.config).toMatchObject({
+      provider: 'spawn',
+      backgroundMode: 'continuable',
+      commandName: 'delegate',
+    })
     expect(rows.filter(row => row.id === 'session-telemetry-otel')).toHaveLength(0)
     expect(manifest.dependencies).not.toHaveProperty('@monotykamary/dsh-session-telemetry-otel')
     expect(rows.filter(row => row.id === 'subagent-codex')).toHaveLength(0)

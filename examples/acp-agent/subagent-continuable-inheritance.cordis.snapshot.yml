@@ -1,6 +1,6 @@
 # Keyless counterpart to subagent-continuable-inheritance.cordis.yml: replace
-# the live adapter with replay and switch the root session to read-only at
-# creation.
+# the live adapter with replay, switch the root session to read-only at
+# creation, and route only the parent request through a non-default model.
 - id: base
   name: '@monotykamary/cordis-plugin-include'
   config:
@@ -44,3 +44,5 @@
                     - id: deepseek-v4-pro
           - id: parent-sandbox-override
             name: './tests/fixtures/parent-sandbox-override.ts'
+          - id: parent-model-route-override
+            name: './tests/fixtures/parent-model-route-override.ts'

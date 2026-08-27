@@ -28,7 +28,7 @@ afterEach(async () => {
 })
 
 /** Write a cordis.yml with one webserver row, then boot it through the real Loader. */
-async function loadComposition(port = 0): Promise<Context> {
+async function loadComposition(port = 0, busyPort: 'error' | 'random' = 'error'): Promise<Context> {
   root = await mkdtemp(join(tmpdir(), 'dsh-webserver-loader-'))
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
@@ -36,6 +36,7 @@ async function loadComposition(port = 0): Promise<Context> {
     '  config:',
     "    host: '127.0.0.1'",
     `    port: ${String(port)}`,
+    `    busyPort: '${busyPort}'`,
     '',
   ].join('\n'))
 
@@ -264,6 +265,25 @@ describe('real Loader composition', () => {
       }
       second = context
       expect(String(failure)).toMatch(/failed to apply loader entry.*EADDRINUSE/)
+    } finally {
+      await second?.fiber.dispose()
+      context = first
+      if (root !== undefined) await rm(root, { recursive: true, force: true })
+      root = firstRoot
+    }
+  })
+
+  it('uses an OS-assigned port when the configured port is busy and fallback is enabled', { timeout: 60_000 }, async () => {
+    const first = await loadComposition()
+    const takenPort = first.webServer.port
+    const firstRoot = root
+    root = undefined // keep the first composition's files until the end
+
+    let second: Context | undefined
+    try {
+      second = await loadComposition(takenPort, 'random')
+      expect(second.webServer.port).toBeGreaterThan(0)
+      expect(second.webServer.port).not.toBe(takenPort)
     } finally {
       await second?.fiber.dispose()
       context = first

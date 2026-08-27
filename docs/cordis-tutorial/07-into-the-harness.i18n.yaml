@@ -1,6 +1,0 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write docs/cordis-tutorial/07-into-the-harness.md
-07-into-the-harness.md: 5e99aa79087dc4ad8e6bc2e3b91992db2110b964
-07-into-the-harness.zh.md: ccee21dd0543af93147ad2be5dabcf5c8fe9a9cf
