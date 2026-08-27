@@ -1,18 +1,14 @@
 name: CI (fork, GitHub-hosted)
 
 # Fork-local CI: this fork has none of upstream's self-hosted enterprise
-# runners (dsh-ubuntu-* / vm-backup / dsh-win-ci labels in ci.yml), so those
-# PR lanes can never start here. Runs the repo's deterministic static gates
-# on GitHub-hosted ubuntu-latest for real pull-request signal. The type-aware
-# lint/build lanes upstream runs on dedicated CI are intentionally omitted:
-# oxlint over the typert-generated client contracts only resolves under
-# upstream's full build order and reports 200+ pre-existing findings on a
-# clean runner tree, unrelated to the diff under review.
+# runners (dsh-ubuntu-* / vm-backup / dsh-win-ci labels in ci.yml). It runs the
+# fork-safe quality gate on GitHub-hosted Ubuntu and intentionally avoids the
+# upstream enterprise/self-hosted runner lanes.
 
 on:
   pull_request:
   push:
-    branches: [master, main, 'work/**']
+    branches: [master, main]
 
 permissions:
   contents: read
@@ -68,3 +64,11 @@ jobs:
         env:
           DSH_ARCHIVE_BASE_REF: ${{ github.event.pull_request.base.sha || github.sha }}
         run: pnpm run check:ci:static
+
+      - name: Unit tests
+        env:
+          NODE_ENV: test
+        run: pnpm test -- --maxWorkers=2
+
+      - name: Build
+        run: pnpm run build:official

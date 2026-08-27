@@ -1,8 +1,10 @@
 name: CI master
 
 on:
+  # Enterprise/self-hosted drills are not available in this fork. Keep the
+  # manual workflow for explicit runner owners, but never queue them on master.
   push:
-    branches: [master]
+    branches: ['__enterprise_runner_only__']
   workflow_dispatch:
     inputs:
       suite:

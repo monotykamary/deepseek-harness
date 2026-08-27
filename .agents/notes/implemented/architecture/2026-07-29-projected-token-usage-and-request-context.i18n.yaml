@@ -1,6 +1,0 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-29-projected-token-usage-and-request-context.md
-2026-07-29-projected-token-usage-and-request-context.md: 367ab57cb05e5b46f82563a5cbf089a65d3610a2
-2026-07-29-projected-token-usage-and-request-context.zh.md: 9d971a92f22e755e29f9e994e44055ae42e4b3e2

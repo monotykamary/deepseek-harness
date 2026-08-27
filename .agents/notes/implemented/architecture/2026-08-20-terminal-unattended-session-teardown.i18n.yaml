@@ -1,6 +1,0 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-20-terminal-unattended-session-teardown.md
-2026-08-20-terminal-unattended-session-teardown.md: 7b70350cb6ff74170ab612827c69f9996b6509d5
-2026-08-20-terminal-unattended-session-teardown.zh.md: fd6291cf18d0e8aa86d5519207c740bebbcc1a96

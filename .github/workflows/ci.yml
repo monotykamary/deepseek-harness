@@ -1,7 +1,12 @@
 name: CI
 
+# The fork-safe ci-fork.yml is the authoritative PR gate. This upstream
+# enterprise matrix remains available only as an explicit source contract; the
+# impossible path filter prevents it from appearing on ordinary fork PRs.
 on:
   pull_request:
+    paths:
+      - '.github/ci-canonical/**'
 permissions:
   contents: read
 
