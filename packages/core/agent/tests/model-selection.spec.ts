@@ -175,7 +175,7 @@ describe('installModelSelection()', () => {
     ctx.provide('llm', {
       async resolveCallConfig(config: { reasoningEffort?: string }) {
         if (serve) return config
-        const error = new Error('model cannot serve reasoning effort ' + config.reasoningEffort) as Error & { code?: string }
+        const error = new Error('model cannot serve reasoning effort ' + String(config.reasoningEffort)) as Error & { code?: string }
         error.code = 'UNSUPPORTED_REASONING_EFFORT'
         throw error
       },

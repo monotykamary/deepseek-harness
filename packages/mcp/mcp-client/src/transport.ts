@@ -28,7 +28,7 @@ export function serializeSends(transport: Transport): Transport {
   const send = transport.send.bind(transport)
   let chain: Promise<void> = Promise.resolve()
   transport.send = (...args) => {
-    const run = chain.then(() => send(...(args as Parameters<typeof send>)))
+    const run = chain.then(() => send(...args))
     /* the chain tail must survive a rejected send; each caller owns its error */
     chain = run.catch(() => {})
     return run
