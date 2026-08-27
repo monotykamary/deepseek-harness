@@ -1,7 +1,7 @@
 /** Fail-closed composition of bilingual pairing records during Git merges. */
 
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import {
@@ -230,6 +230,24 @@ function assertMergedPairStructure(
   }
 }
 
+/** Reject repository paths that traverse a symlink in the worktree. */
+function assertNoSymlinkPath(root: string, repositoryPath: string): void {
+  const components = repositoryPath.split('/').filter(Boolean)
+  let current = root
+  for (const component of components) {
+    current = join(current, component)
+    try {
+      if (lstatSync(current).isSymbolicLink()) {
+        throw new Error(`repository path traverses a symlink: ${JSON.stringify(repositoryPath)}`)
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('repository path traverses a symlink:')) throw error
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') break
+      throw new Error(`cannot inspect repository path: ${JSON.stringify(repositoryPath)}`, { cause: error })
+    }
+  }
+}
+
 function normalizeMetaPath(root: string, meta: string): string {
   if (isAbsolute(meta)) throw new Error(`pairing record must be repository-relative: ${JSON.stringify(meta)}`)
   const repositoryRelative = relative(resolve(root), resolve(root, meta))
@@ -263,6 +281,7 @@ export function mergeTranslationPairingRecords(
   isTranslationPairSource: (sourcePath: string) => boolean,
 ): TranslationPairingMergeResult {
   const normalizedMeta = normalizeMetaPath(root, metaPath)
+  assertNoSymlinkPath(root, normalizedMeta)
   if (!isTranslationScopeFile(normalizedMeta)) {
     throw new Error(`${normalizedMeta} is outside the active bilingual documentation corpus`)
   }
@@ -292,9 +311,7 @@ export function mergeTranslationPairingRecords(
 export function repositoryTranslationPairSource(root: string): (sourcePath: string) => boolean {
   const path = 'scripts/translation-pairing.manifest.json'
   const content = readGitIndexBlob(root, path)?.content ?? readFileSync(join(root, path))
-  const manifest = parseTranslationPairingManifest(
-    content.toString('utf8'),
-  )
+  const manifest = parseTranslationPairingManifest(content.toString('utf8'))
   return translationPairSourcePredicate(manifest)
 }
 
@@ -359,6 +376,7 @@ export function resolveTranslationPairingConflicts(
   const failures: { path: string; reason: string }[] = []
   for (const [metaPath, stages] of [...unmergedSidecars(root)].sort(([left], [right]) => left.localeCompare(right))) {
     try {
+      assertNoSymlinkPath(root, metaPath)
       if (stages.ancestor === undefined || stages.current === undefined || stages.other === undefined) {
         throw new Error('is an add/delete or incomplete-stage conflict and requires manual resolution')
       }
@@ -375,6 +393,8 @@ export function resolveTranslationPairingConflicts(
         isTranslationPairSource,
       )
       const paths = translationPairPathsFromMeta(metaPath)
+      assertNoSymlinkPath(root, paths.source)
+      assertNoSymlinkPath(root, paths.zh)
       if (readGitIndexBlob(root, paths.source)?.objectId !== result.sourceHash) {
         throw new Error(`${paths.source} staged merge does not match the pairing driver's clean merge`)
       }

@@ -9,6 +9,22 @@ const runnerPrivatePnpmDestination = '${{ runner.temp }}/setup-pnpm'
 const nativeWindowsPnpmDestination = '${{ runner.temp }}/setup-pnpm-js'
 
 describe('GitHub workflow schema', () => {
+  it('references only declared package scripts in workflow run commands', () => {
+    const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { scripts?: Record<string, unknown> }
+    const declared = new Set(Object.keys(packageJson.scripts ?? {}))
+    const missing: string[] = []
+    for (const file of globSync('.github/workflows/*.yml', { cwd: root }).sort()) {
+      const text = readFileSync(resolve(root, file), 'utf8')
+      for (const match of text.matchAll(/\b(?:pnpm|npm) run ([A-Za-z0-9:_-]+)/gu)) {
+        const script = match[1]
+        if (script !== 'install' && script !== undefined && !declared.has(script)) {
+          missing.push(`${file}: ${script}`)
+        }
+      }
+    }
+    expect(missing).toEqual([])
+  })
+
   it('uses mappings for every declared workflow, job, and step environment', () => {
     const invalid: string[] = []
     for (const file of globSync('.github/workflows/*.yml', { cwd: root }).sort()) {
@@ -525,64 +541,6 @@ describe('npm release workflows', () => {
           expect(step['continue-on-error']).not.toBe(true)
         }
       }
-    }
-  })
-})
-
-describe('Documentation site publication', () => {
-  it('keeps Pages deployment dispatch-only from a dsh-v* tag', () => {
-    const workflow = loadWorkflow('.github/workflows/docs-pages.yml')
-    const build = workflowJob(workflow, 'build')
-    const deploy = workflowJob(workflow, 'deploy')
-    if (!isRecord(workflow.on) || !isRecord(workflow.env) || !Array.isArray(build.steps)) {
-      throw new TypeError('Documentation deployment must define on, env, and build steps')
-    }
-
-    // The site presents a released snapshot: a merge must never publish it, and
-    // publication must never appear as a PR check.
-    expect(Object.keys(workflow.on)).toEqual(['workflow_dispatch'])
-
-    // RELEASE_PUBLISH makes release:verify reject every ref that is not a dsh-v*
-    // tag naming this tree's version, so the site and the npm sequence share one
-    // definition of a released version.
-    const steps = build.steps.filter(isRecord)
-    const verify = steps.find(step => step.name === 'Verify release version')
-    const checkout = steps.find(
-      step => typeof step.uses === 'string' && step.uses.startsWith('actions/checkout@'),
-    )
-    expect(verify).toMatchObject({
-      env: { RELEASE_PUBLISH: 'true' },
-      run: 'pnpm run release:verify --family dsh',
-    })
-    // Complete history: the release scripts read tags.
-    expect(checkout).toMatchObject({ with: { 'fetch-depth': 0 } })
-
-    // Projected source links stay on the public repository's master. That
-    // repository advances only to each release commit, so its master never
-    // carries unreleased work, while it retains only the most recent tags:
-    // following the dispatched tag would leave every source link on a deploy
-    // from an older tag unresolvable.
-    expect(workflow.env.DOCS_REPOSITORY_REF).toBe('master')
-
-    // The environment owns the deployment tag policy and the required reviewers.
-    expect(deploy.environment).toMatchObject({ name: 'github-pages' })
-  })
-})
-
-describe('Git hooks', () => {
-  it('leaves frozen Agent Note sidecars to the archive verifier', () => {
-    const lefthook = loadWorkflow('lefthook.yml')
-
-    for (const hookName of ['pre-commit', 'pre-merge-commit']) {
-      const hook = lefthook[hookName]
-      if (!isRecord(hook) || !Array.isArray(hook.jobs)) {
-        throw new TypeError(`lefthook must define ${hookName} jobs`)
-      }
-      const pairing: unknown = hook.jobs.find(
-        (job: unknown) => isRecord(job) && job.name === 'translation pairing (staged records)',
-      )
-
-      expect(pairing).toMatchObject({ exclude: ['.agents/notes/archived/**'] })
     }
   })
 })

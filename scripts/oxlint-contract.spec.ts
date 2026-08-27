@@ -23,7 +23,7 @@ function runRepositoryOxlint(args: readonly string[], env: NodeJS.ProcessEnv = {
   return spawnSync(process.execPath, [tsxCli, 'scripts/run-oxlint.ts', ...args], {
     cwd: repositoryRoot,
     encoding: 'utf8',
-    env: { ...process.env, NO_COLOR: '1', ...env },
+    env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1', ...env },
   })
 }
 
@@ -31,7 +31,7 @@ function runOxlint(args: readonly string[], env: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, [oxlintCli, ...args], {
     cwd: repositoryRoot,
     encoding: 'utf8',
-    env: { ...process.env, NO_COLOR: '1', ...env },
+    env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1', ...env },
   })
 }
 
@@ -57,7 +57,7 @@ describe('Oxlint executable contract', () => {
       // probe carries the Client suffix to reach the Client aggregate.
       ['client package test', 'packages/client/ui-trajectory/tests', 'tsconfig.client.json', '.client.ts'],
       ['example', 'examples/headless-agent/tests', 'tsconfig.host.json'],
-      ['website', 'website', 'tsconfig.host.json'],
+      ['application', 'apps/cli/src', 'apps/cli/tsconfig.json'],
     ] as const
     const source = `export function probePromise(): Promise<void> {
   return Promise.resolve()

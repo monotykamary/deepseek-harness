@@ -95,12 +95,15 @@ export function gitMergeInputPaths(root: string, environment: NodeJS.ProcessEnv 
  * @throws Error when the path is unmerged or its index entries are not a valid merge state.
  */
 export function readGitIndexBlob(root: string, path: string): GitIndexBlob | undefined {
+  // Do not pass the path as a Git pathspec: a worktree symlink in an
+  // ancestor directory makes Git reject an otherwise valid index lookup.
+  // Enumerate the index and compare the NUL-delimited path exactly instead.
   const output = runGit(
     root,
-    ['ls-files', '--stage', '-z', '--', path],
-    `git ls-files --stage for ${path}`,
+    ['ls-files', '--stage', '--full-name', '-z'],
+    `listing Git index entries for ${path}`,
   ).toString('utf8')
-  const entries = output.split('\0').filter(Boolean)
+  const entries = output.split('\0').filter(entry => entry.endsWith(`\t${path}`))
   if (entries.length === 0) return undefined
   if (entries.length !== 1) throw new Error(`${path} does not have exactly one resolved index entry`)
   const match = /^(?:\d+) ([0-9a-f]+) 0\t[\s\S]+$/.exec(entries[0] ?? '')

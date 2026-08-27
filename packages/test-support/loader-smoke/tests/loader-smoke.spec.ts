@@ -75,7 +75,7 @@ describe('runLoaderSmoke', () => {
       libBinScript: fixture('fail'),
       configPath,
       tsconfigPath,
-    })).rejects.toThrow('failure fixture exited 7 (expected 0). stdout:\n\nstderr:\nfixture failed')
+    })).rejects.toThrow(/failure fixture exited 7 \(expected 0\)\. stdout:\n\nstderr:\n(?:\(node:[\s\S]*?\n)?fixture failed/)
   })
 
   it('accepts a declared expected failure exit and rejects any other outcome', async () => {
@@ -89,7 +89,7 @@ describe('runLoaderSmoke', () => {
       tsconfigPath,
       expectedExitCode: 7,
     })
-    expect(declared.stderr).toBe('fixture failed\n')
+    expect(declared.stderr).toMatch(/(?:\(node:[\s\S]*?\n)?fixture failed\n/)
 
     // …and a run that succeeds instead still fails the smoke.
     await expect(runLoaderSmoke({

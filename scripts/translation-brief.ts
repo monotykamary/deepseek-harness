@@ -347,7 +347,7 @@ function fenceFor(body: string, mark: '`' | '~'): string {
 }
 
 /** One changed (or first-occurrence) span with its three-way context. */
-export interface BriefBundle {
+interface BriefBundle {
   /** Span index shared by the aligned documents. */
   index: number
   /** Human label: heading text or node type. */
@@ -362,7 +362,7 @@ export interface BriefBundle {
 }
 
 /** The granularities a briefing can map the change at, narrowest first. */
-export type BriefScope =
+type BriefScope =
   | { kind: 'mechanical' }
   | { kind: 'units'; bundles: BriefBundle[]; firstOccurrenceNotes: string[] }
   | { kind: 'sections'; bundles: BriefBundle[]; firstOccurrenceNotes: string[] }

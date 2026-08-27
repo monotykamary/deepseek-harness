@@ -308,7 +308,6 @@ describe('Typert contract preparation', () => {
     for (const [id, script] of [
       ['typecheck', 'typecheck:contracts-ready'],
       ['lint', 'lint:contracts-ready'],
-      ['doc-typecheck', 'doc-typecheck:contracts-ready'],
     ] as const) {
       expect(subject.find(item => item.id === id)).toMatchObject({
         displayCommand: `pnpm run ${script}`,
@@ -319,7 +318,6 @@ describe('Typert contract preparation', () => {
     expect(subject.find(item => item.id === 'build')?.needs).toEqual([
       'typecheck',
       'lint',
-      'doc-typecheck',
     ])
   })
 

@@ -97,7 +97,8 @@ export function scanSlotFiles(scanRoot: string, patterns: readonly string[]): Sc
     .map(path => path.split(sep).join('/')))].sort()
   for (const rel of rels) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    let text: string
+    try { text = readFileSync(abs, 'utf8') } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue; throw error }
     if (!MERGE_HEAD.test(text) && !REGISTER_HEAD.test(text)) continue
     out.push({
       rel,
@@ -124,7 +125,9 @@ export function indexExportedTypes(scanRoot: string, patterns: readonly string[]
     .map(path => path.split(sep).join('/')))].sort()
   for (const rel of rels) {
     const abs = resolve(scanRoot, rel)
-    const sf = ts.createSourceFile(abs, readFileSync(abs, 'utf8'), ts.ScriptTarget.Latest, true, scriptKindOf(rel))
+    let sfText: string
+    try { sfText = readFileSync(abs, 'utf8') } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue; throw error }
+    const sf = ts.createSourceFile(abs, sfText, ts.ScriptTarget.Latest, true, scriptKindOf(rel))
     for (const statement of sf.statements) {
       if (!ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement)) continue
       if (!statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) continue

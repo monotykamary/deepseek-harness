@@ -274,6 +274,22 @@ describe('translation pairing merge composition', { timeout: 15_000 }, () => {
     )).toThrow('pairing record escapes the repository')
   })
 
+  it('rejects pairing paths that traverse a worktree symlink', () => {
+    const fixture = createFixture(false)
+    mkdirSync(join(fixture.root, 'docs'), { recursive: true })
+    const outside = mkdtempSync(join(tmpdir(), 'dsh-translation-pairing-outside-'))
+    fixtures.push(outside)
+    symlinkSync(outside, join(fixture.root, 'docs', 'linked'))
+
+    expect(() => mergeTranslationPairingRecords(
+      fixture.root,
+      'docs/linked/guide.i18n.yaml',
+      '',
+      '',
+      '',
+    )).toThrow('repository path traverses a symlink')
+  })
+
   it('rejects a pairing record excluded from the active corpus', () => {
     const fixture = createFixture(false)
 

@@ -30,7 +30,7 @@ describe('Update Settings components', () => {
       snapshot={async () => ({ ...current, diagnostics: [{ id: 'shell', severity: 'blocking', summary: 'Bash is unavailable.', remediation: 'Install Bash.' }] })}
       t={t} />)
     expect(await screen.findByRole('dialog', { name: 'Host setup needs attention' })).toBeTruthy()
-    expect(root.inert).toBe(true)
+    await waitFor(() => { expect(root.inert).toBe(true) })
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(complete).not.toHaveBeenCalled()
     fireEvent.click(screen.getByText('Continue anyway'))

@@ -288,10 +288,6 @@ jobs:
         if: matrix.platform == 'linux'
         run: pnpm run typecheck
 
-      - name: Run critical Windows production-site lane
-        if: matrix.platform == 'windows'
-        run: pnpm run docs:build
-
   # Manual comparison of the intended low-fanout topology. Linux runs the
   # complete unsharded primary aggregate with bounded in-runner parallelism;
   # Windows runs both blocking build targets concurrently through run-gates.

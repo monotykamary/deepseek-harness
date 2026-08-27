@@ -148,29 +148,6 @@ const NON_SOURCE_DIRECTORIES = new Set([
   'vendor',
 ])
 
-/** Glob traversal exclusions corresponding to the non-source path predicate. */
-export const TRANSLATION_SCOPE_GLOB_EXCLUDES = [
-  '.agents/notes/archived/**',
-  '**/node_modules/**',
-  '**/lib/**',
-  '**/.pnpm-store/**',
-  '**/.cache/**',
-  '**/coverage/**',
-  '**/.doc-typecheck-*/**',
-  '**/.node-next-types-*/**',
-  '**/.sessions/**',
-  '**/.storages/**',
-  '**/tmp/**',
-  '**/dist-exe/**',
-  '**/__pycache__/**',
-  '**/.pytest_cache/**',
-  'apps/web/dist/**',
-  '.artifacts/**',
-  'python/sdk-runtime/src/deepseek_harness_runtime/runtime/dsh-jsonrpc-agent-*/**',
-  'python/sdk-runtime/src/deepseek_harness_runtime/runtime/node/**',
-  'vendor/**',
-]
-
 /** Whether a repository-relative path belongs to a dependency or generated tree. */
 function isTranslationSourceExcluded(file: string): boolean {
   const segments = file.split('/')

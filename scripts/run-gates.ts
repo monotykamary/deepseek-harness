@@ -439,10 +439,7 @@ function webSnapshotGate(needs: string[]): Gate {
 }
 
 function ciWindowsBlockingGates(): Gate[] {
-  return [
-    ciBuildGate('windows-build', { label: 'build' }),
-    pnpmScript('windows-site', 'docs:build', { label: 'production site' }),
-  ]
+  return [ciBuildGate('windows-build', { label: 'build' })]
 }
 
 function ciWindowsCompleteGates(): Gate[] {
@@ -451,9 +448,7 @@ function ciWindowsCompleteGates(): Gate[] {
     : gate)
   const coverageAfter = coverage.map(gate => gate.id)
   const observational = ciWindowsObservationalGates()
-    // The required production site replaces the observational MPA build; both
-    // VitePress modes write the same output directory and cannot overlap.
-    .filter(gate => gate.id !== 'build' && gate.id !== 'docs-site-build')
+    .filter(gate => gate.id !== 'build')
     .map(gate => ({
       ...gate,
       allowFailure: true,
@@ -461,7 +456,6 @@ function ciWindowsCompleteGates(): Gate[] {
     }))
   return [
     ciBuildGate(),
-    pnpmScript('windows-site', 'docs:build', { label: 'production site' }),
     ...coverage,
     observationalTestGate(),
     ...observational,

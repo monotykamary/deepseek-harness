@@ -305,37 +305,6 @@ const VENDORED_LIBRARY = /^@monotykamary\\/(cosmokit|schemastery)(\\/|$)/
     expect: 1,
   },
   {
-    // The step-1 file tree told the reader to keep the upstream name, one
-    // paragraph above the invariant that says to rescope it.
-    id: 'vendoring-cookbook-tree-comment',
-    file: 'docs/cookbook/adding-a-vendored-package.md',
-    find: '  package.json     # from upstream; set "private": true, keep name/exports/type',
-    replace: '  package.json     # from upstream; set "private": true, rescope the name, keep exports/type',
-    expect: 1,
-  },
-  {
-    id: 'vendoring-cookbook-tree-comment-zh',
-    file: 'docs/cookbook/adding-a-vendored-package.zh.md',
-    find: '  package.json     # from upstream; set "private": true, keep name/exports/type',
-    replace: '  package.json     # from upstream; set "private": true, rescope the name, keep exports/type',
-    expect: 1,
-  },
-  {
-    // The checklist told the next vendoring to keep upstream's name.
-    id: 'vendoring-cookbook-name-invariant',
-    file: 'docs/cookbook/adding-a-vendored-package.md',
-    find: "keep upstream's `name`/`version`/`exports`/`type`",
-    replace: "rescope the `name` ([mapping](../rescope.md)) while keeping upstream's `version`/`exports`/`type`",
-    expect: 1,
-  },
-  {
-    id: 'vendoring-cookbook-name-invariant-zh',
-    file: 'docs/cookbook/adding-a-vendored-package.zh.md',
-    find: '保留上游的 `name`/`version`/`exports`/`type`',
-    replace: '改写 `name` 的 scope（[映射](../rescope.zh.md)），保留上游的 `version`/`exports`/`type`',
-    expect: 1,
-  },
-  {
     // The real package references in files whose other `cordis` strings are preset ids.
     id: 'agent-preset-spec-framework-import',
     file: 'packages/client/ui-agent-preset/tests/apply.client.spec.ts',
@@ -624,7 +593,16 @@ function main(): void {
   const planned: { edit: ExactEdit; path: string; find: string; replace: string }[] = []
   for (const edit of EXACT_EDITS) {
     const path = resolve(root, edit.file)
-    const before = readFileSync(path, 'utf8')
+    let before: string
+    try {
+      before = readFileSync(path, 'utf8')
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        failures.push(`exact edit ${edit.id}: ${edit.file} is missing`)
+        continue
+      }
+      throw error
+    }
     const find = reverse ? edit.replace : edit.find
     const replace = reverse ? edit.find : edit.replace
     const state = exactEditState(before, find, replace, edit.expect)
@@ -654,7 +632,13 @@ function main(): void {
 
   for (const file of files) {
     const path = resolve(root, file)
-    const before = readFileSync(path, 'utf8')
+    let before: string
+    try {
+      before = readFileSync(path, 'utf8')
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw error
+    }
     const { text: after, lines } = rewrite(before, file, all)
     if (after === before) continue
     outstanding.push(file)
