@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-tool-subagent",
   "description": "Model and human subagent delegation Consumers over the ctx.subagents seam",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publishConfig": {
     "access": "public"
   },

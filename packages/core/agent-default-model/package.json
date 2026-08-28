@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-agent-default-model",
   "description": "Default model selection shared by Agent entry points",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publishConfig": {
     "access": "public"
   },
