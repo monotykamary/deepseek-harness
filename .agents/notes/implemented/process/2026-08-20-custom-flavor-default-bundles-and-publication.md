@@ -20,7 +20,7 @@ The harness workspace resolves `dsh-tool-repair`, `dsh-multiprovider`, `dsh-fabr
 
 ### The fabric packages publish unscoped
 
-The eight Fabric packages are unscoped (`dsh-fabric-protocol`, `dsh-fabric-compaction`, `dsh-fabric-host`, `dsh-fabric-mesh`, `dsh-fabric-schema`, `dsh-fabric-system-prompt`, `dsh-fabric-code-runtime-quickjs`, `dsh-fabric-client-ui`) under the `dsh-fabric` umbrella bundle. The original `@dsh-fabric/*` scope could not be created: npm scopes are website-only artifacts and the publishing token is a granular 2FA-bypass token, so every publish to the absent scope answered `404 Scope not found`. Unscoped names publish without a scope.
+The nine Fabric packages are unscoped (`dsh-fabric-protocol`, `dsh-fabric-compaction`, `dsh-fabric-host`, `dsh-fabric-mesh`, `dsh-fabric-models`, `dsh-fabric-schema`, `dsh-fabric-system-prompt`, `dsh-fabric-code-runtime-quickjs`, `dsh-fabric-client-ui`) under the `dsh-fabric` umbrella bundle. The original `@dsh-fabric/*` scope could not be created: npm scopes are website-only artifacts and the publishing token is a granular 2FA-bypass token, so every publish to the absent scope answered `404 Scope not found`. Unscoped names publish without a scope.
 
 ### The sibling packages publish with semver ranges
 

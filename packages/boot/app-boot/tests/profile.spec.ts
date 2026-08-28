@@ -4,7 +4,7 @@
  * empty-root composition, and the installation module-fallback healing.
  */
 
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -354,6 +354,35 @@ describe('healProfilesModuleFallback', () => {
     healProfilesModuleFallback(anchor, home)
     const before = readlinkSync(join(fallback, 'dep-of-a'))
     expect(before).toContain('dep-of-a')
+  })
+
+  it('walks a symlinked package dependency graph from its real location', () => {
+    const anchor = stageInstallation({})
+    const appModules = join(anchor, '..', 'node_modules')
+    const appManifest = JSON.parse(readFileSync(anchor, 'utf8')) as { dependencies: Record<string, string> }
+    appManifest.dependencies['bundle-a'] = '0.0.0'
+    writeFileSync(anchor, JSON.stringify(appManifest))
+
+    // pnpm's isolated store puts dependency siblings beside the package's real
+    // directory, while the app sees only a symlink to that package. Traversing
+    // from the lexical app link cannot discover dep-of-a.
+    const storeModules = join(tmp(), 'node_modules')
+    const bundle = join(storeModules, 'bundle-a')
+    const dependency = join(storeModules, 'dep-of-a')
+    mkdirSync(bundle, { recursive: true })
+    mkdirSync(dependency, { recursive: true })
+    writeFileSync(join(bundle, 'package.json'), JSON.stringify({
+      name: 'bundle-a', version: '0.0.0', dependencies: { 'dep-of-a': '0.0.0' },
+    }))
+    writeFileSync(join(dependency, 'package.json'), JSON.stringify({ name: 'dep-of-a', version: '0.0.0' }))
+    symlinkSync(bundle, join(appModules, 'bundle-a'), 'junction')
+
+    const home = tmp()
+    healProfilesModuleFallback(anchor, home)
+
+    const fallback = join(home, 'profiles', 'node_modules')
+    expect(readlinkSync(join(fallback, 'bundle-a'))).toBe(realpathSync(bundle))
+    expect(readlinkSync(join(fallback, 'dep-of-a'))).toBe(realpathSync(dependency))
   })
 
   it('throws when a fallback entry is a real directory', () => {

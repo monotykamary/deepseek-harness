@@ -24,7 +24,7 @@
 
 import { createRequire } from 'node:module'
 import {
-  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync,
+  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync, symlinkSync, unlinkSync, writeFileSync,
 } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import type { EntryOptions } from '@monotykamary/cordis-plugin-loader'
@@ -275,10 +275,13 @@ export function healProfilesModuleFallback(installAnchor: string, home: string =
     /* a real app manifest always declares dependencies */
     for (const dep of [...Object.keys(next.manifest.dependencies ?? {}), ...Object.keys(next.manifest.peerDependencies ?? {})]) {
       if (links.has(dep)) continue
-      const dir = packageDirFromAnchor(next.anchor, dep)
+      const resolvedDir = packageDirFromAnchor(next.anchor, dep)
       // A declared-but-uninstalled dependency cannot be a loader-visible
       // plugin; skip it rather than fail the whole boot.
-      if (dir === undefined) continue
+      if (resolvedDir === undefined) continue
+      // Traverse from the real package location: a pnpm app link does not
+      // lexically expose the isolated store paths that package's imports use.
+      const dir = realpathSync(resolvedDir)
       links.set(dep, dir)
       const manifestPath = join(dir, 'package.json')
       queue.push({ anchor: manifestPath, manifest: JSON.parse(readFileSync(manifestPath, 'utf8')) as ProfileManifest })

@@ -14,7 +14,7 @@ Status: implemented
 
 默认 Profile 模板使用的组合包是 `@monotykamary/dsh-base`（共享核心配置行）、`@monotykamary/dsh-web-app`（浏览器 Host 配置行与 Web 运行时粘合层）和 `@monotykamary/dsh-headless`（直接叠加在 base 上且不含 web-app 的一次性 runner）。通用的 `dsh --profile <name>` 把剩余参数交给该 profile 的命令行启动行：Web 持有自己的 flag 家族，headless 则持有任务位置参数。patch overlay 使用启动器持有的 `--patch`。`dsh plugin --profile <name> <args...>` 是一层薄薄的 pnpm 转发器，负责初始化 profile，并依据已安装包的组合包声明调和 `dsh.profile.bundles`；没有组合包声明的包保持为普通依赖。[Headless 作为直接 core 入口](2026-08-09-headless-direct-core-entry-point.zh.md)负责 headless 组合约定。
 
-解析在构造上就是双锚点的：`dsh.profile.bundles` 中的名称先从 dsh 安装目录解析，再从 profile 目录解析——因此内置组合包始终来自与运行中 `dsh` 相同的安装，pnpm 从不管理它们——而 patch 行中的裸插件名称经 profile 目录的 Node 父目录逐级查找，落到受维护的扁平回退目录 `$DSH_HOME/profiles/node_modules`（安装目录的应用与各组合包所依赖的每个包各一个符号链接，每次启动时修复）。
+解析在构造上就是双锚点的：`dsh.profile.bundles` 中的名称先从 dsh 安装目录解析，再从 profile 目录解析——因此内置组合包始终来自与运行中 `dsh` 相同的安装，pnpm 从不管理它们——而 patch 行中的裸插件名称经 profile 目录的 Node 父目录逐级查找，落到受维护的扁平回退目录 `$DSH_HOME/profiles/node_modules`（安装目录的应用与各组合包所依赖的每个包各一个符号链接，每次启动时修复）。回退机制会先把包的符号链接解析到真实目录，再遍历该包的 manifest，从而保留 pnpm 隔离 store 祖先目录中的依赖查找路径，而不是只沿应用侧的符号链接路径查找。
 
 两项配套重构：webserver 内置的静态 dist 服务改为单一所有者的**回退席位**（`registerFallback`／`applyIndexTaps`），SPA 服务器提取到 `@monotykamary/dsh-host-frontend-static`，使 web 组合包以组合的方式持有自己的 dist，而不是靠启动器代码；[dsh CLI 个人配置决策](../feature/2026-07-20-dsh-cli-personal-config.zh.md)的个人 overlay 机制（`loadPersonalPatches`、`$DSH_HOME/config.yaml`）改为面向逐 profile 与 home 级的 `cordis.patch.yml` 层（`loadOptionalPatches`、接受文件名的 `watchUserPatches`），取代该笔记的各入口模式与文件位置，同时保留其 Harness home 根目录、patch 语义与响亮失败的解析。
 

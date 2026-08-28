@@ -20,7 +20,7 @@ harness 工作区从 npm 解析 `dsh-tool-repair`、`dsh-multiprovider`、`dsh-f
 
 ### fabric 系列以无 scope 名称发布
 
-八个 Fabric 包在 `dsh-fabric` 伞形 Bundle 下以无 scope 名称发布（`dsh-fabric-protocol`、`dsh-fabric-compaction`、`dsh-fabric-host`、`dsh-fabric-mesh`、`dsh-fabric-schema`、`dsh-fabric-system-prompt`、`dsh-fabric-code-runtime-quickjs`、`dsh-fabric-client-ui`）。原本的 `@dsh-fabric/*` scope 无法创建：npm scope 是只能在网站上创建的产物，而发布 token 是绕过 2FA 的细粒度 token，因此每次向缺失 scope 的发布都回答 `404 Scope not found`。无 scope 名称无需 scope 即可发布。
+九个 Fabric 包在 `dsh-fabric` 伞形 Bundle 下以无 scope 名称发布（`dsh-fabric-protocol`、`dsh-fabric-compaction`、`dsh-fabric-host`、`dsh-fabric-mesh`、`dsh-fabric-models`、`dsh-fabric-schema`、`dsh-fabric-system-prompt`、`dsh-fabric-code-runtime-quickjs`、`dsh-fabric-client-ui`）。原本的 `@dsh-fabric/*` scope 无法创建：npm scope 是只能在网站上创建的产物，而发布 token 是绕过 2FA 的细粒度 token，因此每次向缺失 scope 的发布都回答 `404 Scope not found`。无 scope 名称无需 scope 即可发布。
 
 ### 同级包以 semver 范围发布
 

@@ -26,7 +26,7 @@
   - list:
     - listitem:
       - strong: "@monotykamary/dsh"
-      - code: 0.1.2 → 999.0.0
+      - code: 0.1.7 → 999.0.0
     - listitem:
       - strong: dsh-tool-repair
       - code: 0.1.1
@@ -35,12 +35,12 @@
       - code: 0.1.1
     - listitem:
       - strong: dsh-fabric
-      - code: 0.1.7
+      - code: 0.1.11
     - listitem:
       - strong: dsh-fovea
       - code: 0.5.1
     - listitem:
       - strong: dsh-factory
-      - code: 0.1.4
+      - code: 0.1.8
   - button "Check again"
   - button "Update DSH"

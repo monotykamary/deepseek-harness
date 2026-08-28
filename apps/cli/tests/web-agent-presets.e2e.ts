@@ -461,6 +461,47 @@ describe('the shipped Web composition', () => {
   })
 })
 
+describe('the shipped Fabric bundle', () => {
+  it('mounts Fabric mode and prepares its configured model from the installation closure', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-web-fabric-preset-'))
+    const settingsFile = join(root, 'settings.yaml')
+    await writeFile(settingsFile, '{}\n')
+    const fabricCtx = await bootWeb(settingsFile, [{
+      id: 'llm-pi-ai',
+      config: { providers: { 'openai-codex': {} } },
+    }], [], [
+      '@monotykamary/dsh-base',
+      '@monotykamary/dsh-web-app',
+      'dsh-fabric',
+    ])
+    try {
+      expect((await fabricCtx.agentPresets.list()).map(preset => preset.id).sort())
+        .toEqual(['code', 'cordis', 'fabric', 'minimal', 'standard'])
+      // Preparation is keyless but crosses the live adapter registration; a
+      // mixed core/provider installation fails here before provider I/O.
+      const prepared = await fabricCtx.llm.prepareCall({
+        provider: 'openai-codex',
+        model: 'gpt-5.6-sol',
+      })
+      expect(prepared.config).toMatchObject({ provider: 'openai-codex', model: 'gpt-5.6-sol' })
+      const handle = await fabricCtx.agents.create({
+        sessionId: SessionId('preset-fabric'),
+        setup: agentCtx => fabricCtx.agentPresets.mount(agentCtx, 'fabric').then(() => undefined),
+      })
+      try {
+        expect(toolNames(fabricCtx, handle.agent))
+          .toEqual(expect.arrayContaining(['fabric_mesh', 'fabric_models']))
+        expect((await fabricCtx.systemPrompt.assemble({ scope: handle.agent })).tools.map(tool => tool.name))
+          .toEqual(['run_code'])
+      } finally {
+        await handle.dispose()
+      }
+    } finally {
+      await fabricCtx.fiber.dispose()
+    }
+  }, 120_000)
+})
+
 describe('product Bundle and user-preset intersection', () => {
   const presetIds = ['products-none', 'products-codex', 'products-claude', 'products-both'] as const
   type Product = 'codex' | 'claude-code'
