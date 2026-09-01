@@ -1,12 +1,33 @@
 import { describe, expect, it } from 'vitest'
-import { inferRunCodeTitle, resolveRunCodeTitle } from '@monotykamary/dsh-tools'
+import {
+  inferRunCodeTitle,
+  normalizeRunCodeDisplay,
+  resolveRunCodeDisplay,
+  resolveRunCodeTitle,
+} from '@monotykamary/dsh-tools'
 
 describe('Code Mode run titles', () => {
-  it('prefers a declared non-blank description', () => {
+  it('prefers display metadata and retains the legacy flat title for replay', () => {
     expect(resolveRunCodeTitle({
       code: 'return await tools.read({ path: "secret.txt" })',
-      description: '  Inspect the release manifest  ',
-    })).toBe('Inspect the release manifest')
+      display: { name: '  Inspect auth flow  ', description: '  Verify the release path  ' },
+      description: 'Legacy title',
+    })).toBe('Inspect auth flow')
+    expect(resolveRunCodeDisplay({
+      code: 'return 1',
+      display: { name: 'Ship release', description: '  Validate artifacts before publishing.  ' },
+    })).toEqual({ name: 'Ship release', description: 'Validate artifacts before publishing.' })
+    expect(resolveRunCodeTitle({ code: 'return 1', description: '  Legacy title  ' })).toBe('Legacy title')
+  })
+
+  it('normalizes string shorthand and provider-serialized display objects', () => {
+    expect(normalizeRunCodeDisplay('Inspect auth flow')).toEqual({ name: 'Inspect auth flow' })
+    expect(normalizeRunCodeDisplay('{"name":"Run tests","description":"Verify the fix"}'))
+      .toEqual({ name: 'Run tests', description: 'Verify the fix' })
+    expect(normalizeRunCodeDisplay('{malformed')).toEqual({ name: '{malformed' })
+    expect(normalizeRunCodeDisplay('["still a shorthand"]')).toEqual({ name: '["still a shorthand"]' })
+    expect(normalizeRunCodeDisplay(['not', 'metadata'])).toEqual({})
+    expect(normalizeRunCodeDisplay(42)).toEqual({})
   })
 
   it('uses direct nested-tool descriptions without exposing unrelated string payloads', () => {

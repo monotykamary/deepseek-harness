@@ -731,10 +731,16 @@ export function jsonSchemaToPy(schema: unknown): string {
   return renderType(schema, '', { classes: [], usedClassNames: new Set(), nextClassCounter: new Map(), typing: new Set() })
 }
 
+/** Strict-label guidance for the outer `run_code` arguments. */
+const REQUIRED_RUN_CODE_ARGUMENTS = '`run_code` takes two required arguments: `code` — the body of an async Python function (top-level `await` and `return` both work) — and `display`. Prefer `display: {"name": name, "description": objective}`; a string is name shorthand.'
+
+/** Inferred-label guidance for the outer `run_code` arguments. */
+const INFERRED_RUN_CODE_ARGUMENTS = '`run_code` takes one required argument: `code` — the body of an async Python function (top-level `await` and `return` both work). `display` is optional; use `{"name": name, "description": objective}` to name the activity and state its objective, or a string as name shorthand. DSH infers the activity name when it is omitted.'
+
 /** The fixed model-facing usage contract rendered above the declarations. */
 const SDK_INSTRUCTIONS = `## Writing code for run_code
 
-\`run_code\` takes two required arguments: \`code\` — the body of an async Python function (top-level \`await\` and \`return\` both work) — and \`description\`, a short summary of what the program does. At run time exactly two of the names declared below are bound: \`tools\` and \`ToolCallError\`. Everything else is a STATIC STUB describing argument and return types — in particular the \`TypedDict\` classes do NOT exist at run time, so build arguments as plain \`dict\`/\`list\` JSON values: \`await tools.name({"field": 1})\`, never \`FooArgs(field=1)\`, which raises \`NameError\`. Inside the program:
+${REQUIRED_RUN_CODE_ARGUMENTS} At run time exactly two of the names declared below are bound: \`tools\` and \`ToolCallError\`. Everything else is a STATIC STUB describing argument and return types — in particular the \`TypedDict\` classes do NOT exist at run time, so build arguments as plain \`dict\`/\`list\` JSON values: \`await tools.name({"field": 1})\`, never \`FooArgs(field=1)\`, which raises \`NameError\`. Inside the program:
 
 - Call tools as \`await tools.name(args)\` — subscript access for exotic, reserved, or underscore-leading names: \`await tools["my-tool"](args)\`. Every call resolves to the tool's typed canonical JSON value (each method's return type below). Tool arguments must be lossless JSON.
 - For a capability omitted from the declarations below, call \`await tools.describe(name)\` for its exact run-scoped schema, then \`await tools.call({"name": name, "args": args})\`. Do not guess arguments.
@@ -745,11 +751,9 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 The available tools:`
 
 function sdkInstructions(labelMode: RunCodeLabelMode): string {
-  if (labelMode === 'required') return SDK_INSTRUCTIONS
-  return SDK_INSTRUCTIONS.replace(
-    '`run_code` takes two required arguments: `code` — the body of an async Python function (top-level `await` and `return` both work) — and `description`, a short summary of what the program does.',
-    '`run_code` takes one required argument: `code` — the body of an async Python function (top-level `await` and `return` both work). `description` is optional; DSH infers the run title when it is omitted.',
-  )
+  return labelMode === 'required'
+    ? SDK_INSTRUCTIONS
+    : SDK_INSTRUCTIONS.replace(REQUIRED_RUN_CODE_ARGUMENTS, INFERRED_RUN_CODE_ARGUMENTS)
 }
 
 /**

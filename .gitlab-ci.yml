@@ -34,10 +34,10 @@ sdk-wheel:
   extends: .python-tools
   stage: build
   script:
-    - corepack enable
-    - pnpm install --frozen-lockfile
-    - pnpm run verify-runtime-closure
-    - pnpm exec tsx scripts/build-exe-for-python-sdk.ts --targets="$PKG_TARGET"
+    - npm install --global bun@1.4.0
+    - bun install --frozen-lockfile
+    - bun run verify-runtime-closure
+    - bun x tsx scripts/build-exe-for-python-sdk.ts --targets="$PKG_TARGET"
     - EXE="$PWD/dist-exe/dsh-jsonrpc-agent-pkg-$PLATFORM"
     - test -x "$EXE"
     - uv run --python 3.10 --group test --project python/sdk python scripts/smoke-python-runtime.py --scenario all --exe "$EXE"

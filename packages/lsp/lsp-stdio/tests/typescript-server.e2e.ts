@@ -15,7 +15,7 @@ import LocalFileSystem from '@monotykamary/dsh-fs-local'
 import Lsp, { type LspQueryRequest, type LspQueryResult } from '@monotykamary/dsh-lsp'
 import * as LspLocal from '@monotykamary/dsh-lsp-stdio'
 
-// The server binary is a dev dependency of this package; resolve its pnpm-hoisted .bin path.
+// The server binary is a dev dependency of this package; resolve its bun-hoisted .bin path.
 const serverBin = join(
   new URL('..', import.meta.url).pathname,
   'node_modules',

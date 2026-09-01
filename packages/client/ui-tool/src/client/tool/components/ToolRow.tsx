@@ -39,6 +39,8 @@ export interface ToolRowProps {
   icon: ReactNode
   title: string
   summary: string
+  /** Code Mode objective shown separately from the compact activity-name summary. */
+  objective?: string | null | undefined
   /**
    * Trailing summary fragment rendered outside the ellipsized summary text, so
    * a narrow row clips the summary before this. For a fragment whose whole
@@ -131,6 +133,7 @@ export function ToolRow({
   title,
   summary,
   summarySuffix,
+  objective,
   body,
   output,
   errorSummary,
@@ -151,11 +154,12 @@ export function ToolRow({
   const searchBody = search ?? null
   const webBody = web ?? null
   const outputText = output ?? null
+  const objectiveText = objective ?? null
   // A card replaces the text body; a call carries at most one card kind, so the
-  // card props are mutually exclusive. Any of them, or a text body/output,
-  // makes the row expandable.
+  // card props are mutually exclusive. Any of them, objective text, or a text
+  // body/output makes the row expandable.
   const card = terminalBody ?? diffBody ?? readBody ?? searchBody ?? webBody
-  const expandable = body !== null || outputText !== null || card !== null
+  const expandable = body !== null || objectiveText !== null || outputText !== null || card !== null
   const open = expanded && expandable
   // The run-state label AT needs: the StateDot and the running text shimmer are both
   // aria-hidden / colour-only, so a stopped or running row is otherwise silent.
@@ -184,9 +188,10 @@ export function ToolRow({
   const fileLinkKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
   }
-  // The code variant's program renders through CodeBlock (shiki), so only its
-  // output joins the IN/OUT card; every other variant's input does too.
-  const cardBody = variant === 'code' ? null : body
+  // The code variant's program renders through CodeBlock (shiki), while its
+  // distinct objective joins output in a GOAL/OUT card. Other variants use IN.
+  const cardBody = variant === 'code' ? objectiveText : body
+  const cardBodyLabel = variant === 'code' ? 'GOAL' : 'IN'
   // The state substitution rides the idle icon slot, so an expandable error
   // row keeps DisclosureRow's icon→chevron hover preview (its default) instead
   // of losing it with the icon.
@@ -272,7 +277,7 @@ export function ToolRow({
                           <div className={css.ioCard}>
                             {cardBody !== null && (
                               <div className={css.ioSection}>
-                                <span className={css.ioLabel}>IN</span>
+                                <span className={css.ioLabel}>{cardBodyLabel}</span>
                                 <span className={css.ioText}>{cardBody}</span>
                               </div>
                             )}

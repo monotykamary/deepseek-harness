@@ -5,13 +5,13 @@
 
 import { createHash } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@monotykamary/cordis'
+import { Context, Service } from '@monotykamary/cordis'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { CallId } from '@monotykamary/dsh-llm'
 import SystemPrompt, { renderPrompt } from '@monotykamary/dsh-system-prompt'
-import ToolRuntime, { type ToolResult } from '@monotykamary/dsh-tools'
+import ToolRuntime, { TOOL_RUNTIME_SCHEDULER, type ToolExecutionToken, type ToolResult } from '@monotykamary/dsh-tools'
 import { FileSystem, FsError, FsTargetKey, FsVersion } from '@monotykamary/dsh-fs'
 import type {
   FsDirEntry,
@@ -42,6 +42,8 @@ class FakeFs extends FileSystem {
   writeIntents: (FsWriteIntent | undefined)[] = []
   omitWriteBasis = false
   editIntents: ({ version: FsVersion } | undefined)[] = []
+  version = FsVersion('v1')
+  readCalls = 0
 
   private throwIfArmed(): void {
     if (this.rejectWith) throw this.rejectWith
@@ -59,17 +61,19 @@ class FakeFs extends FileSystem {
     this.throwIfArmed()
     const content = this.files.get(target.targetKey)
     if (content === undefined) return undefined
-    return { version: FsVersion('v1'), type: 'file', size: content.length }
+    return { version: this.version, type: 'file', size: content.length }
   }
   override async lstat(path: string): Promise<FsPathInfo | undefined> {
     const content = this.files.get(`key:${path}`)
     if (content === undefined) return undefined
-    return { version: FsVersion('v1'), type: 'file', size: content.length }
+    return { version: this.version, type: 'file', size: content.length }
   }
   override async readText(target: FsTarget): Promise<string> {
+    this.readCalls += 1
     return this.files.get(target.targetKey) ?? ''
   }
   override async streamText(target: FsTarget): Promise<AsyncIterable<string>> {
+    this.readCalls += 1
     const content = this.files.get(target.targetKey) ?? ''
     return (async function* () { yield content })()
   }
@@ -110,6 +114,48 @@ async function setup() {
   await ctx.plugin(ToolFs)
   const fs = ctx.fs as FakeFs
   return { ctx, fs }
+}
+
+class TypeScriptCodeRuntimeDescriptor extends Service {
+  readonly language = 'typescript'
+
+  constructor(ctx: Context) {
+    super(ctx, 'codeRuntime')
+  }
+}
+
+async function setupSpeculativeRead() {
+  const ctx = new Context()
+  await ctx.plugin(SystemPrompt)
+  await ctx.plugin(FakeFs)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- only the language descriptor is needed by the scanner gate
+  await ctx.plugin(TypeScriptCodeRuntimeDescriptor as any)
+  await ctx.plugin(ToolRuntime, { mode: 'code', speculation: { enabled: true } })
+  await ctx.plugin(FsPolicy)
+  await ctx.plugin(ToolFs)
+  return { ctx, fs: ctx.fs as FakeFs }
+}
+
+async function prefetchRead(ctx: Context, rootCallId: CallId, code: string): Promise<void> {
+  const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId })
+  expect(observer).toBeDefined()
+  const finalArguments = JSON.stringify({ code, display: 'Read file' })
+  observer!.push(finalArguments)
+  observer!.finish(finalArguments)
+  await vi.waitFor(() => {
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+  })
+}
+
+function nestedRead(ctx: Context, rootCallId: CallId, filePath: string) {
+  return ctx.tools.execute({
+    signal: testToolSignal,
+    callId: CallId(`${rootCallId}-nested`),
+    rootCallId,
+    parent: Symbol('run-code') as ToolExecutionToken,
+    name: 'read',
+    arguments: { file_path: filePath },
+  })
 }
 
 const digest = (algorithm: 'sha1' | 'sha256', text: string): string =>
@@ -212,6 +258,66 @@ describe('registration', () => {
 })
 
 describe('read tool', () => {
+  it('replays a fresh prefetched read observation only at natural dispatch', async () => {
+    const { ctx, fs } = await setupSpeculativeRead()
+    fs.files.set('key:a.txt', 'prefetched')
+    const observed: string[] = []
+    ctx.on('fs/observed', target => void observed.push(target.displayPath))
+    const rootCallId = CallId('spec-read-fresh')
+
+    await prefetchRead(ctx, rootCallId, 'return tools.read({ file_path: "a.txt" })')
+    expect({ readCalls: fs.readCalls, observed }).toEqual({ readCalls: 1, observed: [] })
+
+    const result = await nestedRead(ctx, rootCallId, 'a.txt')
+
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('prefetched')
+    expect({ readCalls: fs.readCalls, observed }).toEqual({ readCalls: 1, observed: ['/abs/a.txt'] })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ served: 1, pending: 0 })
+  })
+
+  it('never acquires an outside-workspace read speculatively and falls back naturally', async () => {
+    const { ctx, fs } = await setupSpeculativeRead()
+    const outside = resolve(process.cwd(), '..', 'outside.txt')
+    fs.files.set(`key:${outside}`, 'natural only')
+    const rootCallId = CallId('spec-read-outside')
+
+    await prefetchRead(ctx, rootCallId, `return tools.read({ file_path: ${JSON.stringify(outside)} })`)
+    await vi.waitFor(() => {
+      expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().inFlight).toBe(0)
+    })
+    expect(fs.readCalls).toBe(0)
+
+    const result = await nestedRead(ctx, rootCallId, outside)
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('natural only')
+    expect(fs.readCalls).toBe(1)
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().failed).toBe(1)
+  })
+
+  it('rejects a stale prefetched read and performs the natural read', async () => {
+    const { ctx, fs } = await setupSpeculativeRead()
+    fs.files.set('key:a.txt', 'before')
+    const observed: string[] = []
+    ctx.on('fs/observed', target => void observed.push(target.displayPath))
+    const rootCallId = CallId('spec-read-stale')
+
+    await prefetchRead(ctx, rootCallId, 'return tools.read({ file_path: "a.txt" })')
+    fs.files.set('key:a.txt', 'after')
+    fs.version = FsVersion('v2')
+    const result = await nestedRead(ctx, rootCallId, 'a.txt')
+
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('after')
+    expect(text(result)).not.toContain('before')
+    expect({ readCalls: fs.readCalls, observed }).toEqual({ readCalls: 2, observed: ['/abs/a.txt'] })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({
+      served: 0,
+      freshnessInvalidated: 1,
+      pending: 0,
+    })
+  })
+
   it('formats line-numbered content with a footer', async () => {
     const { ctx, fs } = await setup()
     fs.files.set('key:a.txt', 'hello\nworld')

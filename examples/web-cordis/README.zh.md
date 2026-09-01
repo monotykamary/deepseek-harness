@@ -9,13 +9,13 @@
 启动浏览器界面：
 
 ```sh
-pnpm run demo:cordis
+bun run demo:cordis
 ```
 
 改为启动 ACP（Agent Client Protocol）自动化服务器：
 
 ```sh
-pnpm run demo:cordis acp
+bun run demo:cordis acp
 ```
 
 这两条命令都需要 `DEEPSEEK_API_KEY`。[Cordis 工具参考](../../packages/extensions/tool-cordis/README.zh.md)定义了四类约定：工具参数、存续时间、清理行为和安全性。

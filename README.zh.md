@@ -85,9 +85,9 @@ Flake 固定当前检出版本对应的 npm 发行版。打包部署应设置 `D
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 cd deepseek-harness
-pnpm install
-pnpm run build
-pnpm dsh web
+bun install
+bun run build
+bun dsh web
 ```
 
 ## 更新与诊断

@@ -56,14 +56,15 @@ describe('resolveProfileDir', () => {
 })
 
 describe('initProfile', () => {
-  it('creates manifest, user patch layer, and pnpm workspace once, never overwriting', () => {
+  it('creates manifest, user patch layer, and Bun config once, never overwriting', () => {
     const home = tmp()
     const dir = resolveProfileDir('tui', home)
     initProfile(dir, ['@monotykamary/dsh-base'])
     const manifest = readProfileManifest('t', dir)
     expect(manifest.dsh?.profile?.bundles).toEqual(['@monotykamary/dsh-base'])
     expect(readFileSync(join(dir, PROFILE_PATCH_FILENAME), 'utf8')).toContain('[]')
-    expect(readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8')).toContain('nodeLinker: hoisted')
+    expect(readFileSync(join(dir, 'bunfig.toml'), 'utf8')).toContain('linker = "hoisted"')
+    expect(readFileSync(join(dir, 'bunfig.toml'), 'utf8')).toContain('peer = false')
     // Re-init keeps user edits.
     writeFileSync(join(dir, PROFILE_PATCH_FILENAME), '- id: x\n  config: {}\n')
     initProfile(dir, ['other'])
@@ -363,7 +364,7 @@ describe('healProfilesModuleFallback', () => {
     appManifest.dependencies['bundle-a'] = '0.0.0'
     writeFileSync(anchor, JSON.stringify(appManifest))
 
-    // pnpm's isolated store puts dependency siblings beside the package's real
+    // Bun's isolated store puts dependency siblings beside the package's real
     // directory, while the app sees only a symlink to that package. Traversing
     // from the lexical app link cannot discover dep-of-a.
     const storeModules = join(tmp(), 'node_modules')

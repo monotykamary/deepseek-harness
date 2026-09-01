@@ -37,7 +37,7 @@ describe('extractMarkdownPlainText', () => {
   it('preserves raw HTML while removing Markdown presentation markup', () => {
     const block = [
       '<background-job-complete id="trajectory-ui-watch">',
-      'Command: pnpm test',
+      'Command: bun test',
       'Exit code: 0',
       '</background-job-complete>',
     ].join('\n')

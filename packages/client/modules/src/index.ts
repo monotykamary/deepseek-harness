@@ -76,7 +76,7 @@ interface PkgMeta extends WebBootRowFields {
 }
 
 /** Recovery instruction shared by grouped startup and steady-state bundle diagnostics. */
-const CLIENT_BUNDLE_BUILD_INSTRUCTION = 'run `pnpm run build` before launch'
+const CLIENT_BUNDLE_BUILD_INSTRUCTION = 'run `bun run build` before launch'
 
 /** Missing built client export, retained as structured data for activation-error grouping. */
 class MissingClientBundleError extends Error {
@@ -302,7 +302,7 @@ export class ClientModuleRegistry extends Service {
     super(ctx, 'clientModules')
     // Resolution anchor: the config tree's baseUrl (the cordis.yml directory,
     // whose package declares every composed plugin as a dependency). The
-    // modules package's own URL would miss sibling packages under pnpm's
+    // modules package's own URL would miss sibling packages under bun's
     // isolated node_modules.
     if (ctx.baseUrl === undefined) {
       throw new Error('client-modules: ctx.baseUrl is unset — the node half needs the config-tree anchor to resolve plugin packages')

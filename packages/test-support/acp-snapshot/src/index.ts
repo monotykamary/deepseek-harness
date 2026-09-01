@@ -1,6 +1,6 @@
 /**
  * ACP snapshot suite kit — the shared machinery behind the keyless snapshot
- * tier (`pnpm run test:snapshot`). Four layers, composable per example: the
+ * tier (`bun run test:snapshot`). Four layers, composable per example: the
  * shared subprocess/client launcher ({@link launchAcpTestAgent}), the scripted
  * scenario harness ({@link runScenario}), the pure expected-output normalizers
  * ({@link normalizeStdout} / {@link normalizeSessionLog} /

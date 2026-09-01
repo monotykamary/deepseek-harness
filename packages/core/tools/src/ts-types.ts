@@ -247,10 +247,16 @@ export function jsonSchemaToTs(schema: unknown, indent = 0): string {
   }
 }
 
+/** Strict-label guidance for the outer `run_code` arguments. */
+const REQUIRED_RUN_CODE_ARGUMENTS = '`run_code` takes two required arguments: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped) — and `display`. Prefer `display: { name, description }`: `name` is a brief activity name and `description` is the concise objective; a string is name shorthand.'
+
+/** Inferred-label guidance for the outer `run_code` arguments. */
+const INFERRED_RUN_CODE_ARGUMENTS = '`run_code` takes one required argument: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). `display` is optional; use `{ name, description }` to name the activity and state its objective, or a string as name shorthand. DSH infers the activity name when it is omitted.'
+
 /** The fixed model-facing usage contract rendered above the declarations (see the Code Mode Agent Note's "What the model sees"). */
 const SDK_INSTRUCTIONS = `## Writing code for run_code
 
-\`run_code\` takes two required arguments: \`code\` — the body of an async TypeScript function (erasable syntax only — no \`enum\` or namespaces; type annotations are advisory, the code runs type-stripped) — and \`description\`, a short summary of what the program does. Inside the program:
+${REQUIRED_RUN_CODE_ARGUMENTS} Inside the program:
 
 - Call tools as \`await tools.name(args)\` — quoted access for exotic names: \`tools["my-tool"](args)\`. Every call resolves to the tool's typed canonical JSON value. Tool arguments must be lossless JSON.
 - For a capability omitted from the declarations below, call \`await tools.describe(name)\` for its exact run-scoped schema, then \`await tools.call({ name, args })\`. Do not guess arguments.
@@ -261,11 +267,9 @@ const SDK_INSTRUCTIONS = `## Writing code for run_code
 The available tools:`
 
 function sdkInstructions(labelMode: RunCodeLabelMode): string {
-  if (labelMode === 'required') return SDK_INSTRUCTIONS
-  return SDK_INSTRUCTIONS.replace(
-    '`run_code` takes two required arguments: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped) — and `description`, a short summary of what the program does.',
-    '`run_code` takes one required argument: `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). `description` is optional; DSH infers the run title when it is omitted.',
-  )
+  return labelMode === 'required'
+    ? SDK_INSTRUCTIONS
+    : SDK_INSTRUCTIONS.replace(REQUIRED_RUN_CODE_ARGUMENTS, INFERRED_RUN_CODE_ARGUMENTS)
 }
 
 /**

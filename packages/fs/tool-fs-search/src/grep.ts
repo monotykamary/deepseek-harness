@@ -13,12 +13,12 @@
 
 import type { Context } from '@monotykamary/cordis'
 import { defineTool } from '@monotykamary/dsh-tools'
-import type { GenericCallView, SearchResultView, ToolResult } from '@monotykamary/dsh-tools'
+import type { GenericCallView, SearchResultView, ToolExecution, ToolResult } from '@monotykamary/dsh-tools'
 import type { RetainedItems } from '@monotykamary/dsh-output-retention'
 import type { SpillRef } from '@monotykamary/dsh-spill'
 import type {} from '@monotykamary/dsh-system-prompt'
 import type { GrepMatch } from './search-core.ts'
-import { SearchError, previewLine, retainGrepMatches, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
+import { isSpeculationSearchContained, SearchError, previewLine, retainGrepMatches, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
 import { grepSearchMeta, searchViewFromMeta } from './presentation.ts'
 import { acceptedDirectCallValue } from './direct-call.ts'
 
@@ -279,8 +279,29 @@ export function applyGrepTool(ctx: Context, caps: GrepToolCaps): void {
     text: 'Use the grep tool — not shell grep or rg — to search file contents. Use read on a matched file when you need surrounding context.',
   })
 
+  const acquire = async (
+    args: { pattern: string; path?: string; include?: string },
+    exec: Pick<ToolExecution, 'agent' | 'signal'>,
+  ): Promise<{ matches: GrepMatch[] }> => {
+    const input = parseGrepArgs(args)
+    const run = await runRipgrep(ctx, exec, 'grep', buildGrepCommand(input), caps.rawOutputMaxBytes, caps.graceMs, caps.stderrMaxBytes)
+    if (run.noMatches) return { matches: [] }
+
+    const matches: GrepMatch[] = []
+    for (const raw of parseGrepMatches(run.stdout)) {
+      matches.push({
+        path: toWorkdirRelative(raw.path, run.workdir),
+        lineNumber: raw.lineNumber,
+        line: raw.line,
+      })
+    }
+    return { matches }
+  }
+
   const tool = defineTool({
     name: 'grep',
+    risk: 'read',
+    effectKind: 'none',
     description: 'Search file contents with a ripgrep regular expression. Returns matching lines with line numbers, grouped by file. '
       + `Returns the first ${caps.maxMatches} matches inline; a capped result reports where the complete match list was saved. `
       + 'Use read on a matched file for surrounding context.',
@@ -317,21 +338,24 @@ export function applyGrepTool(ctx: Context, caps: GrepToolCaps): void {
       presentationMeta: (_args, value) =>
         grepSearchMeta(retainGrepMatches(value.matches, caps.maxMatches, caps.maxLineBytes), caps.maxMetaBytes),
     },
-    async execute(args, exec) {
-      const input = parseGrepArgs(args)
-      const run = await runRipgrep(ctx, exec, 'grep', buildGrepCommand(input), caps.rawOutputMaxBytes, caps.graceMs, caps.stderrMaxBytes)
-      if (run.noMatches) return { matches: [] }
-
-      const all: GrepMatch[] = []
-      for (const raw of parseGrepMatches(run.stdout)) {
-        const match: GrepMatch = {
-          path: toWorkdirRelative(raw.path, run.workdir),
-          lineNumber: raw.lineNumber,
-          line: raw.line,
-        }
-        all.push(match)
+    execute: acquire,
+    async speculate(args, context) {
+      if (!isSpeculationSearchContained(context, args.path)) throw new Error('speculative grep target escapes workspace')
+      const value = await acquire(args, context)
+      return {
+        value,
+        isFresh: async (exec) => {
+          const current = await acquire(args, exec)
+          return current.matches.length === value.matches.length
+            && current.matches.every((match, index) => {
+              const prior = value.matches[index]
+              return prior !== undefined
+                && match.path === prior.path
+                && match.lineNumber === prior.lineNumber
+                && match.line === prior.line
+            })
+        },
       }
-      return { matches: all }
     },
     presentCall: presentGrepCall,
     presentResult: presentGrepResult,

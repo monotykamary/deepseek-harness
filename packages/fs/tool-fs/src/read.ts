@@ -6,11 +6,13 @@
 
 import type { Context } from '@monotykamary/cordis'
 import { defineTool } from '@monotykamary/dsh-tools'
-import type { GenericCallView, ReadResultView, ToolResult } from '@monotykamary/dsh-tools'
+import type { GenericCallView, ReadResultView, ToolExecution, ToolResult } from '@monotykamary/dsh-tools'
+import type { FsTarget, FsVersion } from '@monotykamary/dsh-fs'
 import type {} from '@monotykamary/dsh-fs'
 import type {} from '@monotykamary/dsh-system-prompt'
 import { buildWindow, formatReadOutput, langFromPath, readMetaFromMeta } from './read-render.ts'
 import { resolveRegularReadTarget } from './read-target.ts'
+import { isSpeculationReadContained } from './session-cwd.ts'
 
 /** Default and maximum number of lines returned by one `read` call (the `readLimit` config). */
 export const READ_LIMIT = 2000
@@ -40,6 +42,19 @@ interface ReadInput {
   limit: number
 }
 
+interface ReadValue {
+  path: string
+  offset: number
+  lines: { number: number; text: string }[]
+  totalLines: number
+}
+
+interface ReadAcquisition {
+  value: ReadValue
+  target: FsTarget
+  version: FsVersion
+}
+
 function parsePositiveInteger(value: number, name: string): number {
   if (!Number.isFinite(value) || !Number.isInteger(value) || value < 1) {
     throw new Error(`${name} must be a positive integer`)
@@ -61,6 +76,35 @@ export function parseReadArgs(args: { file_path: string; offset?: number; limit?
   return { filePath: args.file_path, offset, limit }
 }
 
+async function acquireRead(
+  ctx: Context,
+  caps: ReadToolCaps,
+  args: { file_path: string; offset?: number; limit?: number },
+  exec: Pick<ToolExecution, 'agent' | 'signal'>,
+  observationExec?: ToolExecution,
+): Promise<ReadAcquisition> {
+  const input = parseReadArgs(args, caps.limit)
+  const { target, info } = await resolveRegularReadTarget(ctx, exec, input.filePath, observationExec)
+  const chunks = info.size === undefined || info.size >= caps.streamMinSize
+    ? await ctx.fs.streamText(target, exec.signal)
+    : [await ctx.fs.readText(target, exec.signal)]
+  const window = await buildWindow(
+    chunks,
+    { offset: input.offset, limit: input.limit, maxLineLength: caps.maxLineLength, maxBytes: caps.maxBytes },
+    target.displayPath,
+  )
+  return {
+    value: {
+      path: target.displayPath,
+      offset: input.offset,
+      lines: window.lines,
+      totalLines: window.totalLines,
+    },
+    target,
+    version: info.version,
+  }
+}
+
 /**
  * Register the `read` tool and its system-prompt guidance.
  * @param ctx - the plugin context; registrations are effects scoped to it, and execution uses its `fs` service.
@@ -75,6 +119,8 @@ export function applyReadTool(ctx: Context, caps: ReadToolCaps): void {
 
   ctx.tools.register(defineTool({
     name: 'read',
+    risk: 'read',
+    effectKind: 'none',
     description: 'Read a UTF-8 text file and return line-numbered content.',
     parameters: {
       file_path: { type: 'string', required: true, description: 'Path to read, resolved by the filesystem backend.' },
@@ -134,33 +180,28 @@ export function applyReadTool(ctx: Context, caps: ReadToolCaps): void {
     // Observation races fail closed because guarded mutations re-check the version in-lock.
     isConcurrencySafe: () => true,
     async execute(args, exec) {
-      const input = parseReadArgs(args, caps.limit)
-      // One stat: absence observation OR type check + size routing + present version.
-      // A concurrent write can only make a later guarded mutation fail stale and require reread.
-      const { target, info } = await resolveRegularReadTarget(ctx, exec, input.filePath)
-
-      // Stream when the file is large OR size is unknown, so a size-less backend
-      // never buffers an arbitrarily large file.
-      const chunks = info.size === undefined || info.size >= caps.streamMinSize
-        ? await ctx.fs.streamText(target, exec.signal)
-        : [await ctx.fs.readText(target, exec.signal)]
-      const window = await buildWindow(
-        chunks,
-        { offset: input.offset, limit: input.limit, maxLineLength: caps.maxLineLength, maxBytes: caps.maxBytes },
-        target.displayPath,
-      )
-
-      const outcome = {
-        path: target.displayPath,
-        offset: input.offset,
-        lines: window.lines,
-        totalLines: window.totalLines,
-      }
+      const acquisition = await acquireRead(ctx, caps, args, exec, exec)
       // Record the present observation (a no-op when no policy plugin listens). The
       // read already succeeded; an fs/observed listener is contractually a
       // synchronous, side-effect-only recorder.
-      ctx.emit('fs/observed', target, { kind: 'present', version: info.version }, exec)
-      return outcome
+      ctx.emit('fs/observed', acquisition.target, { kind: 'present', version: acquisition.version }, exec)
+      return acquisition.value
+    },
+    async speculate(args, context) {
+      if (!isSpeculationReadContained(context, args.file_path)) {
+        throw new Error('speculative read target escapes workspace')
+      }
+      const acquisition = await acquireRead(ctx, caps, args, context)
+      return {
+        value: acquisition.value,
+        isFresh: async (exec) => {
+          const current = await ctx.fs.stat(acquisition.target, exec.signal)
+          return current?.type === 'file' && current.version === acquisition.version
+        },
+        replay: (exec) => {
+          ctx.emit('fs/observed', acquisition.target, { kind: 'present', version: acquisition.version }, exec)
+        },
+      }
     },
     // Result-time display: a `read` card carrying the structured line window a
     // capable UI renders as a line-numbered, syntax-highlighted view. The

@@ -46,7 +46,10 @@ beforeEach(() => {
 })
 
 const PROGRAM = 'const listing = await tools.bash({ command: "ls notes", description: "List notes" })\nreturn listing'
-const RUN_CODE_ARGS = JSON.stringify({ code: PROGRAM, description: 'List the notes directory' })
+const RUN_CODE_ARGS = JSON.stringify({
+  code: PROGRAM,
+  display: { name: 'Inspect notes', description: 'Read the notes directory and summarize its contents' },
+})
 
 const codeResult = (seq: number, callId: string): ToolResultNode => ({
   kind: 'tool-result', seq, time: seq * 1_000, callId,
@@ -193,7 +196,7 @@ function mountApp(slots: SlotRegistry) {
 }
 
 describe('run_code sub-calls through the real chat machinery', () => {
-  it('renders the code-variant parent row with the description summary and nested sub-rows', async () => {
+  it('renders the Code parent name and objective separately with nested sub-rows', async () => {
     const parent = 'call-64'
     const subCalls = [
       subCall(11, parent, 1, 'bash', { command: 'ls notes', description: 'List notes' }, 'demo.txt'),
@@ -202,11 +205,15 @@ describe('run_code sub-calls through the real chat machinery', () => {
     const b = await bench(snapshotWith([codeResult(10, parent)], subCalls))
     const view = mountApp(b.slots)
 
-    // Parent row: the code variant with the model-authored description.
+    // Parent row: the compact model-authored name is visible while its objective stays in the expandable body.
     const codeRoot = view.container.querySelector('[data-variant="code"]')
     expect(codeRoot).not.toBeNull()
     expect(view.getByText('Code')).toBeTruthy()
-    expect(view.getByText('List the notes directory')).toBeTruthy()
+    expect(view.getByText('Inspect notes')).toBeTruthy()
+    expect(view.queryByText('Read the notes directory and summarize its contents')).toBeNull()
+    fireEvent.click(codeRoot!.querySelector('[data-expandable]')!)
+    expect(view.getByText('GOAL')).toBeTruthy()
+    expect(view.getByText('Read the notes directory and summarize its contents')).toBeTruthy()
 
     // Nested rows are ALWAYS visible (no parent expand needed): the bash
     // sub-call landed in the bash sample plugin's keyed registration — Bash ·

@@ -395,12 +395,12 @@ describe('task admission and package contracts', () => {
       '--stdio',
     ])
 
-    const lockfile = readFileSync(resolve(root, '../../../pnpm-lock.yaml'), 'utf8')
+    const lockfile = readFileSync(resolve(root, '../../../bun.lock'), 'utf8')
     for (const packageName of CODEX_PLATFORM_PACKAGES) {
       const suffix = packageName.slice('@openai/codex-'.length)
-      expect(lockfile).toContain(`  '@openai/codex@${CODEX_VERSION}-${suffix}':`)
+      expect(lockfile).toContain(`    "${packageName}": ["@openai/codex@${CODEX_VERSION}-${suffix}"`)
       expect(lockfile).toContain(
-        `      '${packageName}': '@openai/codex@${CODEX_VERSION}-${suffix}'`,
+        `"${packageName}": "npm:@openai/codex@${CODEX_VERSION}-${suffix}"`,
       )
     }
 

@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-23-stable-pending-input-reordering.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-23-stable-pending-input-reordering.md
 2026-08-23-stable-pending-input-reordering.md: 0eaaa23cb0fc0d4d498988b935c91f0a529b1d07
 2026-08-23-stable-pending-input-reordering.zh.md: ae684e204dda4f295d58f91f9a886490f29d2590

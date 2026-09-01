@@ -66,7 +66,7 @@ export function detectInstallChannel(appManifest: string, override = process.env
   if (override === 'nix' || override === 'npm-global' || override === 'npx' || override === 'source') return override
   const normalized = appManifest.replaceAll('\\', '/')
   if (normalized.includes('/apps/cli/package.json')) return 'source'
-  if (normalized.includes('/_npx/') || normalized.includes('/pnpm/dlx/')) return 'npx'
+  if (normalized.includes('/_npx/') || normalized.includes('/pnpm/dlx/') || normalized.includes('/.bun/install/cache/')) return 'npx'
   if (normalized.includes('/nix/store/')) return 'nix'
   if (normalized.includes('/lib/node_modules/') || normalized.includes('/AppData/Roaming/npm/node_modules/')) return 'npm-global'
   return 'unknown'
@@ -253,7 +253,7 @@ function sourceRoot(appManifest: string): string {
   const filesystemRoot = parse(appManifest).root
   let directory = dirname(appManifest)
   while (directory !== filesystemRoot) {
-    if (existsSync(join(directory, 'pnpm-workspace.yaml')) && existsSync(join(directory, '.git'))) return directory
+    if (existsSync(join(directory, 'bun.lock')) && existsSync(join(directory, '.git'))) return directory
     directory = dirname(directory)
   }
   throw new Error(`distribution-update: cannot locate source repository above ${appManifest}`)

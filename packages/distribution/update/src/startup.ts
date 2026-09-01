@@ -26,13 +26,13 @@ async function writeStatus(path: string, status: WorkerStatus): Promise<void> {
 
 function commands(channel: InstallChannel, target: string): WorkerCommand[] {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-  const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+  const bun = process.platform === 'win32' ? 'bun.exe' : 'bun'
   switch (channel) {
     case 'npm-global': return [{ executable: npm, args: ['install', '--global', `${target}@latest`] }]
     case 'source': return [
       { executable: 'git', args: ['pull', '--ff-only'], cwd: target },
-      { executable: pnpm, args: ['install'], cwd: target },
-      { executable: pnpm, args: ['run', 'build'], cwd: target },
+      { executable: bun, args: ['install'], cwd: target },
+      { executable: bun, args: ['run', 'build'], cwd: target },
     ]
     case 'npx':
     case 'nix':

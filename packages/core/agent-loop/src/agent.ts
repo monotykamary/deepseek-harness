@@ -16,7 +16,7 @@ import type {
   RequestErrorAction,
 } from '@monotykamary/dsh-agent'
 import { Inbox, agentEvents, assembleContextFor } from '@monotykamary/dsh-agent'
-import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@monotykamary/dsh-llm'
+import type { CallId, GenerateOptions, LlmCallConfig, Message, PreparedLlmCall, StreamChunk } from '@monotykamary/dsh-llm'
 import {
   BlockAssembler,
   LlmError,
@@ -31,6 +31,8 @@ import type { EpochHeader, RequestContext, Session, SessionId, TurnEndReason, Us
 import { canonicalHeader, headerEquals } from '@monotykamary/dsh-session'
 import { joinContextSections, renderContextSections, renderPrompt } from '@monotykamary/dsh-system-prompt'
 import type { PromptAssembly } from '@monotykamary/dsh-system-prompt'
+import { RUN_CODE_NAME, TOOL_RUNTIME_SCHEDULER } from '@monotykamary/dsh-tools'
+import type { ToolSpeculationObserver } from '@monotykamary/dsh-tools'
 import type { Context } from '@monotykamary/cordis'
 import { RuntimeContextProjection } from './runtime-context.ts'
 import { executeToolCalls } from './tool-calls.ts'
@@ -50,6 +52,102 @@ type StepEndReason = Extract<TurnEndReason, { kind: 'completed' | 'max-tokens' }
 type PreparedStep =
   | { kind: 'reject' }
   | { kind: 'enter'; messages: UserMessage[]; assembly: PromptAssembly }
+
+interface StreamedCallState {
+  id?: CallId
+  name?: string
+  bufferedArguments: string
+  observer?: ToolSpeculationObserver
+  observedId?: CallId
+  rejected: boolean
+}
+
+/** Per-request opportunistic observer; no state crosses a provider retry. */
+class StreamedRunCodeSpeculation {
+  private readonly calls = new Map<number, StreamedCallState>()
+
+  constructor(
+    private readonly ctx: Context,
+    private readonly agent: Agent,
+    private readonly location: { turn: number; step: number },
+  ) {}
+
+  push(chunk: StreamChunk): void {
+    if (chunk.type === 'block-start' && chunk.blockType === 'tool-call') {
+      this.calls.set(chunk.index, { bufferedArguments: '', rejected: false })
+      return
+    }
+    if (chunk.type === 'tool-call-delta') {
+      const state = this.calls.get(chunk.index) ?? { bufferedArguments: '', rejected: false }
+      this.calls.set(chunk.index, state)
+      if (state.observer !== undefined) {
+        if (chunk.id !== state.observedId
+          || (chunk.name !== undefined && chunk.name !== RUN_CODE_NAME)) {
+          state.observer.cancel()
+          state.rejected = true
+          return
+        }
+        state.observer.push(chunk.argumentsDelta)
+        return
+      }
+      state.id = chunk.id
+      if (chunk.name !== undefined) state.name = chunk.name
+      state.bufferedArguments += chunk.argumentsDelta
+      this.tryOpen(state)
+      return
+    }
+    if (chunk.type !== 'block-end' || chunk.block.type !== 'tool-call') return
+    const state = this.calls.get(chunk.index) ?? { bufferedArguments: '', rejected: false }
+    this.calls.set(chunk.index, state)
+    if (state.observer !== undefined) {
+      if (chunk.block.id !== state.observedId || chunk.block.name !== RUN_CODE_NAME) {
+        state.observer.cancel()
+        state.rejected = true
+        return
+      }
+      state.observer.finish(chunk.block.arguments)
+      return
+    }
+    state.id = chunk.block.id
+    state.name = chunk.block.name
+    state.bufferedArguments = chunk.block.arguments
+    this.tryOpen(state)
+    this.finish(state, chunk.block.arguments)
+  }
+
+  private finish(state: StreamedCallState, argumentsJson: string): void {
+    state.observer?.finish(argumentsJson)
+  }
+
+  cancel(): void {
+    for (const state of this.calls.values()) state.observer?.cancel()
+    this.calls.clear()
+  }
+
+  private tryOpen(state: StreamedCallState): void {
+    if (state.observer !== undefined || state.rejected || state.name === undefined) return
+    if (state.name !== RUN_CODE_NAME) {
+      state.rejected = true
+      state.bufferedArguments = ''
+      return
+    }
+    if (state.id === undefined) return
+    const observer = this.ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({
+      rootCallId: state.id,
+      agent: this.agent,
+      location: this.location,
+    })
+    if (observer === undefined) {
+      state.rejected = true
+      state.bufferedArguments = ''
+      return
+    }
+    state.observer = observer
+    state.observedId = state.id
+    observer.push(state.bufferedArguments)
+    state.bufferedArguments = ''
+  }
+}
 
 /** Remove adapter-derived values before plugins propose the next request config. */
 function requestProposal(header: EpochHeader): LlmCallConfig {
@@ -342,6 +440,7 @@ export class ReactLoopAgent implements Agent {
       )
       const assembler = new BlockAssembler()
       const chunkSeqs: number[] = []
+      const speculation = new StreamedRunCodeSpeculation(this.loopCtx, this, { turn, step })
       try {
         const stream = preparedCall?.stream(request) ?? this.loopCtx.llm.stream(request)
         signal.throwIfAborted()
@@ -349,9 +448,11 @@ export class ReactLoopAgent implements Agent {
           signal.throwIfAborted()
           chunkSeqs.push(this.session.append('assistant/chunk', { turn, step, chunk }).seq)
           assembler.push(chunk)
+          speculation.push(chunk)
         }
         signal.throwIfAborted()
       } catch (error: unknown) {
+        speculation.cancel()
         if (signal.aborted) {
           const content = assembler.interruptedBlocks()
           if (content.length > 0) {
@@ -371,6 +472,7 @@ export class ReactLoopAgent implements Agent {
       }
       const finish = assembler.finish
       if (finish.kind === 'error' || finish.kind === 'aborted') {
+        speculation.cancel()
         const action = await this.dispatch.waterfall(
           'agent/request-error', {
             turn,
@@ -407,15 +509,27 @@ export class ReactLoopAgent implements Agent {
         },
         { surfaceOp: 'append', sourceEventSeqs: chunkSeqs },
       )
-      if (finish.kind === 'max-tokens') return { kind: 'max-tokens' }
+      if (finish.kind === 'max-tokens') {
+        speculation.cancel()
+        return { kind: 'max-tokens' }
+      }
 
       const toolCalls = message.content.filter(block => block.type === 'tool-call')
-      if (toolCalls.length === 0) return { kind: 'completed' }
-      const { concluded } = await executeToolCalls(
-        this.loopCtx, turn, step, toolCalls, signal,
-        context => this.inbox.splice('next-step', this.inbox.nextStep.length, 0, [context]),
-      )
-      return concluded ? { kind: 'completed' } : null
+      if (toolCalls.length === 0) {
+        speculation.cancel()
+        return { kind: 'completed' }
+      }
+      try {
+        const { concluded } = await executeToolCalls(
+          this.loopCtx, turn, step, toolCalls, signal,
+          context => this.inbox.splice('next-step', this.inbox.nextStep.length, 0, [context]),
+        )
+        return concluded ? { kind: 'completed' } : null
+      } finally {
+        // Natural root finalization has already consumed or cleared useful
+        // entries; this also catches model calls skipped by batch cancellation.
+        speculation.cancel()
+      }
     }
   }
 

@@ -12,6 +12,6 @@ it('keeps every session-format JSONL fixture projected into canonical packed lay
     .map(fixture => fixture.path)
   expect(
     nonCanonical,
-    'Run `pnpm run migrate:packed-session-fixtures` and commit the mechanical fixture rewrite.',
+    'Run `bun run migrate:packed-session-fixtures` and commit the mechanical fixture rewrite.',
   ).toEqual([])
 })

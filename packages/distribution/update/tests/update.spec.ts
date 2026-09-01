@@ -19,7 +19,7 @@ function fixture(): { root: string; manifest: string } {
   const root = mkdtempSync(join(tmpdir(), 'dsh-distribution-'))
   const app = join(root, 'app')
   mkdirSync(join(root, '.git'))
-  writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: []\n')
+  writeFileSync(join(root, 'bun.lock'), '{}\n')
   mkdirSync(join(app, 'node_modules', 'dsh-tool-repair'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-multiprovider'), { recursive: true })
   mkdirSync(join(app, 'node_modules', 'dsh-fabric'), { recursive: true })
@@ -54,6 +54,7 @@ describe('distribution inventory', () => {
     expect(detectInstallChannel('/work/apps/cli/package.json')).toBe('source')
     expect(detectInstallChannel('/tmp/_npx/x/package.json')).toBe('npx')
     expect(detectInstallChannel('/tmp/pnpm/dlx/x/package.json')).toBe('npx')
+    expect(detectInstallChannel('/tmp/.bun/install/cache/x/package.json')).toBe('npx')
     expect(detectInstallChannel('/nix/store/x/package.json')).toBe('nix')
     expect(detectInstallChannel('/usr/lib/node_modules/x/package.json')).toBe('npm-global')
     expect(detectInstallChannel('C:\\Users\\u\\AppData\\Roaming\\npm\\node_modules\\x\\package.json')).toBe('npm-global')
@@ -337,8 +338,8 @@ describe('detached launch and worker', () => {
       executable, args, cwd: (options as { cwd?: string }).cwd,
     }))).toEqual([
       { executable: 'git', args: ['pull', '--ff-only'], cwd: root },
-      { executable: 'pnpm', args: ['install'], cwd: root },
-      { executable: 'pnpm', args: ['run', 'build'], cwd: root },
+      { executable: 'bun', args: ['install'], cwd: root },
+      { executable: 'bun', args: ['run', 'build'], cwd: root },
     ])
   })
 

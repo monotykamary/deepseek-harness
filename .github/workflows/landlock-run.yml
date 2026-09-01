@@ -11,8 +11,8 @@ on:
       - '.github/workflows/landlock-run-release.yml'
       - 'native/landlock-run/**'
       - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+      - 'bun.lock'
+      - 'bunfig.toml'
   push:
     branches: [master]
     paths:
@@ -20,8 +20,8 @@ on:
       - '.github/workflows/landlock-run-release.yml'
       - 'native/landlock-run/**'
       - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+      - 'bun.lock'
+      - 'bunfig.toml'
   workflow_dispatch:
 
 concurrency:
@@ -57,18 +57,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          package_json_file: package.json
+          bun-version: 1.4.0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --filter @monotykamary/node-addon-landlock-run-workspace... --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Install musl toolchain
         run: |
@@ -76,13 +74,13 @@ jobs:
           sudo apt-get install -yq musl-tools
 
       - name: Build TypeScript
-        run: pnpm build:ts
+        run: bun run build:ts
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: bun run typecheck
 
       - name: Build native binaries (this architecture is the builder of record)
-        run: pnpm build:native
+        run: bun run build:native
 
       - name: Entry tests (keyless)
         run: node ./test/entry.test.js
@@ -108,24 +106,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          package_json_file: package.json
+          bun-version: 1.4.0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --filter @monotykamary/node-addon-landlock-run-workspace... --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build TypeScript
-        run: pnpm build:ts
+        run: bun run build:ts
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: bun run typecheck
 
       - name: Entry tests (keyless)
         run: node ./test/entry.test.js

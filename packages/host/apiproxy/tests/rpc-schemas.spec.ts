@@ -463,7 +463,7 @@ describe('events frame schemas', () => {
       { type: 'session/projection', sessionId: 's', key: 'todos', value: [{ content: 'x', status: 'pending' }], seq: 7 },
       { type: 'session/jobs', sessionId: 's', jobs: [] },
       { type: 'session/jobs', sessionId: 's', jobs: [
-        { id: 'bash-1', kind: 'bash', label: 'pnpm run build', status: 'running', startedAt: 5 },
+        { id: 'bash-1', kind: 'bash', label: 'bun run build', status: 'running', startedAt: 5 },
         { id: 'pty-send-2', kind: 'pty-send', label: 'send keys', status: 'failed', detail: 'exit code: 3', startedAt: 5, finishedAt: 9 },
       ] },
       { type: 'stream/error', error: { code: 'internal', message: 'm', details: {} } },

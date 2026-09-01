@@ -9,13 +9,13 @@ Self-referential demonstration of [`@monotykamary/dsh-tool-cordis`](../../packag
 Start the browser interface:
 
 ```sh
-pnpm run demo:cordis
+bun run demo:cordis
 ```
 
 Start the ACP automation server instead:
 
 ```sh
-pnpm run demo:cordis acp
+bun run demo:cordis acp
 ```
 
 Both commands require `DEEPSEEK_API_KEY`. The [Cordis tool reference](../../packages/extensions/tool-cordis/README.md) defines the tool arguments, lifetime, cleanup, and safety contracts.

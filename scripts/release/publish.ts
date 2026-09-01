@@ -22,6 +22,11 @@ import { releaseFamily } from './families.ts'
 import { attemptEchoed, isEntry } from './process.ts'
 import { packedIdentity, readPublishOrder } from './tarball.ts'
 
+/** Bun command and arguments for publishing one immutable packed artifact. */
+export function bunPublishInvocation(tarball: string, tagArgs: readonly string[]): { command: string; args: string[] } {
+  return { command: 'bun', args: ['publish', ...tagArgs, tarball] }
+}
+
 /**
  * Publish one tarball, retrying a registry write that did not settle.
  *
@@ -40,7 +45,8 @@ async function publishTarball(tarball: string, name: string, version: string, st
     // command-line flag could not serve both and would override the manifest
     // that does. Each packed manifest decides, and
     // check-workspace-constraints holds every manifest to its sequence's level.
-    const result = attemptEchoed('npm', ['publish', tarball, ...tagArgs])
+    const invocation = bunPublishInvocation(tarball, tagArgs)
+    const result = attemptEchoed(invocation.command, invocation.args)
     const output = `${result.stdout}${result.stderr}`
     if (result.status === 0) return
 
@@ -50,7 +56,7 @@ async function publishTarball(tarball: string, name: string, version: string, st
       return
     }
     if (tries === NPM_WRITE_ATTEMPTS || !isTransientNpmWriteFailure(output)) {
-      throw new Error(`npm publish ${name}@${version} failed:\n${output}`)
+      throw new Error(`bun publish ${name}@${version} failed:\n${output}`)
     }
     const backoff = NPM_WRITE_SPACING_MS * 2 ** (tries - 1)
     console.log(

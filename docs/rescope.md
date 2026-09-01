@@ -44,10 +44,10 @@ Subpath exports keep their path: `@cordisjs/plugin-loader/repository` becomes `@
 [`scripts/rescope-vendor.ts`](../scripts/rescope-vendor.ts) owns the mapping above and performs the rename, so no reference is renamed by hand:
 
 ```sh
-pnpm run rescope-vendor            # report what would change
-pnpm run rescope-vendor --apply    # rewrite every reference
-pnpm run rescope-vendor:check      # assert the post-state; runs in the hygiene gate
-pnpm run rescope-vendor --apply --reverse   # return to the upstream names
+bun run rescope-vendor            # report what would change
+bun run rescope-vendor --apply    # rewrite every reference
+bun run rescope-vendor:check      # assert the post-state; runs in the hygiene gate
+bun run rescope-vendor --apply --reverse   # return to the upstream names
 ```
 
-Re-apply it after an upstream sync ([procedure](../vendor/README.md)), and follow it with the regeneration it prints: `pnpm install` for the lockfile, `pnpm run gen-third-party-notices`, and `pnpm run verify-translation-pairing --write` for the bilingual pairs it touched.
+Re-apply it after an upstream sync ([procedure](../vendor/README.md)), and follow it with the regeneration it prints: `bun install` for the lockfile, `bun run gen-third-party-notices`, and `bun run verify-translation-pairing --write` for the bilingual pairs it touched.

@@ -6,7 +6,7 @@ import type { Scope } from '@monotykamary/dsh-scope'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@monotykamary/dsh-code-runtime'
-import ToolRuntime, { CODE_DISCOVERY_HELPER_NAMES, CodeRunFailedError, RUN_CODE_NAME, TOOL_ABORTED_BEFORE_DISPATCH, defineContentToolFixture, defineTool } from '@monotykamary/dsh-tools'
+import ToolRuntime, { CODE_DISCOVERY_HELPER_NAMES, CodeRunFailedError, RUN_CODE_NAME, TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, defineContentToolFixture, defineTool } from '@monotykamary/dsh-tools'
 import type { Config, JsonSchemaNode, PostToolDecision, ToolExecutionResult } from '@monotykamary/dsh-tools'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { Session, SessionId } from '@monotykamary/dsh-session'
@@ -44,6 +44,7 @@ interface SetupOptions {
   mode?: Config['mode']
   runCodeLabel?: Config['runCodeLabel']
   maxParallelSubCalls?: number
+  speculation?: Config['speculation']
   runtime?: false | { language?: string }
   toolOrder?: string[]
 }
@@ -55,6 +56,7 @@ async function setup(options: SetupOptions = {}) {
     mode: options.mode ?? 'code',
     ...options.runCodeLabel !== undefined ? { runCodeLabel: options.runCodeLabel } : {},
     ...options.maxParallelSubCalls !== undefined ? { maxParallelSubCalls: options.maxParallelSubCalls } : {},
+    ...options.speculation !== undefined ? { speculation: options.speculation } : {},
   })
   let runtime: FakeRuntime | undefined
   if (options.runtime !== false) {
@@ -112,15 +114,21 @@ async function runCode(
   extras: {
     agent?: Agent
     signal?: AbortSignal
+    display?: string | { name?: string; description?: string }
     description?: string
     location?: { turn: number; step: number }
   } = {},
 ): Promise<ToolExecutionResult> {
+  const metadata = extras.display !== undefined
+    ? { display: extras.display }
+    : extras.description !== undefined
+      ? { description: extras.description }
+      : { display: 'Run the test program' }
   return ctx.tools.execute({
     signal: testToolSignal,
     callId: CallId('call-1'),
     name: RUN_CODE_NAME,
-    arguments: { code, description: extras.description ?? 'Run the test program' },
+    arguments: { code, ...metadata },
     ...extras.agent ? { agent: extras.agent } : {},
     ...extras.location ? { location: extras.location } : {},
     ...extras.signal ? { signal: extras.signal } : {},
@@ -471,7 +479,7 @@ describe('mode-aware wire contribution', () => {
     // Both required arguments are named here, not only in the parameter
     // schema: prose that describes the call as "pass the program" is what
     // leads a model to emit `{code}` alone and fail INVALID_ARGS.
-    expect(runCodeSchema?.description).toContain('`description`')
+    expect(runCodeSchema?.description).toContain('`display`')
     const codeParam = (runCodeSchema?.parameters as { properties: { code: { description: string } } }).properties.code
     expect(codeParam.description).toBe('The program: the body of an async TypeScript function.')
   })
@@ -483,7 +491,7 @@ describe('mode-aware wire contribution', () => {
     const runCodeSchema = assembly.tools.find(tool => tool.name === RUN_CODE_NAME)
     expect(runCodeSchema?.description).toContain('Execute a Python program')
     expect(runCodeSchema?.description).toContain('`return <value>`')
-    expect(runCodeSchema?.description).toContain('`description`')
+    expect(runCodeSchema?.description).toContain('`display`')
     expect(runCodeSchema?.description).not.toContain('TypeScript')
     const codeParam = (runCodeSchema?.parameters as { properties: { code: { description: string } } }).properties.code
     expect(codeParam.description).toBe('The program: the body of an async Python function.')
@@ -1424,24 +1432,30 @@ describe('the run_code dispatch bridge', () => {
     expect((result.content[0] as { text: string }).text).toContain('requires a code runtime')
   })
 
-  it('presents the model-authored description as the execute-card title over the program input', async () => {
+  it('presents the display name and objective over the program input', async () => {
     const { ctx } = await setup({ mode: 'code' })
     const tool = ctx.tools.get(RUN_CODE_NAME)!
-    // The description labels the card (the bash description precedent); the
-    // program itself remains the expanded raw input.
-    expect(tool.presentCall?.({ code: 'return 1', description: 'Return the constant one' })).toEqual({
+    expect(tool.presentCall?.({
+      code: 'return 1',
+      display: { name: 'Return one', description: 'Confirm the runtime result.' },
+    })).toEqual({
       card: 'generic',
-      title: 'Return the constant one',
+      title: 'Return one',
       kind: 'execute',
       rawInput: 'return 1',
+      content: [{ type: 'text', text: 'Confirm the runtime result.' }],
     })
+    expect(tool.presentCall?.({ code: 'return 1', display: 'String shorthand' }))
+      .toMatchObject({ title: 'String shorthand' })
+    expect(tool.presentCall?.({ code: 'return 1', description: 'Legacy title' }))
+      .toMatchObject({ title: 'Legacy title' })
   })
 
-  it('rejects a whitespace-only description with a structured isError', async () => {
+  it('rejects a whitespace-only required display name with a structured isError', async () => {
     const { ctx } = await setup({ mode: 'code' })
-    const result = await runCode(ctx, 'return 1', { description: '   ' })
+    const result = await runCode(ctx, 'return 1', { display: '   ' })
     expect(result.isError).toBe(true)
-    expect((result.content[0] as { text: string }).text).toContain('description: expected a non-empty string')
+    expect((result.content[0] as { text: string }).text).toContain('display: expected a non-empty name')
   })
 
   it.each([
@@ -1870,7 +1884,7 @@ describe('per-agent presentation', () => {
     const runCode = assembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
     expect((runCode.parameters as { required?: string[] }).required).toEqual(['code'])
     expect(assembly.sections.find(section => section.name === 'tools:sdk')?.text)
-      .toContain('`description` is optional')
+      .toContain('`display` is optional')
 
     const code = 'return 1'
     expect(ctx.tools.get(RUN_CODE_NAME)?.presentCall?.({ code }))
@@ -1904,16 +1918,39 @@ describe('per-agent presentation', () => {
     const inferredSchema = inferredAssembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
     const strictSchema = strictAssembly.tools.find(tool => tool.name === RUN_CODE_NAME)!
     expect((inferredSchema.parameters as { required?: string[] }).required).toEqual(['code'])
-    expect((strictSchema.parameters as { required?: string[] }).required).toEqual(['code', 'description'])
+    expect((strictSchema.parameters as { required?: string[] }).required).toEqual(['code', 'display'])
+    const inferredProperties = (inferredSchema.parameters as {
+      properties: Record<string, { oneOf?: Array<Record<string, unknown>> }>
+    }).properties
+    const strictProperties = (strictSchema.parameters as {
+      properties: Record<string, { oneOf?: Array<Record<string, unknown>> }>
+    }).properties
+    expect(inferredProperties).not.toHaveProperty('description')
+    expect(inferredProperties.display?.oneOf).toMatchObject([
+      {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          name: { type: 'string' },
+          description: { type: 'string' },
+        },
+      },
+      { type: 'string' },
+    ])
+    expect((inferredProperties.display?.oneOf?.[0] as { required?: string[] }).required).toBeUndefined()
+    expect((strictProperties.display?.oneOf?.[0] as { required?: string[] }).required).toEqual(['name'])
     expect(inferredAssembly.sections.find(section => section.name === 'tools:sdk')?.text)
-      .toContain('`description` is optional')
+      .toContain('`display` is optional')
     expect(strictAssembly.sections.find(section => section.name === 'tools:sdk')?.text)
       .toContain('two required arguments')
 
     const code = 'return await tools.echo({ value: "ok", description: "Inspect release output" })'
     const inferredTool = ctx.tools.get(RUN_CODE_NAME, inferred.agent)!
     expect(inferredTool.presentCall?.({ code })).toMatchObject({ title: 'Inspect release output', rawInput: code })
-    expect(inferredTool.presentCall?.({ code, description: 'Declared title' })).toMatchObject({ title: 'Declared title' })
+    expect(inferredTool.presentCall?.({ code, display: { name: 'Declared title', description: 'Explain the objective' } })).toMatchObject({
+      title: 'Declared title',
+      content: [{ type: 'text', text: 'Explain the objective' }],
+    })
 
     const accepted = await ctx.tools.execute({
       signal: testToolSignal,
@@ -2067,5 +2104,208 @@ describe('per-agent presentation', () => {
 
     await expect(systemPrompt.assemble({ scope: agent }))
       .rejects.toThrow('mode "both" requires a code runtime')
+  })
+})
+
+
+describe('streamed Code Mode speculation', () => {
+  it('serves one literal candidate through natural policy and deferred replay without rerunning the body', async () => {
+    const { ctx, runtime } = await setup({
+      mode: 'code',
+      speculation: { enabled: true },
+    })
+    let speculativeCalls = 0
+    let naturalCalls = 0
+    let replayCalls = 0
+    const stages: string[] = []
+    ctx.tools.register(defineTool({
+      name: 'probe',
+      risk: 'read',
+      effectKind: 'none',
+      description: 'Read one probe.',
+      parameters: { value: { type: 'string', required: true } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(args) {
+        naturalCalls += 1
+        return Promise.resolve(`natural:${args.value}`)
+      },
+      async speculate(args) {
+        speculativeCalls += 1
+        return {
+          value: `speculative:${args.value}`,
+          replay: () => { replayCalls += 1 },
+        }
+      },
+    }))
+    ctx.on('tools/pre-execute', async (exec, next) => {
+      if (exec.name === 'probe') stages.push('pre')
+      return next()
+    })
+    ctx.on('tools/post-execute', async (exec, _result, next) => {
+      if (exec.name === 'probe') stages.push('post')
+      return next()
+    })
+
+    const code = 'return await tools.probe({ value: "x" })'
+    const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('call-1') })
+    expect(observer).toBeDefined()
+    const finalArguments = JSON.stringify({ code, display: 'Probe' })
+    observer!.push(finalArguments)
+    observer!.finish(finalArguments)
+    await expect.poll(() => ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+
+    runtime.behavior = async request => ({
+      logs: [],
+      value: await request.bindings[0]!.functions.probe!({ value: 'x' }),
+    })
+    const result = await runCode(ctx, code)
+
+    expect(result.isError).toBe(false)
+    expect(result.value).toMatchObject({ result: 'speculative:x' })
+    expect({ speculativeCalls, naturalCalls, replayCalls, stages }).toEqual({
+      speculativeCalls: 1,
+      naturalCalls: 0,
+      replayCalls: 1,
+      stages: ['pre', 'post'],
+    })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ served: 1, pending: 0 })
+  })
+
+  it('does not let a prefetched result bypass the natural pre-execute policy', async () => {
+    const { ctx, runtime } = await setup({ mode: 'code', speculation: { enabled: true } })
+    let speculativeCalls = 0
+    let naturalCalls = 0
+    let replayCalls = 0
+    ctx.tools.register(defineTool({
+      name: 'guarded_probe',
+      risk: 'read',
+      effectKind: 'none',
+      description: 'Read one guarded probe.',
+      parameters: { value: { type: 'string', required: true } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute() {
+        naturalCalls += 1
+        return Promise.resolve('natural')
+      },
+      async speculate() {
+        speculativeCalls += 1
+        return { value: 'hidden', replay: () => { replayCalls += 1 } }
+      },
+    }))
+    ctx.on('tools/pre-execute', (exec, next) => exec.name === 'guarded_probe'
+      ? Promise.resolve({ kind: 'deny' as const, reason: 'guarded by policy' })
+      : next())
+
+    const code = 'return tools.guarded_probe({ value: "x" })'
+    const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('call-1') })!
+    const finalArguments = JSON.stringify({ code, display: 'Guarded probe' })
+    observer.push(finalArguments)
+    observer.finish(finalArguments)
+    await expect.poll(() => ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+
+    runtime.behavior = async (request) => {
+      try {
+        await request.bindings[0]!.functions.guarded_probe!({ value: 'x' })
+        return { logs: [], value: 'unreachable' }
+      } catch (error: unknown) {
+        return { logs: [], value: error instanceof Error ? error.message : String(error) }
+      }
+    }
+    const result = await runCode(ctx, code)
+
+    const firstContent = result.content.at(0)
+    expect(firstContent?.type).toBe('text')
+    expect(firstContent?.type === 'text' ? firstContent.text : '').toContain('guarded by policy')
+    expect({ speculativeCalls, naturalCalls, replayCalls }).toEqual({
+      speculativeCalls: 1,
+      naturalCalls: 0,
+      replayCalls: 0,
+    })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ served: 0, wasted: 1, pending: 0 })
+  })
+
+  it('opens observers only for enabled TypeScript sessions with an opted-in tool', async () => {
+    const registerSpeculative = (ctx: Context): void => {
+      ctx.tools.register(defineTool({
+        name: 'spec_probe',
+        risk: 'read',
+        effectKind: 'none',
+        description: 'Read one probe.',
+        parameters: {},
+        output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+        execute: () => Promise.resolve('natural'),
+        speculate: async () => ({ value: 'hidden' }),
+      }))
+    }
+
+    const disabled = await setup({ mode: 'code', speculation: { enabled: false } })
+    registerSpeculative(disabled.ctx)
+    expect(disabled.ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('disabled') }))
+      .toBeUndefined()
+
+    const python = await setup({
+      mode: 'code',
+      runtime: { language: 'python' },
+      speculation: { enabled: true },
+    })
+    registerSpeculative(python.ctx)
+    expect(python.ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('python') }))
+      .toBeUndefined()
+
+    const ineligible = await setup({ mode: 'code', speculation: { enabled: true } })
+    registerEcho(ineligible.ctx)
+    expect(ineligible.ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('ineligible') }))
+      .toBeUndefined()
+  })
+
+  it('invalidates a prefetched read after an earlier natural mutation in the same program', async () => {
+    const { ctx, runtime } = await setup({
+      mode: 'code',
+      speculation: { enabled: true },
+    })
+    let speculativeReads = 0
+    let naturalReads = 0
+    ctx.tools.register(defineTool({
+      name: 'read_probe',
+      risk: 'read',
+      effectKind: 'none',
+      description: 'Read a value.',
+      parameters: { id: { type: 'string', required: true } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(args) {
+        naturalReads += 1
+        return Promise.resolve(`natural:${args.id}`)
+      },
+      async speculate(args) {
+        speculativeReads += 1
+        return { value: `stale:${args.id}` }
+      },
+    }))
+    ctx.tools.register(defineTool({
+      name: 'mutate_probe',
+      description: 'Mutate state.',
+      parameters: {},
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute: () => Promise.resolve('mutated'),
+    }))
+
+    const code = 'await tools.mutate_probe({}); return tools.read_probe({ id: "after" })'
+    const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId: CallId('call-1') })!
+    const finalArguments = JSON.stringify({ code, display: 'Mutate then read' })
+    observer.push(finalArguments)
+    observer.finish(finalArguments)
+    await expect.poll(() => ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+
+    runtime.behavior = async (request) => {
+      const functions = request.bindings[0]!.functions
+      await functions.mutate_probe!({})
+      return { logs: [], value: await functions.read_probe!({ id: 'after' }) }
+    }
+    const result = await runCode(ctx, code)
+
+    expect(result.isError).toBe(false)
+    expect(result.value).toMatchObject({ result: 'natural:after' })
+    expect({ speculativeReads, naturalReads }).toEqual({ speculativeReads: 1, naturalReads: 1 })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ epochInvalidated: 1, served: 0 })
   })
 })

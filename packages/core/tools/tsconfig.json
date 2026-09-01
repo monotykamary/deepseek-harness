@@ -33,6 +33,9 @@
       "path": "../../core/scope"
     },
     {
+      "path": "../../settings/settings"
+    },
+    {
       "path": "../../interaction/user-approval"
     },
     {

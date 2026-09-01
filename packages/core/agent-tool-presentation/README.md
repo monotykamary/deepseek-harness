@@ -14,7 +14,7 @@ What a preset can own is the **presentation** of that registry. `ctx.tools.prese
 
 `native` applies immediately. A code mode instead waits for `ctx.codeRuntime`, which is a host-plane service ([`dsh-code-runtime-worker-thread`](../../code-runtime/code-runtime-worker-thread/README.md)): a preset selecting Code Mode against a deployment composing no runtime then holds this row pending, and `dsh-agent-presets` refuses the mount naming this id. The alternative — applying optimistically — moves the failure to the session's first request, where the operator can act on neither the preset nor the composition.
 
-`mode` is required rather than defaulted, because a preset without this row already gets the deployment default; an omitted value would mean the row was composed for nothing. `runCodeLabel` defaults to `required`; `inferred` is valid only for `code` or `both`, makes `run_code.description` optional, and selects the deterministic title derived from the recorded program when no non-blank label is supplied.
+`mode` is required rather than defaulted, because a preset without this row already gets the deployment default; an omitted value would mean the row was composed for nothing. `runCodeLabel` defaults to `required`; `inferred` is valid only for `code` or `both`, makes `run_code.display` optional, and selects the deterministic title derived from the recorded program when no non-blank display name is supplied. When present, display metadata keeps the concise activity `name` separate from its optional `description` objective.
 
 One agent declares one presentation. A second declaration in the same composition is refused rather than merged: two answers to "which form does the model see" is a contradiction, not an override.
 

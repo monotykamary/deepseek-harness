@@ -42,7 +42,7 @@ const vendorPackages = [
   'cordis', 'loader', 'include', 'timer', 'hmr', 'logger-console',
   'schemastery', 'cosmokit',
 ]
-// Resolve ACP's declared third-party dependencies from that package, not this test: pnpm's strict
+// Resolve ACP's declared third-party dependencies from that package, not this test: bun's strict
 // layout need not hoist them. Symlink those exact paths into the plain-Node consumer.
 const npmDeps = ['@agentclientprotocol/sdk']
 const acpPkgDir = join(repoRoot, 'packages/acp/acp')

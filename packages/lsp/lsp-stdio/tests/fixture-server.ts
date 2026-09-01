@@ -14,6 +14,7 @@
  *   simulating a server that dies while idle so the pool holds a dead instance (eviction test).
  * - LSP_FAKE_REPLY_DELAY_MS: delays each textDocument/* response by this many milliseconds.
  * - LSP_FAKE_OPEN_MARKER: appends each didOpen document text as one JSON line to this path.
+ * - LSP_FAKE_REQUEST_MARKER: records each textDocument/* request after it reaches the server.
  * - LSP_FAKE_INITIALIZED_MARKER: records when the initialized notification is received.
  * - LSP_FAKE_PAUSE_STDIN_AFTER_INITIALIZED: "1" stops consuming stdin after initialized.
  * - LSP_FAKE_EXIT_DELAY_MS / LSP_FAKE_EXIT_MARKER: delay protocol exit and record exit/termination.
@@ -36,6 +37,7 @@ const crashOnOpen = process.env.LSP_FAKE_CRASH_ON_OPEN === '1'
 const exitAfterReply = process.env.LSP_FAKE_EXIT_AFTER_REPLY === '1'
 const replyDelayMs = Number(process.env.LSP_FAKE_REPLY_DELAY_MS ?? 0)
 const openMarker = process.env.LSP_FAKE_OPEN_MARKER
+const requestMarker = process.env.LSP_FAKE_REQUEST_MARKER
 const initializedMarker = process.env.LSP_FAKE_INITIALIZED_MARKER
 const pauseStdinAfterInitialized = process.env.LSP_FAKE_PAUSE_STDIN_AFTER_INITIALIZED === '1'
 const exitDelayMs = Number(process.env.LSP_FAKE_EXIT_DELAY_MS ?? 0)
@@ -152,6 +154,7 @@ function handle(message: { id?: number; method?: string; params?: unknown; resul
   }
   if (method === 'textDocument/didClose') return
   if (method?.startsWith('textDocument/')) {
+    if (requestMarker !== undefined) appendFileSync(requestMarker, `${method}\n`)
     if (hang) return
     const reply = (): void => {
       if (errorReply) {

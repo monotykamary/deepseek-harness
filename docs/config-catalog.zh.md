@@ -1,5 +1,5 @@
 <!-- 英文源文件由 scripts/gen-config-catalog.ts 生成；本中文文件是通过双语配对维护的经评审对侧。
-     更新时先运行 `pnpm run gen-config-catalog` 更新英文，再更新本文件并运行 `pnpm run verify-translation-pairing --write docs/config-catalog.md` 重新记录配对。 -->
+     更新时先运行 `bun run gen-config-catalog` 更新英文，再更新本文件并运行 `bun run verify-translation-pairing --write docs/config-catalog.md` 重新记录配对。 -->
 
 # 插件配置目录
 
@@ -7,7 +7,7 @@
 
 每个 `config:` 块均可由 `cordis.yml` 条目设置：针对每个可加载的 harness 包，原样列出其 `apply` 函数或服务构造函数接收的配置声明（包括 JSDoc），并附上所有引用类型——包内类型直接粘贴，其他类型则提供链接。粘贴的内容是插件声明的完整配置类型——运行时 schema 有意排除的字段是仅供运行时使用的 seam（其自身的 JSDoc 会如此说明），不能通过 `cordis.yml` 设置。这是以**部署**为轴的参考文档——插件作者所依据的连接方式请参阅各[子系统页面](subsystems/core.zh.md)中的生成 `cordis-surface` 区域，面向模型的工具 schema 请参阅[工具目录](tool-catalog.zh.md)，而 [subsystems/](subsystems/core.zh.md) 则记录了这些声明所引用的类型。
 
-英文源文件由源代码（`scripts/gen-config-catalog.ts`）生成，并通过 `pnpm run verify-config-catalog`（`doc-sync` 的一部分）验证新鲜度；本中文文件作为经评审对侧通过双语配对维护。声明块使用 `ts config-catalog` 围栏（doc-typecheck 会跳过它，因为单独引用导入项的声明无法独立编译）。英文生成器还会将运行时 schemastery schema 与粘贴的声明进行交叉核对——每个经 schema 验证的键（包括嵌套键）都必须能在声明的配置类型中找到——因此，粘贴内容无法隐藏加载器接受的字段。
+英文源文件由源代码（`scripts/gen-config-catalog.ts`）生成，并通过 `bun run verify-config-catalog`（`doc-sync` 的一部分）验证新鲜度；本中文文件作为经评审对侧通过双语配对维护。声明块使用 `ts config-catalog` 围栏（doc-typecheck 会跳过它，因为单独引用导入项的声明无法独立编译）。英文生成器还会将运行时 schemastery schema 与粘贴的声明进行交叉核对——每个经 schema 验证的键（包括嵌套键）都必须能在声明的配置类型中找到——因此，粘贴内容无法隐藏加载器接受的字段。
 
 `Requires:` 行列出插件通过 `inject` 注入的服务键：其 `cordis.yml` 树还必须加载这些服务的提供者。范围限定为 harness 层级（`packages/`）；配置树还可能加载的 vendored cordis 插件（`hmr`、控制台日志记录器等）固定为上游源代码（参见 [vendoring policy](../vendor/README.md)），未收录于此目录。
 
@@ -317,7 +317,7 @@ export interface Config {
    * composed for nothing.
    */
   mode: ToolPresentationMode
-  /** Whether Code Mode requires a model-authored label or derives one from the recorded program. */
+  /** Whether Code Mode requires model-authored display metadata or may infer its missing activity name from the recorded program. */
   runCodeLabel?: RunCodeLabelMode
 }
 ```
@@ -3103,7 +3103,7 @@ export interface Config {
 需要：`systemPrompt`
 
 ```ts config-catalog
-/** Plugin config: how the registered tools are presented to the model. */
+/** Tool registry presentation, Code Mode scheduling, and hidden speculation options. */
 export interface Config {
   /**
    * Model presentation. `native` (default) sends every visible schema; `code`
@@ -3116,7 +3116,7 @@ export interface Config {
    * in `toolOrder` are invalid.
    */
   mode?: ToolPresentationMode
-  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  /** Whether `run_code.display` is required or inferred from `code` when absent. */
   runCodeLabel?: RunCodeLabelMode
   /**
    * Concurrency cap for a `run_code` program's overlapping sub-calls
@@ -3126,16 +3126,34 @@ export interface Config {
    * restores strictly serial dispatch. Must be a positive integer.
    */
   maxParallelSubCalls?: number
+  /** Hidden, take-once pre-execution of explicitly eligible literal Code Mode calls. */
+  speculation?: Partial<ToolSpeculationConfig>
 }
 
 /** How the registry presents its tools to the model (see {@link Config.mode}). */
 export type ToolPresentationMode = 'native' | 'code' | 'both'
 
-/** How a Code Mode presentation obtains the run card and compaction label. */
+/** How a Code Mode presentation obtains its activity name. */
 export type RunCodeLabelMode = 'required' | 'inferred'
+
+/** Deployment bounds for streamed Code Mode speculation. */
+export interface ToolSpeculationConfig {
+  /** Master switch. Disabled deployments never load the TypeScript scanner. */
+  enabled: boolean
+  /** Maximum speculative calls that may still be running. */
+  maxConcurrent: number
+  /** Maximum unserved entries retained across active root calls. */
+  maxEntries: number
+  /** Maximum raw streamed argument bytes buffered for one run_code call. */
+  maxBufferBytes: number
+  /** Maximum total bytes of validated unserved canonical values. */
+  maxRetainedBytes: number
+  /** Maximum age of an unserved entry. */
+  entryTtlMs: number
+}
 ```
 
-来源：[`packages/core/tools/src/index.ts:685`](../packages/core/tools/src/index.ts)
+来源：[`packages/core/tools/src/index.ts:760`](../packages/core/tools/src/index.ts)
 
 <a id="monotykamarydsh-typert-loader"></a>
 

@@ -18,8 +18,7 @@
     "python/sdk-runtime"
   ],
   "ignoreDependencies": [
-    "@yarnpkg/cli-dist",
-    "lightningcss"
+    "@yarnpkg/cli-dist"
   ],
   "workspaces": {
     ".": {
@@ -234,7 +233,8 @@
         "cytoscape",
         "cytoscape-cose-bilkent",
         "dayjs",
-        "debug"
+        "debug",
+        "vue"
       ]
     },
     "packages/*/*": {
@@ -395,6 +395,9 @@
       "project": [
         "src/**/*.ts",
         "tests/**/*.ts"
+      ],
+      "ignoreDependencies": [
+        "tsx"
       ]
     },
     "packages/core/agent-loop": {

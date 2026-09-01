@@ -13,7 +13,7 @@ const SURFACES = new Map([
 const surface = process.argv[2] ?? 'web'
 const args = SURFACES.get(surface)
 if (args === undefined || process.argv.length > 3) {
-  console.error('usage: pnpm run demo:cordis [web|acp]')
+  console.error('usage: bun run demo:cordis [web|acp]')
   process.exit(2)
 }
 

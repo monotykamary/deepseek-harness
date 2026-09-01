@@ -31,7 +31,7 @@ function resultFor(subject: Gate, status: GateResult['status'] = 'passed'): Gate
   }
 }
 
-function withPnpmEntrypoint<T>(action: () => T, entrypoint = '/private/pnpm.cjs'): T {
+function withBunEntrypoint<T>(action: () => T, entrypoint = '/private/bun.cjs'): T {
   const previous = process.env.npm_execpath
   process.env.npm_execpath = entrypoint
   try {
@@ -76,20 +76,20 @@ describe('gate graph validation', () => {
     'hygiene',
     'doc-sync',
   ] as const)('constructs and executes preflight for a valid non-empty %s graph', async (mode) => {
-    const subject = withPnpmEntrypoint(() => gatesForMode(mode))
+    const subject = withBunEntrypoint(() => gatesForMode(mode))
     const execute = vi.fn(async (item: Gate) => resultFor(item))
 
     await expect(runGates(subject, subject.length, execute)).resolves.toHaveLength(subject.length)
   })
 
   it('keeps the public repository link policy in the documentation gate', () => {
-    const ids = withPnpmEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
+    const ids = withBunEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
 
     expect(ids).toContain('public-repository-links')
   })
 
   it('keeps the hygiene aggregate aligned with the package script checks', () => {
-    const ids = withPnpmEntrypoint(() => gatesForMode('hygiene').map(subject => subject.id))
+    const ids = withBunEntrypoint(() => gatesForMode('hygiene').map(subject => subject.id))
 
     expect(ids).toEqual([
       'rescope-vendor', 'knip', 'publint', 'constraints', 'dsh-package-licenses',
@@ -104,7 +104,7 @@ describe('gate graph validation', () => {
   })
 
   it('schedules the longest documentation leaves before short checks', () => {
-    const ids = withPnpmEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
+    const ids = withBunEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
 
     expect(ids.slice(0, 10)).toEqual([
       'doc-typecheck', 'docs-site-build', 'doc-graphs', 'markdown-links', 'type-equivalence',
@@ -112,9 +112,9 @@ describe('gate graph validation', () => {
     ])
   })
 
-  it('launches a native pnpm entrypoint directly', () => {
-    const entrypoint = String.raw`C:\Program Files\pnpm\pnpm.exe`
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-windows-blocking')[0], entrypoint)
+  it('launches a native bun entrypoint directly', () => {
+    const entrypoint = String.raw`C:\Program Files\bun\bun.exe`
+    const subject = withBunEntrypoint(() => gatesForMode('ci-windows-blocking')[0], entrypoint)
 
     expect(subject).toMatchObject({
       command: entrypoint,
@@ -125,7 +125,7 @@ describe('gate graph validation', () => {
   it.each(['ci-primary', 'ci-static', 'check-all'] as const)(
     'keeps the DSH package license policy in %s',
     (mode) => {
-      const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
+      const ids = withBunEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
 
       expect(ids).toContain('dsh-package-licenses')
     },
@@ -134,15 +134,15 @@ describe('gate graph validation', () => {
   it.each(['ci-primary', 'ci-static', 'check-all'] as const)(
     'keeps the client dependency policy in %s',
     (mode) => {
-      const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
+      const ids = withBunEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
 
       expect(ids).toContain('client-packages')
     },
   )
 
   it('keeps native Windows coverage blocking while retaining the observational inventory', () => {
-    const complete = withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))
-    const observational = withPnpmEntrypoint(() => gatesForMode('ci-windows-observational'))
+    const complete = withBunEntrypoint(() => gatesForMode('ci-windows-complete'))
+    const observational = withBunEntrypoint(() => gatesForMode('ci-windows-observational'))
       .filter(gate => gate.id !== 'build' && gate.id !== 'docs-site-build')
     const byId = new Map(complete.map(subject => [subject.id, subject]))
 
@@ -164,7 +164,7 @@ describe('gate graph validation', () => {
   it.each(['ci-primary', 'check-all', 'ci-windows-complete'] as const)(
     'keeps host observations visible but nonblocking in %s',
     (mode) => {
-      const subject = withPnpmEntrypoint(() => gatesForMode(mode))
+      const subject = withBunEntrypoint(() => gatesForMode(mode))
         .find(gate => gate.id === 'observational-tests')
 
       expect(subject?.allowFailure).toBe(true)
@@ -175,7 +175,7 @@ describe('gate graph validation', () => {
   it('splits the coverage worker budget evenly between measured and uninstrumented tests', () => {
     const gates = withoutCoveragePartitions(() =>
       withEnv('DSH_COVERAGE_MAX_WORKERS', '6', () =>
-        withPnpmEntrypoint(() => gatesForMode('ci-coverage'))))
+        withBunEntrypoint(() => gatesForMode('ci-coverage'))))
 
     expect(gates.find(subject => subject.id === 'coverage')?.args).toContain('--maxWorkers=3')
     expect(gates.find(subject => subject.id === 'coverage-exempt-heavy')?.args).toContain('--maxWorkers=3')
@@ -184,7 +184,7 @@ describe('gate graph validation', () => {
   it('applies one configured test and polling timeout to both coverage gates', () => {
     const gates = withoutCoveragePartitions(() =>
       withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', '15000', () =>
-        withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
+        withBunEntrypoint(() => gatesForMode('ci-windows-complete'))))
 
     for (const id of ['coverage', 'coverage-exempt-heavy']) {
       expect(gates.find(subject => subject.id === id)?.args).toEqual(expect.arrayContaining([
@@ -197,7 +197,7 @@ describe('gate graph validation', () => {
   it('keeps Vitest timeout defaults when the coverage override is absent', () => {
     const gates = withoutCoveragePartitions(() =>
       withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', undefined, () =>
-        withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
+        withBunEntrypoint(() => gatesForMode('ci-windows-complete'))))
 
     for (const id of ['coverage', 'coverage-exempt-heavy']) {
       expect(gates.find(subject => subject.id === id)?.args).not.toEqual(expect.arrayContaining([
@@ -208,24 +208,24 @@ describe('gate graph validation', () => {
 
   it('rejects an invalid coverage timeout before starting a gate', () => {
     expect(() => withEnv('DSH_COVERAGE_TEST_TIMEOUT_MS', '0', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
+      withBunEntrypoint(() => gatesForMode('ci-windows-complete'))))
       .toThrow('DSH_COVERAGE_TEST_TIMEOUT_MS must be a positive integer')
   })
 
   it('selects partitioned coverage only when explicitly configured', () => {
     const coverage = withEnv('DSH_COVERAGE_PARTITIONS', '3', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete').find(subject => subject.id === 'coverage')))
+      withBunEntrypoint(() => gatesForMode('ci-windows-complete').find(subject => subject.id === 'coverage')))
 
     expect(coverage).toMatchObject({
-      displayCommand: 'DSH_COVERAGE_PARTITIONS=3 pnpm run test:coverage:partitioned',
-      args: ['/private/pnpm.cjs', 'run', 'test:coverage:partitioned'],
+      displayCommand: 'DSH_COVERAGE_PARTITIONS=3 bun run test:coverage:partitioned',
+      args: ['/private/bun.cjs', 'run', 'test:coverage:partitioned'],
       streamOutput: true,
     })
   })
 
   it('rejects an invalid coverage partition count before starting a gate', () => {
     expect(() => withEnv('DSH_COVERAGE_PARTITIONS', '1', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
+      withBunEntrypoint(() => gatesForMode('ci-windows-complete'))))
       .toThrow('DSH_COVERAGE_PARTITIONS must be an integer greater than 1')
   })
 
@@ -289,25 +289,25 @@ describe('gate graph validation', () => {
 describe('Oxlint gate', () => {
   it('uses the package script when no worker bound is configured', () => {
     const subject = withEnv('DSH_OXLINT_THREADS', undefined, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
+      withBunEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
 
     expect(subject).toMatchObject({
       id: 'lint',
-      displayCommand: 'pnpm run lint:contracts-ready',
+      displayCommand: 'bun run lint:contracts-ready',
       command: process.execPath,
-      args: ['/private/pnpm.cjs', 'run', 'lint:contracts-ready'],
+      args: ['/private/bun.cjs', 'run', 'lint:contracts-ready'],
     })
   })
 
   it('surfaces the configured worker bound on the shared package script', () => {
     const subject = withEnv('DSH_OXLINT_THREADS', '4', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
+      withBunEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
 
     expect(subject).toMatchObject({
       id: 'lint',
-      displayCommand: 'DSH_OXLINT_THREADS=4 pnpm run lint:contracts-ready',
+      displayCommand: 'DSH_OXLINT_THREADS=4 bun run lint:contracts-ready',
       command: process.execPath,
-      args: ['/private/pnpm.cjs', 'run', 'lint:contracts-ready'],
+      args: ['/private/bun.cjs', 'run', 'lint:contracts-ready'],
     })
   })
 })
@@ -315,11 +315,11 @@ describe('Oxlint gate', () => {
 describe('Typert contract preparation', () => {
   it('prepares primary source consumers once before they run', () => {
     const subject = withEnv('DSH_OXLINT_THREADS', undefined, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-primary')))
+      withBunEntrypoint(() => gatesForMode('ci-primary')))
 
     expect(subject.find(item => item.id === 'typert-contracts')).toMatchObject({
-      displayCommand: 'pnpm run build:lib:host',
-      args: ['/private/pnpm.cjs', 'run', 'build:lib:host'],
+      displayCommand: 'bun run build:lib:host',
+      args: ['/private/bun.cjs', 'run', 'build:lib:host'],
     })
     for (const [id, script] of [
       ['typecheck', 'typecheck:contracts-ready'],
@@ -327,8 +327,8 @@ describe('Typert contract preparation', () => {
       ['doc-typecheck', 'doc-typecheck:contracts-ready'],
     ] as const) {
       expect(subject.find(item => item.id === id)).toMatchObject({
-        displayCommand: `pnpm run ${script}`,
-        args: ['/private/pnpm.cjs', 'run', script],
+        displayCommand: `bun run ${script}`,
+        args: ['/private/bun.cjs', 'run', script],
         needs: ['typert-contracts'],
       })
     }
@@ -340,35 +340,35 @@ describe('Typert contract preparation', () => {
   })
 
   it('reuses contracts from the validated consumer build', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-consumers'))
+    const subject = withBunEntrypoint(() => gatesForMode('ci-consumers'))
 
     expect(subject.find(item => item.id === 'lint-and-duplication')).toMatchObject({
-      displayCommand: 'pnpm run check:ci:lint:contracts-ready',
-      args: ['/private/pnpm.cjs', 'run', 'check:ci:lint:contracts-ready'],
+      displayCommand: 'bun run check:ci:lint:contracts-ready',
+      args: ['/private/bun.cjs', 'run', 'check:ci:lint:contracts-ready'],
     })
     expect(subject.find(item => item.id === 'doc-typecheck')).toMatchObject({
-      displayCommand: 'pnpm run doc-typecheck:contracts-ready',
-      args: ['/private/pnpm.cjs', 'run', 'doc-typecheck:contracts-ready'],
+      displayCommand: 'bun run doc-typecheck:contracts-ready',
+      args: ['/private/bun.cjs', 'run', 'doc-typecheck:contracts-ready'],
     })
   })
 
   it('keeps standalone doc sync responsible for preparation', () => {
-    const docTypecheck = withPnpmEntrypoint(() =>
+    const docTypecheck = withBunEntrypoint(() =>
       gatesForMode('doc-sync').find(item => item.id === 'doc-typecheck'))
 
-    expect(docTypecheck?.displayCommand).toBe('pnpm run doc-typecheck')
+    expect(docTypecheck?.displayCommand).toBe('bun run doc-typecheck')
   })
 })
 
 describe('Node compatibility graph', () => {
   it('runs the jsdom environment smoke on every advertised Node line', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('node-compat'))
+    const subject = withBunEntrypoint(() => gatesForMode('node-compat'))
 
     expect(subject.find(item => item.id === 'vitest-jsdom-smoke')).toMatchObject({
       label: 'Vitest jsdom smoke',
       args: [
-        '/private/pnpm.cjs',
-        'exec',
+        '/private/bun.cjs',
+        'x',
         'vitest',
         'run',
         'scripts/vitest-environment.compat.spec.ts',
@@ -379,14 +379,14 @@ describe('Node compatibility graph', () => {
 
 describe('Node 24 lane ownership', () => {
   it('keeps the static lane source-only', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-static'))
+    const subject = withBunEntrypoint(() => gatesForMode('ci-static'))
 
     expect(subject.map(item => item.id)).not.toContain('build')
     expect(subject.map(item => item.id)).not.toContain('doc-typecheck')
   })
 
   it('owns the build and orders its artifact consumers', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-consumers'))
+    const subject = withBunEntrypoint(() => gatesForMode('ci-consumers'))
 
     expect(defaultConcurrency('ci-consumers', subject.length, 4)).toEqual({
       workers: 10,
@@ -433,7 +433,7 @@ describe('Node 24 lane ownership', () => {
       ]),
     )
     expect(subject.find(item => item.id === 'web-snapshot')).toMatchObject({
-      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:built',
+      displayCommand: 'DSH_SNAPSHOT=replay bun run test:web:built',
       env: { DSH_SNAPSHOT: 'replay' },
     })
   })
@@ -441,11 +441,11 @@ describe('Node 24 lane ownership', () => {
 
 describe('Linux primary graph', () => {
   it('adds the same compare-only web gate after built client artifacts', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-linux-primary'))
+    const subject = withBunEntrypoint(() => gatesForMode('ci-linux-primary'))
     const web = subject.find(item => item.id === 'web-snapshot')
 
     expect(web).toMatchObject({
-      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:built',
+      displayCommand: 'DSH_SNAPSHOT=replay bun run test:web:built',
       env: { DSH_SNAPSHOT: 'replay' },
       needs: ['built-package-invariants'],
     })

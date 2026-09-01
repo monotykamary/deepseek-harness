@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-21-client-settings-plane-operator-eligible.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-21-client-settings-plane-operator-eligible.md
 2026-08-21-client-settings-plane-operator-eligible.md: aad0eec721a2f35a7117e5b28550cd420a25ecfc
 2026-08-21-client-settings-plane-operator-eligible.zh.md: bd994965b05d29313f120a39d1244f25bda38ea7

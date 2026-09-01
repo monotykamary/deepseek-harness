@@ -8,7 +8,7 @@
 
 ## 渲染与传输
 
-插件使用 `pnpm-workspace.yaml` 记录的精确 patched xterm WebGL 与 image addon。源自 localterm 的输出调度器会立即解析普通原始二进制帧；当 Host 在 `output-frame-start` 与 `output-frame-end` 之间包围一次跨越传输尺寸上限的 redraw 时，则会保留这些 transport chunk，并把完整逻辑帧作为一次 xterm parse transaction 提交。它会保留用户滚动位置、在已渲染帧边界上调度 DEC 2026 同步输出，并在输入后的有界窗口内直接消费待处理 WebGL render 以降低延迟。WebGL context 丢失时会回退到 xterm 的 DOM renderer。终端会等待所选字体、重新测量 xterm cell，并保留 xterm 自有的 canvas 尺寸而不拉伸。它通过 `ResizeObserver` 重新适配，在底部面板过渡期间观察外层 viewport，并在加载字体度量变化时观察渲染后的 xterm screen，在 attachment 就绪后重放最新网格，使 PTY 使用整个面板，并把后续尺寸发送给 `@monotykamary/dsh-terminal-web`。所选终端调色板统一拥有面板主体、xterm surface、滚动 viewport 与上／右／下／左尺寸一致的 padding gutter 背景。xterm 会占用宽度的 scrollbar 已禁用；派生自 localterm 的 overlay track 不占用 grid 宽度，只在用户滚离 buffer 底部后出现，并支持 track 翻页与 thumb 拖动。连接建立期间会保持视觉空白，直到 xterm 就绪；只有可操作的连接失败才显示状态文案与重试操作。
+插件使用 `bun-workspace.yaml` 记录的精确 patched xterm WebGL 与 image addon。源自 localterm 的输出调度器会立即解析普通原始二进制帧；当 Host 在 `output-frame-start` 与 `output-frame-end` 之间包围一次跨越传输尺寸上限的 redraw 时，则会保留这些 transport chunk，并把完整逻辑帧作为一次 xterm parse transaction 提交。它会保留用户滚动位置、在已渲染帧边界上调度 DEC 2026 同步输出，并在输入后的有界窗口内直接消费待处理 WebGL render 以降低延迟。WebGL context 丢失时会回退到 xterm 的 DOM renderer。终端会等待所选字体、重新测量 xterm cell，并保留 xterm 自有的 canvas 尺寸而不拉伸。它通过 `ResizeObserver` 重新适配，在底部面板过渡期间观察外层 viewport，并在加载字体度量变化时观察渲染后的 xterm screen，在 attachment 就绪后重放最新网格，使 PTY 使用整个面板，并把后续尺寸发送给 `@monotykamary/dsh-terminal-web`。所选终端调色板统一拥有面板主体、xterm surface、滚动 viewport 与上／右／下／左尺寸一致的 padding gutter 背景。xterm 会占用宽度的 scrollbar 已禁用；派生自 localterm 的 overlay track 不占用 grid 宽度，只在用户滚离 buffer 底部后出现，并支持 track 翻页与 thumb 拖动。连接建立期间会保持视觉空白，直到 xterm 就绪；只有可操作的连接失败才显示状态文案与重试操作。
 
 实现与交互模式保留了 [T3 Code 与 localterm 声明](../../../THIRD_PARTY_NOTICES.md#adapted-design-sources)。
 

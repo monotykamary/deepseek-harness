@@ -147,6 +147,9 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   // The glob covers whichever sheets a package emits; sourcemaps stay
   // unpublished, as everywhere else in the repository.
   '@monotykamary/dsh-client-ui-primitives': ['lib/**/*.css'],
+  // Speculative PTC lazy-loads its TypeScript scanner; tsdown emits the scanner and its shared
+  // hashing helper as hashed chunks imported by the public entry.
+  '@monotykamary/dsh-tools': ['lib/*.js'],
   // Automation imports the pure receipt ledger without evaluating the model-facing Consumer.
   '@monotykamary/dsh-tool-session-mutations': ['lib/ledger.js'],
   '@monotykamary/dsh-client-web': ['lib/**/*.css'],
@@ -450,7 +453,7 @@ export function checkExperimentalDependencyIsolation(manifests: readonly Workspa
  * Require the `workspace:` protocol for every reference to a workspace member.
  *
  * A hand-written range says nothing about the version the workspace actually
- * carries, and `pnpm pack` leaves it alone: `^0.0.1` published from version
+ * carries, and `bun pack` leaves it alone: `^0.0.1` published from version
  * `0.0.2` names a version that does not exist. The protocol makes pack
  * substitute the member's real version, so no release step rewrites ranges.
  * @param manifests - every workspace manifest.

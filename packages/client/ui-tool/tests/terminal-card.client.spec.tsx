@@ -115,9 +115,9 @@ describe('terminalCardModel', () => {
     // The presentation contract defines a result title as REPLACING the pending
     // title, so a tool that rewrites it at settle time must win here.
     expect(terminalCardModel(settled({
-      callView: callTerminal({ title: 'pnpm run check' }),
-      resultView: resultTerminal({ title: 'pnpm run check --filter web' }),
-    }))?.card.command).toBe('pnpm run check --filter web')
+      callView: callTerminal({ title: 'bun run check' }),
+      resultView: resultTerminal({ title: 'bun run --filter web check' }),
+    }))?.card.command).toBe('bun run --filter web check')
     // Without one, the call's title is what the card keeps.
     expect(terminalCardModel(settled())?.card.command).toBe('ls -la')
   })

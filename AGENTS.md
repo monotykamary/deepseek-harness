@@ -56,30 +56,30 @@ Package groups: [packages/README.md](packages/README.md).
 ## Commands
 
 ```sh
-pnpm install            # pnpm workspaces, node ^22.19 || >=24
-pnpm run clean           # remove build outputs and safe residue from deleted packages
-pnpm run test           # required deterministic unit tests
-pnpm run test:observational  # nonblocking host-timing observations
-pnpm run test:coverage  # CI coverage gate: aggregate 80% on packages/*/*/src
-pnpm run test:e2e       # real-API tests; self-skip without DEEPSEEK_API_KEY
-pnpm run test:snapshot  # keyless ACP/headless replay vs expected outputs; filter: -t <name>
-pnpm run test:snapshot:record  # re-record expected outputs (needs key)
-pnpm run typecheck
-pnpm run lint
-pnpm run duplication    # cross-file TypeScript clone detection
-pnpm run build          # tsc emits lib/types, tsdown bundles runtime
-pnpm run hygiene        # knip + publint + workspace constraints + NodeNext consumer check
-pnpm run check:windows-wine  # ONLY when diagnosing a known Windows failure (needs wine); CI owns this signal
-pnpm run doc-sync       # all documentation gates; leaf list in scripts/run-gates.ts
-pnpm run website:build  # VitePress build (doubles as dead-link check)
-pnpm dsh --profile headless "task"  # run one task from source (needs DEEPSEEK_API_KEY)
-pnpm run demo:cordis    # the agent modifies its own runtime (needs key)
-pnpm run demo:acp       # ACP automation server (needs DEEPSEEK_API_KEY)
+bun install            # bun workspaces, node ^22.19 || >=24
+bun run clean           # remove build outputs and safe residue from deleted packages
+bun run test           # required deterministic unit tests
+bun run test:observational  # nonblocking host-timing observations
+bun run test:coverage  # CI coverage gate: aggregate 80% on packages/*/*/src
+bun run test:e2e       # real-API tests; self-skip without DEEPSEEK_API_KEY
+bun run test:snapshot  # keyless ACP/headless replay vs expected outputs; filter: -t <name>
+bun run test:snapshot:record  # re-record expected outputs (needs key)
+bun run typecheck
+bun run lint
+bun run duplication    # cross-file TypeScript clone detection
+bun run build          # tsc emits lib/types, tsdown bundles runtime
+bun run hygiene        # knip + publint + workspace constraints + NodeNext consumer check
+bun run check:windows-wine  # ONLY when diagnosing a known Windows failure (needs wine); CI owns this signal
+bun run doc-sync       # all documentation gates; leaf list in scripts/run-gates.ts
+bun run website:build  # VitePress build (doubles as dead-link check)
+bun dsh --profile headless "task"  # run one task from source (needs DEEPSEEK_API_KEY)
+bun run demo:cordis    # the agent modifies its own runtime (needs key)
+bun run demo:acp       # ACP automation server (needs DEEPSEEK_API_KEY)
 ```
 
 ### Host sandbox failures
 
-When required `gh`, `pnpm`, build, test, or generator commands fail because the agent sandbox blocks credentials, network, IPC, file watching, or nested `sandbox-exec`, retry unchanged with the narrowest host escalation before diagnosing authentication or project failure. Require sandbox evidence; never bypass genuine test failures or the product sandbox under test.
+When required `gh`, `bun`, build, test, or generator commands fail because the agent sandbox blocks credentials, network, IPC, file watching, or nested `sandbox-exec`, retry unchanged with the narrowest host escalation before diagnosing authentication or project failure. Require sandbox evidence; never bypass genuine test failures or the product sandbox under test.
 
 ### Golden rule: inner loop free, gates when done
 
@@ -126,9 +126,9 @@ Real-API tests and demos read `DEEPSEEK_API_KEY`, optional `DEEPSEEK_BASE_URL`, 
 - **Testing policy** — [docs/testing.md](docs/testing.md). Every non-trivial model- or product-user-visible behavior change adds or updates a keyless snapshot through a real runnable example in the same PR; package tests, e2e-only assertions, and mock-only fixtures do not substitute for the assembled application transcript. Fixtures must replay on macOS/Linux; fix fixtures, not normalizers.
 - **A tool's UI render intent is part of its design**, decided up front (`generic`/`terminal`/`diff`, `locations`); presentation methods are pure functions of `args` ([cookbook](docs/cookbook/adding-a-tool.md)).
 - **UI spacing is parent-owned**: elements never declare margins — an element changes only its own padding; spacing between siblings is always the parent's `gap` on flex/grid tracks (never `margin`, `space-*`, or positioning).
-- **UI layering follows DOM order**: later siblings paint on top, so overlays portal to the end of `<body>` and sticky bars are fronted by order reversal (`column-reverse`), not z-index; new stacking contexts isolate (`isolation: isolate`) instead of racing numbers, and z-index stays pinned to the overlay-layer tokens. Existing debt is pinned in `scripts/ui-layout-baseline.json`, which only shrinks via `pnpm run verify-ui-layout:baseline` ([mechanism](https://danielrotter.at/2020/04/08/avoid-z-index-whenever-possible.html)).
+- **UI layering follows DOM order**: later siblings paint on top, so overlays portal to the end of `<body>` and sticky bars are fronted by order reversal (`column-reverse`), not z-index; new stacking contexts isolate (`isolation: isolate`) instead of racing numbers, and z-index stays pinned to the overlay-layer tokens. Existing debt is pinned in `scripts/ui-layout-baseline.json`, which only shrinks via `bun run verify-ui-layout:baseline` ([mechanism](https://danielrotter.at/2020/04/08/avoid-z-index-whenever-possible.html)).
 - **Plan unit, e2e, and snapshot coverage** for capability seams, lifecycle paths, and transcript output; include missing snapshot-harness support in the same change.
-- **Both SDKs project the loop.** Agent-loop, session-lifecycle, and `SessionEventMap` changes update the TypeScript and Python SDK expected outputs in the same PR; `pnpm run test` covers neither ([surfaces](docs/testing.md#when-a-snapshot-test-is-required)).
+- **Both SDKs project the loop.** Agent-loop, session-lifecycle, and `SessionEventMap` changes update the TypeScript and Python SDK expected outputs in the same PR; `bun run test` covers neither ([surfaces](docs/testing.md#when-a-snapshot-test-is-required)).
 - **Choose PR history deliberately.** Split independent changes; fix the introducing PR before propagation. Standalone PRs and official stacks may merge-forward or rebase after review. Rewrites use `--force-with-lease`, abort on remote movement, never raw `--force`; an in-progress merge-forward preserves its checkpoint before taking a newer base ([rationale](.agents/notes/implemented/process/2026-08-02-native-github-stacks-and-optional-rebases.md)).
 - **Labels:** one PR `kind/*`, all material `area/*`, and native Issue Type ([taxonomy](.agents/notes/implemented/process/2026-08-08-unified-github-label-taxonomy.md)).
 - TODO markers: `FIXME`/`TODO`/`XXX` by urgency ([semantics](docs/development.md)).
@@ -152,4 +152,4 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 
 ## Vendoring policy
 
-`vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `pnpm run test && pnpm run build`.
+`vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `bun run test && bun run build`.

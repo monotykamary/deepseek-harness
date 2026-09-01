@@ -12,7 +12,7 @@
 // that ref in a worktree, copying this spec, and running it records all
 // fixtures from react-markdown byte-identical to the ones committed here:
 //   git worktree add /tmp/parity origin/master --detach && cd /tmp/parity
-//   pnpm install && cp <this spec> packages/client/ui-primitives/tests/
+//   bun install && cp <this spec> packages/client/ui-primitives/tests/
 //   npx vitest run packages/client/ui-primitives/tests/markdown-dom-parity.spec.tsx
 //   diff -r <recorded fixtures> <this branch's fixtures>   # byte-identical
 import { cleanup, render } from '@testing-library/react'

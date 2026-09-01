@@ -167,18 +167,18 @@ describe('renderToolsSdkPy', () => {
   })
 
   it('names both required call arguments, not just the program', () => {
-    // The schema requires `code` AND `description`; instructions that mention
-    // only the program let a model emit `{code}` alone and fail INVALID_ARGS.
+    // The schema requires `code` AND `display`; instructions that mention only
+    // the program let a model emit `{code}` alone and fail INVALID_ARGS.
     const text = renderToolsSdkPy([bash])
     expect(text).toContain('`code`')
-    expect(text).toContain('`description`')
+    expect(text).toContain('`display`')
     expect(text).toContain('two required arguments')
   })
 
-  it('renders the inferred run-label invocation with optional description', () => {
+  it('renders the inferred run-label invocation with optional display', () => {
     const text = renderToolsSdkPy([bash], 'inferred')
     expect(text).toContain('takes one required argument')
-    expect(text).toContain('`description` is optional')
+    expect(text).toContain('`display` is optional')
   })
 
   it('renders required as plain fields and optional as NotRequired, with per-field description comments', () => {

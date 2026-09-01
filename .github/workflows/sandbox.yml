@@ -53,14 +53,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
 
       - name: Install (immutable)
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       # The bwrap rung needs bubblewrap on PATH and unprivileged user
       # namespaces. Ubuntu 24.04 gates the latter behind an AppArmor knob;
@@ -79,8 +81,8 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -yq musl-tools
-          pnpm --dir native/landlock-run run build:ts
-          pnpm --dir native/landlock-run run build:native
+          bun --cwd native/landlock-run run build:ts
+          bun --cwd native/landlock-run run build:native
 
       # Real PTYs remain visible but host scheduler timing cannot define readiness.
       - name: PowerShell PTY observations (darwin parity)
@@ -90,7 +92,7 @@ jobs:
           NO_COLOR: '1'
         run: |
           set -u +e -o pipefail
-          out=$(pnpm exec vitest run \
+          out=$(bun x vitest run \
             packages/shell/tool-pwsh-persistent/tests/loader-composition.spec.ts \
             packages/terminal/terminal-bash/tests/local.spec.ts \
             --maxWorkers=1 --no-file-parallelism 2>&1); status=$?
@@ -104,12 +106,12 @@ jobs:
         if: matrix.runner == 'seatbelt'
         env:
           DSH_SKIP_REAL_PWSH_TESTS: '1'
-        run: pnpm run test -- --maxWorkers=1
+        run: bun run test -- --maxWorkers=1
 
       - name: HMR filesystem observations (darwin parity)
         if: matrix.runner == 'seatbelt'
         continue-on-error: true
-        run: pnpm run test:observational
+        run: bun run test:observational
 
       - name: Sandbox e2e (real kernel confinement, world-verified)
         # NO_COLOR: vitest force-enables ANSI color under GITHUB_ACTIONS even
@@ -119,7 +121,7 @@ jobs:
           NO_COLOR: 1
         run: |
           set -u +e -o pipefail
-          out=$(pnpm exec vitest run --config vitest.e2e.config.ts \
+          out=$(bun x vitest run --config vitest.e2e.config.ts \
             packages/sandbox/sandbox-local/tests/${{ matrix.runner }}.e2e.ts \
             packages/shell/bash-sandbox/tests/${{ matrix.runner }}.e2e.ts 2>&1); status=$?
           echo "$out"
@@ -133,7 +135,7 @@ jobs:
       # together so registry state cannot mask source/package drift.
       - name: Build packages for the pack rehearsal
         if: matrix.runner == 'landlock'
-        run: pnpm run build:official
+        run: bun run build:official
 
       - name: Packed-distribution e2e (pack → install → confine)
         if: matrix.runner == 'landlock'
@@ -141,7 +143,7 @@ jobs:
           NO_COLOR: 1
         run: |
           set -u +e -o pipefail
-          out=$(pnpm exec vitest run --config vitest.e2e.config.ts \
+          out=$(bun x vitest run --config vitest.e2e.config.ts \
             packages/sandbox/sandbox-local/tests/packed-install.e2e.ts 2>&1); status=$?
           echo "$out"
           [ "$status" -eq 0 ]

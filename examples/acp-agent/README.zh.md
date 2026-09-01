@@ -5,8 +5,8 @@
 通过 JSON-RPC stdio 提供的面向自动化的 [ACP（Agent Client Protocol）](https://agentclientprotocol.com) 服务器。它面向 parent agent（父智能体）、subagent 提供方和其他程序化客户端，而非产品 UI。
 
 ```sh
-pnpm run demo:acp             # needs DEEPSEEK_API_KEY (repo-root .env or env)
-pnpm run demo:code-mode       # same protocol with the Code Mode tool transport
+bun run demo:acp             # needs DEEPSEEK_API_KEY (repo-root .env or env)
+bun run demo:code-mode       # same protocol with the Code Mode tool transport
 ```
 
 该叶节点加载 ACP 应用、DeepSeek 适配器、受沙箱限制的 bash 与文件系统栈、一次性批准策略、压缩（compaction）、subagent、工作流、钩子、派生会话查询索引和重复守卫。应用为每次 `session/new` 创建一个新 agent，将会话持久化到 JSONL，并保持 stdout 只含协议内容。可选 overlay 可添加会话查询、文件系统 spill 存储、Code Mode 或 Web 抓取。

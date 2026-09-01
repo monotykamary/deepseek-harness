@@ -11,7 +11,7 @@ The `dsh` command is the product launcher for profiles: ordered stacks of plugin
 | `dsh --profile <name>` | Boot the named profile under `$DSH_HOME/profiles/<name>`. |
 | `dsh --profile headless "job"` | Run one fresh persisted session, print the final answer, and exit. |
 | `dsh web` | Alias of `--profile web`. |
-| `dsh plugin --profile <name> <pnpm args>` | Manage a profile's plugins by forwarding to pnpm in the profile directory. |
+| `dsh plugin --profile <name> <bun args>` | Manage a profile's plugins by forwarding to bun in the profile directory. |
 | `dsh version [--json]` | Report the installed DSH, Fabric, and Fovea closure. |
 | `dsh update [--check] [--json]` | Check versions or hand an npm-global update to a detached worker. |
 | `dsh doctor [--json]` | Report the installation channel, Node version, DSH home, and package versions. |
@@ -39,7 +39,7 @@ The tree composes over an empty root:
 - then the profile's `cordis.patch.yml`, then the home-level `$DSH_HOME/cordis.patch.yml`
 - then `--patch` overlays
 
-Bundles named in `dsh.profile.bundles` resolve from the dsh installation first (`@monotykamary/dsh-base`, `@monotykamary/dsh-web-app`, `@monotykamary/dsh-headless`), then from the profile's own `node_modules`, where pnpm installs out-of-tree plugins.
+Bundles named in `dsh.profile.bundles` resolve from the dsh installation first (`@monotykamary/dsh-base`, `@monotykamary/dsh-web-app`, `@monotykamary/dsh-headless`), then from the profile's own `node_modules`, where bun installs out-of-tree plugins.
 
 Use `--dump-default-config` and `--dump-config` to inspect the composed tree without booting it.
 
@@ -47,4 +47,4 @@ The [CLI behavior reference](reference/README.md) owns exact layer precedence, f
 
 ## Development
 
-Production runs require built package and frontend artifacts. From the repository root, run `pnpm run build` separately, then use `pnpm dsh <args...>` to run the TypeScript entry and forward every argument; the [source-execution reference](reference/README.md#source-execution) owns the module-resolution contract.
+Production runs require built package and frontend artifacts. From the repository root, run `bun run build` separately, then use `bun dsh <args...>` to run the TypeScript entry and forward every argument; the [source-execution reference](reference/README.md#source-execution) owns the module-resolution contract.

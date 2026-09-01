@@ -44,10 +44,10 @@ Cordis 框架及其基础库以源码形式 vendored 在 [`vendor/`](../vendor/R
 上面这份映射由 [`scripts/rescope-vendor.ts`](../scripts/rescope-vendor.ts) 承载并执行改名，任何引用都不靠手改：
 
 ```sh
-pnpm run rescope-vendor            # report what would change
-pnpm run rescope-vendor --apply    # rewrite every reference
-pnpm run rescope-vendor:check      # assert the post-state; runs in the hygiene gate
-pnpm run rescope-vendor --apply --reverse   # return to the upstream names
+bun run rescope-vendor            # report what would change
+bun run rescope-vendor --apply    # rewrite every reference
+bun run rescope-vendor:check      # assert the post-state; runs in the hygiene gate
+bun run rescope-vendor --apply --reverse   # return to the upstream names
 ```
 
-上游 sync 之后重跑它（[流程](../vendor/README.md)），并接上它打印的重生成：`pnpm install` 重生成 lockfile、`pnpm run gen-third-party-notices`、以及对它触及的双语对跑 `pnpm run verify-translation-pairing --write`。
+上游 sync 之后重跑它（[流程](../vendor/README.md)），并接上它打印的重生成：`bun install` 重生成 lockfile、`bun run gen-third-party-notices`、以及对它触及的双语对跑 `bun run verify-translation-pairing --write`。

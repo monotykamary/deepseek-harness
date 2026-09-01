@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-06-21-subagent-capability-seam.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/feature/2026-06-21-subagent-capability-seam.md
 2026-06-21-subagent-capability-seam.md: fe3929a5996688a14e36f648b91165d33ef59db1
 2026-06-21-subagent-capability-seam.zh.md: 77e81145c9961e5a94c03f08343b71efd72ff081

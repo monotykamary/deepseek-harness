@@ -47,7 +47,7 @@ interface Config {
 
 每个 owner 的根入口仍独立于诊断。单独加载服务不会安装产品检查；在没有服务时加载配套入口，会等待其声明的 `invariants` 注入。
 
-`pnpm run verify-package-invariants` 发现全部工作区包。它拒绝生成标记、未说明的空 installer、省略或忽略 reporter 的非空 installer、错误注册名称，以及不完整的导出、发布、依赖、TypeScript 引用或 bundle 接线。该源码规则是最低归属检查；聚焦测试证明每个可执行配套入口的语义。
+`bun run verify-package-invariants` 发现全部工作区包。它拒绝生成标记、未说明的空 installer、省略或忽略 reporter 的非空 installer、错误注册名称，以及不完整的导出、发布、依赖、TypeScript 引用或 bundle 接线。该源码规则是最低归属检查；聚焦测试证明每个可执行配套入口的语义。
 
 ## 组合
 

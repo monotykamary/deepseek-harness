@@ -23,8 +23,8 @@ import { OFFLOADED_IMAGE_TEXT } from '@monotykamary/dsh-llm'
  * `dsh-acp-snapshot`'s suite factory, which owns every compare/guard mechanic
  * (expected-output + re-persisted-log diffs, record/refresh write-back, the pinned-header
  * uniformity guard, the fixture guards). Fixtures live under `snapshots/<name>/`;
- * `pnpm run test:snapshot:record` re-records model transcripts against the real
- * API; `pnpm run test:snapshot:refresh` rewrites current replay expected outputs keyless.
+ * `bun run test:snapshot:record` re-records model transcripts against the real
+ * API; `bun run test:snapshot:refresh` rewrites current replay expected outputs keyless.
  * See the package README (packages/test-support/acp-snapshot) and the snapshot Agent Note,
  * .agents/notes/implemented/testing/2026-06-19-acp-snapshot-tests.md.
  */
@@ -627,9 +627,9 @@ const SCENARIOS: Scenario[] = [
   // tools:sdk section rides in the prompt, and the program's tool calls land as
   // tool/code-dispatch events. Each overlay composes and pins its own header class.
   { name: 'code-mode-turn', hasModelTurn: true, recorded: true, pinsHeader: true, headerClass: 'code', configPath: CODE_MODE_CONFIG },
-  // Authored from code-mode-turn with the outer description removed. The real
-  // transport accepts the recorded program, and this class pins its optional
-  // schema plus policy-aware SDK sentence through the assembled application.
+  // Authored from code-mode-turn with the outer display metadata removed. The
+  // real transport accepts the recorded program, and this class pins its
+  // optional schema plus policy-aware SDK sentence through the assembled app.
   {
     name: 'code-mode-inferred-label',
     hasModelTurn: true,

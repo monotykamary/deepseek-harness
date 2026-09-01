@@ -14,7 +14,7 @@ import {
   parseVendoredRows,
   render,
   tierExternalDeps,
-  virtualManifest,
+  bunStoreManifest,
 } from './gen-third-party-notices.ts'
 
 const root = resolve(import.meta.dirname, '..')
@@ -36,7 +36,7 @@ describe('THIRD_PARTY_NOTICES.md', () => {
     expect(generated).toContain('Permission is hereby granted, free of charge')
     expect(generated).toContain('THE SOFTWARE IS PROVIDED "AS IS"')
     expect(generated).toContain('a4cc1367b03ee0c1dc2b50fceac81ef5e63212e2')
-    expect(readFileSync(resolve(root, 'THIRD_PARTY_NOTICES.md'), 'utf8'), 'stale notices — run `pnpm run gen-third-party-notices`').toBe(generated)
+    expect(readFileSync(resolve(root, 'THIRD_PARTY_NOTICES.md'), 'utf8'), 'stale notices — run `bun run gen-third-party-notices`').toBe(generated)
   })
 })
 
@@ -88,7 +88,7 @@ describe('tierExternalDeps', () => {
   })
 })
 
-describe('virtualManifest', () => {
+describe('bunStoreManifest', () => {
   it('resolves a manifest from an ordinary prefix-matching store directory', () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-notices-prefix-'))
     try {
@@ -99,13 +99,13 @@ describe('virtualManifest', () => {
       mkdirSync(manifestDir, { recursive: true })
       writeFileSync(join(manifestDir, 'package.json'), JSON.stringify({ name, version, license: 'MIT' }))
 
-      expect(virtualManifest(store, name)).toMatchObject({ name, version, license: 'MIT' })
+      expect(bunStoreManifest(store, name)).toMatchObject({ name, version, license: 'MIT' })
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
   })
 
-  it('falls back to a content scan when pnpm 11 truncates the store directory name', () => {
+  it('falls back to a content scan when the Bun store truncates the store directory name', () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-notices-truncated-'))
     try {
       const name = '@scope/pkg'
@@ -117,7 +117,7 @@ describe('virtualManifest', () => {
       mkdirSync(manifestDir, { recursive: true })
       writeFileSync(join(manifestDir, 'package.json'), JSON.stringify({ name, version, license: 'Apache-2.0' }))
 
-      expect(virtualManifest(store, name)).toMatchObject({ name, version, license: 'Apache-2.0' })
+      expect(bunStoreManifest(store, name)).toMatchObject({ name, version, license: 'Apache-2.0' })
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
@@ -131,7 +131,7 @@ describe('virtualManifest', () => {
       mkdirSync(other, { recursive: true })
       writeFileSync(join(other, 'package.json'), JSON.stringify({ name: 'other-pkg', version: '1.0.0' }))
 
-      expect(virtualManifest(store, '@scope/missing')).toBeUndefined()
+      expect(bunStoreManifest(store, '@scope/missing')).toBeUndefined()
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

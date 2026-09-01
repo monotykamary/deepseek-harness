@@ -34,9 +34,9 @@
 
 ## ③ 测试政策清单
 
-> **Coverage gate** (`pnpm run test:coverage`): statements, branches, functions, and lines under `packages/*/*/src` must each reach 80% in aggregate. Coverage is execution evidence, never proof that the feature works as shipped.
+> **Coverage gate** (`bun run test:coverage`): statements, branches, functions, and lines under `packages/*/*/src` must each reach 80% in aggregate. Coverage is execution evidence, never proof that the feature works as shipped.
 
-覆盖率门禁（`pnpm run test:coverage`）：`packages/*/*/src` 下的语句、分支、函数与行聚合覆盖率均须达到 80%。覆盖率是执行证据，绝不是功能按交付方式运行的证明。
+覆盖率门禁（`bun run test:coverage`）：`packages/*/*/src` 下的语句、分支、函数与行聚合覆盖率均须达到 80%。覆盖率是执行证据，绝不是功能按交付方式运行的证明。
 
 > We are DeepSeek — do not ration real-API tests. A no-key test proves the plumbing; only a with-key run proves the agent works against a real model. Write many: real prompts that write files, multi-turn conversations, tool use, cancellation mid-stream. Cheapest and highest-value are **smoke tests** that boot the real example, send one real prompt, and check the world — they catch the "green unit tests, broken product" class that mocks structurally cannot. The self-skip exists only so secretless CI and keyless contributors aren't blocked; it is not a cost signal.
 

@@ -44,7 +44,7 @@ export interface Config {
    * composed for nothing.
    */
   mode: ToolPresentationMode
-  /** Whether Code Mode requires a model-authored label or derives one from the recorded program. */
+  /** Whether Code Mode requires model-authored display metadata or may infer its missing activity name from the recorded program. */
   runCodeLabel?: RunCodeLabelMode
 }
 

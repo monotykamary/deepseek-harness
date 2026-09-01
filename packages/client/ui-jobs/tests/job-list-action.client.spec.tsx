@@ -26,7 +26,7 @@ function job(over: Partial<JobView> = {}): JobView {
   return {
     id: 'bash-1' as JobView['id'],
     kind: 'bash',
-    label: 'pnpm run build',
+    label: 'bun run build',
     status: 'running',
     startedAt: START,
     ...over,

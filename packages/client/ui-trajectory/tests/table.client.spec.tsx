@@ -172,7 +172,7 @@ describe('TrajectoryTable', () => {
   it('keeps raw HTML tags in a Markdown-derived context preview', () => {
     const html = [
       '<background-job-complete id="trajectory-ui-watch">',
-      'Command: pnpm test',
+      'Command: bun test',
       'Exit code: 0',
       '</background-job-complete>',
     ].join('\n')
@@ -193,7 +193,7 @@ describe('TrajectoryTable', () => {
     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
 
     expect(screen.getByText(
-      '<background-job-complete id="trajectory-ui-watch"> Command: pnpm test Exit code: 0 </background-job-complete>',
+      '<background-job-complete id="trajectory-ui-watch"> Command: bun test Exit code: 0 </background-job-complete>',
     )).toBeTruthy()
   })
 

@@ -97,6 +97,38 @@ describe('tool-call-model', () => {
     expect(toolRowModel('bash', running({ argsRaw: '{"command":"pwd"}' })).summary).toBe('pwd')
   })
 
+  it('separates Code Mode activity names from objectives and preserves presenter and legacy fallbacks', () => {
+    const structured = toolRowModel('run_code', running({
+      name: 'run_code',
+      argsRaw: JSON.stringify({ code: 'return 1', display: { name: 'Inspect release', description: 'Verify every package artifact before publishing' } }),
+    }))
+    expect(structured.summary).toBe('Inspect release')
+    expect(structured.objective).toBe('Verify every package artifact before publishing')
+
+    const shorthand = toolRowModel('run_code', running({
+      name: 'run_code', argsRaw: JSON.stringify({ code: 'return 1', display: 'Inspect release' }),
+    }))
+    expect(shorthand.summary).toBe('Inspect release')
+    expect(shorthand.objective).toBeNull()
+
+    const inferred = toolRowModel('run_code', running({
+      name: 'run_code',
+      argsRaw: JSON.stringify({ code: 'return 1', display: { description: 'Verify release' } }),
+      callView: {
+        card: 'generic', kind: 'execute', title: 'Run echo', rawInput: 'return 1',
+        content: [{ type: 'text', text: 'Presenter-owned objective' }],
+      },
+    }))
+    expect(inferred.summary).toBe('Run echo')
+    expect(inferred.objective).toBe('Presenter-owned objective')
+
+    const legacy = toolRowModel('run_code', running({
+      name: 'run_code', argsRaw: JSON.stringify({ code: 'return 1', description: 'Legacy replay title' }),
+    }))
+    expect(legacy.summary).toBe('Legacy replay title')
+    expect(legacy.objective).toBeNull()
+  })
+
   it('keeps summaries single-line and falls back for opaque args', () => {
     expect(toolRowModel('bash', running({ argsRaw: '{"command":"a\\nb"}' })).summary).toBe('a')
     expect(toolRowModel('read', running({ name: 'read', argsRaw: '{"path":"/tmp/x.ts"}' })).summary).toBe('/tmp/x.ts')

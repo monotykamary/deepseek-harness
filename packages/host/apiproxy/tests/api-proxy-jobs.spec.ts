@@ -101,7 +101,7 @@ describe('session/jobs subscription baseline', () => {
 
   it('carries the live set for a session that already has tasks when the stream opens', async () => {
     const { ctx, session, agent } = await harness(true)
-    ctx.jobs.start({ ...producer('pnpm run build').spec, owner: agent })
+    ctx.jobs.start({ ...producer('bun run build').spec, owner: agent })
     const abort = new AbortController()
     const stream = api(ctx).events.mux({ rpcId: RpcId('t-tasks-baseline'), payload: {} }, abort.signal)
     const [baseline] = await collect(stream, 1, abort)
@@ -112,7 +112,7 @@ describe('session/jobs subscription baseline', () => {
     expect({ ...job, startedAt: 0 }).toEqual({
       id: 'bash-1',
       kind: 'bash',
-      label: 'pnpm run build',
+      label: 'bun run build',
       status: 'running',
       startedAt: 0,
     })

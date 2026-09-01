@@ -89,6 +89,8 @@ export interface ToolRowModel {
    * relative values against the session cwd before opening.
    */
   filePath: string | undefined
+  /** Code Mode execution objective, separate from its compact activity name; null for other rows or an omitted objective. */
+  objective: string | null
   /** Expanded-body input text (pretty args); null = no input section. */
   body: string | null
   /** Flattened result text ({@link resultText}); null while running or when the result carries no text. */
@@ -131,6 +133,41 @@ function firstLine(text: string): string {
   return nl === -1 ? text : text.slice(0, nl)
 }
 
+function nonBlankString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed === '' ? undefined : trimmed
+}
+
+interface CodeDisplayMetadata {
+  name: string
+  objective: string | undefined
+}
+
+/** Resolve the display envelope from the durable presenter first, then raw args for old or partial projections. */
+function codeDisplayMetadata(block: ToolCallBlock, argsRaw: string): CodeDisplayMetadata {
+  const parsed = parseArgs(argsRaw)
+  const args = typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : undefined
+  const display = args?.display
+  const displayObject = typeof display === 'object' && display !== null ? display as Record<string, unknown> : undefined
+  const argsName = nonBlankString(display)
+    ?? nonBlankString(displayObject?.name)
+    ?? nonBlankString(args?.description)
+  const argsObjective = nonBlankString(displayObject?.description)
+
+  const callView = block.callView?.card === 'generic' ? block.callView : undefined
+  const viewObjective = callView?.content
+    ?.filter(item => item.type === 'text')
+    .map(item => item.text.trim())
+    .filter(Boolean)
+    .join('\n')
+
+  return {
+    name: nonBlankString(callView?.title) ?? argsName ?? 'Run code',
+    objective: nonBlankString(viewObjective) ?? argsObjective,
+  }
+}
+
 function pickString(args: Record<string, unknown>, keys: readonly string[]): string | undefined {
   for (const key of keys) {
     const v = args[key]
@@ -146,7 +183,7 @@ const SUMMARY_KEYS: Record<ToolRowVariant, readonly string[]> = {
   search: ['query', 'pattern', 'url'],
   write: ['path', 'file_path'],
   edit: ['path', 'file_path'],
-  code: ['description'],
+  code: [],
   others: [],
 }
 
@@ -221,9 +258,10 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
   const state: ToolRowState = !done ? 'running'
     : block.error?.code === 'interrupted' ? 'stopped'
       : block.isError ? 'error' : 'ok'
-  const base = argsRaw === ''
+  const codeDisplay = variant === 'code' ? codeDisplayMetadata(block, argsRaw) : undefined
+  const base = codeDisplay?.name ?? (argsRaw === ''
     ? block.callId
-    : abbreviateHomePath(relativizeToCwd(deriveSummary(variant, argsRaw), cwd), home)
+    : abbreviateHomePath(relativizeToCwd(deriveSummary(variant, argsRaw), cwd), home))
   const toolTitle = TOOL_TITLES[toolName]
   // Others keeps the static "Tool call" title (figma literal); the real tool
   // name rides the mutable summary slot unless the tool owns a specific title.
@@ -240,6 +278,7 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
     title: toolTitle ?? VARIANT_TITLES[variant],
     summary,
     filePath: deriveFilePath(variant, argsRaw),
+    objective: codeDisplay?.objective ?? null,
     body: deriveBody(variant, argsRaw),
     output,
     errorSummary,

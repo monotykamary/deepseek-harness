@@ -35,7 +35,7 @@ The entry package has NO install script and never compiles on the consumer host.
 
 ## Pack gates
 
-Platform tarballs are produced by `npm pack`, entry tarballs by `pnpm pack` — deliberately split: `pnpm pack` (observed on 11.7.0) normalizes file modes and strips the executable bit, which would ship a launcher no consumer can spawn, while platform packages have no dependencies and so need none of pnpm's workspace-protocol conversion; entry packages need that conversion and carry no executables. `scripts/pack-release.mjs` encodes the split — never hand-pack a platform package with pnpm.
+Platform and entry tarballs are produced by `bun pm pack`. Bun preserves launcher executable modes and converts entry-package `workspace:*` dependencies; `scripts/pack-release.mjs` then checks every expected output, and the packed-install rehearsal verifies the installed launcher bytes and mode. Always use that release script rather than hand-packing a package.
 
 Both pack paths produce the exact publish bytes behind a `prepack` gate:
 

@@ -14,17 +14,19 @@ import { sessionResolveOptions } from './session-cwd.ts'
  * @param ctx - the plugin context providing filesystem resolution and observation events.
  * @param exec - the current tool execution, including session cwd and cancellation.
  * @param requestedPath - the raw path supplied to the tool.
+ * @param observationExec - the natural execution that owns an optional absent observation.
  * @returns the resolved target and its single stat result.
  */
 export async function resolveRegularReadTarget(
   ctx: Context,
-  exec: ToolExecution,
+  exec: Pick<ToolExecution, 'agent' | 'signal'>,
   requestedPath: string,
+  observationExec?: ToolExecution,
 ): Promise<{ target: FsTarget; info: FsInfo }> {
   const target = await ctx.fs.resolve(requestedPath, sessionResolveOptions(exec, requestedPath))
   const info = await ctx.fs.stat(target, exec.signal)
   if (info === undefined) {
-    ctx.emit('fs/observed', target, { kind: 'absent' }, exec)
+    if (observationExec !== undefined) ctx.emit('fs/observed', target, { kind: 'absent' }, observationExec)
     throw new FsError(`cannot read "${target.displayPath}": not found`, 'FS_NOT_FOUND')
   }
   if (info.type !== 'file') {

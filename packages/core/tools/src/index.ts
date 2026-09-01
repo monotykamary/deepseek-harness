@@ -12,6 +12,7 @@ import type { CallId, ContentBlock, ToolSchema } from '@monotykamary/dsh-llm'
 import { assertNever, deepFreeze, HarnessError } from '@monotykamary/dsh-llm'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { snapshotJsonValue } from '@monotykamary/dsh-session'
+import { installSettingsSection, settingsNamespace } from '@monotykamary/dsh-settings'
 import type { FileMutation, FileMutationInput, JsonValue, UserMessage } from '@monotykamary/dsh-session'
 import type { ToolProviderResult } from '@monotykamary/dsh-system-prompt'
 import type { CodeRuntime } from '@monotykamary/dsh-code-runtime'
@@ -23,6 +24,16 @@ import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schem
 import type { JsonSchemaNode } from './json-schema.ts'
 import { CODE_DISCOVERY_HELPER_NAMES, createRunCodeTool, RUN_CODE_NAME, SDK_SECTION_ORDER } from './code-mode.ts'
 import type { CodeSdkLanguage, CodeDiscoveryHelperName, RunCodeLabelMode } from './code-mode.ts'
+import { ToolSpeculationStore } from './speculation/store.ts'
+import type { ToolSpeculationOwner } from './speculation/store.ts'
+import { RunCodeSpeculationObserver } from './speculation/stream.ts'
+import type {
+  ToolSpeculationConfig,
+  ToolSpeculationContext,
+  ToolSpeculationObserver,
+  ToolSpeculationResult,
+  ToolSpeculationStats,
+} from './speculation/types.ts'
 import { renderToolsSdk } from './ts-types.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
 import { renderToolsSdkPy } from './py-types.ts'
@@ -62,7 +73,14 @@ const SDK_RENDERERS: Record<string, (schemas: ToolSdkSchema[], labelMode: RunCod
   python: renderToolsSdkPy,
 } satisfies Record<CodeSdkLanguage, (schemas: ToolSdkSchema[], labelMode: RunCodeLabelMode) => string>
 
-export { inferRunCodeTitle, resolveRunCodeTitle, type RunCodeTitleInput } from './code-mode-title.ts'
+export {
+  inferRunCodeTitle,
+  normalizeRunCodeDisplay,
+  resolveRunCodeDisplay,
+  resolveRunCodeTitle,
+  type RunCodeDisplay,
+  type RunCodeTitleInput,
+} from './code-mode-title.ts'
 export type { RunCodeLabelMode } from './code-mode.ts'
 
 export {
@@ -103,6 +121,13 @@ export {
 
 export type { JsonValue } from '@monotykamary/dsh-session'
 export type { CodeDispatchEventData, CodeDispatchStartEventData } from './types.ts'
+export type {
+  ToolSpeculationConfig,
+  ToolSpeculationContext,
+  ToolSpeculationObserver,
+  ToolSpeculationResult,
+  ToolSpeculationStats,
+} from './speculation/types.ts'
 
 export { CODE_DISCOVERY_HELPER_NAMES, CodeRunFailedError, RUN_CODE_NAME } from './code-mode.ts'
 export type { CodeDiscoveryHelperName } from './code-mode.ts'
@@ -222,8 +247,18 @@ export interface ToolOutputDefinition {
   presentationMeta?(args: unknown, value: JsonValue): JsonValue
 }
 
+/** Host-only risk class used by speculative eligibility and policy tooling. */
+export type ToolRisk = 'read' | 'write' | 'execute' | 'network'
+
+/** Host-only effect class; `none` is the sole speculative-safe value. */
+export type ToolEffectKind = 'none' | 'state' | 'workspace' | 'external'
+
 /** A registered tool: its schema plus the execution function. */
 export interface ToolDefinition extends ToolSchema {
+  /** Operational risk declaration; omitted definitions are never speculative. */
+  readonly risk?: ToolRisk
+  /** Observable effect declaration; omitted definitions invalidate speculative reads conservatively. */
+  readonly effectKind?: ToolEffectKind
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -237,6 +272,16 @@ export interface ToolDefinition extends ToolSchema {
    * @returns the canonical value declared by `output.schema`.
    */
   execute(args: unknown, exec: ToolRunContext): Promise<unknown>
+  /**
+   * Optional hidden acquisition path for literal calls discovered while a
+   * `run_code` argument is still streaming. It runs before `tools/pre-execute`,
+   * so it MUST be read-only, side-effect-free, independently authorized by its
+   * provider boundary, and cooperative with `context.signal`. Return replay work
+   * for observations/audit that belong only at the natural allowed call point.
+   * The ordinary `execute` path remains authoritative on every miss or failed
+   * freshness check. This callback is never model-visible.
+   */
+  speculate?(args: unknown, context: ToolSpeculationContext): Promise<ToolSpeculationResult>
   /**
    * Synchronous last-mile transform for model-facing content. The registry
    * snapshots this callback when execution starts and invokes it exactly once
@@ -470,6 +515,14 @@ export type ScheduledToolDispatch =
  * @internal
  */
 export interface ToolRuntimeScheduler {
+  /** Observe one model-streamed run_code JSON argument object, when speculation is enabled. */
+  observeRunCode(input: {
+    rootCallId: CallId
+    agent?: Agent
+    location?: ToolExecutionLocation
+  }): ToolSpeculationObserver | undefined
+  /** Snapshot opportunistic counters for diagnostics and focused tests. */
+  speculationStats(): ToolSpeculationStats & { pending: number; inFlight: number; retainedBytes: number }
   /** Materialize input, run the ordered pre-execute/guard gate, and decide what stage follows. */
   prepare(exec: ToolExecutionInput): Promise<ScheduledToolPreparation>
   /** Run only the around-dispatch/body stage. */
@@ -677,11 +730,33 @@ export type ToolPresentationMode = 'native' | 'code' | 'both'
 
 /** Optional behavior attached to one scoped presentation declaration. */
 export interface ToolPresentationOptions {
-  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  /** Whether `run_code.display` is required or inferred from `code` when absent. */
   readonly runCodeLabel?: RunCodeLabelMode
 }
 
+/** Persistent settings namespace for speculative Code Mode execution. */
+export const TOOL_SPECULATION_SETTINGS_NAMESPACE = settingsNamespace('tool-speculation')
+
 /** Plugin config: how the registered tools are presented to the model. */
+export const DEFAULT_TOOL_SPECULATION_CONFIG: ToolSpeculationConfig = {
+  enabled: false,
+  maxConcurrent: 4,
+  maxEntries: 64,
+  maxBufferBytes: 2 * 1024 * 1024,
+  maxRetainedBytes: 16 * 1024 * 1024,
+  entryTtlMs: 180_000,
+}
+
+const TOOL_SPECULATION_SETTINGS_SCHEMA = z.object({
+  enabled: z.boolean().default(DEFAULT_TOOL_SPECULATION_CONFIG.enabled),
+  maxConcurrent: z.natural().min(1).max(32).default(DEFAULT_TOOL_SPECULATION_CONFIG.maxConcurrent),
+  maxEntries: z.natural().min(1).max(1_024).default(DEFAULT_TOOL_SPECULATION_CONFIG.maxEntries),
+  maxBufferBytes: z.natural().min(64 * 1024).max(64 * 1024 * 1024).default(DEFAULT_TOOL_SPECULATION_CONFIG.maxBufferBytes),
+  maxRetainedBytes: z.natural().min(64 * 1024).max(256 * 1024 * 1024).default(DEFAULT_TOOL_SPECULATION_CONFIG.maxRetainedBytes),
+  entryTtlMs: z.natural().min(5_000).max(30 * 60_000).default(DEFAULT_TOOL_SPECULATION_CONFIG.entryTtlMs),
+})
+
+/** Tool registry presentation, Code Mode scheduling, and hidden speculation options. */
 export interface Config {
   /**
    * Model presentation. `native` (default) sends every visible schema; `code`
@@ -694,7 +769,7 @@ export interface Config {
    * in `toolOrder` are invalid.
    */
   mode?: ToolPresentationMode
-  /** Whether `run_code.description` is required or inferred from `code` when absent. */
+  /** Whether `run_code.display` is required or inferred from `code` when absent. */
   runCodeLabel?: RunCodeLabelMode
   /**
    * Concurrency cap for a `run_code` program's overlapping sub-calls
@@ -704,6 +779,8 @@ export interface Config {
    * restores strictly serial dispatch. Must be a positive integer.
    */
   maxParallelSubCalls?: number
+  /** Hidden, take-once pre-execution of explicitly eligible literal Code Mode calls. */
+  speculation?: Partial<ToolSpeculationConfig>
 }
 
 /**
@@ -819,6 +896,50 @@ function resolveMaxParallelSubCalls(value: number | undefined): number {
   return maxParallelSubCalls
 }
 
+function isSpeculationFreshness(
+  value: unknown,
+): value is NonNullable<ToolSpeculationResult['isFresh']> {
+  return typeof value === 'function'
+}
+
+function isSpeculationReplay(
+  value: unknown,
+): value is NonNullable<ToolSpeculationResult['replay']> {
+  return typeof value === 'function'
+}
+
+type SpeculationEligibleDefinition = ToolDefinition & {
+  readonly risk: 'read'
+  readonly effectKind: 'none'
+  readonly speculate: NonNullable<ToolDefinition['speculate']>
+}
+
+/** Re-check host-only eligibility on the currently resolved definition at every speculative boundary. */
+function isSpeculationEligible(definition: ToolDefinition): definition is SpeculationEligibleDefinition {
+  return definition.speculate !== undefined
+    && definition.risk === 'read'
+    && definition.effectKind === 'none'
+}
+
+function resolveSpeculationConfig(input: Partial<ToolSpeculationConfig> | undefined): ToolSpeculationConfig {
+  const config = { ...DEFAULT_TOOL_SPECULATION_CONFIG, ...input }
+  const bounds: Record<Exclude<keyof ToolSpeculationConfig, 'enabled'>, readonly [number, number]> = {
+    maxConcurrent: [1, 32],
+    maxEntries: [1, 1_024],
+    maxBufferBytes: [64 * 1024, 64 * 1024 * 1024],
+    maxRetainedBytes: [64 * 1024, 256 * 1024 * 1024],
+    entryTtlMs: [5_000, 30 * 60_000],
+  }
+  if (typeof config.enabled !== 'boolean') throw new Error('speculation.enabled must be boolean')
+  for (const [name, [minimum, maximum]] of Object.entries(bounds)) {
+    const value = config[name as keyof typeof bounds]
+    if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
+      throw new Error(`speculation.${name} must be an integer from ${minimum} through ${maximum}`)
+    }
+  }
+  return config
+}
+
 /**
  * Tool registry and execution pipeline. Scoped registrations shadow globals;
  * one visibility resolver feeds presentation, lookup, and dispatch.
@@ -830,10 +951,13 @@ export class ToolRuntime extends Service {
     mode: z.union(['native', 'code', 'both'] as const).default('native'),
     runCodeLabel: z.union(['required', 'inferred'] as const).default('required'),
     maxParallelSubCalls: z.natural().min(1).default(10),
+    speculation: TOOL_SPECULATION_SETTINGS_SCHEMA,
   })
 
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
   readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler = {
+    observeRunCode: input => this.observeRunCode(input),
+    speculationStats: () => this.speculationStore.stats(),
     prepare: exec => this.prepareScheduledExecution(exec),
     dispatch: exec => this.dispatchScheduledExecution(exec),
     finalize: (exec, result) => this.finalizeScheduledExecution(exec, result),
@@ -863,6 +987,10 @@ export class ToolRuntime extends Service {
   /** Code Mode label policy for scopes that declare no presentation. */
   private readonly defaultRunCodeLabel: RunCodeLabelMode
   private readonly maxParallelSubCalls: number
+  private speculationConfig: ToolSpeculationConfig
+  private readonly speculationStore: ToolSpeculationStore
+  private readonly activeSpeculationRoots = new Map<string, ToolSpeculationOwner>()
+  private speculationScannerModule: Promise<typeof import('./speculation/scanner.ts').LiteralToolCallScanner> | undefined
   /**
    * Reserved presentation transport, kept outside the filterable registration
    * layers. Built on first need rather than at construction: which agents run
@@ -881,11 +1009,160 @@ export class ToolRuntime extends Service {
       throw new Error('dsh-tools: runCodeLabel "inferred" requires mode "code" or "both"')
     }
     this.maxParallelSubCalls = resolveMaxParallelSubCalls(config.maxParallelSubCalls)
+    this.speculationConfig = resolveSpeculationConfig(config.speculation)
+    this.speculationStore = new ToolSpeculationStore(this.speculationConfig)
+    let speculationSource = () => this.speculationConfig
+    installSettingsSection(
+      ctx,
+      TOOL_SPECULATION_SETTINGS_NAMESPACE,
+      TOOL_SPECULATION_SETTINGS_SCHEMA,
+      this.speculationConfig,
+      {
+        setSource: (source) => { speculationSource = source },
+        onChange: () => { this.configureSpeculation(speculationSource()) },
+      },
+    )
+    ctx.effect(() => () => {
+      this.activeSpeculationRoots.clear()
+      this.speculationStore.reset()
+    }, 'tools.speculation')
     ctx.systemPrompt.tools(context => this.wireSchemas(context.scope))
     if (this.defaultMode !== 'native') {
       ctx.systemPrompt.section(this.collapseSection())
       ctx.systemPrompt.section(this.sdkSection())
     }
+  }
+
+  /** Apply one settings snapshot without allowing old observers or entries to cross the boundary. */
+  private configureSpeculation(input: Partial<ToolSpeculationConfig>): void {
+    const next = resolveSpeculationConfig(input)
+    if (Object.entries(next).every(([key, value]) =>
+      this.speculationConfig[key as keyof ToolSpeculationConfig] === value)) return
+    this.activeSpeculationRoots.clear()
+    this.speculationConfig = next
+    this.speculationStore.reconfigure(next)
+  }
+
+  /** Build one hidden stream observer for an eligible run_code root. */
+  private observeRunCode(input: {
+    rootCallId: CallId
+    agent?: Agent
+    location?: ToolExecutionLocation
+  }): ToolSpeculationObserver | undefined {
+    if (!this.speculationConfig.enabled || this.modeFor(input.agent) === 'native') return undefined
+    if (this.ctx.get('codeRuntime')?.language !== 'typescript') return undefined
+    let eligible = false
+    for (const definition of this.view(input.agent).visible.values()) {
+      if (definition.name !== RUN_CODE_NAME && isSpeculationEligible(definition)) {
+        eligible = true
+        break
+      }
+    }
+    if (!eligible) return undefined
+
+    const rootKey = this.speculationRootKey(input)
+    this.endSpeculationRoot(input)
+    const owner: ToolSpeculationOwner = Symbol(input.rootCallId)
+    this.activeSpeculationRoots.set(rootKey, owner)
+    const loadScanner = async (): Promise<typeof import('./speculation/scanner.ts').LiteralToolCallScanner> => {
+      this.speculationScannerModule ??= import('./speculation/scanner.ts')
+        .then(module => module.LiteralToolCallScanner)
+      return this.speculationScannerModule
+    }
+    return new RunCodeSpeculationObserver(
+      this.speculationConfig.maxBufferBytes,
+      (candidate) => {
+        if (this.activeSpeculationRoots.get(rootKey) !== owner) return
+        const definition = this.resolveExecution(candidate.name, input.agent, true)
+        if (definition === undefined || !isSpeculationEligible(definition)) return
+        const detached = snapshotJsonValue(candidate.arguments)
+        if (detached === undefined) return
+        const argumentsValue = deepFreeze(detached)
+        this.speculationStore.launch({
+          owner,
+          rootCallId: input.rootCallId,
+          name: candidate.name,
+          arguments: argumentsValue,
+          definition,
+          execute: signal => definition.speculate(argumentsValue, {
+            rootCallId: input.rootCallId,
+            ...input.agent === undefined ? {} : { agent: input.agent },
+            ...input.location === undefined ? {} : { location: input.location },
+            signal,
+          }),
+          validate: result => this.validateSpeculationResult(definition, result),
+        })
+      },
+      loadScanner,
+      () => {
+        if (this.activeSpeculationRoots.get(rootKey) !== owner) return
+        this.activeSpeculationRoots.delete(rootKey)
+        this.speculationStore.cancelRoot(owner)
+      },
+    )
+  }
+
+  /** Stable correlation key for one agent-loop root; the mapped owner remains unforgeable. */
+  private speculationRootKey(input: {
+    rootCallId: CallId
+    agent?: Agent
+    location?: ToolExecutionLocation
+  }): string {
+    return JSON.stringify([
+      input.agent?.id ?? null,
+      input.location?.turn ?? null,
+      input.location?.step ?? null,
+      input.rootCallId,
+    ])
+  }
+
+  /** Resolve the active owner token carried by one natural root or nested call. */
+  private speculationOwner(input: {
+    rootCallId: CallId
+    agent?: Agent
+    location?: ToolExecutionLocation
+  }): ToolSpeculationOwner | undefined {
+    return this.activeSpeculationRoots.get(this.speculationRootKey(input))
+  }
+
+  /** Snapshot and validate a hidden value before it occupies retained cache bytes. */
+  private validateSpeculationResult(
+    definition: ToolDefinition,
+    result: unknown,
+  ): ToolSpeculationResult {
+    if (typeof result !== 'object' || result === null) {
+      throw new TypeError(`tool "${definition.name}" speculation returned no result object`)
+    }
+    const candidate = result as { value?: unknown; isFresh?: unknown; replay?: unknown }
+    const value = snapshotToolValue(definition.name, candidate.value)
+    const violations = validateJsonSchemaValue(definition.output.schema, value, 'value')
+    if (violations.length > 0) throw new ToolOutputError(definition.name, violations)
+    const isFresh = candidate.isFresh
+    if (isFresh !== undefined && !isSpeculationFreshness(isFresh)) {
+      throw new TypeError(`tool "${definition.name}" speculation isFresh must be a function`)
+    }
+    const replay = candidate.replay
+    if (replay !== undefined && !isSpeculationReplay(replay)) {
+      throw new TypeError(`tool "${definition.name}" speculation replay must be a function`)
+    }
+    return {
+      value: deepFreeze(value),
+      ...isFresh === undefined ? {} : { isFresh },
+      ...replay === undefined ? {} : { replay },
+    }
+  }
+
+  /** End a root generation before clearing its unserved hidden work. */
+  private endSpeculationRoot(input: {
+    rootCallId: CallId
+    agent?: Agent
+    location?: ToolExecutionLocation
+  }): void {
+    const key = this.speculationRootKey(input)
+    const owner = this.activeSpeculationRoots.get(key)
+    if (owner === undefined) return
+    this.activeSpeculationRoots.delete(key)
+    this.speculationStore.cancelRoot(owner)
   }
 
   /**
@@ -1115,6 +1392,10 @@ export class ToolRuntime extends Service {
       throw new TypeError(`tool "${name}" must declare output { schema, render, presentationMeta? }`)
     }
     assertSupportedJsonSchema(output.schema)
+    if (definition.speculate !== undefined
+      && (definition.risk !== 'read' || definition.effectKind !== 'none')) {
+      throw new TypeError(`tool "${name}" speculate requires risk "read" and effectKind "none"`)
+    }
     const timeoutMs = definition.timeoutMs
     if (timeoutMs !== undefined
       && (!Number.isFinite(timeoutMs) || timeoutMs <= 0)) {
@@ -1659,8 +1940,30 @@ export class ToolRuntime extends Service {
     try {
       const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
       if (!tool) throw new ToolNotFoundError(exec.name)
+      const speculationOwner = exec.parent === undefined ? undefined : this.speculationOwner(exec)
+      if (speculationOwner !== undefined && isSpeculationEligible(tool)) {
+        const argumentsValue = exec.arguments as Record<string, unknown>
+        const served = await this.speculationStore.tryServe(
+          speculationOwner, exec.name, argumentsValue, tool, exec,
+        )
+        if (served.hit || served.reason !== 'absent') state.bodyInvoked = true
+        if (served.hit) {
+          const result = this.createSuccessResult(exec, tool, served.value)
+          return isAborted(signal) ? toolAbortedResult(result) : result
+        }
+        if (isAborted(signal)) return this.cancellationResult(exec)
+      }
       state.bodyInvoked = true
-      const returned = await tool.execute(exec.arguments, exec)
+      let returned: unknown
+      try {
+        returned = await tool.execute(exec.arguments, exec)
+      } finally {
+        // Every real nested body not declared effect-free invalidates older
+        // reads in this root only, even when the body throws after mutating.
+        if (speculationOwner !== undefined && tool.effectKind !== 'none') {
+          this.speculationStore.bumpEpoch(speculationOwner)
+        }
+      }
       const result = this.createSuccessResult(exec, tool, returned)
       return isAborted(signal)
         ? toolAbortedResult(result)
@@ -1743,6 +2046,7 @@ export class ToolRuntime extends Service {
    * @internal
    */
   private finishScheduledExecution(exec: ToolRunContext, result: ToolExecutionResult): ToolExecutionResult {
+    if (exec.parent === undefined) this.endSpeculationRoot(exec)
     let materializedResult: ToolExecutionResult
     try {
       materializedResult = this.materializeFinalResult(result)

@@ -115,6 +115,12 @@ export namespace ModuleLoader {
     try {
       return require('node-addon-require-builtin').requireBuiltin(id)
     } catch {}
+    try {
+      const packageRequire = createRequire(require.resolve('node-addon-require-builtin/package.json'))
+      const nativeLoader = packageRequire('node-addon-native-custom-loader')
+      const platformPackage = nativeLoader.optionalPackageName('node-addon-require-builtin')
+      return packageRequire(platformPackage).requireBuiltin(id)
+    } catch {}
   }
 
   export function fromInternal(): ModuleLoader | undefined {

@@ -64,7 +64,7 @@ npm scope 为 `@monotykamary/dsh-*`；Cordis `Service` 子类和函数插件通�
 
 ## 依赖
 
-依赖图由工具生成：[docs/module-graph.md](../docs/module-graph.zh.md)（`pnpm run gen-module-graph`，CI 中有新鲜度门禁）。
+依赖图由工具生成：[docs/module-graph.md](../docs/module-graph.zh.md)（`bun run gen-module-graph`，CI 中有新鲜度门禁）。
 
 **扩展插件依赖 Service Definition，绝不依赖具体提供方。** `dsh-agent-loop` 可替换；UI、钩子和工具插件使用 `dsh-agent`。包括 `dsh-agent-spine-demo` 在内的组合包可以依赖主干插件。能力会将需要独立演进的 Service Definition／Service Provider／Consumer 角色分离；详见[能力 seam](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.zh.md)。
 

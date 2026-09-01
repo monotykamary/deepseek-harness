@@ -1,4 +1,4 @@
-/** Explicit ESM entries carrying the localterm patches registered in pnpm-workspace.yaml. */
+/** Explicit ESM entries carrying the localterm patches registered in bun-workspace.yaml. */
 declare module '@xterm/addon-image/lib/addon-image.mjs' {
   export { ImageAddon } from '@xterm/addon-image'
 }

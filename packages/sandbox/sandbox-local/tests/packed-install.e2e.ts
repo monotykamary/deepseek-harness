@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { accessSync, constants, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -95,14 +95,14 @@ describe.skipIf(!packable)('sandbox-local: packed-tarball distribution (publish-
     // Pack each harness closure member with the exact bytes publish would upload.
     const tarballs: string[] = []
     for (const pkg of WORKSPACE_CLOSURE) {
-      const pack = spawnSync('pnpm', ['pack', '--pack-destination', packDest], {
+      const pack = spawnSync('bun', ['pm', 'pack', '--destination', packDest, '--quiet'], {
         cwd: join(repoRoot, pkg),
         encoding: 'utf8',
         timeout: 120_000,
       })
-      expect(pack.status, `pnpm pack failed for ${pkg}:\n${pack.stdout}\n${pack.stderr}`).toBe(0)
+      expect(pack.status, `bun pm pack failed for ${pkg}:\n${pack.stdout}\n${pack.stderr}`).toBe(0)
       const lines = pack.stdout.trim().split('\n')
-      tarballs.push(lines[lines.length - 1] as string)
+      tarballs.push(join(packDest, basename(lines[lines.length - 1] as string)))
     }
     tarballs.push(...nativeTarballs)
 

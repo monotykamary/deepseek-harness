@@ -10,14 +10,15 @@
  * - packages/<group>/<pkg>/ and examples/<name>/ changes run that package.
  * - scripts and apps spec files (non-e2e) run the file itself.
  * - app e2e files are reported (the web lane owns them:
- *   DSH_SNAPSHOT=replay pnpm run test:web).
+ *   DSH_SNAPSHOT=replay bun run test:web).
  * - Everything else (docs, notes, root configs) reports no test scope.
  *
- * Usage: pnpm run test:changed [-- --coverage] [--watch]
+ * Usage: bun run test:changed [-- --coverage] [--watch]
  */
 import { spawnSync } from 'node:child_process'
 import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
+import { bunInvocation } from './bun-invocation.ts'
 
 const REPO_ROOT = resolve(import.meta.dirname, '..')
 
@@ -56,17 +57,17 @@ const e2eFiles = changed.filter(path => path.endsWith('.e2e.ts'))
 if (scopes.length === 0) {
   console.log('test:changed: no changed package, example, or spec file; nothing to run.')
   if (e2eFiles.length > 0) {
-    console.log('  web e2e files changed — run the web lane: DSH_SNAPSHOT=replay pnpm run test:web')
+    console.log('  web e2e files changed — run the web lane: DSH_SNAPSHOT=replay bun run test:web')
   }
   process.exit(0)
 }
 
 console.log('test:changed: ' + scopes.join(', '))
 if (e2eFiles.length > 0) {
-  console.log('  (web e2e also changed — run DSH_SNAPSHOT=replay pnpm run test:web for those)')
+  console.log('  (web e2e also changed — run DSH_SNAPSHOT=replay bun run test:web for those)')
 }
 
-const vitestArgs: string[] = ['exec', 'vitest']
+const vitestArgs: string[] = ['x', 'vitest']
 if (!options.watch) vitestArgs.push('run')
 vitestArgs.push(...scopes)
 if (options.coverage) {
@@ -80,6 +81,7 @@ if (options.coverage) {
   }
 }
 
-console.log('  $ pnpm ' + vitestArgs.join(' '))
-const run = spawnSync('pnpm', vitestArgs, { cwd: REPO_ROOT, stdio: 'inherit' })
+console.log('  $ bun ' + vitestArgs.join(' '))
+const invocation = bunInvocation(vitestArgs)
+const run = spawnSync(invocation.command, invocation.args, { cwd: REPO_ROOT, stdio: 'inherit' })
 process.exit(run.status ?? 1)

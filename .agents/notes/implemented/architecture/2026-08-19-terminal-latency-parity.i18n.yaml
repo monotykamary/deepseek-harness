@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-19-terminal-latency-parity.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-19-terminal-latency-parity.md
 2026-08-19-terminal-latency-parity.md: 92bbf7033892f1290288af75bc0ce72451dfcc98
 2026-08-19-terminal-latency-parity.zh.md: 50a3ea0c15ff29b04e094c94341be1062f19456c

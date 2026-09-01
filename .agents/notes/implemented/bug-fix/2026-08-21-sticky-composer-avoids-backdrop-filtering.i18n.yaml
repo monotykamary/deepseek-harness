@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-21-sticky-composer-avoids-backdrop-filtering.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-21-sticky-composer-avoids-backdrop-filtering.md
 2026-08-21-sticky-composer-avoids-backdrop-filtering.md: 09cc09f4dbfef5c9148f9cfb8631b6f8a14abb3f
 2026-08-21-sticky-composer-avoids-backdrop-filtering.zh.md: edffa14f000e5567993a105c5a26fe1fd7632d6e

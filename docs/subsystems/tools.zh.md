@@ -25,6 +25,10 @@ interface ToolOutputDefinition {
 ```ts type-equiv
 /** A registered tool: its schema plus the execution function. */
 interface ToolDefinition extends ToolSchema {
+  /** Operational risk declaration; omitted definitions are never speculative. */
+  readonly risk?: ToolRisk
+  /** Observable effect declaration; omitted definitions invalidate speculative reads conservatively. */
+  readonly effectKind?: ToolEffectKind
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -38,6 +42,16 @@ interface ToolDefinition extends ToolSchema {
    * @returns the canonical value declared by `output.schema`.
    */
   execute(args: unknown, exec: ToolRunContext): Promise<unknown>
+  /**
+   * Optional hidden acquisition path for literal calls discovered while a
+   * `run_code` argument is still streaming. It runs before `tools/pre-execute`,
+   * so it MUST be read-only, side-effect-free, independently authorized by its
+   * provider boundary, and cooperative with `context.signal`. Return replay work
+   * for observations/audit that belong only at the natural allowed call point.
+   * The ordinary `execute` path remains authoritative on every miss or failed
+   * freshness check. This callback is never model-visible.
+   */
+  speculate?(args: unknown, context: ToolSpeculationContext): Promise<ToolSpeculationResult>
   /**
    * Synchronous last-mile transform for model-facing content. The registry
    * snapshots this callback when execution starts and invokes it exactly once
@@ -519,7 +533,7 @@ type ObjectJsonSchema = JsonSchemaNode & { type: 'object' }
 
 ## Cordis API
 
-Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `bun run verify-cordis-catalog` in doc-sync; regenerate with `bun run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
 <a id="ctxtools--toolruntime"></a>
 

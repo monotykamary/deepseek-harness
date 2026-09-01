@@ -85,9 +85,9 @@ The flake pins the npm release named by this checkout. Set `DSH_INSTALL_CHANNEL=
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 cd deepseek-harness
-pnpm install
-pnpm run build
-pnpm dsh web
+bun install
+bun run build
+bun dsh web
 ```
 
 ## Updates and diagnostics

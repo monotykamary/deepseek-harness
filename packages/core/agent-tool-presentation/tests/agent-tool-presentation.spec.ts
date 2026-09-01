@@ -73,7 +73,7 @@ describe('the tool-presentation row', () => {
 
     expect(codedAssembly.tools.map(tool => tool.name)).toEqual([RUN_CODE_NAME])
     expect((codedAssembly.tools[0]?.parameters as { required?: string[] }).required).toEqual(['code'])
-    expect(codedAssembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('`description` is optional')
+    expect(codedAssembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('`display` is optional; use `{ name, description }`')
     expect(codedAssembly.sections.find(section => section.name === 'tools:sdk')?.text).toContain('echo')
     expect(plainAssembly.tools.map(tool => tool.name)).toEqual(['echo'])
   })

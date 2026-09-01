@@ -1,6 +1,6 @@
 /**
  * Process helpers shared by the release scripts: the release steps drive `git`,
- * `pnpm`, `npm`, and `tar`, and each needs one of three failure behaviours.
+ * `Bun`, `npm`, and `tar`, and each needs one of three failure behaviours.
  */
 
 import { spawnSync } from 'node:child_process'
@@ -58,10 +58,9 @@ export function attempt(command: string, args: readonly string[], options: RunOp
  * This is not live progress. `spawnSync` returns only after the child exits, so
  * nothing appears while the command runs, and the two streams are echoed one
  * after the other — all of stdout, then all of stderr — which loses their
- * interleaving. For an npm publish that matters in one visible way: `npm notice`
- * lines go to stderr while the `+ name@version` confirmation goes to stdout, so
- * the log shows the confirmation first. Live progress would need an
- * asynchronous spawn with data listeners.
+ * interleaving. Registry clients may split notices and the final confirmation
+ * across those streams, so the log can show them out of order. Live progress
+ * would need an asynchronous spawn with data listeners.
  * @param command - executable name.
  * @param args - command arguments.
  * @param options - working directory and environment.

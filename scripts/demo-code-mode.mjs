@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process'
 
 if (process.argv.length > 2) {
-  console.error('usage: pnpm run demo:code-mode')
+  console.error('usage: bun run demo:code-mode')
   process.exit(2)
 }
 

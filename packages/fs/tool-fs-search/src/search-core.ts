@@ -19,8 +19,8 @@
  * @module @monotykamary/dsh-tool-fs-search/search-core
  */
 
-import { existsSync } from 'node:fs'
-import { isAbsolute, relative, sep } from 'node:path'
+import { existsSync, realpathSync } from 'node:fs'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 import type { Context } from '@monotykamary/cordis'
 import { HarnessError } from '@monotykamary/dsh-llm'
 import { ItemRetainer, TextRetainer } from '@monotykamary/dsh-output-retention'
@@ -178,6 +178,26 @@ export function resolveRgPath(): Promise<string> {
 }
 
 /**
+ * Check whether a hidden search target stays under the caller's workspace.
+ * @param exec - the calling execution whose session supplies the workspace root.
+ * @param inputPath - the optional path resolved relative to that workspace.
+ * @returns whether both canonical paths exist and the target is contained.
+ */
+export function isSpeculationSearchContained(
+  exec: Pick<ToolExecution, 'agent'>,
+  inputPath: string | undefined,
+): boolean {
+  try {
+    const workdir = realpathSync.native(exec.agent?.session.header.cwd ?? process.cwd())
+    const target = realpathSync.native(resolve(workdir, inputPath ?? '.'))
+    const rel = relative(workdir, target)
+    return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))
+  } catch {
+    return false
+  }
+}
+
+/**
  * Run the packaged ripgrep binary with a plain argv vector and return its
  * complete raw stdout. The working directory is the calling agent's session
  * cwd (`exec.agent.session.header.cwd`) when available, else
@@ -214,7 +234,7 @@ export function resolveRgPath(): Promise<string> {
  */
 export async function runRipgrep(
   ctx: Context,
-  exec: ToolExecution,
+  exec: Pick<ToolExecution, 'agent' | 'signal'>,
   toolName: string,
   argv: readonly string[],
   rawOutputMaxBytes: number,

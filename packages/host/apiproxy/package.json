@@ -88,7 +88,6 @@
     "@monotykamary/dsh-storage": "workspace:^",
     "@monotykamary/dsh-storage-domain": "workspace:^",
     "@monotykamary/dsh-typert-protocol": "workspace:^",
-    "@monotykamary/dsh-typert-registry": "workspace:^",
-    "@monotykamary/cordis": "workspace:^"
+    "@monotykamary/dsh-typert-registry": "workspace:^"
   }
 }

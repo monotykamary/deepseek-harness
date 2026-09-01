@@ -13,7 +13,7 @@ import { snapshotJsonValue } from '@monotykamary/dsh-session'
 import type { JsonValue } from '@monotykamary/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema, ToolArgsError } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
-import { resolveRunCodeTitle } from './code-mode-title.ts'
+import { normalizeRunCodeDisplay, resolveRunCodeDisplay } from './code-mode-title.ts'
 import type { CodeDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
 import type {} from './types.ts'
 
@@ -26,7 +26,7 @@ export const CODE_DISCOVERY_HELPER_NAMES = ['call', 'describe'] as const
 /** One reserved Code Mode discovery-helper name. */
 export type CodeDiscoveryHelperName = typeof CODE_DISCOVERY_HELPER_NAMES[number]
 
-/** How a Code Mode presentation obtains the run card and compaction label. */
+/** How a Code Mode presentation obtains its activity name. */
 export type RunCodeLabelMode = 'required' | 'inferred'
 
 /** The `tools:sdk` section order: inside the 100–199 tool-guidance band, after per-tool guidance sections. */
@@ -59,17 +59,18 @@ const TYPESCRIPT_FLAVOR: RunCodeFlavor = {
   description:
     'Execute a TypeScript program against the available tools. Takes two required '
     + 'arguments: `code`, the BODY of an async function (erasable syntax only; top-level '
-    + '`await` and `return` work), and `description`, a short summary of what the program '
-    + 'does. Call tools as `await tools.name(args)` per the declarations in the system '
-    + 'prompt. Only what you print or return is program output — curate it. Image-bearing '
-    + 'subtool results are attached after the run.',
+    + '`await` and `return` work), and `display`, activity metadata naming the run and '
+    + 'optionally describing its objective. Call tools as `await tools.name(args)` per the '
+    + 'declarations in the system prompt. Only what you print or return is program output — '
+    + 'curate it. Image-bearing subtool results are attached after the run.',
   inferredDescription:
     'Execute a TypeScript program against the available tools. Takes one required '
     + 'argument: `code`, the BODY of an async function (erasable syntax only; top-level '
-    + '`await` and `return` work). Optional `description` labels the run; when omitted, '
-    + 'DSH derives a title from the program. Call tools as `await tools.name(args)` per '
-    + 'the declarations in the system prompt. Only what you print or return is program '
-    + 'output — curate it. Image-bearing subtool results are attached after the run.',
+    + '`await` and `return` work). Optional `display` names the activity and describes its '
+    + 'objective; when its name is omitted, DSH derives a title from the program. Call tools '
+    + 'as `await tools.name(args)` per the declarations in the system prompt. Only what you '
+    + 'print or return is program output — curate it. Image-bearing subtool results are '
+    + 'attached after the run.',
   codeDescription: 'The program: the body of an async TypeScript function.',
 }
 
@@ -82,17 +83,17 @@ const PYTHON_FLAVOR: RunCodeFlavor = {
   description:
     'Execute a Python program against the available tools. Takes two required '
     + 'arguments: `code`, the BODY of an async function (top-level `await` and `return` '
-    + 'work), and `description`, a short summary of what the program does. Call tools as '
-    + '`await tools.name(args)` per the declarations in the system prompt. Use '
-    + '`print(...)` and/or `return <value>` for program output — curate it. Image-bearing '
-    + 'subtool results are attached after the run.',
-  inferredDescription:
-    'Execute a Python program against the available tools. Takes one required argument: '
-    + '`code`, the BODY of an async function (top-level `await` and `return` work). '
-    + 'Optional `description` labels the run; when omitted, DSH derives a title from the '
-    + 'program. Call tools as `await tools.name(args)` per the declarations in the system '
+    + 'work), and `display`, activity metadata naming the run and optionally describing its '
+    + 'objective. Call tools as `await tools.name(args)` per the declarations in the system '
     + 'prompt. Use `print(...)` and/or `return <value>` for program output — curate it. '
     + 'Image-bearing subtool results are attached after the run.',
+  inferredDescription:
+    'Execute a Python program against the available tools. Takes one required argument: '
+    + '`code`, the BODY of an async function (top-level `await` and `return` work). Optional '
+    + '`display` names the activity and describes its objective; when its name is omitted, '
+    + 'DSH derives a title from the program. Call tools as `await tools.name(args)` per the '
+    + 'declarations in the system prompt. Use `print(...)` and/or `return <value>` for '
+    + 'program output — curate it. Image-bearing subtool results are attached after the run.',
   codeDescription: 'The program: the body of an async Python function.',
 }
 
@@ -113,16 +114,41 @@ const RUN_CODE_FLAVORS: Record<string, RunCodeFlavor> = {
   python: PYTHON_FLAVOR,
 } satisfies Record<CodeSdkLanguage, RunCodeFlavor>
 
-/**
- * The `description` parameter's model-facing description: language-independent
- * (the UI label contract is the same for every runtime), shared between the
- * static spec and the language-aware `parameters` getter so the two emissions
- * can never drift.
- */
-const RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION
-  = 'Clear, concise description of what this program does in active voice, '
-    + '5-10 words (shown in the UI). Examples: "Count TODO markers across packages"; '
-    + '"Read failing test and its fixture"; "Rename config key in every cordis.yml".'
+/** Model-facing explanation of the display object and its shorthand form. */
+const RUN_CODE_DISPLAY_PARAM_DESCRIPTION
+  = 'Activity metadata for the whole run. Prefer an object with `name` and optional '
+    + '`description`; a string is shorthand for `name`. A JSON-string object is also accepted.'
+
+/** Model-facing explanation of the activity name. */
+const RUN_CODE_DISPLAY_NAME_DESCRIPTION
+  = 'Brief activity name for the whole run (for example, "Inspect auth flow" or "Run focused tests").'
+
+/** Model-facing explanation of the activity objective. */
+const RUN_CODE_DISPLAY_DESCRIPTION_DESCRIPTION
+  = 'Concise objective for the whole run: what it is doing and why. This appears in the activity UI.'
+
+/** Build the display parameter for one label policy. */
+function runCodeDisplayParameter(required: boolean) {
+  return {
+    oneOf: [{
+      type: 'object' as const,
+      additionalProperties: false,
+      properties: {
+        name: {
+          type: 'string' as const,
+          ...(required ? { required: true as const } : {}),
+          description: RUN_CODE_DISPLAY_NAME_DESCRIPTION,
+        },
+        description: { type: 'string' as const, description: RUN_CODE_DISPLAY_DESCRIPTION_DESCRIPTION },
+      },
+    }, {
+      type: 'string' as const,
+      description: 'String shorthand for the activity name.',
+    }] as const,
+    ...(required ? { required: true as const } : {}),
+    description: RUN_CODE_DISPLAY_PARAM_DESCRIPTION,
+  }
+}
 
 /**
  * Resolve the {@link RunCodeFlavor} for the loaded runtime's language, read at
@@ -338,10 +364,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
     description: TYPESCRIPT_FLAVOR.description,
     parameters: {
       code: { type: 'string', required: true, description: TYPESCRIPT_FLAVOR.codeDescription },
-      description: {
-        type: 'string',
-        description: RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION,
-      },
+      display: runCodeDisplayParameter(false),
+      // Accepted only for replay and callers created before display metadata.
+      description: { type: 'string' },
     },
     output: {
       schema: {
@@ -359,9 +384,10 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
       },
     },
     async execute(args, exec): Promise<RunCodeOutput> {
+      const declaredDisplay = normalizeRunCodeDisplay(args.display)
       if (labelMode === 'required'
-        && (typeof args.description !== 'string' || args.description.trim().length === 0)) {
-        throw new ToolArgsError(['description: expected a non-empty string'])
+        && !(declaredDisplay.name?.trim() || args.description?.trim())) {
+        throw new ToolArgsError(['display: expected a non-empty name'])
       }
       const runtime = requireRuntime()
 
@@ -729,14 +755,20 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         exec.signal.removeEventListener('abort', onOuterAbort)
       }
     },
-    // The explicit or lexically inferred title is a pure projection of the
-    // recorded arguments; the program itself rides rawInput.
-    presentCall: args => ({
-      card: 'generic',
-      title: resolveRunCodeTitle(args),
-      kind: 'execute',
-      rawInput: args.code,
-    }),
+    // Display metadata is a pure projection of the recorded arguments; the
+    // program itself rides rawInput and the objective is visible above it.
+    presentCall: (args) => {
+      const display = resolveRunCodeDisplay(args)
+      return {
+        card: 'generic',
+        title: display.name,
+        kind: 'execute',
+        rawInput: args.code,
+        ...(display.description === undefined
+          ? {}
+          : { content: [{ type: 'text' as const, text: display.description }] }),
+      }
+    },
     // Deliberately no presentResult: the generic card fallback keeps this
     // title and reads durable result content without duplicating a large raw
     // result into the host view payload.
@@ -755,11 +787,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
     // the emitted schema always matches the validated specification.
     get: () => parameterSchemaSpecToJsonSchema({
       code: { type: 'string', required: true, description: resolveFlavor(peekRuntime).codeDescription },
-      description: {
-        type: 'string',
-        ...(labelMode === 'required' ? { required: true as const } : {}),
-        description: RUN_CODE_DESCRIPTION_PARAM_DESCRIPTION,
-      },
+      display: runCodeDisplayParameter(labelMode === 'required'),
     }) as unknown as Record<string, unknown>,
   })
   return definition

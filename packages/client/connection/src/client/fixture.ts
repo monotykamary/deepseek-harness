@@ -457,7 +457,10 @@ function buildAlphaLog(): SessionEvent[] {
       + 'const demo = await tools.read({ file_path: "notes/demo.txt" })\n'
       + 'await tools.read({ file_path: "notes/missing.txt" }).catch(() => "tolerated")\n'
       + 'return { listing, demo }'
-    const args = JSON.stringify({ code: program, description: 'Read the notes files and summarize' })
+    const args = JSON.stringify({
+      code: program,
+      display: { name: 'Inspect notes', description: 'Read the notes files and summarize their contents' },
+    })
     push({ type: 'turn/start', data: { turn } })
     push({ type: 'user/message', surfaceOp: 'append', data: userMessage(text(`问题 ${turn}：run_code 样本。`)) })
     push({ type: 'step/start', data: { turn, step: 0 } })
@@ -511,7 +514,7 @@ function buildAlphaLog(): SessionEvent[] {
   // Ordered BEFORE the todo turn deliberately: the standing plan retires at the
   // next `turn/start`, so a turn appended after it would leave the dock's plan
   // strip empty and take the todo surfaces' own coverage with it.
-  toolTurn(66, 'bash', '{"command":"pnpm run check","cwd":"/tmp/fixture/deep/nested"}', TERMINAL_OUTPUT_FIXTURE)
+  toolTurn(66, 'bash', '{"command":"bun run check","cwd":"/tmp/fixture/deep/nested"}', TERMINAL_OUTPUT_FIXTURE)
 
   // Turns 67-68: the search card's two shapes. `grep` emits a `card: 'search'`
   // `shape: 'matches'` result view (grouped-by-file matches, truncated with a

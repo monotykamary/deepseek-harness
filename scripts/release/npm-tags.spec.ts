@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { finalDistTag, promotionRequired, publicationTagArgs, RELEASE_CANDIDATE_TAG } from './npm-tags.ts'
 import { isTransientNpmWriteFailure } from './npm-write.ts'
+import { bunPublishInvocation } from './publish.ts'
 
 describe('npm release tags', () => {
   it('stages every version without moving latest or next', () => {
     expect(publicationTagArgs('1.2.3', true)).toEqual(['--tag', RELEASE_CANDIDATE_TAG])
     expect(publicationTagArgs('1.2.3-rc.1', true)).toEqual(['--tag', RELEASE_CANDIDATE_TAG])
+  })
+
+  it('publishes packed artifacts through Bun with the selected tag', () => {
+    expect(bunPublishInvocation('/tmp/pkg.tgz', ['--tag', RELEASE_CANDIDATE_TAG])).toEqual({
+      command: 'bun',
+      args: ['publish', '--tag', RELEASE_CANDIDATE_TAG, '/tmp/pkg.tgz'],
+    })
   })
 
   it('promotes stable releases to latest and prereleases to next', () => {

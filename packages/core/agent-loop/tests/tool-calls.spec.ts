@@ -3,16 +3,16 @@
  * ACP expected outputs own transcript-facing coverage.
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@monotykamary/cordis'
 import { createUserMessage, CallId, StreamChunk  } from '@monotykamary/dsh-llm'
 import SessionStore, { SessionEvent, SessionId } from '@monotykamary/dsh-session'
 import SystemPrompt from '@monotykamary/dsh-system-prompt'
 import LlmRuntime from '@monotykamary/dsh-llm'
-import ToolRuntime, { defineContentToolFixture, TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type PostToolDecision, type PreToolDecision } from '@monotykamary/dsh-tools'
+import ToolRuntime, { defineContentToolFixture, defineTool, TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type PostToolDecision, type PreToolDecision } from '@monotykamary/dsh-tools'
 import AgentRegistry, { type Agent } from '@monotykamary/dsh-agent'
 import AgentLoop, { DEFAULT_MAX_PARALLEL_TOOL_CALLS } from '@monotykamary/dsh-agent-loop'
-import { MockAdapter, textResponse } from './mock-adapter.ts'
+import { MockAdapter, textResponse, toolCallResponse } from './mock-adapter.ts'
 import { CodeRuntime } from '@monotykamary/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@monotykamary/dsh-code-runtime'
 
@@ -723,12 +723,14 @@ describe('tool-call scheduler: failure quiescence', () => {
 })
 
 describe('code-mode native-tool denial through the agent loop', () => {
-  /** A minimal in-process code runtime for test purposes — never actually runs. */
+  /** A scriptable in-process code runtime for the agent-loop composition. */
   class FakeCodeRuntime extends CodeRuntime {
     readonly language = 'typescript'
     readonly isolation = 'fake' as const
-    async run(_request: CodeRunRequest): Promise<CodeRunResult> {
-      return { logs: [] }
+    behavior: (request: CodeRunRequest) => Promise<CodeRunResult> = () => Promise.resolve({ logs: [] })
+
+    run(request: CodeRunRequest): Promise<CodeRunResult> {
+      return this.behavior(request)
     }
   }
 
@@ -737,7 +739,7 @@ describe('code-mode native-tool denial through the agent loop', () => {
     await ctx.plugin(LlmRuntime)
     await ctx.plugin(SessionStore)
     await ctx.plugin(SystemPrompt, { persona: '' })
-    await ctx.plugin(ToolRuntime, { mode: 'code' })
+    await ctx.plugin(ToolRuntime, { mode: 'code', speculation: { enabled: true } })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FakeCodeRuntime is an internal test helper with an opaque type shape
     await ctx.plugin(FakeCodeRuntime as any)
     await ctx.plugin(AgentRegistry)
@@ -745,6 +747,66 @@ describe('code-mode native-tool denial through the agent loop', () => {
     ctx.llm.registerAdapter(['mock'], adapter)
     return ctx
   }
+
+  it('prefetches a literal nested call from streamed run_code arguments', async () => {
+    const code = 'return tools.probe({ value: "x" })'
+    const adapter = new MockAdapter([
+      toolCallResponse('run-1', 'run_code', { code, display: 'Probe' }),
+      textResponse('done'),
+    ])
+    const ctx = await codeModeHarness(adapter)
+    let speculativeCalls = 0
+    let naturalCalls = 0
+    let replayCalls = 0
+    ctx.tools.register(defineTool({
+      name: 'probe',
+      risk: 'read',
+      effectKind: 'none',
+      description: 'Read one probe.',
+      parameters: { value: { type: 'string', required: true } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      execute(args) {
+        naturalCalls += 1
+        return Promise.resolve(`natural:${args.value}`)
+      },
+      async speculate(args) {
+        speculativeCalls += 1
+        return { value: `prefetched:${args.value}`, replay: () => { replayCalls += 1 } }
+      },
+    }))
+    const runtime = ctx.get('codeRuntime') as FakeCodeRuntime
+    runtime.behavior = async (request) => {
+      await vi.waitFor(() => {
+        expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+      })
+      return {
+        logs: [],
+        value: await request.bindings[0]!.functions.probe!({ value: 'x' }),
+      }
+    }
+
+    const agent = ctx.agentLoop.create(SessionId('code-speculation'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'probe' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx, agent)
+
+    expect({ speculativeCalls, naturalCalls, replayCalls }).toEqual({
+      speculativeCalls: 1,
+      naturalCalls: 0,
+      replayCalls: 1,
+    })
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ served: 1, pending: 0 })
+    expect(events(agent).find(event => event.type === 'tool/result')?.data).toMatchObject({
+      message: {
+        source: { kind: 'tool', callId: 'run-1' },
+        content: [{
+          type: 'tool-result',
+          toolCallId: 'run-1',
+          isError: false,
+          content: [{ type: 'text', text: 'prefetched:x' }],
+        }],
+      },
+    })
+  })
 
   it('denies a model-direct native-tool call under code mode: tool body never runs and session records UNKNOWN_TOOL', async () => {
     let toolInvoked = false

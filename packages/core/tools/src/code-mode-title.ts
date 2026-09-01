@@ -187,18 +187,70 @@ export function inferRunCodeTitle(code: string): string | undefined {
   return title
 }
 
-/** Code Mode arguments needed to resolve a presentation and compaction title. */
+/** Model-authored activity metadata for one Code Mode run. */
+export interface RunCodeDisplay {
+  readonly name?: string
+  readonly description?: string
+}
+
+/** Code Mode arguments needed to resolve presentation and compaction metadata. */
 export interface RunCodeTitleInput {
   readonly code: string
+  readonly display?: unknown
+  /** Legacy flat title retained for durable replay compatibility. */
   readonly description?: string
+}
+
+/**
+ * Normalize the object form, string shorthand, or JSON-string object accepted by `run_code.display`.
+ * @param value - raw display argument from a live or replayed tool call.
+ * @returns recognized string fields; malformed and unsupported values yield an empty object.
+ */
+export function normalizeRunCodeDisplay(value: unknown): RunCodeDisplay {
+  let source = value
+  if (typeof source === 'string') {
+    const shorthand = source
+    const trimmed = shorthand.trim()
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed: unknown = JSON.parse(trimmed)
+        if (typeof parsed === 'object' && parsed !== null) source = parsed
+        else return { name: shorthand }
+      } catch {
+        return { name: shorthand }
+      }
+    } else {
+      return { name: shorthand }
+    }
+  }
+  if (typeof source !== 'object' || source === null || Array.isArray(source)) return {}
+  const candidate = source as { name?: unknown; description?: unknown }
+  return {
+    ...(typeof candidate.name === 'string' ? { name: candidate.name } : {}),
+    ...(typeof candidate.description === 'string' ? { description: candidate.description } : {}),
+  }
+}
+
+/**
+ * Resolve stable activity metadata shared by the call card and durable projections.
+ * @param input - recorded `run_code` arguments.
+ * @returns a non-blank name plus an optional non-blank objective.
+ */
+export function resolveRunCodeDisplay(input: RunCodeTitleInput): { name: string; description?: string } {
+  const declared = normalizeRunCodeDisplay(input.display)
+  const name = declared.name?.trim()
+    || input.description?.trim()
+    || inferRunCodeTitle(input.code)
+    || 'Run code'
+  const description = declared.description?.trim()
+  return { name, ...(description ? { description } : {}) }
 }
 
 /**
  * Resolve the stable title shared by the call card and durable projections.
  * @param input - recorded `run_code` arguments.
- * @returns the explicit non-blank description, a lexical title, or `Run code`.
+ * @returns the display name, legacy title, lexical title, or `Run code`.
  */
 export function resolveRunCodeTitle(input: RunCodeTitleInput): string {
-  const declared = input.description?.trim()
-  return declared || inferRunCodeTitle(input.code) || 'Run code'
+  return resolveRunCodeDisplay(input).name
 }

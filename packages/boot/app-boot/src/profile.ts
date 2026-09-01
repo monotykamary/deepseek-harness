@@ -15,7 +15,7 @@
  * Module resolution is two-anchor by construction: a bundle name resolves
  * first from the dsh installation (the launcher's own package), then from the
  * profile directory. The Loader's `baseUrl` is the profile directory, whose
- * `node_modules` pnpm manages for out-of-tree plugins, while the maintained
+ * `node_modules` Bun manages for out-of-tree plugins, while the maintained
  * flat fallback directory `$DSH_HOME/profiles/node_modules` (one symlink per
  * package the installation's app and bundles depend on) makes every in-box
  * plugin Node-resolvable from any profile through the ordinary parent-walk.
@@ -165,21 +165,17 @@ const PROFILE_PATCH_TEMPLATE = `# Your patch layer for this dsh profile, applied
 []
 `
 
-// The hoisted linker gives out-of-tree plugins a flat node_modules whose
-// missing peers (cordis and friends) fall through to the healed
-// profiles/node_modules installation fallback, so every plugin shares the
-// installation's single cordis instance instead of a duplicate. pnpm ≥10
-// reads its settings from pnpm-workspace.yaml, not .npmrc.
-const PROFILE_PNPM_WORKSPACE = `packages:
-  - .
-
-nodeLinker: hoisted
-autoInstallPeers: false
+// A hoisted profile lets out-of-tree plugins share the installation fallback
+// instead of installing duplicate peers such as Cordis. Bun reads these
+// package-manager settings from bunfig.toml.
+const PROFILE_BUNFIG = `[install]
+linker = "hoisted"
+peer = false
 `
 
 /**
  * Initialize a profile directory: manifest, empty user patch layer, and the
- * pnpm settings out-of-tree plugins need. Existing files are never touched,
+ * Bun settings out-of-tree plugins need. Existing files are never touched,
  * so re-running is a no-op on an initialized profile.
  * @param dir - the profile directory from {@link resolveProfileDir}.
  * @param bundles - the initial custom bundle list, or ignored template expansion input.
@@ -201,8 +197,8 @@ export function initProfile(dir: string, bundles: readonly string[], template?: 
   }
   const patchPath = join(dir, PROFILE_PATCH_FILENAME)
   if (!existsSync(patchPath)) writeFileSync(patchPath, PROFILE_PATCH_TEMPLATE)
-  const workspacePath = join(dir, 'pnpm-workspace.yaml')
-  if (!existsSync(workspacePath)) writeFileSync(workspacePath, PROFILE_PNPM_WORKSPACE)
+  const bunfigPath = join(dir, 'bunfig.toml')
+  if (!existsSync(bunfigPath)) writeFileSync(bunfigPath, PROFILE_BUNFIG)
 }
 
 /** Ensure `link` is a symlink to `target`, replacing a wrong or dangling link; a real directory throws. */
@@ -244,7 +240,7 @@ function ensureSymlink(link: string, target: string): void {
  * over `dependencies` from the app manifest), each resolved from its own
  * real location. Node's parent-directory walk from any profile finds this
  * directory after the profile's own `node_modules`, so every in-box plugin
- * resolves without pnpm ever managing it — the exact "bundles come from the
+ * resolves without Bun ever managing it — the exact "bundles come from the
  * installation" contract. The closure (not just direct dependencies) is
  * required for out-of-tree plugins: their peer dependencies name Service
  * Definition packages (`dsh-compaction`, `dsh-invariants`, ...) that the app
@@ -279,7 +275,7 @@ export function healProfilesModuleFallback(installAnchor: string, home: string =
       // A declared-but-uninstalled dependency cannot be a loader-visible
       // plugin; skip it rather than fail the whole boot.
       if (resolvedDir === undefined) continue
-      // Traverse from the real package location: a pnpm app link does not
+      // Traverse from the real package location: a Bun app link does not
       // lexically expose the isolated store paths that package's imports use.
       const dir = realpathSync(resolvedDir)
       links.set(dep, dir)
@@ -382,7 +378,7 @@ function normalizeShippedProfile(name: string, dir: string, manifest: ProfileMan
  * probe the require resolution paths for a directory holding the named
  * manifest. This is Node's own node_modules lookup order, so the result
  * matches what the Loader would import from the same anchor, and
- * `existsSync` follows the symlinks pnpm's isolated layout uses.
+ * `existsSync` follows the symlinks Bun's isolated layout uses.
  */
 function packageDirFromAnchor(anchor: string, packageName: string): string | undefined {
   // resolve.paths returns null only for builtins, which no bundle name is.

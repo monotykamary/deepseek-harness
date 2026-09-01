@@ -10,12 +10,14 @@
  * Real-`rg` behavior is pinned separately in integration.spec.ts.
  */
 
-import { describe, expect, it } from 'vitest'
-import { Context } from '@monotykamary/cordis'
+import { describe, expect, it, vi } from 'vitest'
+import { Context, Service } from '@monotykamary/cordis'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, sep } from 'node:path'
 import { createUserMessage, CallId } from '@monotykamary/dsh-llm'
 import SystemPrompt, { renderPrompt } from '@monotykamary/dsh-system-prompt'
-import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH, type ToolExecution, type ToolExecutionToken } from '@monotykamary/dsh-tools'
+import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecution, type ToolExecutionToken } from '@monotykamary/dsh-tools'
 import { SubprocessRuntime } from '@monotykamary/dsh-subprocess'
 import type { SubprocessCollectedOutputs, SubprocessHandle, SubprocessOutcome, SubprocessOutputRead, SubprocessOutputReader, SubprocessSpawnSpec } from '@monotykamary/dsh-subprocess'
 import { MAX_TIMER_DELAY_MS } from '@monotykamary/dsh-timeout'
@@ -201,6 +203,41 @@ async function setup(options: SetupOptions = {}) {
   return { ctx, subprocess, spill, fiber, warnings }
 }
 
+class TypeScriptCodeRuntimeDescriptor extends Service {
+  readonly language = 'typescript'
+
+  constructor(ctx: Context) {
+    super(ctx, 'codeRuntime')
+  }
+}
+
+async function setupSpeculativeSearch() {
+  const ctx = new Context()
+  await ctx.plugin(SystemPrompt)
+  await ctx.plugin(FakeSubprocess)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- only the language descriptor is needed by the scanner gate
+  await ctx.plugin(TypeScriptCodeRuntimeDescriptor as any)
+  await ctx.plugin(ToolRuntime, { mode: 'code', speculation: { enabled: true } })
+  await ctx.plugin(ToolFsSearch, DEFAULT_CONFIG)
+  return { ctx, subprocess: ctx.subprocess as FakeSubprocess }
+}
+
+function nestedSearch(
+  ctx: Context,
+  rootCallId: CallId,
+  name: 'glob' | 'grep',
+  args: Record<string, unknown>,
+) {
+  return ctx.tools.execute({
+    signal: testToolSignal,
+    callId: CallId(`${rootCallId}-${name}`),
+    rootCallId,
+    parent: Symbol('run-code') as ToolExecutionToken,
+    name,
+    arguments: args,
+  })
+}
+
 /** A stand-in agent whose session header carries the given cwd (and a stable id). */
 const agent = (cwd?: string) => ({ session: { header: { id: 'session-1', ...cwd !== undefined ? { cwd } : {} } } })
 
@@ -285,6 +322,96 @@ describe('registration', () => {
     const glob = ctx.tools.schemas().find(schema => schema.name === 'glob')
     expect(glob?.description).toContain('a larger result returns the first 100 paths in modification-time order')
     expect(glob?.description).not.toContain('sampled across top-level entries')
+  })
+})
+
+describe('speculative search', () => {
+  it('does not spawn a hidden search through an outside-workspace symlink', async () => {
+    const { ctx, subprocess } = await setupSpeculativeSearch()
+    const base = mkdtempSync(join(tmpdir(), 'dsh-spec-search-'))
+    const workspace = join(base, 'workspace')
+    const outside = join(base, 'outside')
+    mkdirSync(workspace)
+    mkdirSync(outside)
+    symlinkSync(outside, join(workspace, 'escape'), process.platform === 'win32' ? 'junction' : 'dir')
+    try {
+      const rootCallId = CallId('spec-search-symlink')
+      const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({
+        rootCallId,
+        agent: agent(workspace) as never,
+      })!
+      const finalArguments = JSON.stringify({
+        code: 'return tools.glob({ pattern: "*", path: "escape" })',
+        display: 'Search symlink',
+      })
+      observer.push(finalArguments)
+      observer.finish(finalArguments)
+      await vi.waitFor(() => {
+        expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ launched: 1, inFlight: 0 })
+      })
+      expect(subprocess.spawns).toHaveLength(0)
+      observer.cancel()
+    } finally {
+      rmSync(base, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects changed prefetched search output and runs the natural search', async () => {
+    const { ctx, subprocess } = await setupSpeculativeSearch()
+    let runs = 0
+    subprocess.handler = () => runResult(++runs === 1 ? 'src/old.ts\n' : 'src/new.ts\n')
+    const rootCallId = CallId('spec-search-stale')
+    const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId })!
+    const finalArguments = JSON.stringify({
+      code: 'return tools.glob({ pattern: "*.ts" })',
+      display: 'Search source',
+    })
+    observer.push(finalArguments)
+    observer.finish(finalArguments)
+    await vi.waitFor(() => {
+      expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(1)
+    })
+
+    const result = await nestedSearch(ctx, rootCallId, 'glob', { pattern: '*.ts' })
+    expect(result.isError).toBe(false)
+    expect(text(result)).toContain('src/new.ts')
+    expect(text(result)).not.toContain('src/old.ts')
+    expect(subprocess.spawns).toHaveLength(3)
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({
+      served: 0,
+      freshnessInvalidated: 1,
+      pending: 0,
+    })
+  })
+
+  it('revalidates and reuses prefetched glob and grep results at natural nested calls', async () => {
+    const { ctx, subprocess } = await setupSpeculativeSearch()
+    subprocess.handler = spec => spec.argv.includes('--json')
+      ? runResult(`${matchLine('src/a.ts', 2, 'needle\n')}\n`)
+      : runResult('src/a.ts\nsrc/b.ts\n')
+    const rootCallId = CallId('spec-search')
+    const observer = ctx.tools[TOOL_RUNTIME_SCHEDULER].observeRunCode({ rootCallId })
+    expect(observer).toBeDefined()
+    const finalArguments = JSON.stringify({
+      code: 'const files = await tools.glob({ pattern: "*.ts" }); return tools.grep({ pattern: "needle" })',
+      display: 'Search source',
+    })
+    observer!.push(finalArguments)
+    observer!.finish(finalArguments)
+    await vi.waitFor(() => {
+      expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats().launched).toBe(2)
+    })
+    expect(subprocess.spawns).toHaveLength(2)
+
+    const glob = await nestedSearch(ctx, rootCallId, 'glob', { pattern: '*.ts' })
+    const grep = await nestedSearch(ctx, rootCallId, 'grep', { pattern: 'needle' })
+
+    expect(glob.isError).toBe(false)
+    expect(text(glob)).toContain('src/a.ts')
+    expect(grep.isError).toBe(false)
+    expect(text(grep)).toContain('needle')
+    expect(subprocess.spawns).toHaveLength(4)
+    expect(ctx.tools[TOOL_RUNTIME_SCHEDULER].speculationStats()).toMatchObject({ served: 2, pending: 0 })
   })
 })
 

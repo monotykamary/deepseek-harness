@@ -73,11 +73,11 @@ export function diffAgainstBaseline(current: DebtMap, baseline: DebtMap): string
     if (debt.margins > pin.margins) failures.push(`${file}: margin decls grew ${pin.margins} -> ${debt.margins} (the pin only shrinks)`)
     if (debt.zindexes > pin.zindexes) failures.push(`${file}: z-index sites grew ${pin.zindexes} -> ${debt.zindexes} (the pin only shrinks)`)
     if (debt.margins < pin.margins || debt.zindexes < pin.zindexes) {
-      failures.push(`${file}: debt dropped below its pin — run pnpm run verify-ui-layout:baseline to shrink the baseline`)
+      failures.push(`${file}: debt dropped below its pin — run bun run verify-ui-layout:baseline to shrink the baseline`)
     }
   }
   for (const file of Object.keys(baseline)) {
-    if (!(file in current)) failures.push(`${file}: fully resolved — run pnpm run verify-ui-layout:baseline to drop the pin entry`)
+    if (!(file in current)) failures.push(`${file}: fully resolved — run bun run verify-ui-layout:baseline to drop the pin entry`)
   }
   return failures
 }

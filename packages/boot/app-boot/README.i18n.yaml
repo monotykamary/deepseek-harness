@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write packages/boot/app-boot/README.md
-README.md: 3d7a5adb5e4908a5e05c96bcc5fa9813027a3265
-README.zh.md: 364acf6d696ac6e25dbd98f44ad504660a193c37
+#   bun run verify-translation-pairing --write packages/boot/app-boot/README.md
+README.md: 76f85f1f6f07df4203fcc96b56af67f26b1e9a2a
+README.zh.md: 964fa6214f98557dcc9a9150991030d0a2505cd0

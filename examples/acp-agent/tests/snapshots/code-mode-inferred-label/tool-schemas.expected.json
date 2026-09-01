@@ -2,7 +2,7 @@
   "initial": [
     {
       "name": "run_code",
-      "description": "Execute a TypeScript program against the available tools. Takes one required argument: `code`, the BODY of an async function (erasable syntax only; top-level `await` and `return` work). Optional `description` labels the run; when omitted, DSH derives a title from the program. Call tools as `await tools.name(args)` per the declarations in the system prompt. Only what you print or return is program output — curate it. Image-bearing subtool results are attached after the run.",
+      "description": "Execute a TypeScript program against the available tools. Takes one required argument: `code`, the BODY of an async function (erasable syntax only; top-level `await` and `return` work). Optional `display` names the activity and describes its objective; when its name is omitted, DSH derives a title from the program. Call tools as `await tools.name(args)` per the declarations in the system prompt. Only what you print or return is program output — curate it. Image-bearing subtool results are attached after the run.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -10,9 +10,28 @@
             "type": "string",
             "description": "The program: the body of an async TypeScript function."
           },
-          "description": {
-            "type": "string",
-            "description": "Clear, concise description of what this program does in active voice, 5-10 words (shown in the UI). Examples: \"Count TODO markers across packages\"; \"Read failing test and its fixture\"; \"Rename config key in every cordis.yml\"."
+          "display": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Brief activity name for the whole run (for example, \"Inspect auth flow\" or \"Run focused tests\")."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Concise objective for the whole run: what it is doing and why. This appears in the activity UI."
+                  }
+                }
+              },
+              {
+                "type": "string",
+                "description": "String shorthand for the activity name."
+              }
+            ],
+            "description": "Activity metadata for the whole run. Prefer an object with `name` and optional `description`; a string is shorthand for `name`. A JSON-string object is also accepted."
           }
         },
         "required": [

@@ -676,14 +676,14 @@ describe('MessageItem arms', () => {
         kind: 'context',
         seq: 3,
         content: [{ type: 'text', text: 'background job bash-1 finished.' }],
-        source: { kind: 'plugin', plugin: 'tool-jobs', form: 'notice', summary: 'bash pnpm test [status: completed]' },
+        source: { kind: 'plugin', plugin: 'tool-jobs', form: 'notice', summary: 'bash bun test [status: completed]' },
         provenance: { role: 'inject', label: 'tool-jobs' },
         form: 'notice',
       } as never}
       />,
     )
     expect(view.container.querySelector('[data-context-summary]')?.textContent)
-      .toBe('bash pnpm test [status: completed]')
+      .toBe('bash bun test [status: completed]')
     expect(view.container.querySelector('[data-context-injection-body]')).toBeNull()
   })
 

@@ -14,7 +14,7 @@ preset 能拥有的是这份注册表的**呈现方式**。`ctx.tools.presentAs(
 
 `native` 立即生效。code 类模式则等待 `ctx.codeRuntime`——这是一个宿主平面服务（[`dsh-code-runtime-worker-thread`](../../code-runtime/code-runtime-worker-thread/README.zh.md)）：若某个 preset 在未组装运行时的部署上选择 Code Mode，本行就停在 pending，`dsh-agent-presets` 会指名此 id 拒绝挂载。另一种做法——先乐观应用——会把失败推迟到该会话的第一次请求，那时操作者对 preset 和组装都已无从下手。
 
-`mode` 是必填而非有默认值：不带这一行的 preset 本来就会拿到部署默认值，省略它等于这一行白组装了。`runCodeLabel` 默认为 `required`；`inferred` 仅对 `code` 或 `both` 有效，它会把 `run_code.description` 变为可选，并在没有非空标签时选择从已记录程序中确定性派生的标题。
+`mode` 是必填而非有默认值：不带这一行的 preset 本来就会拿到部署默认值，省略它等于这一行白组装了。`runCodeLabel` 默认为 `required`；`inferred` 仅对 `code` 或 `both` 有效，它会把 `run_code.display` 变为可选，并在没有非空 display 名称时选择从已记录程序中确定性派生的标题。display 元数据存在时，会把简洁的活动 `name` 与可选的 `description` 目标分开。
 
 一个 agent 只声明一次呈现方式。同一份组装里的第二次声明会被拒绝而不是合并：对「模型看到哪种形态」给出两个答案是矛盾，不是覆盖。
 

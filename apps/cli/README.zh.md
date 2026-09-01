@@ -11,7 +11,7 @@
 | `dsh --profile <name>` | 启动位于 `$DSH_HOME/profiles/<name>` 的指定 profile。 |
 | `dsh --profile headless "job"` | 运行一个全新的持久化会话，打印最终答案并退出。 |
 | `dsh web` | `--profile web` 的别名。 |
-| `dsh plugin --profile <name> <pnpm args>` | 通过在 profile 目录中转发给 pnpm 来管理该 profile 的插件。 |
+| `dsh plugin --profile <name> <bun args>` | 通过在 profile 目录中转发给 bun 来管理该 profile 的插件。 |
 | `dsh version [--json]` | 报告已安装的 DSH、Fabric 与 Fovea 闭包。 |
 | `dsh update [--check] [--json]` | 检查版本，或把 npm 全局更新交给分离 Worker。 |
 | `dsh doctor [--json]` | 报告安装渠道、Node 版本、DSH home 与包版本。 |
@@ -41,7 +41,7 @@ profile 目录包含一个 `package.json`，其中记录树外插件依赖、由
 - profile 自身的 `cordis.patch.yml`，然后是 home 级的 `$DSH_HOME/cordis.patch.yml`
 - `--patch` 指定的覆盖层
 
-`dsh.profile.bundles` 中列出的组合包先从 dsh 安装目录解析（`@monotykamary/dsh-base`、`@monotykamary/dsh-web-app`、`@monotykamary/dsh-headless`），再从 profile 自身的 `node_modules` 解析；pnpm 会将树外插件安装到该目录。
+`dsh.profile.bundles` 中列出的组合包先从 dsh 安装目录解析（`@monotykamary/dsh-base`、`@monotykamary/dsh-web-app`、`@monotykamary/dsh-headless`），再从 profile 自身的 `node_modules` 解析；bun 会将树外插件安装到该目录。
 
 使用 `--dump-default-config` 和 `--dump-config` 可在不启动的情况下检查组合后的配置树。
 
@@ -49,4 +49,4 @@ profile 目录包含一个 `package.json`，其中记录树外插件依赖、由
 
 ## 开发
 
-生产运行需要已构建的包与前端产物。请在仓库根目录单独运行 `pnpm run build`，然后使用 `pnpm dsh <args...>` 运行 TypeScript 入口并转发所有参数；模块解析约定以[源码执行参考](reference/README.zh.md#source-execution)为准。
+生产运行需要已构建的包与前端产物。请在仓库根目录单独运行 `bun run build`，然后使用 `bun dsh <args...>` 运行 TypeScript 入口并转发所有参数；模块解析约定以[源码执行参考](reference/README.zh.md#source-execution)为准。

@@ -6,10 +6,11 @@
  * @module @monotykamary/dsh-workflow-worker-thread/host
  */
 
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { Worker } from 'node:worker_threads'
 import type { WorkerOptions } from 'node:worker_threads'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { Context } from '@monotykamary/cordis'
 import type { Agent } from '@monotykamary/dsh-agent'
 import { assertNever } from '@monotykamary/dsh-llm'
@@ -71,8 +72,9 @@ function resolveWorkerSpawn(init: WorkerInit): { entry: string | URL; options: W
   }
   // Resolve tsx only for unbuilt consumers and install it before importing TS.
   const workerEntry = new URL('./worker.ts', import.meta.url)
-  const tsxEsmApiEntry = import.meta.resolve('tsx/esm/api')
-  const tsxCjsApiEntry = import.meta.resolve('tsx/cjs/api')
+  const require = createRequire(import.meta.url)
+  const tsxEsmApiEntry = pathToFileURL(require.resolve('tsx/esm/api')).href
+  const tsxCjsApiEntry = pathToFileURL(require.resolve('tsx/cjs/api')).href
   const bootstrap = [
     `import { register as registerEsm } from ${JSON.stringify(tsxEsmApiEntry)}`,
     `import { register as registerCjs } from ${JSON.stringify(tsxCjsApiEntry)}`,

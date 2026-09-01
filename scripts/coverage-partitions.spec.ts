@@ -89,7 +89,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 3,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       vitestArgs: ['--testTimeout=30000'],
       runCommand,
     })
@@ -104,7 +104,7 @@ describe('coverage partition coordinator', () => {
     ])
     for (const [index, command] of commands.slice(0, 3).entries()) {
       expect(command.command).toBe(process.execPath)
-      expect(command.args[0]).toBe('/pnpm.cjs')
+      expect(command.args[0]).toBe('/bun.cjs')
       expect(command.args).toEqual(expect.arrayContaining([
         '--coverage',
         '--coverage.reportOnFailure',
@@ -129,22 +129,22 @@ describe('coverage partition coordinator', () => {
     })
   })
 
-  it('runs a native pnpm entrypoint directly', async () => {
+  it('runs a native bun entrypoint directly', async () => {
     const root = await temporaryRoot()
     const commands: CoverageCommand[] = []
     const runCommand = successfulCommandRecorder(commands)
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/tools/pnpm',
+      bunEntrypoint: '/tools/bun',
       runCommand,
     })
 
     await expect(coordinator.run()).resolves.toBe(0)
     expect(commands).toHaveLength(3)
     for (const command of commands) {
-      expect(command.command).toBe('/tools/pnpm')
-      expect(command.args[0]).toBe('exec')
+      expect(command.command).toBe('/tools/bun')
+      expect(command.args[0]).toBe('x')
     }
   })
 
@@ -160,7 +160,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       runCommand,
     })
 
@@ -181,7 +181,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       runCommand,
     })
 
@@ -201,7 +201,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       runCommand,
     })
 
@@ -224,7 +224,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       runCommand,
     })
 
@@ -247,7 +247,7 @@ describe('coverage partition coordinator', () => {
     const coordinator = new CoveragePartitionCoordinator({
       root,
       partitions: 2,
-      pnpmEntrypoint: '/pnpm.cjs',
+      bunEntrypoint: '/bun.cjs',
       runCommand,
     })
 

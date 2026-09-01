@@ -5,8 +5,6 @@ import { describe, expect, it } from 'vitest'
 import { requiredReadinessJobs } from './readiness.ts'
 
 const root = resolve(import.meta.dirname, '..')
-const runnerPrivatePnpmDestination = '${{ runner.temp }}/setup-pnpm'
-const nativeWindowsPnpmDestination = '${{ runner.temp }}/setup-pnpm-js'
 
 describe('GitHub workflow schema', () => {
   it('uses mappings for every declared workflow, job, and step environment', () => {
@@ -31,16 +29,18 @@ describe('GitHub workflow schema', () => {
 })
 
 describe('CI workflow', () => {
-  it('isolates every pnpm action setup destination per runner', () => {
+  it('pins Bun for every package-manager setup step', () => {
     const files = ['.github/workflows/ci.yml', '.github/workflows/ci-master.yml']
-    const setups: Array<{ jobName: string; step: unknown }> = []
+    const setups: Array<{ jobName: string; step: Record<string, unknown> }> = []
     for (const file of files) {
       const workflow: unknown = yaml.load(readFileSync(resolve(root, file), 'utf8'))
       if (!isRecord(workflow) || !isRecord(workflow.jobs)) throw new TypeError(`${file} must define jobs`)
       for (const [jobName, job] of Object.entries(workflow.jobs)) {
         if (!isRecord(job) || !Array.isArray(job.steps)) continue
         for (const step of job.steps) {
-          if (!isRecord(step) || typeof step.uses !== 'string' || !step.uses.startsWith('pnpm/action-setup@')) continue
+          if (!isRecord(step) || typeof step.uses !== 'string') continue
+          if (!step.uses.includes('action-setup') && !step.uses.includes('setup-bun')) continue
+          expect(step.uses).toBe('oven-sh/setup-bun@v2')
           setups.push({ jobName, step })
         }
       }
@@ -48,16 +48,13 @@ describe('CI workflow', () => {
 
     expect(setups.length).toBeGreaterThan(0)
     for (const { jobName, step } of setups) {
-      expect(step, `${jobName} must not share pnpm/action-setup's default destination`).toMatchObject({
-        with: {
-          dest: jobName === 'windows-native'
-            ? nativeWindowsPnpmDestination
-            : runnerPrivatePnpmDestination,
-        },
+      expect(step, `${jobName} must use the repository's pinned Bun version`).toMatchObject({
+        uses: 'oven-sh/setup-bun@v2',
+        with: { 'bun-version': '1.4.0' },
       })
-      if (jobName === 'windows-native') expect(step).not.toMatchObject({ with: { standalone: true } })
     }
   })
+
 
   it('keeps a required Wine Windows job, a non-blocking native Windows job with failover, and a master-only standby', () => {
     const workflow = loadWorkflow('.github/workflows/ci.yml')
@@ -115,7 +112,7 @@ describe('CI workflow', () => {
     const nativeCommandSteps = nativeSteps.filter((step): step is Record<string, unknown> & { run: string } => (
       isRecord(step) && typeof step.run === 'string'
     ))
-    expect(nativeCommandSteps.map(step => step.run)).toContain('pnpm run check:ci:windows-complete')
+    expect(nativeCommandSteps.map(step => step.run)).toContain('bun run check:ci:windows-complete')
 
     // wine-apt-cache: master-only, seeds the Wine apt cache, lives in ci-master.
     expect(wineAptCache.if).toBe("github.event_name == 'push' && github.ref == 'refs/heads/master'")
@@ -289,7 +286,7 @@ describe('Sandbox workflow', () => {
       name: 'Unit tests (darwin parity)',
       if: "matrix.runner == 'seatbelt'",
       env: { DSH_SKIP_REAL_PWSH_TESTS: '1' },
-      run: 'pnpm run test -- --maxWorkers=1',
+      run: 'bun run test -- --maxWorkers=1',
     })
     const hmr: unknown = sandbox.steps.find(
       (step: unknown) => isRecord(step) && step.name === 'HMR filesystem observations (darwin parity)',
@@ -297,7 +294,7 @@ describe('Sandbox workflow', () => {
     expect(hmr).toMatchObject({
       if: "matrix.runner == 'seatbelt'",
       'continue-on-error': true,
-      run: 'pnpm run test:observational',
+      run: 'bun run test:observational',
     })
   })
 })
@@ -460,8 +457,7 @@ describe('Python release workflows', () => {
     expect(manylinuxAddon).toMatchObject({ if: "runner.os == 'Linux'" })
     expect(JSON.stringify(manylinuxAddon)).toContain('manylinux_2_28_x86_64')
     expect(JSON.stringify(manylinuxAddon)).toContain('manylinux_2_28_aarch64')
-    expect(JSON.stringify(manylinuxAddon)).toContain('npm_config_build_from_source=true pnpm run install')
-    expect(JSON.stringify(manylinuxAddon)).toContain('$HOME/setup-pnpm:$HOME/setup-pnpm:ro')
+    expect(JSON.stringify(manylinuxAddon)).toContain('npm_config_build_from_source=true bun run install')
     expect(JSON.stringify(manylinuxAddon)).toContain('node-pty-glibc-versions.txt')
     expect(JSON.stringify(manylinuxAddon)).toContain('le 2.28')
     expect(macosCheck).toMatchObject({ if: "runner.os == 'macOS'" })
@@ -600,7 +596,7 @@ describe('Documentation site publication', () => {
     )
     expect(verify).toMatchObject({
       env: { RELEASE_PUBLISH: 'true' },
-      run: 'pnpm run release:verify --family dsh',
+      run: 'bun run release:verify --family dsh',
     })
     // Complete history: the release scripts read tags.
     expect(checkout).toMatchObject({ with: { 'fetch-depth': 0 } })

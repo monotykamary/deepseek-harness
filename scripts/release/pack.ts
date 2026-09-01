@@ -25,7 +25,7 @@ const DEFAULT_OUTPUT = 'dist/npm'
  * @returns The tarball filename.
  */
 function packMember(family: ReleaseFamily, member: ReleaseMember, destination: string): string {
-  run('pnpm', ['--dir', member.directory, 'pack', '--pack-destination', destination])
+  run('bun', ['pm', 'pack', '--destination', destination], { cwd: member.directory })
 
   const filename = tarballName(member)
   const tarball = join(destination, filename)

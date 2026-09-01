@@ -378,7 +378,7 @@ export default withMermaid({
     resolve: {
       alias: {
         // vitepress-plugin-mermaid prepends an import of this subpath to
-        // vitepress's own dist file, which pnpm's isolated node_modules
+        // vitepress's own dist file, which bun's isolated node_modules
         // cannot resolve from inside the store; the aliases anchor those
         // imports to the website's dependency copies.
         'vitepress-plugin-mermaid/Mermaid.vue': require.resolve('vitepress-plugin-mermaid/Mermaid.vue'),

@@ -3,7 +3,17 @@
 import { HarnessError } from '@monotykamary/dsh-llm'
 import type { ContentBlock } from '@monotykamary/dsh-llm'
 import type { JsonValue } from '@monotykamary/dsh-session'
-import type { ToolDefinition, ToolExecution, ToolExecutionResult, ToolRunContext, ToolResult } from './index.ts'
+import type {
+  ToolDefinition,
+  ToolEffectKind,
+  ToolRisk,
+  ToolExecution,
+  ToolExecutionResult,
+  ToolRunContext,
+  ToolResult,
+  ToolSpeculationContext,
+  ToolSpeculationResult,
+} from './index.ts'
 import { assertSupportedJsonSchema, isJsonSchemaRecord, isPlainJsonArray, JsonSchemaError, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode, JsonSchemaScalar, ObjectJsonSchema } from './json-schema.ts'
 import type { ToolCallView, ToolResultView } from './presentation.ts'
@@ -496,6 +506,10 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
     /** Pure replayable presentation metadata for direct top-level calls. */
     presentationMeta?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): JsonValue
   }
+  /** Host-only operational risk declaration; required as `read` when `speculate` is present. */
+  readonly risk?: ToolRisk
+  /** Host-only effect declaration; required as `none` when `speculate` is present. */
+  readonly effectKind?: ToolEffectKind
   /** Optional positive cooperative timeout budget in milliseconds. */
   readonly timeoutMs?: number
   /**
@@ -511,6 +525,15 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
    * @returns The canonical value declared by `output.schema`.
    */
   execute(args: InferArgs<S>, exec: ToolRunContext): Promise<InferValue<NoInfer<O>>>
+  /**
+   * Optional side-effect-free acquisition used before a streamed Code Mode
+   * program becomes authoritative. Arguments receive the same hard validation
+   * as `execute`; observations belong in the result's deferred replay callback.
+   */
+  speculate?(
+    args: InferArgs<S>,
+    context: ToolSpeculationContext,
+  ): Promise<ToolSpeculationResult<InferValue<NoInfer<O>>>>
   /**
    * Optional last-mile content transform for every normalized outcome. Unlike
    * `execute`, arguments remain `unknown` because invalid-input failures also
@@ -549,6 +572,8 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
   // oxlint-disable-next-line typescript/unbound-method
   const userExecute = options.execute
   // oxlint-disable-next-line typescript/unbound-method
+  const userSpeculate = options.speculate
+  // oxlint-disable-next-line typescript/unbound-method
   const userFinalizeContent = options.finalizeContent
   // oxlint-disable-next-line typescript/unbound-method
   const userRender = options.output.render
@@ -570,6 +595,8 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
     name: options.name,
     description: options.description,
     parameters: parameters as unknown as Record<string, unknown>,
+    ...(options.risk === undefined ? {} : { risk: options.risk }),
+    ...(options.effectKind === undefined ? {} : { effectKind: options.effectKind }),
     output: {
       schema: outputSchema,
       render(args: unknown, value: JsonValue): ContentBlock[] {
@@ -587,6 +614,17 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
       if (violations.length > 0) throw new ToolArgsError(violations)
       return userExecute(args as InferArgs<S>, exec) as Promise<JsonValue>
     },
+  }
+  if (userSpeculate) {
+    if (options.risk !== 'read' || options.effectKind !== 'none') {
+      throw new Error(`defineTool(${options.name}): speculate requires risk "read" and effectKind "none"`)
+    }
+    tool.speculate = async (args: unknown, context: ToolSpeculationContext): Promise<ToolSpeculationResult> => {
+      const violations = validate(args)
+      if (violations.length > 0) throw new ToolArgsError(violations)
+      const result: unknown = await userSpeculate(args as InferArgs<S>, context)
+      return result as ToolSpeculationResult
+    }
   }
   if (userFinalizeContent) {
     tool.finalizeContent = (exec, result) => userFinalizeContent(exec, result)

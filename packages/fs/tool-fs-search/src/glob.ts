@@ -12,10 +12,10 @@
 import type { Context } from '@monotykamary/cordis'
 import { sep } from 'node:path'
 import { defineTool } from '@monotykamary/dsh-tools'
-import type { GenericCallView, SearchResultView, ToolResult } from '@monotykamary/dsh-tools'
+import type { GenericCallView, SearchResultView, ToolExecution, ToolResult } from '@monotykamary/dsh-tools'
 import type { SpillRef } from '@monotykamary/dsh-spill'
 import type {} from '@monotykamary/dsh-system-prompt'
-import { runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
+import { isSpeculationSearchContained, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
 import { globSearchMeta, searchViewFromMeta } from './presentation.ts'
 import { acceptedDirectCallValue } from './direct-call.ts'
 
@@ -308,8 +308,26 @@ export function applyGlobTool(ctx: Context, caps: GlobToolCaps): void {
   const overCapDescription = caps.sampleOverCapGlobResults
     ? `a larger result instead returns ${caps.maxResults} paths sampled across top-level entries`
     : `a larger result returns the first ${caps.maxResults} paths in modification-time order`
+  const acquire = async (
+    args: { pattern: string; path?: string },
+    exec: Pick<ToolExecution, 'agent' | 'signal'>,
+  ): Promise<{ root: string; paths: string[] }> => {
+    const input = parseGlobArgs(args)
+    const run = await runRipgrep(ctx, exec, 'glob', buildGlobCommand(input), caps.rawOutputMaxBytes, caps.graceMs, caps.stderrMaxBytes)
+    const root = input.path === undefined ? '.' : toWorkdirRelative(input.path, run.workdir)
+    if (run.noMatches) return { root, paths: [] }
+
+    const paths: string[] = []
+    for (const line of run.stdout.split('\n')) {
+      if (line.length > 0) paths.push(toWorkdirRelative(line, run.workdir))
+    }
+    return { root, paths }
+  }
+
   const tool = defineTool({
     name: 'glob',
+    risk: 'read',
+    effectKind: 'none',
     description: 'Find files whose paths match a glob pattern. Returns matching file paths — never directories — '
       + 'including hidden and ignored files (VCS metadata directories are excluded). '
       + `Up to ${caps.maxResults} paths come back in modification-time order; ${overCapDescription}, `
@@ -339,19 +357,19 @@ export function applyGlobTool(ctx: Context, caps: GlobToolCaps): void {
         return globSearchMeta({ items: page.items, truncated: page.truncated, seen: value.paths.length }, caps.maxMetaBytes)
       },
     },
-    async execute(args, exec) {
-      const input = parseGlobArgs(args)
-      const run = await runRipgrep(ctx, exec, 'glob', buildGlobCommand(input), caps.rawOutputMaxBytes, caps.graceMs, caps.stderrMaxBytes)
-      const root = input.path === undefined ? '.' : toWorkdirRelative(input.path, run.workdir)
-      if (run.noMatches) return { root, paths: [] }
-
-      const all: string[] = []
-      for (const line of run.stdout.split('\n')) {
-        if (line.length === 0) continue
-        const displayPath = toWorkdirRelative(line, run.workdir)
-        all.push(displayPath)
+    execute: acquire,
+    async speculate(args, context) {
+      if (!isSpeculationSearchContained(context, args.path)) throw new Error('speculative glob target escapes workspace')
+      const value = await acquire(args, context)
+      return {
+        value,
+        isFresh: async (exec) => {
+          const current = await acquire(args, exec)
+          return current.root === value.root
+            && current.paths.length === value.paths.length
+            && current.paths.every((path, index) => path === value.paths[index])
+        },
       }
-      return { root, paths: all }
     },
     presentCall: presentGlobCall,
     presentResult: presentGlobResult,

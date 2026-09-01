@@ -1,66 +1,65 @@
 /**
- * Verify that pnpm-lock.yaml resolves every vendored package name to its
- * workspace `link:` — never a registry copy. `linkWorkspacePackages: true`
- * (pnpm-workspace.yaml) makes matching upstream semver ranges resolve to the
- * pinned vendored sources; a registry copy of the same name coexisting with
- * the vendored one silently forks the framework layer (vendor/README.md).
+ * Verify that bun.lock resolves every vendored package name to its workspace
+ * source and never to a registry copy. A registry copy of a vendored identity
+ * silently forks the framework layer described in vendor/README.md.
  */
 import { readdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import * as yaml from 'js-yaml'
 
 const root = resolve(import.meta.dirname, '..')
 
-async function vendoredNames(): Promise<Set<string>> {
-  const names = new Set<string>()
+async function vendoredPackages(): Promise<Map<string, string>> {
+  const packages = new Map<string, string>()
   for (const entry of await readdir(join(root, 'vendor'), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
     let manifest: { name?: string }
     try {
       manifest = JSON.parse(await readFile(join(root, 'vendor', entry.name, 'package.json'), 'utf8')) as { name?: string }
     } catch {
-      continue // not a package directory (e.g. vendor/README.md siblings)
+      continue
     }
-    if (manifest.name !== undefined) names.add(manifest.name)
+    if (manifest.name !== undefined) packages.set(manifest.name, `vendor/${entry.name}`)
   }
-  return names
+  return packages
 }
 
-interface Lockfile {
-  importers?: Record<string, Record<string, unknown>>
-  packages?: Record<string, unknown>
-  snapshots?: Record<string, unknown>
+interface LockedPackage {
+  readonly key: string
+  readonly descriptor: string
 }
 
-const names = await vendoredNames()
-if (names.size === 0) throw new Error('verify-vendored-links: no vendored package manifests found under vendor/')
-const lockfile = yaml.load(await readFile(join(root, 'pnpm-lock.yaml'), 'utf8')) as Lockfile
+/** Read package-map rows from Bun's JSONC lockfile without accepting unrelated object fields. */
+export function lockedPackages(text: string): LockedPackage[] {
+  const rows: LockedPackage[] = []
+  const row = /^\s{4}("(?:[^"\\]|\\.)+"):\s*\[\s*("(?:[^"\\]|\\.)+")/gmu
+  for (const match of text.matchAll(row)) {
+    const keyToken = match[1]
+    const descriptorToken = match[2]
+    if (keyToken === undefined || descriptorToken === undefined) continue
+    const key: unknown = JSON.parse(keyToken)
+    const descriptor: unknown = JSON.parse(descriptorToken)
+    if (typeof key === 'string' && typeof descriptor === 'string') rows.push({ key, descriptor })
+  }
+  return rows
+}
+
+const vendored = await vendoredPackages()
+if (vendored.size === 0) throw new Error('verify-vendored-links: no vendored package manifests found under vendor/')
+const packages = lockedPackages(await readFile(join(root, 'bun.lock'), 'utf8'))
+if (packages.length === 0) throw new Error('verify-vendored-links: bun.lock contains no package map entries')
 
 const violations: string[] = []
-
-// Importer resolutions: every dependency entry naming a vendored package must
-// resolve to a link:, or the build silently uses a registry copy.
-for (const [importer, sections] of Object.entries(lockfile.importers ?? {})) {
-  for (const [section, dependencies] of Object.entries(sections)) {
-    if (typeof dependencies !== 'object' || dependencies === null) continue
-    for (const [dependency, entry] of Object.entries(dependencies as Record<string, { version?: string }>)) {
-      if (!names.has(dependency)) continue
-      const version = entry.version ?? ''
-      if (!version.startsWith('link:')) {
-        violations.push(`${importer} ${section}.${dependency} resolves to ${JSON.stringify(version)} (expected link:)`)
-      }
-    }
+for (const [name, directory] of vendored) {
+  const matches = packages.filter(entry => entry.descriptor.startsWith(`${name}@`))
+  if (matches.length === 0) {
+    violations.push(`${name} has no bun.lock package entry`)
+    continue
   }
-}
-
-// Package/snapshot keys: a registry copy materializes as a `<name>@<version>`
-// key; vendored names must never appear there at all.
-for (const section of ['packages', 'snapshots'] as const) {
-  for (const key of Object.keys(lockfile[section] ?? {})) {
-    const atIndex = key.lastIndexOf('@')
-    if (atIndex <= 0) continue
-    const packageName = key.slice(0, atIndex)
-    if (names.has(packageName)) violations.push(`${section} entry ${key} is a registry copy of a vendored package`)
+  const expected = `${name}@workspace:${directory}`
+  for (const entry of matches) {
+    if (entry.descriptor !== expected) {
+      violations.push(`${entry.key} resolves to ${JSON.stringify(entry.descriptor)} (expected ${JSON.stringify(expected)})`)
+    }
   }
 }
 
@@ -69,4 +68,4 @@ if (violations.length > 0) {
   for (const violation of violations) console.error(`  - ${violation}`)
   process.exit(1)
 }
-console.log(`verify-vendored-links: all ${String(names.size)} vendored package names resolve to workspace links.`)
+console.log(`verify-vendored-links: all ${String(vendored.size)} vendored package names resolve to Bun workspace sources.`)

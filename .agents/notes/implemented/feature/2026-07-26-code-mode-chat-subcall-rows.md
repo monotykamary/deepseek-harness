@@ -4,7 +4,7 @@ Status: implemented
 
 English | [中文](2026-07-26-code-mode-chat-subcall-rows.zh.md)
 
-> Scope: how the web chat view renders a `run_code` turn — the client-side half of the Code Mode UI stack, built on the [host foundation](2026-07-26-code-dispatch-ui-foundation.md) (full-content `tool/code-dispatch`, the required `description` parameter). The [toolview dissolution](../architecture/2026-07-23-toolview-dissolution.md) owns the slot model this rides on.
+> Scope: how the Web chat view renders a `run_code` turn — the client-side half of the Code Mode UI stack, built on the [host foundation](2026-07-26-code-dispatch-ui-foundation.md) (full-content `tool/code-dispatch`, required structured `display` metadata). The [toolview dissolution](../architecture/2026-07-23-toolview-dissolution.md) owns the slot model this rides on.
 
 ## Problem
 
@@ -16,7 +16,7 @@ With Code Mode enabled, the chat view showed one opaque `run_code` row: raw prog
 
 - **Data layer**: Runtime's `ToolCallTree` folds in-window `tool/code-dispatch-start` and `tool/code-dispatch` events into a private per-parent index, then projects running and settled children onto recursive `ToolCallBlock.subCalls`. Live Session projection and `projectConversationHistory` share that fold; copy-on-write parent arrays and path-copy projection keep unrelated roots and siblings reference-stable. Sub-calls never join `nodes` — the surface flow remains exactly the model-visible turn structure. The events are narrowed structurally at the wire-consumer boundary, which also rejects cyclic parent relationships (dsh-tools' host types cannot enter the client program because the host/client `Context` merges collide).
 - **Render layer**: `ChatView` passes each parent with its recursive children through the whole-Tool `'conversation.chat.tool'` seat. ui-tool's `ToolCallTree` renders the parent followed by `[data-subcalls]` nests, and every atomic call dispatches through the same `'tool.call.toolview'` keyed slot with `entryKey = Tool name` and the same `GenericToolCard` fallback. A keyed registration therefore takes over descendant and top-level calls without registration changes. Running parents (`runningCalls`) receive accumulated dispatches in the same recursive block, so child rows stream in during the run.
-- **`run_code` presentation**: a new `code` row variant (classifier `run_code → code`, `Code` title, ui-primitives `CodeXml`) summarizes with the model-authored `description` and expands to the program itself (monospace on the markdown code-block fill) rather than the args JSON envelope.
+- **`run_code` presentation**: the `code` row variant (classifier `run_code → code`, `Code` title, ui-primitives `CodeXml`) uses the presenter-resolved `display.name` as its compact summary, expands to the program itself (monospace on the markdown code-block fill), and renders `display.description` separately as a `GOAL` section rather than collapsing the objective into the name. The durable generic call view is authoritative for inferred names; raw structured arguments and the legacy flat description are replay fallbacks.
 - **Details panel**: `materialFor` recursively searches `nodes` and `runningCalls`, so a selected descendant callId resolves to full args and complete output through the identical rendering path as a native settled call.
 
 ## Alternatives considered

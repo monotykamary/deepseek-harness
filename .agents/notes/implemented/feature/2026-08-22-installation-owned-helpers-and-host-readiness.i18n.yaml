@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-22-installation-owned-helpers-and-host-readiness.md
+#   bun run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-22-installation-owned-helpers-and-host-readiness.md
 2026-08-22-installation-owned-helpers-and-host-readiness.md: b883292a71b8b6e8a6b1c73ddfc2746c3bcdb3dc
 2026-08-22-installation-owned-helpers-and-host-readiness.zh.md: 0c4d7c034ab79a9ac549a01a3b0e8b2382b8ef26

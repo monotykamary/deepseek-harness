@@ -1,22 +1,21 @@
 /**
  * Build the SDK runtime executables and Python node carrier. The fixed
- * `@yao-pkg/pkg --sea` route, deploy flags, and artifact layout are owned by
+ * `@yao-pkg/pkg --sea` route, closure materialization, and artifact layout are owned by
  * .agents/notes/implemented/architecture/2026-07-10-single-file-executable-sdk-runtime-distribution.md.
  * The staged closure is symlink-free, and whole-tree assets cover Cordis's
  * runtime imports that pkg cannot discover statically.
  */
 
 import { spawn } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { existsSync, statSync } from 'node:fs'
-import { chmod, copyFile, cp, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises'
+import { chmod, copyFile, cp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve, sep } from 'node:path'
 import { parseArgs } from 'node:util'
 import { resolveLinuxNodePtyAddon } from './build-exe-for-python-sdk-native-pty.ts'
 
 const root = resolve(import.meta.dirname, '..')
 
-/** The closure manifest whose dependencies define the executable. */
-const DEPLOY_ROOT_PACKAGE = 'dsh-jsonrpc-agent-pkg'
 /** The closed-runtime app entry inside the deployed closure. */
 const ENTRY_BIN = 'node_modules/@monotykamary/dsh-sdk-jsonrpc-demo/lib/packaged-bin.js'
 const OUTPUT_BASENAME = 'dsh-jsonrpc-agent-pkg'
@@ -29,8 +28,6 @@ const OUT_DIR = 'dist-exe'
 const PYTHON_RUNTIME_DIR = 'python/sdk-runtime/src/deepseek_harness_runtime/runtime'
 /** The deployed closure doubles as the node-mode carrier. */
 const PYTHON_NODE_SUBDIR = 'node'
-/** Legacy deploy may hoist peer-specialized workspace packages back here. */
-const DEPLOY_SOURCE_NODE_MODULES = 'python/sdk-runtime/node_modules'
 /** Documentation excluded from the generated runtime directory. */
 const DEPLOY_ONLY_DOCS = ['README.md', 'README.zh.md', 'README.i18n.yaml']
 
@@ -131,7 +128,7 @@ class BuildCli {
   private constructor(
     /** Build targets; defaults to the host platform only. */
     readonly targets: readonly Target[],
-    /** Skip step 1 (`pnpm run build`); lib/ artifacts must already exist. */
+    /** Skip step 1 (`bun run build`); lib/ artifacts must already exist. */
     readonly skipBuild: boolean,
     /** Print every command and config patch instead of executing. */
     readonly dryRun: boolean,
@@ -185,11 +182,11 @@ class BuildCli {
 
   private static usage(): string {
     return [
-      'Usage: pnpm exec tsx scripts/build-exe-for-python-sdk.ts [flags]',
+      'Usage: bun x tsx scripts/build-exe-for-python-sdk.ts [flags]',
       '',
       '  --targets=<t1,t2,...>  pkg targets, e.g. node24-linux-x64,node24-linux-arm64,node24-macos-arm64.',
       '                         Default: the host platform only (on node24).',
-      '  --skip-build           skip `pnpm run build` (lib/ artifacts must already exist).',
+      '  --skip-build           skip `bun run build` (lib/ artifacts must already exist).',
       '  --dry-run              print every command and config patch without executing.',
       '  --help                 print this help.',
       '',
@@ -199,8 +196,15 @@ class BuildCli {
   }
 }
 
-function pnpmBin(): string {
-  return process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+function bunBin(): string {
+  return process.platform === 'win32' ? 'bun.exe' : 'bun'
+}
+
+/** Resolve a package directory from a manifest anchor without requiring a package.json export. */
+function packageDirFromAnchor(anchor: string, packageName: string): string | undefined {
+  return (createRequire(anchor).resolve.paths(packageName) ?? [])
+    .map(searchPath => join(searchPath, packageName))
+    .find(candidate => existsSync(join(candidate, 'package.json')))
 }
 
 /**
@@ -229,38 +233,32 @@ class SingleExeBuild {
 
   /** Verify the closure before compiling or packaging. */
   async verifyClosure(): Promise<void> {
-    await this.run('runtime dependency closure', pnpmBin(), ['run', 'verify-runtime-closure'])
+    await this.run('runtime dependency closure', bunBin(), ['run', 'verify-runtime-closure'])
   }
 
   /** Build all package artifacts unless `--skip-build` was passed. */
   async build(): Promise<void> {
     if (this.cli.skipBuild) {
-      console.log('build-exe-for-python-sdk: skipping pnpm run build (--skip-build)')
+      console.log('build-exe-for-python-sdk: skipping bun run build (--skip-build)')
       return
     }
-    await this.run('build', pnpmBin(), ['run', 'build'])
+    await this.run('build', bunBin(), ['run', 'build'])
   }
 
-  /** Clear and deploy the runtime closure into the node carrier. */
+  /** Clear and materialize the runtime closure into the node carrier. */
   async deployStaging(): Promise<void> {
     if (this.staging === root || root.startsWith(this.staging + sep)) {
       throw new Error(`build-exe-for-python-sdk: refusing to clear staging dir ${this.staging}: it contains the repo root.`)
     }
-    if (this.cli.dryRun) console.log(`build-exe-for-python-sdk: [dry-run] rm -rf ${this.staging}`)
-    else await rm(this.staging, { recursive: true, force: true })
-    await this.run('deploy', pnpmBin(), [
-      '--filter',
-      DEPLOY_ROOT_PACKAGE,
-      'deploy',
-      '--legacy',
-      '--prod',
-      '--config.node-linker=hoisted',
-      '--config.auto-install-peers=false',
-      '--config.link-workspace-packages=true',
-      this.staging,
-    ])
-    await this.restoreLegacyHoists()
-    await this.materializeStagedLinks()
+    if (this.cli.dryRun) {
+      console.log(`build-exe-for-python-sdk: [dry-run] materialize Bun runtime closure at ${this.staging}`)
+    } else {
+      await rm(this.staging, { recursive: true, force: true })
+      await mkdir(join(this.staging, 'node_modules'), { recursive: true })
+      const manifestPath = resolve(root, 'python/sdk-runtime/package.json')
+      await copyFile(manifestPath, join(this.staging, 'package.json'))
+      await this.materializeRuntimeClosure(manifestPath)
+    }
     if (this.cli.dryRun) {
       for (const name of DEPLOY_ONLY_DOCS) console.log(`build-exe-for-python-sdk: [dry-run] rm -f ${join(this.staging, name)}`)
     } else {
@@ -268,32 +266,41 @@ class SingleExeBuild {
     }
   }
 
-  /**
-   * Restore direct packages that pnpm's legacy hoister places beside the deploy
-   * source instead of in the target. The runtime manifest supplies every peer,
-   * so package-local node_modules trees are omitted to preserve one flat Cordis
-   * instance and a symlink-free packaged payload.
-   */
-  private async restoreLegacyHoists(): Promise<void> {
-    if (this.cli.dryRun) {
-      console.log('build-exe-for-python-sdk: [dry-run] restore direct dependencies omitted by legacy deploy')
-      return
-    }
-    const manifestPath = join(this.staging, 'package.json')
-    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+  /** Copy the installed production graph into one symlink-free flat node_modules tree. */
+  private async materializeRuntimeClosure(rootManifestPath: string): Promise<void> {
+    interface RuntimeManifest {
       dependencies?: Record<string, string>
+      optionalDependencies?: Record<string, string>
+      peerDependencies?: Record<string, string>
+      peerDependenciesMeta?: Record<string, { optional?: boolean }>
     }
-    const sourceNodeModules = resolve(root, DEPLOY_SOURCE_NODE_MODULES)
-    const restored: string[] = []
-    for (const dependency of Object.keys(manifest.dependencies ?? {}).sort()) {
-      const destination = join(this.staging, 'node_modules', dependency)
-      if (existsSync(destination)) continue
-      const source = join(sourceNodeModules, dependency)
-      if (!existsSync(source)) {
-        throw new Error(
-          `build-exe-for-python-sdk: deployed dependency ${dependency} is absent from both ${destination} and ${source}.`,
-        )
+    interface PendingDependency {
+      readonly name: string
+      readonly anchor: string
+      readonly optional: boolean
+    }
+    const rootManifest = JSON.parse(await readFile(rootManifestPath, 'utf8')) as RuntimeManifest
+    const queue: PendingDependency[] = Object.keys(rootManifest.dependencies ?? {})
+      .map(name => ({ name, anchor: rootManifestPath, optional: false }))
+    const copied = new Map<string, string>()
+    while (queue.length > 0) {
+      const pending = queue.shift()
+      if (pending === undefined) break
+      const resolved = packageDirFromAnchor(pending.anchor, pending.name)
+      if (resolved === undefined) {
+        if (pending.optional) continue
+        throw new Error(`build-exe-for-python-sdk: cannot resolve ${pending.name} from ${pending.anchor}.`)
       }
+      const source = await realpath(resolved)
+      const previous = copied.get(pending.name)
+      if (previous !== undefined) {
+        if (previous !== source) {
+          throw new Error(`build-exe-for-python-sdk: flat runtime closure resolves ${pending.name} to both ${previous} and ${source}.`)
+        }
+        continue
+      }
+      copied.set(pending.name, source)
+      const destination = join(this.staging, 'node_modules', pending.name)
       await mkdir(dirname(destination), { recursive: true })
       const nestedNodeModules = join(source, 'node_modules')
       await cp(source, destination, {
@@ -301,59 +308,23 @@ class SingleExeBuild {
         dereference: true,
         filter: path => path !== nestedNodeModules && !path.startsWith(nestedNodeModules + sep),
       })
-      restored.push(dependency)
-    }
-    const stillMissing = Object.keys(manifest.dependencies ?? {})
-      .filter(dependency => !existsSync(join(this.staging, 'node_modules', dependency)))
-    if (stillMissing.length > 0) {
-      throw new Error(`build-exe-for-python-sdk: staged dependencies remain missing: ${stillMissing.join(', ')}.`)
-    }
-    if (restored.length > 0) {
-      console.log(`build-exe-for-python-sdk: restored legacy deploy hoists: ${restored.join(', ')}`)
-    }
-  }
-
-  /** Replace deploy-time package links with files and reject any remaining link. */
-  private async materializeStagedLinks(): Promise<void> {
-    if (this.cli.dryRun) {
-      console.log('build-exe-for-python-sdk: [dry-run] materialize staged package links')
-      return
-    }
-    const nodeModules = join(this.staging, 'node_modules')
-    let remaining = await this.findSymlink(nodeModules)
-    while (remaining !== undefined) {
-      const segments = remaining.slice(nodeModules.length + 1).split(sep)
-      const binIndex = segments.lastIndexOf('.bin')
-      if (binIndex >= 0) {
-        await rm(join(nodeModules, ...segments.slice(0, binIndex + 1)), { recursive: true, force: true })
-        remaining = await this.findSymlink(nodeModules)
-        continue
+      const manifestPath = join(source, 'package.json')
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as RuntimeManifest
+      for (const name of Object.keys(manifest.dependencies ?? {})) {
+        queue.push({ name, anchor: manifestPath, optional: false })
       }
-      const destination = remaining
-      const source = await realpath(destination)
-      const nestedNodeModules = join(source, 'node_modules')
-      await rm(destination, { recursive: true, force: true })
-      await cp(source, destination, {
-        recursive: true,
-        dereference: true,
-        filter: path => path !== nestedNodeModules && !path.startsWith(nestedNodeModules + sep),
-      })
-      remaining = await this.findSymlink(nodeModules)
-    }
-  }
-
-  /** Return the first symbolic link below a directory, if one exists. */
-  private async findSymlink(directory: string): Promise<string | undefined> {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name)
-      const metadata = await lstat(path)
-      if (metadata.isSymbolicLink()) return path
-      if (metadata.isDirectory()) {
-        const nested = await this.findSymlink(path)
-        if (nested !== undefined) return nested
+      for (const name of Object.keys(manifest.optionalDependencies ?? {})) {
+        queue.push({ name, anchor: manifestPath, optional: true })
+      }
+      for (const name of Object.keys(manifest.peerDependencies ?? {})) {
+        queue.push({
+          name,
+          anchor: manifestPath,
+          optional: manifest.peerDependenciesMeta?.[name]?.optional === true,
+        })
       }
     }
-    return undefined
+    console.log(`build-exe-for-python-sdk: materialized ${String(copied.size)} runtime packages`)
   }
 
   /** Add the executable entry and pkg assets to the staged manifest. */
@@ -365,7 +336,7 @@ class SingleExeBuild {
       return
     }
     if (!existsSync(manifestPath)) {
-      throw new Error(`build-exe-for-python-sdk: ${manifestPath} missing — pnpm deploy did not produce a staged package.`)
+      throw new Error(`build-exe-for-python-sdk: ${manifestPath} missing — Bun closure materialization did not produce a staged package.`)
     }
     if (!existsSync(join(this.staging, ENTRY_BIN))) {
       throw new Error(`build-exe-for-python-sdk: ${join(this.staging, ENTRY_BIN)} missing — run without --skip-build so lib/ artifacts exist.`)
@@ -384,8 +355,8 @@ class SingleExeBuild {
     const product = join(this.outDir, `${OUTPUT_BASENAME}-${target.platform}-${target.arch}`)
     await this.prepareNativePty(target)
     if (!this.cli.dryRun) await mkdir(this.outDir, { recursive: true })
-    await this.run(`pkg ${target.spec}`, pnpmBin(), [
-      'dlx',
+    await this.run(`pkg ${target.spec}`, bunBin(), [
+      'x',
       PKG_SPEC,
       this.staging,
       '--sea',

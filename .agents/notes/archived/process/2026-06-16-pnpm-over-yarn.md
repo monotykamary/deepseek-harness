@@ -1,6 +1,7 @@
 # Agent Note: pnpm as the package manager instead of Yarn 4
 
 Status: implemented
+Archived: 2026-08-31
 
 English | [中文](2026-06-16-pnpm-over-yarn.zh.md)
 
