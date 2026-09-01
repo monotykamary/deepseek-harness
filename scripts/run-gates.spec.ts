@@ -183,6 +183,22 @@ describe('gate graph validation', () => {
     })
   })
 
+  it('applies one complete-suite test and polling timeout budget', () => {
+    const subject = withEnv('DSH_TEST_TIMEOUT_MS', '15000', () =>
+      withBunEntrypoint(() => gatesForMode('check-all').find(gate => gate.id === 'test')))
+
+    expect(subject?.args).toEqual(expect.arrayContaining([
+      '--testTimeout=15000',
+      '--expect.poll.timeout=15000',
+    ]))
+  })
+
+  it('rejects an invalid complete-suite timeout before starting a gate', () => {
+    expect(() => withEnv('DSH_TEST_TIMEOUT_MS', '0', () =>
+      withBunEntrypoint(() => gatesForMode('check-all'))))
+      .toThrow('DSH_TEST_TIMEOUT_MS must be a positive integer')
+  })
+
   it('keeps ordinary complete-suite Vitest worker defaults without an override', () => {
     const subject = withEnv('DSH_TEST_MAX_WORKERS', undefined, () =>
       withBunEntrypoint(() => gatesForMode('check-all').find(gate => gate.id === 'test')))

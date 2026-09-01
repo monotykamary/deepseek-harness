@@ -514,12 +514,19 @@ function typertContractsGate(): Gate {
 
 // DSH_TEST_MAX_WORKERS bounds Vitest's own file workers independently of
 // DSH_GATE_CONCURRENCY, which only controls sibling repository gates.
+// DSH_TEST_TIMEOUT_MS raises per-test and expect.poll budgets together for a
+// complete inventory whose scheduling overhead exceeds Vitest's defaults.
 function unitTestGate(): Gate {
   const workers = positiveIntArg('DSH_TEST_MAX_WORKERS', '--maxWorkers')
-  if (workers.length === 0) return bunScript('test', 'test')
+  const timeout = positiveIntArg('DSH_TEST_TIMEOUT_MS', '--testTimeout')
+  const timeoutArgs = timeout.length === 0
+    ? []
+    : [...timeout, `--expect.poll.timeout=${process.env.DSH_TEST_TIMEOUT_MS as string}`]
+  const args = [...workers, ...timeoutArgs]
+  if (args.length === 0) return bunScript('test', 'test')
   return bunScript('test', 'test', {
-    displayCommand: `bun run test -- ${workers.join(' ')}`,
-    ...bunInvocation(['run', 'test', '--', ...workers]),
+    displayCommand: `bun run test -- ${args.join(' ')}`,
+    ...bunInvocation(['run', 'test', '--', ...args]),
   })
 }
 
