@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-agent-preset",
   "description": "Agent-preset surfaces: the default for later sessions, this session's seat, and the composition editor",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publishConfig": {
     "access": "public"
   },

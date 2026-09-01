@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-command-palette",
   "description": "Global Web command palette for session search and workspace-targeted session creation",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publishConfig": {
     "access": "public"
   },

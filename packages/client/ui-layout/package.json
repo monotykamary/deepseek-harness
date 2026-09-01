@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-layout",
   "description": "Shell plugin: three-column AppFrame with drag handles, ctx.layout viewing-state service (navigation + panels)",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publishConfig": {
     "access": "public"
   },

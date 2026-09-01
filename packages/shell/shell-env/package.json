@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-shell-env",
   "description": "Tool-independent managed DSH_* shell environment registry",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publishConfig": {
     "access": "public"
   },

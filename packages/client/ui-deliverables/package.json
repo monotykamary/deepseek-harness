@@ -1,7 +1,7 @@
 {
   "name": "@monotykamary/dsh-client-ui-deliverables",
   "description": "Changed-files turn card, file references, and loaded mutation Changes surface for Web",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publishConfig": {
     "access": "public"
   },
