@@ -172,6 +172,30 @@ describe('gate graph validation', () => {
     },
   )
 
+  it('bounds complete-suite Vitest workers independently from gate concurrency', () => {
+    const subject = withEnv('DSH_TEST_MAX_WORKERS', '1', () =>
+      withBunEntrypoint(() => gatesForMode('check-all').find(gate => gate.id === 'test')))
+
+    expect(subject).toMatchObject({
+      displayCommand: 'bun run test -- --maxWorkers=1',
+      command: process.execPath,
+      args: ['/private/bun.cjs', 'run', 'test', '--', '--maxWorkers=1'],
+    })
+  })
+
+  it('keeps ordinary complete-suite Vitest worker defaults without an override', () => {
+    const subject = withEnv('DSH_TEST_MAX_WORKERS', undefined, () =>
+      withBunEntrypoint(() => gatesForMode('check-all').find(gate => gate.id === 'test')))
+
+    expect(subject?.args).toEqual(['/private/bun.cjs', 'run', 'test'])
+  })
+
+  it('rejects an invalid complete-suite worker bound before starting a gate', () => {
+    expect(() => withEnv('DSH_TEST_MAX_WORKERS', '0', () =>
+      withBunEntrypoint(() => gatesForMode('check-all'))))
+      .toThrow('DSH_TEST_MAX_WORKERS must be a positive integer')
+  })
+
   it('splits the coverage worker budget evenly between measured and uninstrumented tests', () => {
     const gates = withoutCoveragePartitions(() =>
       withEnv('DSH_COVERAGE_MAX_WORKERS', '6', () =>

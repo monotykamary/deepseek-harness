@@ -237,7 +237,7 @@ export function gatesForMode(selected: Mode): Gate[] {
         bunScript('runtime-closure', 'verify-runtime-closure', { label: 'runtime closure' }),
         bunScript('cordis-config', 'verify-cordis-config', { label: 'Cordis config' }),
         bunScript('client-domain-graph', 'verify-client-domain-graph', { label: 'client domain graph' }),
-        bunScript('test', 'test'),
+        unitTestGate(),
         bunScript('issue-management', 'test:issue-management', { label: 'Issue management policy' }),
         bunScript('duplication', 'duplication'),
         observationalTestGate(),
@@ -510,6 +510,17 @@ function ciWindowsObservationalGates(): Gate[] {
 
 function typertContractsGate(): Gate {
   return bunScript('typert-contracts', 'build:lib:host', { label: 'Typert contracts' })
+}
+
+// DSH_TEST_MAX_WORKERS bounds Vitest's own file workers independently of
+// DSH_GATE_CONCURRENCY, which only controls sibling repository gates.
+function unitTestGate(): Gate {
+  const workers = positiveIntArg('DSH_TEST_MAX_WORKERS', '--maxWorkers')
+  if (workers.length === 0) return bunScript('test', 'test')
+  return bunScript('test', 'test', {
+    displayCommand: `bun run test -- ${workers.join(' ')}`,
+    ...bunInvocation(['run', 'test', '--', ...workers]),
+  })
 }
 
 function lintGate(options: { needs?: string[] } = {}): Gate {
