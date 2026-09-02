@@ -79,8 +79,12 @@ jobs:
       # are optional, and building them needs a musl toolchain per architecture.
       - name: Pack the Landlock entry for verification
         run: |
-          bun --cwd native/landlock-run run build:ts
-          bun --cwd native/landlock-run/packages/entry pm pack --destination "$PWD/dist/npm-landlock"
+          mkdir -p dist/npm-landlock
+          bun run --cwd native/landlock-run build:ts
+          (
+            cd native/landlock-run/packages/entry
+            bun pm pack --destination "$GITHUB_WORKSPACE/dist/npm-landlock"
+          )
 
       - name: Verify packed install
         run: bun run release:verify-packed-install --family dsh --from dist/npm --from dist/npm-vendor --from dist/npm-landlock

@@ -81,8 +81,8 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -yq musl-tools
-          bun --cwd native/landlock-run run build:ts
-          bun --cwd native/landlock-run run build:native
+          bun run --cwd native/landlock-run build:ts
+          bun run --cwd native/landlock-run build:native
 
       # Real PTYs remain visible but host scheduler timing cannot define readiness.
       - name: PowerShell PTY observations (darwin parity)

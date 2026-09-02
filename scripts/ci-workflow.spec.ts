@@ -26,6 +26,13 @@ describe('GitHub workflow schema', () => {
     }
     expect(invalid).toEqual([])
   })
+
+  it('places working-directory control on Bun subcommands that support it', () => {
+    for (const file of globSync('.github/workflows/*.yml', { cwd: root }).sort()) {
+      const source = readFileSync(resolve(root, file), 'utf8')
+      expect(source, `${file}: global bun --cwd silently prints help under Bun 1.4`).not.toContain('bun --cwd')
+    }
+  })
 })
 
 describe('CI workflow', () => {
